@@ -311,19 +311,8 @@ func GetSentEmailCount(contact *pb.Contact, reason string, timeWindowDays int) (
 		return 0, err
 	}
 
-	for _, value := range emailLog {
-		strTimestamp := value.Timestamp
-		timestamp, err := time.Parse(time.RFC3339, strTimestamp)
-		if err != nil {
-			return 0, fmt.Errorf("error parsing timestamp: %v", err)
-		}
-
-		matchedReason := reason == value.Reason
-		withinTimeWindow := timestamp.After(time.Now().AddDate(0, 0, -timeWindowDays))
-
-		if matchedReason && withinTimeWindow {
-			sent++
-		}
+	if sent, err = countSentEmails(emailLog, reason, timeWindowDays); err != nil {
+		return 0, err
 	}
 	return sent, nil
 }

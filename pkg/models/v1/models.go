@@ -237,14 +237,22 @@ func GetVASPEmailLog(vasp *pb.VASP) (emails []*VASPEmailEntry, err error) {
 	return emails, nil
 }
 
-// TODO: cleanup the duplicated code between this function and contacts.GetSentEmailCount
+// GetSentAdminEmailCount returns the number of emails sent to vasp admin for the given reason.
 func GetSentAdminEmailCount(vasp *pb.VASP, reason string, timeWindowDays int) (sent int, err error) {
 	var adminEmailLog []*EmailLogEntry
 	if adminEmailLog, err = GetAdminEmailLog(vasp); err != nil {
 		return 0, err
 	}
 
-	for _, value := range adminEmailLog {
+	if sent, err = countSentEmails(adminEmailLog, reason, timeWindowDays); err != nil {
+		return 0, err
+	}
+	return sent, nil
+}
+
+// Counts emails within the given EmailLogEntry slice for the given reason within the given time frame.
+func countSentEmails(emailLog []*EmailLogEntry, reason string, timeWindowDays int) (sent int, err error) {
+	for _, value := range emailLog {
 		var timestamp time.Time
 		if timestamp, err = time.Parse(time.RFC3339, value.Timestamp); err != nil {
 			return 0, fmt.Errorf("error parsing timestamp: %v", err)
