@@ -347,7 +347,11 @@ func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent
 // TRISA member is necessary before the reissuance process begins.
 func (m *EmailManager) SendExpiresAdminNotification(vasp *pb.VASP, timeWindow int, reissueDate time.Time) (sent int, err error) {
 	// Make sure the email has not already been sent recently
-	if emailCount, err := models.GetSentAdminEmailCount(vasp, string(admin.ReissuanceReminder), timeWindow); err != nil {
+	var adminEmailLog []*models.EmailLogEntry
+	if adminEmailLog, err = models.GetAdminEmailLog(vasp); err != nil {
+		return 0, err
+	}
+	if emailCount, err := models.CountSentEmails(adminEmailLog, string(admin.ReissuanceReminder), timeWindow); err != nil {
 		log.Error().Err(err).Msg(fmt.Sprintf("error retrieving admin email log for %s's reissuance reminder", vasp.Id))
 		return 0, err
 	} else if emailCount > 0 {
@@ -432,8 +436,12 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 
 	for _, contact := range contactsToNotify {
 		// Make sure that the reminder email hasn't already been sent to this contact.
+		var emailLog []*models.EmailLogEntry
+		if emailLog, err = models.GetEmailLog(contact); err != nil {
+			return err
+		}
 		reissuanceReminder := string(admin.ReissuanceReminder)
-		emailCount, err := models.GetSentEmailCount(contact, reissuanceReminder, timeWindow)
+		emailCount, err := models.CountSentEmails(emailLog, reissuanceReminder, timeWindow)
 		if err != nil {
 			log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("could not retrieve email count from email log")
 			continue
@@ -633,7 +641,11 @@ func (m *EmailManager) SendReissuanceStarted(vasp *pb.VASP, whisperLink string) 
 // has been reissued. This allows the admins to know that the reissuance has been done automatically
 func (m *EmailManager) SendReissuanceAdminNotification(vasp *pb.VASP, timeWindow int, reissueDate time.Time) (sent int, err error) {
 	// Make sure the email has not already been sent recently
-	if emailCount, err := models.GetSentAdminEmailCount(vasp, string(admin.ReissuanceStarted), timeWindow); err != nil {
+	var adminEmailLog []*models.EmailLogEntry
+	if adminEmailLog, err = models.GetAdminEmailLog(vasp); err != nil {
+		return 0, err
+	}
+	if emailCount, err := models.CountSentEmails(adminEmailLog, string(admin.ReissuanceStarted), timeWindow); err != nil {
 		log.Error().Err(err).Msg(fmt.Sprintf("error retrieving admin email log for %s's reissuance notification", vasp.Id))
 		return 0, err
 	} else if emailCount > 0 {
