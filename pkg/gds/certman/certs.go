@@ -751,9 +751,19 @@ vaspsLoop:
 		reissuanceDate := expirationDate.Add(-time.Hour * 240)
 		timeBeforeExpiration := time.Until(expirationDate)
 
-		// TODO: handle the case where the certificate has expired, we should update the certificate record to the EXPIRED state
 		// NOTE: This computation returns fractional days rather than rounding up or down to the nearest day.
 		switch daysBeforeExpiration := timeBeforeExpiration.Hours() / 24; {
+
+		//
+		case daysBeforeExpiration <= 0:
+			var cert *models.Certificate
+			if cert, err = c.db.RetrieveCert(); err != nil {
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not update expired certificate status")
+				continue vaspsLoop
+			}
+			cert.Status = models.CertificateState_EXPIRED
+			c.db.UpdateCert(cert)
+
 		// Seven days before expiration, send a cert reissuance reminder to VASP.
 		// NOTE: the SendContactReissuanceReminder will not send emails more than
 		// once to a contact.
