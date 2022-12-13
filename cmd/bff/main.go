@@ -49,6 +49,12 @@ func main() {
 				},
 			},
 			{
+				Name:     "validate",
+				Usage:    "validate the current bff configuration",
+				Category: "server",
+				Action:   validate,
+			},
+			{
 				Name:     "login",
 				Usage:    "allow a user to login to the BFF via Auth0 Oauth",
 				Category: "client",
@@ -131,6 +137,15 @@ func serve(c *cli.Context) (err error) {
 	}
 
 	return nil
+}
+
+// Validate checks the current BFF configuration and prints the status.
+func validate(c *cli.Context) (err error) {
+	var conf config.Config
+	if conf, err = config.New(); err != nil {
+		return cli.Exit(err, 1)
+	}
+	return printJSON(conf)
 }
 
 // Login fetches an auth0 token using three-legged oauth
