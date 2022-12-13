@@ -265,7 +265,7 @@ func GetEmailLog(contact *pb.Contact) (_ []*EmailLogEntry, err error) {
 }
 
 // Create and add a new entry to the EmailLog on the extra data on the Contact record.
-func AppendEmailLog(contact *pb.Contact, reason string, subject string) (err error) {
+func AppendEmailLog(contact *pb.Contact, reason, subject string) (err error) {
 	// Contact must be non-nil.
 	if contact == nil || contact.IsZero() {
 		return errors.New("cannot append entry to nil contact")
@@ -286,6 +286,7 @@ func AppendEmailLog(contact *pb.Contact, reason string, subject string) (err err
 		Timestamp: time.Now().Format(time.RFC3339),
 		Reason:    reason,
 		Subject:   subject,
+		Recipient: contact.Email,
 	}
 	extra.EmailLog = append(extra.EmailLog, entry)
 
