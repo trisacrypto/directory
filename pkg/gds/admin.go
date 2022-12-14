@@ -1009,7 +1009,6 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 				out.EmailLog = nil
 				break
 			} else {
-				rewiredEntry["contact"] = entry.ContactType
 				out.EmailLog = append(out.EmailLog, rewiredEntry)
 			}
 		}
