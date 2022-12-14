@@ -296,35 +296,3 @@ func AppendEmailLog(contact *pb.Contact, reason, subject string) (err error) {
 	}
 	return nil
 }
-
-// GetSentEmailCount returns the number of emails sent to the contact for the given reason.
-func GetSentEmailCount(contact *pb.Contact, reason string, timeWindowDays int) (sent int, err error) {
-	if reason == "" {
-		return 0, errors.New("cannot match on empty reason string")
-	}
-
-	if timeWindowDays < 0 {
-		return 0, errors.New("time window must be a positive number of days")
-	}
-
-	emailLog, err := GetEmailLog(contact)
-	if err != nil {
-		return 0, err
-	}
-
-	for _, value := range emailLog {
-		strTimestamp := value.Timestamp
-		timestamp, err := time.Parse(time.RFC3339, strTimestamp)
-		if err != nil {
-			return 0, fmt.Errorf("error parsing timestamp: %v", err)
-		}
-
-		matchedReason := reason == value.Reason
-		withinTimeWindow := timestamp.After(time.Now().AddDate(0, 0, -timeWindowDays))
-
-		if matchedReason && withinTimeWindow {
-			sent++
-		}
-	}
-	return sent, nil
-}
