@@ -9,6 +9,7 @@ import (
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-multierror"
 	"github.com/joho/godotenv"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
@@ -16,14 +17,17 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/store"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
+	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc/status"
 )
 
 var (
-	db    store.Store
-	auth0 *management.Management
-	conf  config.Config
+	db        store.Store
+	mainnetDB store.Store
+	testnetDB store.Store
+	auth0     *management.Management
+	conf      config.Config
 )
 
 func main() {
@@ -52,6 +56,25 @@ func main() {
 			Before:    connectDB,
 			After:     closeDB,
 			Flags:     []cli.Flag{},
+		},
+		{
+			Name:   "orgs:missing",
+			Usage:  "list GDS registrations that are missing organizaions",
+			Action: missingOrgs,
+			Before: Before(loadConf, connectDB, connectGDSDatabases),
+			After:  After(closeDB, closeGDSDatabases),
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "no-testnet",
+					Aliases: []string{"T"},
+					Usage:   "don't lookup TestNet registrations in report",
+				},
+				&cli.BoolFlag{
+					Name:    "no-mainnet",
+					Aliases: []string{"M"},
+					Usage:   "don't lookup TestNet registrations in report",
+				},
+			},
 		},
 		{
 			Name:   "collabs:add",
@@ -107,7 +130,6 @@ func connectDB(c *cli.Context) (err error) {
 	}
 
 	// Connect to the BFF main database
-	// TODO: do we need to connect to the mainnet and testnet databases?
 	if db, err = store.Open(conf.Database); err != nil {
 		if serr, ok := status.FromError(err); ok {
 			return cli.Exit(fmt.Errorf("could not open store: %s", serr.Message()), 1)
@@ -136,6 +158,48 @@ func closeDB(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 	return nil
+}
+
+func connectGDSDatabases(c *cli.Context) (err error) {
+	if conf.IsZero() {
+		if err = loadConf(c); err != nil {
+			return err
+		}
+	}
+
+	// Connect to the GDS TestNet database
+	if testnetDB, err = store.Open(conf.TestNet.Database); err != nil {
+		if serr, ok := status.FromError(err); ok {
+			return cli.Exit(fmt.Errorf("could not open testnet store: %s", serr.Message()), 1)
+		}
+		return cli.Exit(err, 1)
+	}
+
+	// Connect to the GDS MainNet database
+	if mainnetDB, err = store.Open(conf.MainNet.Database); err != nil {
+		if serr, ok := status.FromError(err); ok {
+			return cli.Exit(fmt.Errorf("could not open mainnet store: %s", serr.Message()), 1)
+		}
+		return cli.Exit(err, 1)
+	}
+
+	return nil
+}
+
+func closeGDSDatabases(c *cli.Context) (err error) {
+	if mainnetDB != nil {
+		if dberr := mainnetDB.Close(); dberr != nil {
+			err = multierror.Append(err, dberr)
+		}
+	}
+
+	if testnetDB != nil {
+		if dberr := testnetDB.Close(); dberr != nil {
+			err = multierror.Append(err, dberr)
+		}
+	}
+
+	return err
 }
 
 //===========================================================================
@@ -191,6 +255,87 @@ func detailOrgs(c *cli.Context) (err error) {
 		return printJSON(orgs[0])
 	}
 	return printJSON(orgs)
+}
+
+func missingOrgs(c *cli.Context) (err error) {
+	if c.Bool("no-testnet") && c.Bool("no-mainnet") {
+		return cli.Exit("no GDS networks specified to analyze", 0)
+	}
+
+	// Step one: compile all directory records from existing organizations
+	testnet := make(map[string]struct{})
+	mainnet := make(map[string]struct{})
+
+	orgs := db.ListOrganizations()
+	defer orgs.Release()
+	for orgs.Next() {
+		var org *models.Organization
+		if org, err = orgs.Organization(); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		if org.Testnet != nil && org.Testnet.Id != "" {
+			testnet[org.Testnet.Id] = struct{}{}
+		}
+
+		if org.Mainnet != nil && org.Mainnet.Id != "" {
+			mainnet[org.Mainnet.Id] = struct{}{}
+		}
+	}
+
+	if err = orgs.Error(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Step two: loop through TestNet to see what registrations are missing
+	if !c.Bool("no-testnet") {
+		fmt.Println("Missing TestNet Registrations\n----------------------------")
+		vasps := testnetDB.ListVASPs()
+		defer vasps.Release()
+		for vasps.Next() {
+			var vasp *pb.VASP
+			if vasp, err = vasps.VASP(); err != nil {
+				return cli.Exit(err, 1)
+			}
+
+			if _, ok := testnet[vasp.Id]; !ok {
+				name, _ := vasp.Name()
+				fmt.Printf("%s (%s | %s)\n", name, vasp.CommonName, vasp.Id)
+			}
+		}
+
+		if err = vasps.Error(); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		fmt.Println()
+	}
+
+	// Step three: loop through MainNet to see what registrations are missing
+	if !c.Bool("no-mainnet") {
+		fmt.Println("Missing MainNet Registrations\n----------------------------")
+		vasps := mainnetDB.ListVASPs()
+		defer vasps.Release()
+		for vasps.Next() {
+			var vasp *pb.VASP
+			if vasp, err = vasps.VASP(); err != nil {
+				return cli.Exit(err, 1)
+			}
+
+			if _, ok := mainnet[vasp.Id]; !ok {
+				name, _ := vasp.Name()
+				fmt.Printf("%s (%s | %s)\n", name, vasp.CommonName, vasp.Id)
+			}
+		}
+
+		if err = vasps.Error(); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		fmt.Println()
+	}
+
+	return nil
 }
 
 func addCollab(c *cli.Context) (err error) {
@@ -336,6 +481,17 @@ func GetOrg(id string) (_ *models.Organization, err error) {
 }
 
 func Before(funcs ...cli.BeforeFunc) cli.BeforeFunc {
+	return func(c *cli.Context) error {
+		for _, f := range funcs {
+			if err := f(c); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
+func After(funcs ...cli.AfterFunc) cli.AfterFunc {
 	return func(c *cli.Context) error {
 		for _, f := range funcs {
 			if err := f(c); err != nil {
