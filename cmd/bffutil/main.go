@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/joho/godotenv"
 	"github.com/trisacrypto/directory/pkg"
+	"github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
@@ -383,6 +384,8 @@ func createOrgs(c *cli.Context) (err error) {
 		mainnetVASP *pb.VASP
 		testnetVASP *pb.VASP
 		user        *management.User
+		permissions *management.PermissionList
+		appdata     *auth.AppMetadata
 		username    string
 		mainname    string
 		testname    string
@@ -416,12 +419,129 @@ func createOrgs(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
+	// Fetch the appdata and permissions of the user
+	appdata = &auth.AppMetadata{}
+	if err = appdata.Load(user.AppMetadata); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	if permissions, err = auth0.User.Permissions(*user.ID); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	if !HasPermission(auth.SwitchOrganizations, permissions) {
+		return cli.Exit("the user must be a TSP user", 1)
+	}
+
 	// Ask if we should proceed
 	username, _ = auth.UserDisplayName(user)
 	if !askForConfirmation(fmt.Sprintf("create org for TestNet: %s and MainNet: %s records with user %s?", testname, mainname, username)) {
 		return cli.Exit("canceled at request of user", 0)
 	}
 
+	// Create new organization record
+	org := &models.Organization{
+		Name:      c.String("name"),
+		Domain:    c.String("domain"),
+		CreatedBy: "support@rotational.io",
+	}
+
+	// TODO: should we make domain required?
+	if org.Domain != "" {
+		if org.Domain, err = bff.NormalizeDomain(org.Domain); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		if err = bff.ValidateDomain(org.Domain); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		// TODO: Check for duplicate domains
+	}
+
+	// Add the user as a collaborator to the organization
+	// NOTE: expecting the user to be a TSP so no roles are modified
+	collaborator := &models.Collaborator{
+		Email:    *user.Email,
+		UserId:   *user.ID,
+		Verified: *user.EmailVerified,
+	}
+
+	if err = org.AddCollaborator(collaborator); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Add the directory records
+	if mainnetVASP != nil {
+		org.Mainnet = &models.DirectoryRecord{
+			Id:                  mainnetVASP.Id,
+			RegisteredDirectory: mainnetVASP.RegisteredDirectory,
+			CommonName:          mainnetVASP.CommonName,
+			Submitted:           mainnetVASP.FirstListed,
+		}
+	}
+
+	if testnetVASP != nil {
+		org.Testnet = &models.DirectoryRecord{
+			Id:                  testnetVASP.Id,
+			RegisteredDirectory: testnetVASP.RegisteredDirectory,
+			CommonName:          testnetVASP.CommonName,
+			Submitted:           testnetVASP.FirstListed,
+		}
+	}
+
+	// Create the registration form
+	var vasp *pb.VASP
+	if mainnetVASP != nil {
+		vasp = mainnetVASP
+	} else if testnetVASP != nil {
+		vasp = testnetVASP
+	}
+
+	if vasp != nil {
+		reg := models.NewRegisterForm()
+		reg.Website = vasp.Website
+		reg.BusinessCategory = vasp.BusinessCategory
+		reg.VaspCategories = vasp.VaspCategories
+		reg.EstablishedOn = vasp.EstablishedOn
+		reg.OrganizationName = org.Name
+		reg.Entity = vasp.Entity
+		reg.Contacts = vasp.Contacts
+		reg.Trixo = vasp.Trixo
+
+		if mainnetVASP != nil {
+			reg.Mainnet = &models.NetworkDetails{
+				CommonName: mainnetVASP.CommonName,
+				Endpoint:   mainnetVASP.TrisaEndpoint,
+			}
+		}
+
+		if testnetVASP != nil {
+			reg.Testnet = &models.NetworkDetails{
+				CommonName: testnetVASP.CommonName,
+				Endpoint:   testnetVASP.TrisaEndpoint,
+			}
+		}
+
+		// TODO: help, what should the form steps be?
+		reg.State.Current = 1
+		reg.State.ReadyToSubmit = reg.ReadyToSubmit("all")
+
+		org.Registration = reg
+	} else {
+		org.Registration = models.NewRegisterForm()
+	}
+
+	// Create the organization
+	if _, err = db.CreateOrganization(org); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Add the user to the organization
+	appdata.AddOrganization(org.Id)
+	if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
+		return cli.Exit(err, 1)
+	}
 	return nil
 }
 
