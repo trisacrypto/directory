@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -73,6 +74,41 @@ func main() {
 					Name:    "no-mainnet",
 					Aliases: []string{"M"},
 					Usage:   "don't lookup TestNet registrations in report",
+				},
+			},
+		},
+		{
+			Name:   "orgs:create",
+			Usage:  "create an organization from existing GDS records",
+			Action: createOrgs,
+			Before: Before(loadConf, connectDB, connectGDSDatabases, connectAuth0),
+			After:  After(closeDB, closeGDSDatabases),
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "name",
+					Aliases: []string{"n"},
+					Usage:   "the name of the organization to create",
+				},
+				&cli.StringFlag{
+					Name:    "domain",
+					Aliases: []string{"d"},
+					Usage:   "the domain name of the organization",
+				},
+				&cli.StringFlag{
+					Name:    "testnet-id",
+					Aliases: []string{"t"},
+					Usage:   "the VASP ID of the TestNet record",
+				},
+				&cli.StringFlag{
+					Name:    "mainnet-id",
+					Aliases: []string{"m"},
+					Usage:   "the VASP ID of the MainNet record",
+				},
+				&cli.StringFlag{
+					Name:     "user",
+					Aliases:  []string{"u"},
+					Usage:    "the auth0 user ID to add as organization leader",
+					Required: true,
 				},
 			},
 		},
@@ -287,9 +323,12 @@ func missingOrgs(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
+	// Step one and a half: create a CSV document to write records to
+	writer := csv.NewWriter(os.Stdout)
+	writer.Write([]string{"id", "name", "common name", "registered directory"})
+
 	// Step two: loop through TestNet to see what registrations are missing
 	if !c.Bool("no-testnet") {
-		fmt.Println("Missing TestNet Registrations\n----------------------------")
 		vasps := testnetDB.ListVASPs()
 		defer vasps.Release()
 		for vasps.Next() {
@@ -300,20 +339,18 @@ func missingOrgs(c *cli.Context) (err error) {
 
 			if _, ok := testnet[vasp.Id]; !ok {
 				name, _ := vasp.Name()
-				fmt.Printf("%s (%s | %s)\n", name, vasp.CommonName, vasp.Id)
+				row := []string{vasp.Id, name, vasp.CommonName, vasp.RegisteredDirectory}
+				writer.Write(row)
 			}
 		}
 
 		if err = vasps.Error(); err != nil {
 			return cli.Exit(err, 1)
 		}
-
-		fmt.Println()
 	}
 
 	// Step three: loop through MainNet to see what registrations are missing
 	if !c.Bool("no-mainnet") {
-		fmt.Println("Missing MainNet Registrations\n----------------------------")
 		vasps := mainnetDB.ListVASPs()
 		defer vasps.Release()
 		for vasps.Next() {
@@ -324,15 +361,65 @@ func missingOrgs(c *cli.Context) (err error) {
 
 			if _, ok := mainnet[vasp.Id]; !ok {
 				name, _ := vasp.Name()
-				fmt.Printf("%s (%s | %s)\n", name, vasp.CommonName, vasp.Id)
+				row := []string{vasp.Id, name, vasp.CommonName, vasp.RegisteredDirectory}
+				writer.Write(row)
 			}
 		}
 
 		if err = vasps.Error(); err != nil {
 			return cli.Exit(err, 1)
 		}
+	}
 
-		fmt.Println()
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return cli.Exit(err, 1)
+	}
+	return nil
+}
+
+func createOrgs(c *cli.Context) (err error) {
+	var (
+		mainnetVASP *pb.VASP
+		testnetVASP *pb.VASP
+		user        *management.User
+		username    string
+		mainname    string
+		testname    string
+	)
+
+	if vaspID := c.String("mainnet-id"); vaspID != "" {
+		if mainnetVASP, err = mainnetDB.RetrieveVASP(vaspID); err != nil {
+			return cli.Exit(err, 1)
+		}
+		mainname, _ = mainnetVASP.Name()
+		if mainname == "" {
+			mainname = mainnetVASP.CommonName
+		}
+	} else {
+		mainname = "N/A"
+	}
+
+	if vaspID := c.String("testnet-id"); vaspID != "" {
+		if testnetVASP, err = testnetDB.RetrieveVASP(vaspID); err != nil {
+			return cli.Exit(err, 1)
+		}
+		testname, _ = testnetVASP.Name()
+		if testname == "" {
+			testname = testnetVASP.CommonName
+		}
+	} else {
+		testname = "N/A"
+	}
+
+	if user, err = auth0.User.Read(c.String("user")); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Ask if we should proceed
+	username, _ = auth.UserDisplayName(user)
+	if !askForConfirmation(fmt.Sprintf("create org for TestNet: %s and MainNet: %s records with user %s?", testname, mainname, username)) {
+		return cli.Exit("canceled at request of user", 0)
 	}
 
 	return nil
