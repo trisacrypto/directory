@@ -74,7 +74,7 @@ func main() {
 				&cli.BoolFlag{
 					Name:    "no-mainnet",
 					Aliases: []string{"M"},
-					Usage:   "don't lookup TestNet registrations in report",
+					Usage:   "don't lookup MainNet registrations in report",
 				},
 			},
 		},
