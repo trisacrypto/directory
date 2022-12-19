@@ -86,14 +86,16 @@ func main() {
 			After:  After(closeDB, closeGDSDatabases),
 			Flags: []cli.Flag{
 				&cli.StringFlag{
-					Name:    "name",
-					Aliases: []string{"n"},
-					Usage:   "the name of the organization to create",
+					Name:     "name",
+					Aliases:  []string{"n"},
+					Usage:    "the name of the organization to create",
+					Required: true,
 				},
 				&cli.StringFlag{
-					Name:    "domain",
-					Aliases: []string{"d"},
-					Usage:   "the domain name of the organization",
+					Name:     "domain",
+					Aliases:  []string{"d"},
+					Usage:    "the domain name of the organization",
+					Required: true,
 				},
 				&cli.StringFlag{
 					Name:    "testnet-id",
@@ -446,18 +448,15 @@ func createOrgs(c *cli.Context) (err error) {
 		CreatedBy: "support@rotational.io",
 	}
 
-	// TODO: should we make domain required?
-	if org.Domain != "" {
-		if org.Domain, err = bff.NormalizeDomain(org.Domain); err != nil {
-			return cli.Exit(err, 1)
-		}
-
-		if err = bff.ValidateDomain(org.Domain); err != nil {
-			return cli.Exit(err, 1)
-		}
-
-		// TODO: Check for duplicate domains
+	if org.Domain, err = bff.NormalizeDomain(org.Domain); err != nil {
+		return cli.Exit(err, 1)
 	}
+
+	if err = bff.ValidateDomain(org.Domain); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// TODO: Check for duplicate domains
 
 	// Add the user as a collaborator to the organization
 	// NOTE: expecting the user to be a TSP so no roles are modified
@@ -523,9 +522,17 @@ func createOrgs(c *cli.Context) (err error) {
 			}
 		}
 
-		// TODO: help, what should the form steps be?
-		reg.State.Current = 1
+		reg.State.Current = 6
 		reg.State.ReadyToSubmit = reg.ReadyToSubmit("all")
+		reg.State.Started = vasp.FirstListed
+		reg.State.Steps = []*models.FormStep{
+			{Key: 1, Status: "done"},
+			{Key: 2, Status: "done"},
+			{Key: 3, Status: "done"},
+			{Key: 4, Status: "done"},
+			{Key: 5, Status: "done"},
+			{Key: 6, Status: "done"},
+		}
 
 		org.Registration = reg
 	} else {
