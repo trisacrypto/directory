@@ -1,6 +1,7 @@
 package iterator
 
 import (
+	bff "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
@@ -34,4 +35,11 @@ type CertificateIterator interface {
 	Iterator
 	Cert() (*models.Certificate, error)
 	All() ([]*models.Certificate, error)
+}
+
+// OrganizationIterator allows access to OrganizationStore models
+type OrganizationIterator interface {
+	Iterator
+	ID() string
+	Organization() (*bff.Organization, error)
 }

@@ -2,7 +2,6 @@ package bff
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"sort"
@@ -163,7 +162,7 @@ func (s *Server) ListCollaborators(c *gin.Context) {
 
 	for _, collab := range org.Collaborators {
 		if err = s.LoadCollaboratorDetails(collab); err != nil {
-			log.Error().Err(err).Str("collabID", collab.Key()).Msg("could not load collaborator details from Auth0")
+			log.Error().Err(err).Str("collabID", collab.Key()).Msg("could not load collaborator details")
 		}
 
 		// Enforce consistent ordering by email address
@@ -351,7 +350,7 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 }
 
 // LoadCollaboratorDetails updates a collaborator record with the user details in
-// Auth0. The collaborator must have an user ID on it and the data in Auth0 will
+// Auth0. The collaborator must have a user ID on it and the data in Auth0 will
 // overwrite the data on the collaborator record.
 func (s *Server) LoadCollaboratorDetails(collab *models.Collaborator) (err error) {
 	// If the user is not verified in Auth0 then we can't retrieve the details
@@ -364,28 +363,51 @@ func (s *Server) LoadCollaboratorDetails(collab *models.Collaborator) (err error
 		return errors.New("collaborator does not have a user ID")
 	}
 
-	// Load the user details
-	// Note: This assumes that the user does not change or have multiple email addresses
-	var user *management.User
-	if user, err = s.auth0.User.Read(collab.UserId); err != nil {
-		return fmt.Errorf("could not load user %q from Auth0: %w", collab.UserId, err)
+	// Fetch the user profile from Auth0
+	var profile *auth.UserProfile
+	if profile, err = s.FetchUserProfile(collab.UserId); err != nil {
+		return err
 	}
 
-	if user.Name != nil {
-		collab.Name = *user.Name
-	}
-
-	// Load the user roles
-	var roles *management.RoleList
-	if roles, err = s.auth0.User.Roles(collab.UserId); err != nil {
-		return fmt.Errorf("could not load roles for user %q from Auth0: %w", collab.UserId, err)
-	}
-	collab.Roles = make([]string, len(roles.Roles))
-	for i, role := range roles.Roles {
-		collab.Roles[i] = *role.Name
-	}
+	// Refresh the collaborator record with the details
+	collab.Name = profile.Name
+	collab.Roles = profile.Roles
 
 	return nil
+}
+
+// FetchUserProfile fetches a user profile by ID from the user cache or Auth0 if
+// necessary.
+func (s *Server) FetchUserProfile(id string) (profile *auth.UserProfile, err error) {
+	if data, ok := s.users.Get(id); !ok {
+		// If we can't get the profile from the cache then fetch it from Auth0
+		var user *management.User
+		if user, err = s.auth0.User.Read(id); err != nil {
+			return nil, err
+		}
+
+		profile = &auth.UserProfile{}
+		if user.Name != nil {
+			profile.Name = *user.Name
+		}
+
+		var roles *management.RoleList
+		if roles, err = s.auth0.User.Roles(id); err != nil {
+			return nil, err
+		}
+
+		profile.Roles = make([]string, len(roles.Roles))
+		for i, role := range roles.Roles {
+			profile.Roles[i] = *role.Name
+		}
+
+		// Add the fetched profile to the cache
+		s.users.Add(id, profile)
+	} else if profile, ok = data.(*auth.UserProfile); !ok {
+		return nil, errors.New("invalid user profile cache entry")
+	}
+
+	return profile, nil
 }
 
 // InsortCollaborator is a helper function to insert a collaborator into a sorted slice
