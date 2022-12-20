@@ -341,6 +341,10 @@ func (s *Server) UpdateUser(c *gin.Context) {
 		return
 	}
 
+	// Invalidate the user's cache entry so that the updated profile is returned from
+	// the backend.
+	s.users.Remove(*user.ID)
+
 	c.Status(http.StatusNoContent)
 }
 
@@ -419,6 +423,9 @@ func (s *Server) AssignRoles(userID string, roles []string) (err error) {
 		}
 	}
 
+	// Invalidate the user's cache entry so updated roles are returned from the backend
+	s.users.Remove(userID)
+
 	return nil
 }
 
@@ -436,21 +443,27 @@ func (s *Server) ListUserRoles(c *gin.Context) {
 	c.JSON(http.StatusOK, []string{auth.CollaboratorRole, auth.LeaderRole})
 }
 
-// FindUserByEmail returns the Auth0 user record by email address.
+// FindUserByEmail returns the Auth0 user record by email address. This method returns
+// an ErrUserEmailNotFound error if the user does not exist and returns the first user
+// if there are multiple users with the same email address.
 func (s *Server) FindUserByEmail(email string) (user *management.User, err error) {
 	var users []*management.User
 	if users, err = s.auth0.User.ListByEmail(strings.ToLower(email)); err != nil {
 		return nil, err
 	}
 
-	switch len(users) {
-	case 0:
+	if len(users) == 0 {
 		return nil, ErrUserEmailNotFound
-	case 1:
-		return users[0], nil
-	default:
-		return nil, ErrMultipleEmailUsers
 	}
+
+	if len(users) > 1 {
+		// TODO: This can happen if the user has authenticated with Auth0 using
+		// multiple identities (e.g. email and Google). We might be able to handle this
+		// by linking the identities.
+		log.Warn().Str("email", email).Int("count", len(users)).Msg("multiple users found with same email address")
+	}
+
+	return users[0], nil
 }
 
 func (s *Server) FindRoleByName(name string) (*management.Role, error) {

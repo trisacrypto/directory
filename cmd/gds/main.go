@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -92,6 +91,12 @@ func main() {
 						EnvVars: []string{"GDS_BIND_ADDR"},
 					},
 				},
+			},
+			{
+				Name:     "validate",
+				Usage:    "validate the current gds configuration",
+				Category: "server",
+				Action:   validate,
 			},
 			{
 				// TODO: move this to gdsutil as it is deprecated
@@ -708,6 +713,15 @@ func serve(c *cli.Context) (err error) {
 	return nil
 }
 
+// validate checks the current GDS configuration and prints the status.
+func validate(c *cli.Context) (err error) {
+	var conf config.Config
+	if conf, err = config.New(); err != nil {
+		return cli.Exit(err, 1)
+	}
+	return printJSON(conf)
+}
+
 // Load the LevelDB database with initial directory info from CSV
 // TODO: remove or make more robust
 func load(c *cli.Context) (err error) {
@@ -787,7 +801,7 @@ func register(c *cli.Context) (err error) {
 		return cli.Exit("specify a json file to load the entity data from", 1)
 	}
 
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
@@ -1109,7 +1123,7 @@ func adminUpdateVASP(c *cli.Context) (err error) {
 	req := &admin.UpdateVASPRequest{}
 	if path := c.String("data"); path != "" {
 		var data []byte
-		if data, err = ioutil.ReadFile(path); err != nil {
+		if data, err = os.ReadFile(path); err != nil {
 			return cli.Exit(err, 1)
 		}
 
@@ -1159,7 +1173,7 @@ func adminReplaceContact(c *cli.Context) (err error) {
 	req := &admin.ReplaceContactRequest{}
 	if path := c.String("data"); path != "" {
 		var data []byte
-		if data, err = ioutil.ReadFile(path); err != nil {
+		if data, err = os.ReadFile(path); err != nil {
 			return cli.Exit(err, 1)
 		}
 

@@ -5,7 +5,9 @@ import (
 	"errors"
 	"io"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+	bff "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/trtl"
 	trtlpb "github.com/trisacrypto/directory/pkg/trtl/pb/v1"
@@ -23,6 +25,10 @@ type certIterator struct {
 }
 
 type certReqIterator struct {
+	trtlIterator
+}
+
+type organizationIterator struct {
 	trtlIterator
 }
 
@@ -379,4 +385,20 @@ func (i *certReqIterator) All() (reqs []*models.CertificateRequest, err error) {
 	}
 
 	return reqs, nil
+}
+
+func (i *organizationIterator) ID() string {
+	orgID, err := uuid.FromBytes(i.Key())
+	if err != nil {
+		panic(err)
+	}
+	return orgID.String()
+}
+
+func (i *organizationIterator) Organization() (o *bff.Organization, err error) {
+	o = new(bff.Organization)
+	if err = proto.Unmarshal(i.Value(), o); err != nil {
+		return nil, err
+	}
+	return o, nil
 }

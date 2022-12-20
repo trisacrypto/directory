@@ -1,8 +1,10 @@
 package leveldb
 
 import (
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
+	bff "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -22,6 +24,10 @@ type certIterator struct {
 }
 
 type certReqIterator struct {
+	iterWrapper
+}
+
+type organizationIterator struct {
 	iterWrapper
 }
 
@@ -131,4 +137,22 @@ func (i *certReqIterator) All() (reqs []*models.CertificateRequest, err error) {
 	}
 
 	return reqs, nil
+}
+
+func (i *organizationIterator) ID() string {
+	// The orgID is prefix + uuid so strip off the prefix and parse the UUID string
+	key := i.iter.Key()
+	orgID, err := uuid.FromBytes(key[len(preOrganizations):])
+	if err != nil {
+		panic(err)
+	}
+	return orgID.String()
+}
+
+func (i *organizationIterator) Organization() (o *bff.Organization, err error) {
+	o = new(bff.Organization)
+	if err = proto.Unmarshal(i.iter.Value(), o); err != nil {
+		return nil, err
+	}
+	return o, nil
 }

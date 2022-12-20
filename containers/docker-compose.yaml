@@ -178,6 +178,9 @@ services:
       - GDS_BFF_AUTH0_AUDIENCE=https://bff.vaspdirectory.dev
       - GDS_BFF_AUTH0_CLIENT_ID
       - GDS_BFF_AUTH0_CLIENT_SECRET
+      - GDS_BFF_USER_CACHE_ENABLED
+      - GDS_BFF_USER_CACHE_SIZE=100
+      - GDS_BFF_USER_CACHE_EXPIRATION=5m
 
     profiles:
       - api
@@ -192,7 +195,7 @@ services:
       args:
         REACT_APP_TRISA_BASE_URL: http://localhost:4437/v1/
         REACT_APP_ANALYTICS_ID: ${REACT_APP_STAGING_VASPDIRECTORY_ANALYTICS_ID}
-        REACT_APP_VERSION_NUMBER: v1.6.1-dev
+        REACT_APP_VERSION_NUMBER: v1.6.2-dev
         REACT_APP_GIT_REVISION: ${REACT_APP_GIT_REVISION}
         REACT_APP_SENTRY_DSN: ${REACT_APP_SENTRY_DSN}
         REACT_APP_SENTRY_ENVIRONMENT: development
@@ -225,7 +228,7 @@ services:
         REACT_APP_GOOGLE_CLIENT_ID: ${REACT_APP_GOOGLE_CLIENT_ID}
         REACT_APP_SENTRY_DSN: ${REACT_APP_ADMIN_SENTRY_DSN}
         REACT_APP_SENTRY_ENVIRONMENT: "development"
-        REACT_APP_VERSION_NUMBER: v1.6.1-dev
+        REACT_APP_VERSION_NUMBER: v1.6.2-dev
         REACT_APP_GIT_REVISION: ${REACT_APP_GIT_REVISION}
     image: trisa/gds-testnet-admin-ui
     depends_on:
@@ -387,7 +390,7 @@ services:
         REACT_APP_GOOGLE_CLIENT_ID: ${REACT_APP_GOOGLE_CLIENT_ID}
         REACT_APP_SENTRY_DSN: ${REACT_APP_ADMIN_SENTRY_DSN}
         REACT_APP_SENTRY_ENVIRONMENT: "development"
-        REACT_APP_VERSION_NUMBER: v1.6.1-dev
+        REACT_APP_VERSION_NUMBER: v1.6.2-dev
         REACT_APP_GIT_REVISION: ${REACT_APP_GIT_REVISION}
     image: trisa/gds-admin-ui
     depends_on:

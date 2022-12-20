@@ -1,7 +1,13 @@
-import axios from 'axios';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-lonely-if */
+import axios, { AxiosError } from 'axios';
 import { getCookie } from 'utils/cookies';
 import { auth0CheckSession } from 'utils/auth0.helper';
 import { setCookie, clearCookies } from './cookies';
+import { createStandaloneToast } from '@chakra-ui/react';
+
+const toast = createStandaloneToast();
+
 const axiosInstance = axios.create({
   baseURL: process.env.REACT_APP_TRISA_BASE_URL,
   headers: {
@@ -19,7 +25,7 @@ axiosInstance.interceptors.request.use(
       const { exp } = JSON.parse(atob(token.split('.')[1]));
       const isExpired = exp * 1000 < Date.now();
       if (isExpired) {
-        const { accessToken } = await auth0CheckSession() as any;
+        const { accessToken } = (await auth0CheckSession()) as any;
         setCookie('token', accessToken);
         config.headers.Authorization = `Bearer ${accessToken}`;
       } else {
@@ -66,12 +72,35 @@ axiosInstance.interceptors.response.use(
           return axiosInstance(originalRequest);
         }
       } else {
-        console.log('[axios.interceptors.response] status', error?.response?.status);
+        // The user should not be logged out if he can't process a request due to a missing permission
+        if (
+          error?.response?.status === 401 &&
+          (error as AxiosError).config.url !== '/users/login'
+        ) {
+          toast({
+            title: "Sorry, you don't have permission to perform this action",
+            status: 'error',
+            position: 'top-right',
+            isClosable: true
+          });
+          return;
+        } else {
+          window.location.href = `/auth/login?q=token_expired`;
+        }
         clearCookies();
         switch (error.response.status) {
-          case 401:
-            window.location.href = `/auth/login?q=token_expired`;
-            break;
+          // case 401:
+          //   console.log('[error] response', error.response);
+          //   if ((error as AxiosError).config.url !== '/users/login') {
+          //     toast({
+          //       title: "Sorry, you don't have permission to perform this action",
+          //       status: 'error',
+          //       position: 'top-right'
+          //     });
+          //   } else {
+          //     window.location.href = `/auth/login?q=token_expired`;
+          //   }
+          //   break;
           case 403:
             window.location.href = `/auth/login?q=unauthorized`;
             break;

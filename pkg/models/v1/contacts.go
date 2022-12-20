@@ -265,7 +265,7 @@ func GetEmailLog(contact *pb.Contact) (_ []*EmailLogEntry, err error) {
 }
 
 // Create and add a new entry to the EmailLog on the extra data on the Contact record.
-func AppendEmailLog(contact *pb.Contact, reason string, subject string) (err error) {
+func AppendEmailLog(contact *pb.Contact, reason, subject string) (err error) {
 	// Contact must be non-nil.
 	if contact == nil || contact.IsZero() {
 		return errors.New("cannot append entry to nil contact")
@@ -286,6 +286,7 @@ func AppendEmailLog(contact *pb.Contact, reason string, subject string) (err err
 		Timestamp: time.Now().Format(time.RFC3339),
 		Reason:    reason,
 		Subject:   subject,
+		Recipient: contact.Email,
 	}
 	extra.EmailLog = append(extra.EmailLog, entry)
 
@@ -294,36 +295,4 @@ func AppendEmailLog(contact *pb.Contact, reason string, subject string) (err err
 		return err
 	}
 	return nil
-}
-
-// GetSentEmailCount returns the number of emails sent to the contact for the given reason.
-func GetSentEmailCount(contact *pb.Contact, reason string, timeWindowDays int) (sent int, err error) {
-	if reason == "" {
-		return 0, errors.New("cannot match on empty reason string")
-	}
-
-	if timeWindowDays < 0 {
-		return 0, errors.New("time window must be a positive number of days")
-	}
-
-	emailLog, err := GetEmailLog(contact)
-	if err != nil {
-		return 0, err
-	}
-
-	for _, value := range emailLog {
-		strTimestamp := value.Timestamp
-		timestamp, err := time.Parse(time.RFC3339, strTimestamp)
-		if err != nil {
-			return 0, fmt.Errorf("error parsing timestamp: %v", err)
-		}
-
-		matchedReason := reason == value.Reason
-		withinTimeWindow := timestamp.After(time.Now().AddDate(0, 0, -timeWindowDays))
-
-		if matchedReason && withinTimeWindow {
-			sent++
-		}
-	}
-	return sent, nil
 }

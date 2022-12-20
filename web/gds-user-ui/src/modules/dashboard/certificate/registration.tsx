@@ -287,15 +287,6 @@ const Certificate: React.FC = () => {
                         handleResetForm={handleResetForm}
                       />
                     )}
-                    {/* <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
-                          {currentStep === lastStep ? t`Previous` : t`Save & Previous`}
-                        </Button>
-                        <Button type="submit" variant="secondary">
-                          {currentStep === lastStep ? t`Next` : t`Save & Next`}
-                        </Button>
-                        <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
-                          <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
-                        </Button> */}
                   </Stack>
                 </VStack>
               </chakra.form>
