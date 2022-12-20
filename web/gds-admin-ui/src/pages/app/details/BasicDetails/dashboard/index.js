@@ -10,6 +10,7 @@ import Statistics from './Statistics';
 import Status from './Status';
 import Tasks from './Tasks';
 import TasksChart from './TasksChart';
+import VaspsByCountryChart from './VaspsByCountryChart';
 import { getPendingVaspsData, getPendingVaspsError, getPendingVaspsLoadingState, getSummaryData } from 'redux/selectors/dashboard';
 import useSafeDispatch from 'hooks/useSafeDispatch';
 
@@ -51,6 +52,11 @@ const ProjectDashboardPage = () => {
             <Row>
                 <Col>
                     <TasksChart />
+                </Col>
+            </Row>
+            <Row>
+                <Col>
+                    <VaspsByCountryChart />
                 </Col>
             </Row>
 
