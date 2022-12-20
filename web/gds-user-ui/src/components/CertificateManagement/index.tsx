@@ -15,110 +15,12 @@ import {
   AccordionButton,
   AccordionItem,
   AccordionPanel,
-  AccordionIcon,
-  AlertIcon,
-  Alert,
-  HStack,
-  Button,
-  AlertDescription
+  AccordionIcon
 } from '@chakra-ui/react';
 import MainnetTestnetCertificates from './MainnetTestnetCertificates';
 import { t, Trans } from '@lingui/macro';
 import useGetCertificates from 'hooks/useGetCertificates';
-import dayjs from 'dayjs';
-
-const CertificateValidityAlert = ({ hasValidMainnet, hasValidTestnet }: any) => (
-  <>
-    {hasValidMainnet && hasValidTestnet ? (
-      <Alert bg="#D8EAF6" borderRadius={'10px'} mb={2}>
-        <AlertIcon />
-        <HStack justifyContent={'space-between'} w="100%">
-          <AlertDescription>
-            <Trans>
-              The Organization has a current and valid{' '}
-              <chakra.span fontWeight={700}>Mainnet</chakra.span> and{' '}
-              <chakra.span fontWeight={700}>Tesnet</chakra.span> Identity Certificate.
-            </Trans>
-          </AlertDescription>
-          <Button
-            border={'1px solid white'}
-            width={142}
-            px={8}
-            as={'a'}
-            borderRadius={0}
-            color="#fff"
-            cursor="pointer"
-            bg="#000"
-            _hover={{ bg: '#000000D1' }}>
-            <Trans>View/Edit</Trans>
-          </Button>
-        </HStack>
-      </Alert>
-    ) : null}
-
-    {hasValidMainnet ? (
-      <Alert bg="#D8EAF6" borderRadius={'10px'} mb={2}>
-        <AlertIcon />
-        <HStack justifyContent={'space-between'} w="100%">
-          <AlertDescription>
-            <Trans>
-              The Organization has a current and valid{' '}
-              <chakra.span fontWeight={700}>Mainnet</chakra.span> Identity Certificate.
-            </Trans>
-          </AlertDescription>
-          <Button
-            border={'1px solid white'}
-            width={142}
-            px={8}
-            as={'a'}
-            borderRadius={0}
-            color="#fff"
-            cursor="pointer"
-            bg="#000"
-            _hover={{ bg: '#000000D1' }}>
-            <Trans>View/Edit</Trans>
-          </Button>
-        </HStack>
-      </Alert>
-    ) : null}
-
-    {hasValidTestnet ? (
-      <Alert bg="#D8EAF6" borderRadius={'10px'} mb={2}>
-        <AlertIcon />
-        <HStack justifyContent={'space-between'} w="100%">
-          <AlertDescription>
-            <Trans>
-              The Organization has a current and valid{' '}
-              <chakra.span fontWeight={700}>Testnet</chakra.span> Identity Certificate.
-            </Trans>
-          </AlertDescription>
-          <Button
-            border={'1px solid white'}
-            width={142}
-            px={8}
-            as={'a'}
-            borderRadius={0}
-            color="#fff"
-            cursor="pointer"
-            bg="#000"
-            _hover={{ bg: '#000000D1' }}>
-            <Trans>View/Edit</Trans>
-          </Button>
-        </HStack>
-      </Alert>
-    ) : null}
-  </>
-);
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const hasExpired = (date: string) => {
-  const _date = dayjs(date);
-  if (_date.isValid()) {
-    return dayjs(_date).isBefore(dayjs());
-  }
-
-  return false;
-};
+import CertificateValidityAlert from './CertificateValidityAlert';
 
 function CertificateManagement() {
   const { data: certificates } = useGetCertificates();
@@ -220,12 +122,6 @@ function CertificateManagement() {
           </TabPanels>
         </Tabs>
       </Box>
-      {/* <Heading fontSize={'1.2rem'} fontWeight={700} p={5} my={5} bg={'#E5EDF1'} mx={4}>
-        <Trans>Sealing Certificate Inventory</Trans>
-      </Heading>
-      <Box px={4}>
-        <CertificateDataTable />
-      </Box> */}
     </>
   );
 }
