@@ -7,6 +7,7 @@ import { useParams } from 'react-router-dom'
 import { isEditorContentEmpty } from 'utils'
 
 
+
 function ReviewNoteForm({ handleReviewNoteSubmit, isSubmitting }) {
     const [note, setNote] = React.useState({})
     const params = useParams()
