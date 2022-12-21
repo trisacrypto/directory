@@ -14,6 +14,7 @@ import TrixoQuestionnaire from './TrixoQuestionnaire';
 import { useSelector } from 'react-redux';
 import { getVaspDetails } from 'redux/selectors';
 import { fetchVaspDetailsApiResponse } from 'redux/vasp-details';
+import EmailLog from './EmailLog';
 
 
 const ReviewNotes = React.lazy(() => import('./ReviewNotes'))
@@ -53,6 +54,7 @@ const VaspDetails = () => {
                     <Col md={6} xl={4} xxl={4}>
                         <Contact data={vasp?.vasp?.contacts} verifiedContact={vasp?.verified_contacts} />
                         <AuditLog data={vasp?.audit_log} />
+                        <EmailLog data={vasp?.email_log} />
                         <CertificateDetails data={vasp?.vasp?.identity_certificate} />
                     </Col>
                 </Row>
