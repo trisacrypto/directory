@@ -28,7 +28,7 @@ const BasicDetailsForm: React.FC = () => {
           data-testid="organization_name"
           label={t`Organization Name`}
           error="true"
-          formHelperText={errors.organization_name?.message}
+          formHelperText={errors.organization_name?.message as string}
           isInvalid={!!errors.organization_name}
           inputProps={{ placeholder: 'VASP HOLDING LLC' }}
           {...register('organization_name')}
@@ -40,7 +40,7 @@ const BasicDetailsForm: React.FC = () => {
           label={t`Website`}
           error="true"
           type="url"
-          formHelperText={errors.website?.message}
+          formHelperText={errors.website?.message as string}
           isInvalid={!!errors.website}
           inputProps={{ placeholder: 'https://example.com' }}
           {...register('website')}
@@ -50,7 +50,7 @@ const BasicDetailsForm: React.FC = () => {
           controlId="established_on"
           data-testid="established_on"
           label={t`Date of Incorporation / Establishment`}
-          formHelperText={errors.established_on?.message}
+          formHelperText={errors.established_on?.message as string}
           isInvalid={!!errors.established_on}
           inputProps={{
             placeholder: '21/01/2021',

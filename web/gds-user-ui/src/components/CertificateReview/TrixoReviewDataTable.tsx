@@ -181,7 +181,7 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
                     </Tag>
                   );
                 } else {
-                  return <Text>{'N/A'}</Text>;
+                  return <Text key={i}>{'N/A'}</Text>;
                 }
               })}
             </Td>
