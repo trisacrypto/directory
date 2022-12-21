@@ -99,8 +99,20 @@ export function currencyFormatter(
     currency
   });
 
+  if (amount === 0) {
+    return formatedAmount.format(0.00);
+  }
+
   return formatedAmount.format(amount);
 }
+
+export const getFormattedAmount = (amount: number, currency: string): string => {
+  const traction = currencyFormatter(amount, {
+    currency
+  });
+
+  return `${traction} ${currency}`;
+};
 
 export const getRefreshToken = () => {
   const auth0Config = getAuth0Config();
@@ -234,3 +246,5 @@ export const setUserCookies = (accessToken?: string, expiresIn?: number, userLoc
   if (userLocale) setCookie('user_locale', userLocale);
   if (expiresIn) setCookie('expires_in', expiresIn);
 };
+
+
