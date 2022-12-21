@@ -1,7 +1,6 @@
-import { render, screen, waitFor } from "utils/test-utils"
+import { render, screen, fireEvent } from "utils/test-utils"
 import DeleteContactPromptModal from "pages/app/details/contact/DeleteContactPromptModal"
 import { Modal } from "components/Modal"
-import userEvent from "@testing-library/user-event"
 
 describe('<DeleteContactPromptModal />', () => {
 
@@ -15,9 +14,7 @@ describe('<DeleteContactPromptModal />', () => {
         )
 
         const deleteEl = screen.getByRole('button', { name: /delete/i });
-        await waitFor(() => {
-            userEvent.click(deleteEl)
-        })
+        fireEvent.click(deleteEl)
         expect(handleDelete).toHaveBeenCalledTimes(1)
     })
 })
