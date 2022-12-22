@@ -15,7 +15,7 @@ export const TransparentBackground = ({ children }: TransparentBackgroundProps) 
       w="100%"
       h="100%"
       bg={'rgba(255,255,255,255)'}
-      zIndex="9999">
+      zIndex="8888">
       {children}
     </Flex>
   );
