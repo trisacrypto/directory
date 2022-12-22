@@ -14,20 +14,18 @@ import {
   MenuItem,
   MenuDivider,
   Show,
-  Tooltip,
-  useDisclosure
+  Tooltip
 } from '@chakra-ui/react';
 import { FiMenu } from 'react-icons/fi';
 import LanguagesDropdown from 'components/LanguagesDropdown';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearCookies } from 'utils/cookies';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import DefaultAvatar from 'assets/default_avatar.svg';
 import { resetStore } from 'application/store';
 import { userSelector, logout } from 'modules/auth/login/user.slice';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
-import ChooseAnOrganization from 'components/ChooseAnOrganization';
 import { colors } from 'utils/theme';
 import { canCreateOrganization } from 'utils/permission';
 interface MobileProps extends FlexProps {
@@ -35,12 +33,6 @@ interface MobileProps extends FlexProps {
   isLoading?: boolean;
 }
 const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
-  const {
-    isOpen: isAccountSwitchOpen,
-    onOpen: onAccountSwitchOpen,
-    onClose: onAccountSwitchClose
-  } = useDisclosure();
-
   const dispatch = useDispatch();
   const { user } = useSelector(userSelector);
   const navigate = useNavigate();
@@ -112,9 +104,8 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
               <Trans id="Profile">Profile</Trans>
             </MenuItem>
             {canCreateOrganization() ? (
-              <MenuItem onClick={onAccountSwitchOpen} data-testid="switch_accounts">
+              <MenuItem as={Link} to="/organization/switch" data-testid="switch_accounts">
                 <Trans id="Switch Accounts">Switch accounts</Trans>
-                <ChooseAnOrganization isOpen={isAccountSwitchOpen} onClose={onAccountSwitchClose} />
               </MenuItem>
             ) : null}
             <MenuDivider />

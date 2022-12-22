@@ -1,4 +1,3 @@
-// default value should be initialized from localstorage and assigned to each property
 export const getRegistrationDefaultValues = () => {
   return {
     entity: {
@@ -72,3 +71,5 @@ export const getRegistrationDefaultValues = () => {
     }
   };
 };
+
+export type RegistrationFormValues = ReturnType<typeof getRegistrationDefaultValues>;

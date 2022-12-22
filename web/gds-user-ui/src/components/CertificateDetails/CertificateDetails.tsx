@@ -157,10 +157,12 @@ function CertificateDetails() {
               {certificateDetails?.serial_number || 'N/A'}
             </Text>
             <Text>
-              <chakra.span fontWeight={700}>
-                <Trans>Expires</Trans>:
-              </chakra.span>{' '}
-              {certificateDetails?.expires_at || 'N/A'}
+              <>
+                <chakra.span fontWeight={700}>
+                  <Trans>Expires</Trans>:
+                </chakra.span>{' '}
+                {certificateDetails?.expires_at || 'N/A'}
+              </>
             </Text>
             <Text>
               <chakra.span fontWeight={700}>
