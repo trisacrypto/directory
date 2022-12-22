@@ -1,4 +1,4 @@
-import { HStack, IconButton, Stack, StackDivider, Text, VStack } from '@chakra-ui/react';
+import { HStack, IconButton, Stack, StackDivider, Text, VStack, css } from '@chakra-ui/react';
 import { Account } from 'components/Account';
 import AddNewVaspModal from 'components/AddNewVaspModal/AddNewVaspModal';
 import { Trans } from '@lingui/macro';
@@ -41,7 +41,14 @@ function ChooseAnOrganization() {
         variant="ghost"
         title="Get back to dashboard"
       />
-      <Stack width={'50%'} mx="auto">
+      <Stack
+        width={'50%'}
+        mx="auto"
+        overflowY={'scroll'}
+        css={css({
+          boxShadow: 'inset 0 -2px 0 rgba(0, 0, 0, 0.1)',
+          border: '0 none'
+        })}>
         <div>
           <HStack width="100%" justifyContent="end">
             <AddNewVaspModal />
@@ -50,20 +57,23 @@ function ChooseAnOrganization() {
             <Trans>Select a VASP from the Managed VASP List</Trans>
           </Text>
         </div>
-        <Stack divider={<StackDivider borderColor="#D9D9D9" />} p={2}>
-          {organizations && organizations?.length > 0 ? (
-            organizations?.map((organization) => (
-              <Account
-                key={organization.id}
-                id={organization.id}
-                name={organization?.name}
-                domain={organization?.domain}
-                isCurrent={organization.id === user?.vasp?.id}
-              />
-            ))
-          ) : (
-            <Text>No VASPs found</Text>
-          )}
+
+        <Stack>
+          <Stack divider={<StackDivider borderColor="#D9D9D9" />} p={2}>
+            {organizations && organizations?.length > 0 ? (
+              organizations?.map((organization) => (
+                <Account
+                  key={organization.id}
+                  id={organization.id}
+                  name={organization?.name}
+                  domain={organization?.domain}
+                  isCurrent={organization.id === user?.vasp?.id}
+                />
+              ))
+            ) : (
+              <Text>No VASPs found</Text>
+            )}
+          </Stack>
         </Stack>
       </Stack>
     </VStack>
