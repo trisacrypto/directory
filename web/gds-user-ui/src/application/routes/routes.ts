@@ -115,12 +115,7 @@ const appRoutes = [
     component: VerifyPage,
     layout: 'landing'
   },
-  {
-    layout: 'landing',
-    name: 'Switch Account',
-    component: ChooseAnOrganization,
-    path: '/organization/switch'
-  },
+
 
   // ------- DASHBOARD ROUTES-------
   {
@@ -178,6 +173,13 @@ const appRoutes = [
     component: SwitchOrganization,
     layout: 'dashboard',
     route: '/organization/switch/:id'
+  },
+  {
+    layout: 'dashboard',
+    name: 'Switch Account',
+    component: ChooseAnOrganization,
+    path: '/dashboard/switch',
+    route: '/switch'
   },
   //  -------ERROR ROUTES-------
   {

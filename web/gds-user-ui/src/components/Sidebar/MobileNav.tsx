@@ -27,6 +27,7 @@ import { userSelector, logout } from 'modules/auth/login/user.slice';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
 import { colors } from 'utils/theme';
+import { APP_PATH } from 'utils/constants';
 import { canCreateOrganization } from 'utils/permission';
 interface MobileProps extends FlexProps {
   onOpen: () => void;
@@ -104,7 +105,7 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
               <Trans id="Profile">Profile</Trans>
             </MenuItem>
             {canCreateOrganization() ? (
-              <MenuItem as={Link} to="/organization/switch" data-testid="switch_accounts">
+              <MenuItem as={Link} to={APP_PATH.SWITCH} data-testid="switch_accounts">
                 <Trans id="Switch Accounts">Switch accounts</Trans>
               </MenuItem>
             ) : null}
