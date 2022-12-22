@@ -47,6 +47,7 @@ function AddNewVaspModal() {
   const onSubmit = (values: any) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { accept, ...payload } = values;
+    console.log('[mutate] payload', payload);
 
     mutate(payload, {
       onSuccess() {
