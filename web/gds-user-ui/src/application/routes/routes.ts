@@ -17,6 +17,7 @@ import VerifyPage from 'modules/verify';
 import Collaborators from 'modules/dashboard/collaborator';
 import Profile from 'modules/dashboard/profile';
 import SwitchOrganization from 'modules/dashboard/organization/SwitchOrganization';
+import ChooseAnOrganization from 'components/ChooseAnOrganization';
 const Overview = lazy(() => import('modules/dashboard/overview'));
 const CertificateRegistrationPage = lazy(
   () => import('modules/dashboard/certificate/registration')
@@ -113,6 +114,12 @@ const appRoutes = [
     name: 'verify',
     component: VerifyPage,
     layout: 'landing'
+  },
+  {
+    layout: 'landing',
+    name: 'Switch Account',
+    component: ChooseAnOrganization,
+    path: '/organization/switch'
   },
 
   // ------- DASHBOARD ROUTES-------

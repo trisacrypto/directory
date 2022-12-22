@@ -2,7 +2,7 @@ import { DeleteIcon } from '@chakra-ui/icons';
 import { Button, Icon, Tooltip, TooltipProps } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
 
-type DeleteButtonProps = {
+export type DeleteButtonProps = {
   tooltip?: Omit<TooltipProps, 'children'>;
   onDelete?: (e: unknown) => void;
   isDisabled?: boolean;

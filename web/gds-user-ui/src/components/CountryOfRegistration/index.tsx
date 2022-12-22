@@ -26,8 +26,8 @@ const CountryOfRegistration: React.FC = () => {
             ref={field.ref}
             label=""
             placeholder={t`Select a country`}
-            isInvalid={!!errors?.entity?.country_of_registration}
-            formHelperText={errors?.entity?.country_of_registration?.message}
+            isInvalid={!!(errors?.entity as any)?.country_of_registration}
+            formHelperText={(errors?.entity as any)?.country_of_registration?.message}
             controlId="entity.country_of_registration"
             options={countries}
             name={field.name}

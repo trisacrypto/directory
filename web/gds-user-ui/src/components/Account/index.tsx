@@ -6,15 +6,13 @@ import { APP_PATH } from 'utils/constants';
 type AccountProps = {
   src?: string;
   alt?: string;
-  onClose: () => void;
   isCurrent: boolean;
 } & Partial<Organization>;
 
-export const Account = ({ domain, name, src, id, onClose, isCurrent }: AccountProps) => {
+export const Account = ({ domain, name, src, id, isCurrent }: AccountProps) => {
   const orgLink = `${APP_PATH.SWITCH_ORGANIZATION}/${id}?vaspName=${name}&vaspDomain=${domain}`;
 
   const selectOrgHandler = () => {
-    onClose();
     window.location.href = orgLink;
   };
   return (

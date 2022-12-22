@@ -129,7 +129,7 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
       <InputFormControl
         label={t`Identification Number`}
         controlId="identification_number"
-        isInvalid={!!errors?.entity?.national_identification?.national_identifier}
+        isInvalid={!!(errors?.entity as any)?.national_identification?.national_identifier}
         formHelperText={t`An identifier issued by an appropriate issuing authority`}
         {...register('entity.national_identification.national_identifier')}
       />
@@ -172,12 +172,12 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
                 options={countries}
                 value={countries.find((option) => option.value === field.value)}
                 onChange={(newValue: any) => field.onChange(newValue.value)}
-                isInvalid={!!errors?.entity?.national_identification?.country_of_issue}
+                isInvalid={!!(errors?.entity as any)?.national_identification?.country_of_issue}
                 isDisabled={!disabledIdentifiers.includes(NationalIdentificationType)}
                 label={t`Country of Issue`}
                 controlId="country_of_issue"
                 formHelperText={
-                  errors?.entity?.national_identification?.country_of_issue?.message ||
+                  (errors?.entity as any)?.national_identification?.country_of_issue?.message ||
                   t`Country of Issue is reserved for National Identifiers of Natural Persons`
                 }
               />
@@ -198,12 +198,13 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
                 onChange={(newValue: any) => field.onChange(newValue.value)}
                 label={t`Registration Authority`}
                 controlId="registration_authority"
-                isInvalid={!!errors?.entity?.national_identification?.registration_authority}
+                isInvalid={
+                  !!(errors?.entity as any)?.national_identification?.registration_authority
+                }
                 isDisabled={NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'}
                 formHelperText={
-                  errors?.entity?.national_identification?.registration_authority?.message || (
-                    <RegistrationAuthorityFormHelperText option={field.value} />
-                  )
+                  (errors?.entity as any)?.national_identification?.registration_authority
+                    ?.message || <RegistrationAuthorityFormHelperText option={field.value} />
                 }
               />
             )}
