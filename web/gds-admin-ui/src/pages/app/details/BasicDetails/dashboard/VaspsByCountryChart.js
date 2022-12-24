@@ -5,6 +5,7 @@ import OvalLoader from 'components/OvalLoader';
 import { useQuery } from '@tanstack/react-query'
 import { APICore } from 'helpers/api/apiCore';
 import { isoCountries } from 'utils/country'
+import NoData from 'components/NoData';
 
 const api = new APICore()
 
@@ -99,7 +100,11 @@ const VaspsByCountryChart = () => {
             <Card.Body>
                 <h4 className="header-title mb-4">Vasps by country</h4>
                 {
-                    isLoading ? <div><OvalLoader /></div> : (
+                    isLoading ? <div><OvalLoader /></div> : null
+                }
+                {
+                    !getRegistrations().length ? <NoData title='No VASP by country' /> : (
+
                         <div dir="ltr">
                             <div style={{ height: '320px' }} className="mt-3 chartjs-chart">
                                 <Bar data={barChartData} options={barChartOpts} />
