@@ -8,6 +8,7 @@ import useSafeDispatch from 'hooks/useSafeDispatch';
 import toast from 'react-hot-toast';
 import { postReviewNote } from 'services/review-notes';
 import { createReviewNoteApiResponseSuccess } from 'redux/vasp-details';
+import sanitizeMarkdown from 'utils/sanitize-markdown';
 dayjs.extend(relativeTime)
 
 const ReviewNotes = React.lazy(_ => import('./ReviewNotes'))
@@ -21,8 +22,10 @@ const Comments = () => {
     const [isSubmitting, setIsSubmiting] = React.useState(false)
 
     const handleReviewNoteSubmit = (note) => {
+
         if (note && (params && params.id)) {
-            postReviewNote(note, params.id).then(response => {
+            const sanitizedNote = sanitizeMarkdown(note)
+            postReviewNote(sanitizedNote, params.id).then(response => {
                 const data = response?.data
                 safeDispatch(createReviewNoteApiResponseSuccess(data))
                 toast.success('Review note added successfully')

@@ -24,6 +24,7 @@
         "immer": "^9.0.16",
         "jwt-decode": "^3.1.2",
         "localforage": "^1.10.0",
+        "marked": "^4.2.5",
         "node-sass": "^6.0.1",
         "nprogress": "^0.2.0",
         "prettier": "^2.8.0",
@@ -90,15 +91,15 @@
         "@babel/core": "^7.20.5",
         "@babel/preset-env": "^7.20.2",
         "@babel/runtime": "7.13.8",
+        "@testing-library/jest-dom": "^5.11.4",
+        "@testing-library/react": "^11.1.0",
+        "@testing-library/user-event": "^12.1.10",
         "@types/jest": "^27.0.3",
         "babel-loader": "8.1.0",
         "eslint-config-react-app": "^7.0.1",
         "eslint-plugin-jest": "^25.2.4",
         "redux-saga-test-plan": "^4.0.3",
-        "typescript": "^4.9.3",
-        "@testing-library/jest-dom": "^5.11.4",
-        "@testing-library/react": "^11.1.0",
-        "@testing-library/user-event": "^12.1.10"
+        "typescript": "^4.9.3"
     },
     "engines": {
         "node": "16.x.x"
