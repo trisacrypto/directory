@@ -193,7 +193,7 @@ func (s *trtlTestSuite) setupConfig() (err error) {
 	}
 
 	// Create a tmp directory for the database
-	s.tmpdb = s.T().TempDir()
+	s.tmpdb = os.TempDir()
 
 	// Create the configuration without loading it from the environment
 	conf := mock.Config()

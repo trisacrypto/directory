@@ -41,7 +41,7 @@ func setupTrtl(t testing.TB) (bench *trtlBench, err error) {
 	bench = new(trtlBench)
 
 	// Create a tmp directory for the database
-	bench.tmpdb = t.TempDir()
+	bench.tmpdb = os.TempDir()
 
 	// Manually create a configuration
 	c := config.Config{
