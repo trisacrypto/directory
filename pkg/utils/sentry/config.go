@@ -13,7 +13,10 @@ type Config struct {
 	Environment      string  `split_words:"true"`
 	Release          string  `split_words:"true"`
 	TrackPerformance bool    `split_words:"true" default:"false"`
-	SampleRate       float64 `split_words:"true" default:"1.0"`
+	SampleRate       float64 `split_words:"true" default:"0.85"`
+	Service          string  `split_words:"true"`
+	ReportErrors     bool    `split_words:"true" default:"false"`
+	Repanic          bool    `split_words:"true" default:"false"`
 	Debug            bool    `default:"false"`
 }
 
@@ -30,7 +33,7 @@ func (c Config) UsePerformanceTracking() bool {
 func (c Config) Validate() error {
 	// If Sentry is enabled then the envionment must be set.
 	if c.UseSentry() && c.Environment == "" {
-		return errors.New("invalid configuration: envrionment must be configured when Sentry is enabled")
+		return errors.New("invalid configuration: environment must be configured when Sentry is enabled")
 	}
 	return nil
 }
