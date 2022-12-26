@@ -7,7 +7,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -194,9 +193,7 @@ func (s *trtlTestSuite) setupConfig() (err error) {
 	}
 
 	// Create a tmp directory for the database
-	if s.tmpdb, err = ioutil.TempDir("testdata", "trtldb-*"); err != nil {
-		return fmt.Errorf("could not create tmpdb: %s", err)
-	}
+	s.tmpdb = s.T().TempDir()
 
 	// Create the configuration without loading it from the environment
 	conf := mock.Config()
@@ -384,7 +381,7 @@ func (s *trtlTestSuite) loadClientCredentials() (opts []grpc.DialOption, err err
 // comparative assertions in test code.
 func (s *trtlTestSuite) loadFixtures() (err error) {
 	var fixtures []byte
-	if fixtures, err = ioutil.ReadFile("testdata/db.json"); err != nil {
+	if fixtures, err = os.ReadFile("testdata/db.json"); err != nil {
 		return fmt.Errorf("could not read fixtures at testdata/db.json: %s", err)
 	}
 

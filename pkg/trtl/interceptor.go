@@ -2,7 +2,7 @@ package trtl
 
 import (
 	"github.com/trisacrypto/directory/pkg/utils/interceptors"
-	sentryutil "github.com/trisacrypto/directory/pkg/utils/sentry"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"google.golang.org/grpc"
 )
 
@@ -14,8 +14,6 @@ const statusMethod = "/trtl.v1.Trtl/Status"
 // method should be changed using grpc.ChaingUnaryInterceptor().
 func (t *Server) UnaryInterceptors() []grpc.UnaryServerInterceptor {
 	// Prepare Sentry configuration
-	// NOTE: this will override any user-configured settings
-	t.conf.Sentry.Service = "trtl"
 	t.conf.Sentry.Repanic = true
 
 	// If we're in maintenance mode, only return maintenance and recovery
@@ -27,12 +25,16 @@ func (t *Server) UnaryInterceptors() []grpc.UnaryServerInterceptor {
 	}
 
 	// Return Unary interceptors
-	return []grpc.UnaryServerInterceptor{
+	opts := []grpc.UnaryServerInterceptor{
 		interceptors.UnaryLogging(),
 		interceptors.UnaryRecovery(),
-		sentryutil.UnaryInterceptor(t.conf.Sentry),
-		interceptors.UnaryMTLS(),
+		sentry.UnaryInterceptor(t.conf.Sentry),
 	}
+
+	if !t.conf.MTLS.Insecure {
+		opts = append(opts, interceptors.UnaryMTLS())
+	}
+	return opts
 }
 
 // Prepares the interceptors (middleware) for the stream RPC endpoints of the server.
@@ -41,8 +43,6 @@ func (t *Server) UnaryInterceptors() []grpc.UnaryServerInterceptor {
 // method should be changed using grpc.ChaingStreamInterceptor().
 func (t *Server) StreamInterceptors() []grpc.StreamServerInterceptor {
 	// Prepare Sentry configuration
-	// NOTE: this will override any user-configured settings
-	t.conf.Sentry.Service = "trtl"
 	t.conf.Sentry.Repanic = true
 
 	// If we're in maintenance mode, only return maintenance and recovery
@@ -54,10 +54,14 @@ func (t *Server) StreamInterceptors() []grpc.StreamServerInterceptor {
 	}
 
 	// Return Unary interceptors
-	return []grpc.StreamServerInterceptor{
+	opts := []grpc.StreamServerInterceptor{
 		interceptors.StreamLogging(),
 		interceptors.StreamRecovery(),
-		sentryutil.StreamInterceptor(t.conf.Sentry),
-		interceptors.StreamMTLS(),
+		sentry.StreamInterceptor(t.conf.Sentry),
 	}
+
+	if !t.conf.MTLS.Insecure {
+		opts = append(opts, interceptors.StreamMTLS())
+	}
+	return opts
 }

@@ -13,7 +13,6 @@ import (
 func UnaryInterceptor(conf Config) grpc.UnaryServerInterceptor {
 	trackPerformance := conf.UsePerformanceTracking()
 	reportErrors := conf.ReportErrors
-	serviceName := conf.Service
 	repanic := conf.Repanic
 
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (_ interface{}, err error) {
@@ -31,9 +30,6 @@ func UnaryInterceptor(conf Config) grpc.UnaryServerInterceptor {
 
 		hub.Scope().SetTransaction(info.FullMethod)
 		hub.Scope().SetTag("rpc", "unary")
-		if serviceName != "" {
-			hub.Scope().SetTag("service", serviceName)
-		}
 
 		defer sentryRecovery(hub, ctx, repanic)
 		rep, err := handler(ctx, req)
@@ -51,7 +47,6 @@ func UnaryInterceptor(conf Config) grpc.UnaryServerInterceptor {
 func StreamInterceptor(conf Config) grpc.StreamServerInterceptor {
 	trackPerformance := conf.UsePerformanceTracking()
 	reportErrors := conf.ReportErrors
-	serviceName := conf.Service
 	repanic := conf.Repanic
 
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
@@ -71,9 +66,6 @@ func StreamInterceptor(conf Config) grpc.StreamServerInterceptor {
 
 		hub.Scope().SetTransaction(info.FullMethod)
 		hub.Scope().SetTag("rpc", "streaming")
-		if serviceName != "" {
-			hub.Scope().SetTag("service", serviceName)
-		}
 
 		defer sentryRecovery(hub, ctx, repanic)
 		err = handler(srv, stream)
