@@ -125,6 +125,20 @@ func main() {
 			Flags:     []cli.Flag{},
 		},
 		{
+			Name:   "orgs:cleanup",
+			Usage:  "removes any organizations that have zero collaborators",
+			Action: cleanupOrgs,
+			Before: connectDB,
+			After:  closeDB,
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "force",
+					Aliases: []string{"f"},
+					Usage:   "do not prompt to confirm org delete",
+				},
+			},
+		},
+		{
 			Name:   "collabs:add",
 			Usage:  "add a collaborator to an organization",
 			Action: addCollab,
@@ -631,6 +645,38 @@ func deleteOrgs(c *cli.Context) (err error) {
 	if err = db.DeleteOrganization(org.UUID()); err != nil {
 		return cli.Exit(err, 1)
 	}
+	return nil
+}
+
+func cleanupOrgs(c *cli.Context) (err error) {
+	orgsDeleted := 0
+	force := c.Bool("force")
+
+	iter := db.ListOrganizations()
+	defer iter.Release()
+	for iter.Next() {
+		var org *models.Organization
+		if org, err = iter.Organization(); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		if len(org.Collaborators) == 0 {
+			if !force && !askForConfirmation(fmt.Sprintf("org %s has 0 collaborators, delete?", org.ResolveName())) {
+				continue
+			}
+
+			if err = db.DeleteOrganization(org.UUID()); err != nil {
+				return cli.Exit(fmt.Errorf("could not delete %s: %w", org.ResolveName(), err), 1)
+			}
+			orgsDeleted++
+		}
+	}
+
+	if err = iter.Error(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	fmt.Printf("deleted %d organizations\n", orgsDeleted)
 	return nil
 }
 
