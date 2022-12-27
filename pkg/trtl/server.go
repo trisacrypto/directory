@@ -94,8 +94,8 @@ func New(conf config.Config) (s *Server, err error) {
 
 	// NOTE: It appears this must happen outside the struct initialization of the Server
 	// or else the UnaryInterceptor doesn't capture conf when it when it creates the closure
-	opts = append(opts, grpc.UnaryInterceptor(s.interceptor))
-	opts = append(opts, grpc.StreamInterceptor(s.streamInterceptor))
+	opts = append(opts, grpc.ChainUnaryInterceptor(s.UnaryInterceptors()...))
+	opts = append(opts, grpc.ChainStreamInterceptor(s.StreamInterceptors()...))
 	s.srv = grpc.NewServer(opts...)
 
 	// NOTE: if we are *not* in maintenance mode, we must open the database before we

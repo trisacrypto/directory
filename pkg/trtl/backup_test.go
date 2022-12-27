@@ -1,7 +1,6 @@
 package trtl_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
@@ -50,7 +49,7 @@ func (s *trtlTestSuite) TestBackupManager() {
 
 	// Backup should be created
 	require.DirExists(backupDir)
-	files, err := ioutil.ReadDir(backupDir)
+	files, err := os.ReadDir(backupDir)
 	require.NoError(err)
 	require.Len(files, 1, "wrong number of backups created")
 	s.compareBackup(filepath.Join(conf.Storage, files[0].Name()))
