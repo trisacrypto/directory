@@ -63,8 +63,8 @@ func NewMembers(svc *Service) (members *Members, err error) {
 	}
 
 	// Add the unary interceptor to the gRPC server
-	opts = append(opts, grpc.UnaryInterceptor(svc.unaryInterceptor))
-	opts = append(opts, grpc.StreamInterceptor(svc.streamInterceptor))
+	opts = append(opts, grpc.ChainUnaryInterceptor(svc.UnaryInterceptors()...))
+	opts = append(opts, grpc.ChainStreamInterceptor(svc.StreamInterceptors()...))
 
 	// Initialize the gRPC server
 	members.srv = grpc.NewServer(opts...)
