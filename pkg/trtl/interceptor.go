@@ -11,7 +11,7 @@ const statusMethod = "/trtl.v1.Trtl/Status"
 // Prepares the interceptors (middleware) for the unary RPC endpoints of the server.
 // The first interceptor will be the outer-most handler and the last will be the
 // inner-most wrapper around the final handler. All unary interceptors returned by this
-// method should be changed using grpc.ChaingUnaryInterceptor().
+// method should be chained using grpc.ChainUnaryInterceptor().
 func (t *Server) UnaryInterceptors() []grpc.UnaryServerInterceptor {
 	// Prepare Sentry configuration
 	t.conf.Sentry.Repanic = true
@@ -40,7 +40,7 @@ func (t *Server) UnaryInterceptors() []grpc.UnaryServerInterceptor {
 // Prepares the interceptors (middleware) for the stream RPC endpoints of the server.
 // The first interceptor will be the outer-most handler and the last will be the
 // inner-most wrapper around the final handler. All stream interceptors returned by this
-// method should be changed using grpc.ChaingStreamInterceptor().
+// method should be chained using grpc.ChainStreamInterceptor().
 func (t *Server) StreamInterceptors() []grpc.StreamServerInterceptor {
 	// Prepare Sentry configuration
 	t.conf.Sentry.Repanic = true
@@ -53,7 +53,7 @@ func (t *Server) StreamInterceptors() []grpc.StreamServerInterceptor {
 		}
 	}
 
-	// Return Unary interceptors
+	// Return Stream interceptors
 	opts := []grpc.StreamServerInterceptor{
 		interceptors.StreamLogging(),
 		interceptors.StreamRecovery(),

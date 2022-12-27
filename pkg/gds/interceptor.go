@@ -21,7 +21,7 @@ const statusMethod = "/trisa.gds.api.v1beta1.TRISADirectory/Status"
 // Prepares the interceptors (middleware) for the unary RPC endpoints of the server.
 // The first interceptor will be the outer-most handler and the last will be the
 // inner-most wrapper around the final handler. All unary interceptors returned by this
-// method should be changed using grpc.ChaingUnaryInterceptor().
+// method should be chained using grpc.ChainUnaryInterceptor().
 func (s *Service) UnaryInterceptors() []grpc.UnaryServerInterceptor {
 	// Prepare Sentry configuration
 	s.conf.Sentry.Repanic = true
@@ -48,7 +48,7 @@ func (s *Service) UnaryInterceptors() []grpc.UnaryServerInterceptor {
 // Prepares the interceptors (middleware) for the stream RPC endpoints of the server.
 // The first interceptor will be the outer-most handler and the last will be the
 // inner-most wrapper around the final handler. All stream interceptors returned by this
-// method should be changed using grpc.ChaingStreamInterceptor().
+// method should be chained using grpc.ChainStreamInterceptor().
 func (s *Service) StreamInterceptors() []grpc.StreamServerInterceptor {
 	// Prepare Sentry configuration
 	s.conf.Sentry.Repanic = true
@@ -61,7 +61,7 @@ func (s *Service) StreamInterceptors() []grpc.StreamServerInterceptor {
 		}
 	}
 
-	// Return Unary interceptors
+	// Return Stream interceptors
 	opts := []grpc.StreamServerInterceptor{
 		interceptors.StreamLogging(),
 		interceptors.StreamRecovery(),

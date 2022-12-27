@@ -16,8 +16,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// UnaryMTLS adds authenticated peer info to the context and returns unauthenticated if
-// that peer information is not available.
+// UnaryMTLS adds authenticated peer info to the context and returns an unauthenticated
+// error if that peer information is not available.
 func UnaryMTLS() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (_ interface{}, err error) {
 		var peer *PeerInfo
@@ -33,8 +33,8 @@ func UnaryMTLS() grpc.UnaryServerInterceptor {
 	}
 }
 
-// StreamMTLS adds authenticated peer info to the context and returns unauthenticated if
-// that peer information is not available.
+// StreamMTLS adds authenticated peer info to the context and returns an unauthenticated
+// error if that peer information is not available.
 func StreamMTLS() grpc.StreamServerInterceptor {
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
 		// TODO: add peer information to the context, this requires wrapping the ServerStream
