@@ -130,14 +130,12 @@ func New() (s *Server, err error) {
 // Config returns an AuthConfig that can be used to setup middleware.
 func (s *Server) Config() config.AuthConfig {
 	return config.AuthConfig{
-		Domain:         s.URL.Host,
-		Audience:       Audience,
-		ConnectionName: ConnectionName,
-		RedirectURL:    RedirectURL,
-		ProviderCache:  30 * time.Second,
-		ClientID:       ClientID,
-		ClientSecret:   ClientSecret,
-		Testing:        true,
+		Domain:        s.URL.Host,
+		Audience:      Audience,
+		ProviderCache: 30 * time.Second,
+		ClientID:      ClientID,
+		ClientSecret:  ClientSecret,
+		Testing:       true,
 	}
 }
 
@@ -234,17 +232,17 @@ func (s *Server) JWKS(w http.ResponseWriter, r *http.Request) {
 func (s *Server) Users(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		s.GetUser(w, r)
+		s.RetrieveUser(w, r)
 	case http.MethodPost:
 		s.CreateUser(w, r)
 	case http.MethodPatch:
-		s.PatchUserAppMetadata(w, r)
+		s.PatchUser(w, r)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
 
-func (s *Server) GetUser(w http.ResponseWriter, r *http.Request) {
+func (s *Server) RetrieveUser(w http.ResponseWriter, r *http.Request) {
 	// Return the user object from the map
 	// TODO: Parse the user id from the request
 	if user, ok := s.users[UserID]; ok {
@@ -375,7 +373,7 @@ func (s *Server) GetRoles(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(s.roles)
 }
 
-func (s *Server) PatchUserAppMetadata(w http.ResponseWriter, r *http.Request) {
+func (s *Server) PatchUser(w http.ResponseWriter, r *http.Request) {
 	// Get the user object from the request
 	user := &management.User{}
 	if err := json.NewDecoder(r.Body).Decode(user); err != nil {
@@ -383,12 +381,23 @@ func (s *Server) PatchUserAppMetadata(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Replace the user app metadata
-	s.users[UserID].AppMetadata = user.AppMetadata
+	// Patch the user object
+	if user.AppMetadata != nil {
+		s.users[UserID].AppMetadata = user.AppMetadata
+	}
+
+	if user.Name != nil {
+		s.users[UserID].Name = user.Name
+	}
 
 	// Return the user object in the response
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
+}
+
+// Expose the user record to the tests.
+func (s *Server) GetUser() *management.User {
+	return s.users[UserID]
 }
 
 // Expose the test user's app metadata to the tests.

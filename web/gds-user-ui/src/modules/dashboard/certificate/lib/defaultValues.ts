@@ -1,4 +1,3 @@
-// default value should be initialized from localstorage and assigned to each property
 export const getRegistrationDefaultValues = () => {
   return {
     entity: {
@@ -61,14 +60,16 @@ export const getRegistrationDefaultValues = () => {
       financial_transfers_permitted: 'no',
       has_required_regulatory_program: 'no',
       conducts_customer_kyc: false,
-      kyc_threshold: 10,
+      kyc_threshold: undefined,
       kyc_threshold_currency: 'USD',
       must_comply_travel_rule: false,
       applicable_regulations: ['FATF Recommendation 16'],
-      compliance_threshold: 3000,
+      compliance_threshold: undefined,
       compliance_threshold_currency: 'USD',
       must_safeguard_pii: false,
       safeguards_pii: false
     }
   };
 };
+
+export type RegistrationFormValues = ReturnType<typeof getRegistrationDefaultValues>;

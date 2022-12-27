@@ -1,15 +1,16 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { setCookie } from 'utils/cookies';
-import { logUserInBff, getUserRoles } from 'modules/auth/login/auth.service';
+import { logUserInBff, getUserRoles, getUserCurrentOrganizationService } from 'modules/auth/login/auth.service';
 import { t } from '@lingui/macro';
 import {
   auth0SignIn,
   auth0SignUp,
   auth0SignWithSocial,
   auth0Hash,
-  auth0CheckSession
+  auth0CheckSession,
+  setUserPayload,
+  refreshAndSetPermission
 } from 'utils/auth0.helper';
-import { handleError } from 'utils/utils';
+import { handleError, getUserExpiresTime, setUserCookies } from 'utils/utils';
 
 export const userLoginWithSocial = (social: string) => {
   if (social === 'google') {
@@ -58,46 +59,50 @@ export const getAuth0User: any = createAsyncThunk(
     try {
       // then login with auth0
       const getUserInfo: any = hasToken && (await auth0Hash());
-      console.log('[getUserInfo]', getUserInfo);
-      const updatedTime = new Date(getUserInfo?.idTokenPayload?.updated_at).getTime() / 1000;
-      const expiresTime = updatedTime + getUserInfo.expiresIn;
-      setCookie('access_token', getUserInfo?.accessToken);
-      setCookie('user_locale', getUserInfo?.idTokenPayload?.locale || 'en');
-      setCookie('expires_in', expiresTime);
+      // console.log('[getUserInfo]', getUserInfo);
+
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
-        const getUser = await logUserInBff();
-        const getRoles = await getUserRoles() as any;
+        const hasOrgId = localStorage.getItem('orgId') as any;
+        const getUser = await logUserInBff(hasOrgId ? { orgid: hasOrgId } : {}) as any;
+        if (getUser && hasOrgId) {
+          localStorage.removeItem('orgId');
+        }
+
         if (getUser?.data?.refresh_token) {
-          const newUserPayload: any = await auth0CheckSession();
-          setCookie('access_token', newUserPayload?.accessToken);
-          setCookie('user_locale', newUserPayload?.idTokenPayload?.locale || 'en');
-          // set expired time
-          const updated = new Date(newUserPayload?.idTokenPayload?.updated_at).getTime() / 1000;
-          const expires = updated + getUserInfo.expiresIn;
-          setCookie('expires_in', expires);
+          let newUserPayload: any = await auth0CheckSession();
+          if (!newUserPayload?.idTokenPayload?.permissions) {
+            newUserPayload = await refreshAndSetPermission();
+          }
+          const expiresIn = getUserExpiresTime(newUserPayload?.idTokenPayload?.updated_at, getUserInfo.expiresIn);
+          setUserCookies(newUserPayload?.accessToken, expiresIn, newUserPayload?.idTokenPayload?.locale || 'en');
+          const getRoles = await getUserRoles() as any;
+          const getUserOrgInfo: any = await getUserCurrentOrganizationService();
+
           const userInfo: TUser = {
             isLoggedIn: true,
-            user: {
-              name: newUserPayload?.idTokenPayload?.name,
-              pictureUrl: newUserPayload?.idTokenPayload?.picture,
-              email: newUserPayload?.idTokenPayload?.email,
-              roles: getRoles?.data?.roles,
-              permissions: newUserPayload?.idTokenPayload?.permissions,
-            }
+            user: setUserPayload(newUserPayload?.idTokenPayload, {
+              roles: getRoles?.data,
+              vasp: getUserOrgInfo?.data
+            }) as IUserState
           };
           return userInfo;
         }
         // return;
         if (getUser.status === 204) {
+          const expiresIn = getUserExpiresTime(getUserInfo?.idTokenPayload?.updated_at, getUserInfo.expiresIn);
+          setUserCookies(getUserInfo?.accessToken, expiresIn, getUserInfo?.idTokenPayload?.locale || 'en');
+          const getRoles = await getUserRoles() as any;
+          const getUserOrgInfo: any = await getUserCurrentOrganizationService();
+
           const userInfo: TUser = {
             isLoggedIn: true,
-            user: {
-              name: getUserInfo?.idTokenPayload?.name,
-              pictureUrl: getUserInfo?.idTokenPayload?.picture,
-              email: getUserInfo?.idTokenPayload?.email,
-              roles: getRoles?.data?.roles,
-              permissions: getUserInfo?.idTokenPayload?.permissions,
-            }
+            user: setUserPayload(getUserInfo?.idTokenPayload,
+              {
+                roles: getRoles?.data,
+                vasp: getUserOrgInfo?.data
+
+              }) as IUserState
+
           };
           return userInfo;
         } else {
@@ -138,7 +143,14 @@ const userSlice: any = createSlice({
       state.user = null;
 
       return state;
-    }
+    },
+    setUserOrganization: (state: any, { payload }: any) => {
+      state.user.vasp = payload;
+    },
+    setUserName(state: any, { payload }: any) {
+      state.user.name = payload;
+    },
+
     // isloading: (state: any, { payload }: any) => {
   },
   extraReducers: {
@@ -162,7 +174,7 @@ const userSlice: any = createSlice({
 });
 
 export const userReducer = userSlice.reducer;
-export const { login, logout } = userSlice.actions;
+export const { login, logout, setUserOrganization, setUserName } = userSlice.actions;
 // selectors
 export const userSelector = (state: any) => state.user;
 export const isLoggedInSelector = (state: any) => state.user.isLoggedIn;

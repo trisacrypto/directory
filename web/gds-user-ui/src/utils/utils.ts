@@ -5,7 +5,7 @@ import auth0 from 'auth0-js';
 import getAuth0Config from 'application/config/auth0';
 import * as Sentry from '@sentry/react';
 import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
-import { getCookie } from 'utils/cookies';
+import { getCookie, setCookie } from 'utils/cookies';
 const DEFAULT_REGISTRATION_AUTHORITY = 'RA777777';
 export const findStepKey = (steps: any, key: number) =>
   steps?.filter((step: any) => step.key === key);
@@ -78,30 +78,6 @@ export const getRegistrationAuthoritiesOptions = (country?: any) => {
   });
 };
 
-export const mapTrixoFormForBff = (data: any) => {
-  const { trixo } = data;
-  const { applicable_regulations, other_jurisdictions } = trixo;
-
-  const cleanAppRegulation = applicable_regulations.reduce((acc: any, value: any) => {
-    if (value.name.length > 0) {
-      acc.push(value.name);
-    }
-    return acc;
-  }, []);
-  const cleanOtherJurisdiction = other_jurisdictions.filter(
-    (o: any) => o?.country?.length > 0 && o?.regulator_name?.length > 0
-  );
-
-  return {
-    ...data,
-    trixo: {
-      ...trixo,
-      applicable_regulations: cleanAppRegulation.length > 0 ? cleanAppRegulation : [],
-      other_jurisdictions: cleanOtherJurisdiction.length > 0 ? cleanOtherJurisdiction : []
-    }
-  };
-};
-
 export const hasValue = (obj: Record<string, any>): boolean => {
   return obj && Object.values(obj).some(Boolean);
 };
@@ -123,8 +99,20 @@ export function currencyFormatter(
     currency
   });
 
+  if (amount === 0) {
+    return formatedAmount.format(0.00);
+  }
+
   return formatedAmount.format(amount);
 }
+
+export const getFormattedAmount = (amount: number, currency: string): string => {
+  const traction = currencyFormatter(amount, {
+    currency
+  });
+
+  return `${traction} ${currency}`;
+};
 
 export const getRefreshToken = () => {
   const auth0Config = getAuth0Config();
@@ -243,3 +231,20 @@ export const isTokenExpired = () => {
   }
   return false;
 };
+
+// get expires time
+
+export const getUserExpiresTime = (time: string, expiresIn: number) => {
+  const updatedTime = new Date(time).getTime() / 1000;
+  return updatedTime + expiresIn as number;
+};
+
+// SET USER COOKIES
+
+export const setUserCookies = (accessToken?: string, expiresIn?: number, userLocale?: string,): void => {
+  if (accessToken) setCookie('access_token', accessToken);
+  if (userLocale) setCookie('user_locale', userLocale);
+  if (expiresIn) setCookie('expires_in', expiresIn);
+};
+
+

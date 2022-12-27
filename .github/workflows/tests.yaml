@@ -59,13 +59,15 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           version: "3.x"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Dependencies
         run: |
           go version
           go install github.com/kevinburke/go-bindata/go-bindata@v3.23.0
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+          go install github.com/swaggo/swag/cmd/swag@v1.8.7
 
       - name: Clone TRISA repository
         uses: actions/checkout@v3
@@ -79,16 +81,6 @@ jobs:
 
       - name: Run Unit Tests
         run: go test -v -coverprofile=coverage.txt -covermode=atomic --race ./...
-
-      - name: Upload Coverage report to CodeCov
-        uses: codecov/codecov-action@v3
-        with:
-          # Make sure to add to GitHub secrets!
-          token: ${{secrets.CODECOV_TOKEN}}
-          files: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory/coverage.txt
-          flags: unittests
-          fail_ci_if_error: false
-          verbose: true
 
   gds_admin_test:
     name: GDS Admin UI Tests
@@ -115,15 +107,6 @@ jobs:
           REACT_APP_GDS_IS_TESTNET: true
         run: yarn test
 
-      - name: Upload Coverage report to CodeCov
-        uses: codecov/codecov-action@v3
-        with:
-          # Make sure to add to GitHub secrets!
-          token: ${{secrets.CODECOV_TOKEN}}
-          flags: unittests
-          fail_ci_if_error: false
-          verbose: true
-
   gds_user_ui_test:
     name: GDS User UI Tests
     runs-on: ubuntu-latest
@@ -149,14 +132,6 @@ jobs:
           REACT_APP_TRISA_BASE_URL: http://localhost:4437/v1/
           REACT_APP_GDS_IS_TESTNET: true
         run: yarn test
-
-      - name: Upload Coverage report to CodeCov
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{secrets.CODECOV_TOKEN}}
-          flags: unittests
-          fail_ci_if_error: false
-          verbose: true
 
   lingui_gds_ui:
     name: Lingui Extract && Build
@@ -216,13 +191,15 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           version: "3.x"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Dependencies
         run: |
           go version
           go install github.com/kevinburke/go-bindata/go-bindata@v3.23.0
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+          go install github.com/swaggo/swag/cmd/swag@v1.8.7
 
       - name: Clone TRISA repository
         uses: actions/checkout@v3

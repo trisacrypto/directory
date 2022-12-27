@@ -10,3 +10,12 @@ export const collaboratorMockValue: any = {
         },
     ],
 };
+
+export const userOrganizationMockValue: any = {
+    data: {
+        id: "1",
+        name: "test",
+        domain: "test.local.dev",
+        created_at: "2021-01-01",
+    },
+};

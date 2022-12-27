@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -214,6 +215,7 @@ func (s *Admin) setupRoutes() (err error) {
 		v2.GET("/summary", authorize, s.Summary)
 		v2.GET("/autocomplete", authorize, s.Autocomplete)
 		v2.GET("/reviews", authorize, s.ReviewTimeline)
+		v2.GET("/countries", authorize, s.ListCountries)
 
 		// VASP routes all must be authenticated (some CSRF protection required)
 		vasps := v2.Group("/vasps", authorize)
@@ -754,6 +756,67 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
+// ListCountries returns a list of countries with VASP registrations, sorted by
+// registration count. This is an authenticated endpoint used to support visualizations
+// on the Admin UI.
+func (s *Admin) ListCountries(c *gin.Context) {
+	var err error
+
+	// Count registrations by country
+	countries := make(map[string]int)
+
+	iter := s.db.ListVASPs()
+	defer iter.Release()
+	for iter.Next() {
+		// Fetch VASP from the database
+		var vasp *pb.VASP
+		if vasp, err = iter.VASP(); err != nil {
+			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not parse VASP from database")
+			continue
+		}
+
+		// Only count verified VASPs
+		if vasp.VerificationStatus != pb.VerificationState_VERIFIED {
+			continue
+		}
+
+		// Counts are aggregated by country ISO code
+		var code string
+		if code = vasp.Entity.CountryOfRegistration; code == "" {
+			log.Error().Str("vasp_id", vasp.Id).Msg("VASP country code is empty")
+			continue
+		}
+
+		// Increment country count
+		if _, ok := countries[code]; !ok {
+			countries[code] = 0
+		}
+		countries[code]++
+	}
+
+	if err := iter.Error(); err != nil {
+		log.Error().Err(err).Msg("could not iterate over vasps in store")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
+		return
+	}
+
+	// Build the response with countries sorted by descending registration count
+	out := make([]*admin.CountryRecord, 0)
+	for code, count := range countries {
+		i := sort.Search(len(out), func(i int) bool {
+			return out[i].Registrations <= count
+		})
+		out = append(out, nil)
+		copy(out[i+1:], out[i:])
+		out[i] = &admin.CountryRecord{
+			ISOCode:       code,
+			Registrations: count,
+		}
+	}
+
+	c.JSON(http.StatusOK, out)
+}
+
 // ListVASPs returns a paginated, summary data structure of all VASPs managed by the
 // directory service. This is an authenticated endpoint that is used to support the
 // Admin UI and facilitate the review and registration process.
@@ -946,7 +1009,6 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 				out.EmailLog = nil
 				break
 			} else {
-				rewiredEntry["contact"] = entry.ContactType
 				out.EmailLog = append(out.EmailLog, rewiredEntry)
 			}
 		}

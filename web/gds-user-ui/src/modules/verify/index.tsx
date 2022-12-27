@@ -8,14 +8,11 @@ import useAuth from 'hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import TransparentLoader from 'components/Loader/TransparentLoader';
 const VerifyPage: React.FC = () => {
-  const query = useQuery();
+  const { vaspID, token, registered_directory } = useQuery();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<any>();
   const [result, setResult] = useState<any>(null);
   const [isRedirected, setIsRedirected] = useState<boolean>(false);
-  const vaspID = query.get('vaspID');
-  const token = query.get('token');
-  const registered_directory = query.get('registered_directory');
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
 

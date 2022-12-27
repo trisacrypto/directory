@@ -15,13 +15,15 @@ import IntegrateAndComply from 'components/Section/IntegrateAndComply';
 import CertificateManagement from 'components/CertificateManagement';
 import VerifyPage from 'modules/verify';
 import Collaborators from 'modules/dashboard/collaborator';
+import Profile from 'modules/dashboard/profile';
 import SwitchOrganization from 'modules/dashboard/organization/SwitchOrganization';
+import ChooseAnOrganization from 'components/ChooseAnOrganization';
 const Overview = lazy(() => import('modules/dashboard/overview'));
 const CertificateRegistrationPage = lazy(
   () => import('modules/dashboard/certificate/registration')
 );
 
-const CertificateInventory = lazy(() => import('components/CertificateInventory'));
+// const CertificateInventory = lazy(() => import('components/CertificateInventory'));
 
 const appRoutes = [
   // -------LANDING  ROUTES-------
@@ -114,6 +116,7 @@ const appRoutes = [
     layout: 'landing'
   },
 
+
   // ------- DASHBOARD ROUTES-------
   {
     path: '/dashboard/overview',
@@ -130,26 +133,18 @@ const appRoutes = [
     route: '/certificate/registration'
   },
   {
-    path: '/dashboard/organization/switch',
+    path: '/dashboard/switch',
     name: 'Switch Organization',
     component: SwitchOrganization,
     layout: 'dashboard',
     route: '/organization/switch'
-
   },
   {
-    path: '/dashboard/certificate-management',
-    name: 'Certificate Management',
+    path: '/dashboard/certificate/inventory',
+    name: 'Certificate Inventory',
     component: CertificateManagement,
     layout: 'dashboard',
-    route: '/certificate-management'
-  },
-  {
-    path: '/dashboard/certificate/certificate-inventory',
-    name: 'Certificate Inventory',
-    component: CertificateInventory,
-    layout: 'dashboard',
-    route: '/certificate-inventory'
+    route: '/certificate/inventory'
   },
   {
     path: '/dashboard/logout',
@@ -158,11 +153,33 @@ const appRoutes = [
     layout: 'dashboard'
   },
   {
+    path: '/dashboard/profile',
+    route: '/profile',
+    name: 'Profile',
+    component: Profile,
+    layout: 'dashboard'
+  },
+
+  {
     path: '/dashboard/collaborators',
     route: '/collaborators',
     name: 'Collaborators',
     component: Collaborators,
     layout: 'dashboard'
+  },
+  {
+    path: '/dashboard/organization/switch/:id',
+    name: 'Switch Organization',
+    component: SwitchOrganization,
+    layout: 'dashboard',
+    route: '/organization/switch/:id'
+  },
+  {
+    layout: 'dashboard',
+    name: 'Switch Account',
+    component: ChooseAnOrganization,
+    path: '/dashboard/switch',
+    route: '/switch'
   },
   //  -------ERROR ROUTES-------
   {

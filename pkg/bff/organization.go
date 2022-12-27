@@ -17,6 +17,19 @@ import (
 // CreateOrganization creates a new organization in the database. This endpoint returns
 // an error if the organization already exists and the user is assigned to it. The user
 // must have the create:organizations permission to perform this action.
+//
+// @Summary Create a new organization [create:organizations]
+// @Description Create a new organization with the specified name and domain for the user.
+// @Tags organizations
+// @Accept json
+// @Produce json
+// @Param params body api.OrganizationParams true "Name and domain"
+// @Success 200 {object} api.OrganizationReply
+// @Failure 400 {object} api.Reply "Must provide name and domain"
+// @Failure 401 {object} api.Reply
+// @Failure 409 {object} api.Reply "Domain already exists"
+// @Failure 500 {object} api.Reply
+// @Router /organizations [post]
 func (s *Server) CreateOrganization(c *gin.Context) {
 	var (
 		err  error
@@ -76,6 +89,29 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 		Name:   params.Name,
 		Domain: domain,
 	}
+
+	// CreatedBy is used to render the organization name for the frontend if no other
+	// organization name is available
+	if org.CreatedBy, err = auth.UserDisplayName(user); err != nil {
+		log.Error().Err(err).Msg("could not get user display name")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not resolve name for user"))
+		return
+	}
+
+	// Add the user to their new organization
+	// Note: The UserInfo middleware ensures that these fields are present in the Auth0
+	// user record
+	collaborator := &models.Collaborator{
+		Email:    *user.Email,
+		UserId:   *user.ID,
+		Verified: *user.EmailVerified,
+	}
+	if err = org.AddCollaborator(collaborator); err != nil {
+		log.Error().Err(err).Str("user_id", collaborator.UserId).Msg("could not add user as collaborator in organization")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not create organization"))
+		return
+	}
+
 	if _, err = s.db.CreateOrganization(org); err != nil {
 		log.Error().Err(err).Msg("could not create organization in database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not create organization"))
@@ -103,6 +139,15 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 
 // ListOrganizations returns a list of organizations that the user is a member of. The
 // user must have the read:organizations permission to perform this action.
+//
+// @Summary List organizations [read:organizations]
+// @Description Return the list of organizations that the user is assigned to.
+// @Tags organizations
+// @Produce json
+// @Success 200 {list} api.OrganizationReply
+// @Failure 401 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /organizations [get]
 func (s *Server) ListOrganizations(c *gin.Context) {
 	var (
 		err  error
@@ -125,17 +170,26 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 	}
 
 	// Build the response
-	// TODO: Return a last login timestamp so the frontend can order by last used
 	out := make([]*api.OrganizationReply, 0)
 	for _, id := range appdata.GetOrganizations() {
 		if org, err := s.OrganizationFromID(id); err != nil {
 			log.Error().Err(err).Str("org_id", id).Msg("could not retrieve organization from database")
 		} else {
+			// User data is on the collaborator record.
+			// Note: The UserInfo middleware ensures that the user email address is
+			// present in the claims so we can safely dereference it here.
+			var collaborator *models.Collaborator
+			if collaborator = org.GetCollaborator(*user.Email); collaborator == nil {
+				log.Error().Str("org_id", id).Str("email", *user.Email).Msg("could not find user in organization collaborators")
+				continue
+			}
+
 			out = append(out, &api.OrganizationReply{
 				ID:        org.Id,
-				Name:      org.Name,
+				Name:      org.ResolveName(),
 				Domain:    org.Domain,
 				CreatedAt: org.Created,
+				LastLogin: collaborator.LastLogin,
 			})
 		}
 	}

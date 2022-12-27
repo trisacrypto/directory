@@ -2,7 +2,6 @@ package leveldb
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -30,12 +29,10 @@ func (s *leveldbTestSuite) SetupSuite() {
 	// NOTE: ConsoleLog MUST be false otherwise this will be overriden
 	logger.Discard()
 
-	path, err := ioutil.TempDir("", "gdsldbstore-*")
-	s.NoError(err)
-
 	// Open the database in a temp directory
-	s.path = path
-	s.db, err = Open(path)
+	var err error
+	s.path = s.T().TempDir()
+	s.db, err = Open(s.path)
 	s.NoError(err)
 }
 
@@ -52,7 +49,7 @@ func TestLevelDB(t *testing.T) {
 
 func (s *leveldbTestSuite) TestDirectoryStore() {
 	// Load the VASP record from testdata
-	data, err := ioutil.ReadFile("../testdata/vasp.json")
+	data, err := os.ReadFile("../testdata/vasp.json")
 	s.NoError(err)
 
 	alice := &pb.VASP{}
@@ -143,7 +140,7 @@ func (s *leveldbTestSuite) TestDirectoryStore() {
 
 func (s *leveldbTestSuite) TestCertificateStore() {
 	// Load the VASP record from testdata
-	data, err := ioutil.ReadFile("../testdata/cert.json")
+	data, err := os.ReadFile("../testdata/cert.json")
 	s.NoError(err)
 
 	cert := &models.Certificate{}
@@ -237,7 +234,7 @@ func (s *leveldbTestSuite) TestCertificateStore() {
 
 func (s *leveldbTestSuite) TestCertificateRequestStore() {
 	// Load the certreq record from testdata
-	data, err := ioutil.ReadFile("../testdata/certreq.json")
+	data, err := os.ReadFile("../testdata/certreq.json")
 	s.NoError(err)
 
 	certreq := &models.CertificateRequest{}
@@ -331,7 +328,7 @@ func (s *leveldbTestSuite) TestCertificateRequestStore() {
 
 func (s *leveldbTestSuite) TestAnnouncementStore() {
 	// Load the announcement month record from testdata
-	data, err := ioutil.ReadFile("../testdata/announcements.json")
+	data, err := os.ReadFile("../testdata/announcements.json")
 	s.NoError(err)
 
 	month := &bff.AnnouncementMonth{}

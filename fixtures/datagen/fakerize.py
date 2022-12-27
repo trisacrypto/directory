@@ -297,17 +297,20 @@ def make_person(vasp, verified=True, token="", rng=random.Random()):
         "timestamp": dates[0],
         "reason": "verify_contact",
         "subject": "TRISA: Please verify your email address",
+        "recipient": email,
     }]
     if verified:
         email_log.append({
             "timestamp": dates[1],
             "reason": "deliver_certs",
             "subject": "Welcome to the TRISA network!",
+            "recipient": email,
         })
         email_log.append({
             "timestamp": dates[2],
             "reason": "reissuance_reminder",
             "subject": "TRISA Identity Certificate Expiration",
+            "recipient": email,
         })
     return {
         "name": name,

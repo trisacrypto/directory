@@ -19,22 +19,18 @@ import {
 } from '@chakra-ui/react';
 import MainnetTestnetCertificates from './MainnetTestnetCertificates';
 import { t, Trans } from '@lingui/macro';
-import { useAsync } from 'react-use';
-import axiosInstance from 'utils/axios';
-
-const getCertificates = async () => {
-  const response = await axiosInstance.get('/certificates');
-  return response.data;
-};
+import useGetCertificates from 'hooks/useGetCertificates';
+import CertificateValidityAlert from './CertificateValidityAlert';
 
 function CertificateManagement() {
-  const { value } = useAsync(getCertificates);
+  const { data: certificates } = useGetCertificates();
 
   return (
     <>
       <Heading marginBottom="30px">
-        <Trans id="Certificate Management">Certificate Management</Trans>
+        <Trans id="Certificate Management">Certificate Inventory</Trans>
       </Heading>
+      <CertificateValidityAlert hasValidMainnet={true} hasValidTestNet={false} />
       <NeedsAttention text={t`Complete Certficate Registration`} buttonText={t`Continue`} />
       <Flex
         border="1px solid #DFE0EB"
@@ -118,20 +114,14 @@ function CertificateManagement() {
           </TabList>
           <TabPanels>
             <TabPanel>
-              <MainnetTestnetCertificates network="mainnet" data={value?.mainnet} />
+              <MainnetTestnetCertificates network="mainnet" data={certificates?.mainnet} />
             </TabPanel>
             <TabPanel>
-              <MainnetTestnetCertificates network="testnet" data={value?.testnet} />
+              <MainnetTestnetCertificates network="testnet" data={certificates?.testnet} />
             </TabPanel>
           </TabPanels>
         </Tabs>
       </Box>
-      {/* <Heading fontSize={'1.2rem'} fontWeight={700} p={5} my={5} bg={'#E5EDF1'} mx={4}>
-        <Trans>Sealing Certificate Inventory</Trans>
-      </Heading>
-      <Box px={4}>
-        <CertificateDataTable />
-      </Box> */}
     </>
   );
 }

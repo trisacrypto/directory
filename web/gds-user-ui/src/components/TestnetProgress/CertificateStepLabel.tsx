@@ -14,14 +14,14 @@ import {
 } from '@chakra-ui/react';
 import { FaCheckCircle, FaDotCircle, FaRegCircle } from 'react-icons/fa';
 import { useSelector, RootStateOrAny } from 'react-redux';
-import { TStep } from 'application/store/stepper.slice';
+import { TStep, setHasReachSubmitStep } from 'application/store/stepper.slice';
 import { findStepKey } from 'utils/utils';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
 import { useFormContext } from 'react-hook-form';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import InvalidFormPrompt from './InvalidFormPrompt';
-
+import { useAppDispatch } from 'application/store';
 export enum LCOLOR {
   'COMPLETE' = '#34A853',
   'PROGRESS' = '#5469D4',
@@ -55,6 +55,7 @@ type TStepLabel = {
 // }
 
 const CertificateStepLabel: FC<StepLabelProps> = () => {
+  const dispatch = useAppDispatch();
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const textColor = useColorModeValue('#3C4257', '#F7F8FC');
@@ -135,6 +136,7 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
     if (formContext.formState.isDirty) {
       onOpen();
     } else {
+      dispatch(setHasReachSubmitStep({ hasReachSubmitStep: false }));
       jumpToStep(step);
     }
   };

@@ -1,21 +1,16 @@
 import {
-  Button,
-  FormLabel,
   IconButton,
   Modal,
-  ModalBody,
   ModalCloseButton,
   ModalContent,
-  ModalFooter,
   ModalHeader,
   ModalOverlay,
-  useDisclosure,
-  VStack
+  useDisclosure
 } from '@chakra-ui/react';
 import CkLazyLoadImage from 'components/LazyImage';
 import EditIcon from 'assets/edit-input.svg';
-import { Trans } from '@lingui/macro';
-import InputFormControl from 'components/ui/InputFormControl';
+import ChangeNameForm from './ChangeNameForm';
+import { isSocialLogin } from 'utils/auth';
 
 function ChangeNameModal() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -28,6 +23,7 @@ function ChangeNameModal() {
         variant="unstyled"
         marginTop="32px!important"
         onClick={onOpen}
+        isDisabled={isSocialLogin()}
       />
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
@@ -36,35 +32,7 @@ function ChangeNameModal() {
             Change Name
           </ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
-            <VStack align="start">
-              <InputFormControl
-                label={
-                  <FormLabel fontWeight={700}>
-                    <Trans>First (Given) Name</Trans>
-                  </FormLabel>
-                }
-                controlId="first_given_name"
-              />
-              <InputFormControl
-                label={
-                  <FormLabel fontWeight={700}>
-                    <Trans>Last (Family) Name</Trans>
-                  </FormLabel>
-                }
-                controlId="first_given_name"
-              />
-            </VStack>
-          </ModalBody>
-
-          <ModalFooter display="flex" flexDir="column" rowGap={2}>
-            <Button bg="orange" _hover={{ bg: 'orange' }} minW="150px">
-              Save
-            </Button>
-            <Button variant="ghost" onClick={onClose}>
-              Cancel
-            </Button>
-          </ModalFooter>
+          <ChangeNameForm onCloseModal={onClose} />
         </ModalContent>
       </Modal>
     </>

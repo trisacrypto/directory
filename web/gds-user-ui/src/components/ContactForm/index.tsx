@@ -51,7 +51,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) =
         label={t`Full Name`}
         formHelperText={t`Preferred name for email communication.`}
         controlId="fullName"
-        isInvalid={get(errors, `${name}.name`)}
+        isInvalid={!!get(errors, `${name}.name`)}
         {...register(`${name}.name`)}
         data-testid="fullName"
       />
@@ -59,13 +59,13 @@ const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) =
       <InputFormControl
         label={t`Email Address`}
         formHelperText={
-          get(errors, `${name}.email`)
-            ? get(errors, `${name}.email`).message
-            : t`Please use the email address associated with your organization.`
+          (get(errors, `${name}.email`)
+            ? get(errors, `${name}.email`)?.message
+            : t`Please use the email address associated with your organization.`) as string
         }
         controlId="fullName"
         type="email"
-        isInvalid={get(errors, `${name}.email`)}
+        isInvalid={!!get(errors, `${name}.email`)}
         {...register(`${name}.email`)}
         data-testid="email"
       />
@@ -80,12 +80,12 @@ const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) =
               onChange={(val) => onChange(val)}
               value={value}
               name={inputName}
-              isInvalid={get(errors, `${name}.phone`)}
+              isInvalid={!!get(errors, `${name}.phone`)}
               label={t`Phone Number `}
               formHelperText={
-                get(errors, `${name}.phone`)
-                  ? get(errors, `${name}.phone`).message
-                  : getPhoneMessageHint()
+                (get(errors, `${name}.phone`)
+                  ? get(errors, `${name}.phone`)?.message
+                  : getPhoneMessageHint()) as string
               }
               controlId="phoneNumber"
               data-testid="phoneNumber"

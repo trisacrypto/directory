@@ -135,6 +135,7 @@ func (s *gdsTestSuite) TestMiddleware() {
 		{"summary", http.MethodGet, "/v2/summary", true, false},
 		{"autocomplete", http.MethodGet, "/v2/autocomplete", true, false},
 		{"reviews", http.MethodGet, "/v2/reviews", true, false},
+		{"countries", http.MethodGet, "/v2/countries", true, false},
 		{"listVASPs", http.MethodGet, "/v2/vasps", true, false},
 		{"retrieveVASP", http.MethodGet, "/v2/vasps/42", true, false},
 		{"listReviewNotes", http.MethodGet, "/v2/vasps/42/notes", true, false},
@@ -708,37 +709,37 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 				"reason":    "verify_contact",
 				"subject":   "TRISA: Please verify your email address",
 				"timestamp": "2021-06-17T01:24:08Z",
-				"contact":   models.LegalContact,
+				"recipient": hotel.Contacts.Legal.Email,
 			},
 			{
 				"reason":    "verify_contact",
 				"subject":   "TRISA: Please verify your email address",
 				"timestamp": "2021-06-26T15:53:51Z",
-				"contact":   models.TechnicalContact,
+				"recipient": hotel.Contacts.Technical.Email,
 			},
 			{
 				"reason":    "deliver_certs",
 				"subject":   "Welcome to the TRISA network!",
 				"timestamp": "2021-08-19T15:47:59Z",
-				"contact":   models.LegalContact,
+				"recipient": hotel.Contacts.Legal.Email,
 			},
 			{
 				"reason":    "reissuance_reminder",
 				"subject":   "TRISA Identity Certificate Expiration",
 				"timestamp": "2021-09-03T07:06:22Z",
-				"contact":   models.LegalContact,
+				"recipient": hotel.Contacts.Legal.Email,
 			},
 			{
 				"reason":    "deliver_certs",
 				"subject":   "Welcome to the TRISA network!",
 				"timestamp": "2021-09-12T11:41:09Z",
-				"contact":   models.TechnicalContact,
+				"recipient": hotel.Contacts.Technical.Email,
 			},
 			{
 				"reason":    "reissuance_reminder",
 				"subject":   "TRISA Identity Certificate Expiration",
 				"timestamp": "2021-10-08T12:45:17Z",
-				"contact":   models.TechnicalContact,
+				"recipient": hotel.Contacts.Technical.Email,
 			},
 		},
 	}
@@ -2031,4 +2032,75 @@ func (s *gdsTestSuite) TestReviewTimeline() {
 		},
 	}
 	require.Equal(expected, actual)
+}
+
+func (s *gdsTestSuite) TestListCountries() {
+	s.LoadSmallFixtures()
+	defer s.ResetFixtures()
+	defer s.fixtures.LoadReferenceFixtures()
+	require := s.Require()
+	a := s.svc.GetAdmin()
+
+	// Alter the VASPs so we can test the country record sorting
+	charlie, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err, "could not get charliebank fixture")
+	charlie.Entity.CountryOfRegistration = "US"
+	charlie.VerificationStatus = pb.VerificationState_VERIFIED
+	require.NoError(s.svc.GetStore().UpdateVASP(charlie), "could not update charliebank")
+
+	delta, err := s.fixtures.GetVASP("delta")
+	require.NoError(err, "could not get delta fixture")
+	delta.Entity.CountryOfRegistration = "US"
+	delta.VerificationStatus = pb.VerificationState_VERIFIED
+	require.NoError(s.svc.GetStore().UpdateVASP(delta), "could not update delta")
+
+	hotel, err := s.fixtures.GetVASP("hotel")
+	require.NoError(err, "could not get hotel fixture")
+	hotel.Entity.CountryOfRegistration = "SG"
+	hotel.VerificationStatus = pb.VerificationState_VERIFIED
+	require.NoError(s.svc.GetStore().UpdateVASP(hotel), "could not update hotel")
+
+	// Make the request
+	request := &httpRequest{
+		method: http.MethodGet,
+		path:   "/v2/countries",
+	}
+	c, w := s.makeRequest(request)
+	rep := s.doRequest(a.ListCountries, c, w, nil)
+	require.Equal(http.StatusOK, rep.StatusCode, "expected successful response")
+
+	// Countries should be ordered by descending registration count
+	actual := []*admin.CountryRecord{}
+	require.NoError(json.Unmarshal(w.Body.Bytes(), &actual), "could not unmarshal response")
+	expected := []*admin.CountryRecord{
+		{
+			ISOCode:       "US",
+			Registrations: 2,
+		},
+		{
+			ISOCode:       "SG",
+			Registrations: 1,
+		},
+	}
+	require.Equal(expected, actual, "country responses did not match")
+
+	// Alter the VASPs so we can test unverified VASP filtering
+	hotel.VerificationStatus = pb.VerificationState_REJECTED
+	require.NoError(s.svc.GetStore().UpdateVASP(hotel), "could not update hotel")
+
+	// Make the request
+	c, w = s.makeRequest(request)
+	rep = s.doRequest(a.ListCountries, c, w, nil)
+	require.Equal(http.StatusOK, rep.StatusCode, "expected successful response")
+
+	// Countries should only be returned if they have at least one verified VASP
+	actual = []*admin.CountryRecord{}
+	require.NoError(json.Unmarshal(w.Body.Bytes(), &actual), "could not unmarshal response")
+	expected = []*admin.CountryRecord{
+		{
+			ISOCode:       "US",
+			Registrations: 2,
+		},
+	}
+	require.Equal(expected, actual, "country responses did not match")
 }

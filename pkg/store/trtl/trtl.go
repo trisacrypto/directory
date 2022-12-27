@@ -730,6 +730,13 @@ func (s *Store) DeleteAnnouncementMonth(date string) (err error) {
 // OrganizationStore Implementation
 //===========================================================================
 
+// ListOrganizations returns an iterator to retrieve all organizations.
+func (s *Store) ListOrganizations() iterator.OrganizationIterator {
+	return &organizationIterator{
+		NewTrtlStreamingIterator(s.client, wire.NamespaceOrganizations),
+	}
+}
+
 // CreateOrganization creates a new organization record in the store, assigning a
 // unique ID if it doesn't eixst and setting the created and modified timestamps.
 func (s *Store) CreateOrganization(o *bff.Organization) (id string, err error) {

@@ -114,6 +114,9 @@ const stepperSlice: any = createSlice({
     // get certificate data
     getCertificateData: (state: any) => {
       return state.data;
+    },
+    setVaspName(state: any, { payload }: any) {
+      state.data.organization_name = payload;
     }
   }
 });
@@ -134,5 +137,6 @@ export const {
   setTestnetSubmitted,
   setMainnetSubmitted,
   setCertificateValue,
-  getCertificateData
+  getCertificateData,
+  setVaspName
 } = stepperSlice.actions;

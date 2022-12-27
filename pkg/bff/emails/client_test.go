@@ -101,7 +101,7 @@ func (s *EmailTestSuite) TestSendUserInvite() {
 	inviterName = ""
 	inviterEmail = ""
 	err = email.SendUserInvite(user, inviter, org, inviteURL)
-	require.EqualError(err, "inviter user has no name or email address", "should return an error if inviter has no name or email address")
+	require.EqualError(err, "user record has no name or email address", "should return an error if inviter has no name or email address")
 
 	// If no user name is provided, the email address is used instead
 	userName = ""

@@ -15,6 +15,7 @@ message Organization {
     string name = 2;
     string logo_url = 3;
     string domain = 4;
+    string created_by = 5;
 
     // Directory Registrations for Lookups
     // TODO: populate these details in the Registration Endpoint
@@ -55,6 +56,7 @@ message Collaborator {
     string modified_at = 11;
     string joined_at = 12;
     string last_login = 13;
+    string expires_at = 14;
 }
 
 // FormState contains the current state of an organization's registration form to

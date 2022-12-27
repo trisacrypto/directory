@@ -21,6 +21,8 @@ const TrixoQuestionnaireForm: React.FC = () => {
   const getMustComplyRegulations = watch('trixo.must_comply_travel_rule');
   const getApplicableRegulations = watch('trixo.applicable_regulations');
   const getCountryFromLegalAddress = watch('entity.country_of_registration');
+  const getComplianceThreshold = watch('trixo.compliance_threshold');
+  const getKycThreshold = watch('trixo.kyc_threshold');
 
   useEffect(() => {
     if (getCountryFromLegalAddress) {
@@ -51,6 +53,20 @@ const TrixoQuestionnaireForm: React.FC = () => {
     setValue,
     getApplicableRegulations
   ]);
+
+  useEffect(() => {
+    const regExp = /^0[0-9].*$/;
+    if (getComplianceThreshold !== 0) {
+      if (regExp.test(getComplianceThreshold)) {
+        setValue(`trixo.compliance_threshold`, getComplianceThreshold.replace(/^0+/, ''));
+      }
+    }
+    if (getKycThreshold !== 0) {
+      if (regExp.test(getKycThreshold)) {
+        setValue(`trixo.kyc_threshold`, getKycThreshold.replace(/^0+/, ''));
+      }
+    }
+  }, [getKycThreshold, getComplianceThreshold, setValue]);
 
   return (
     <FormLayout spacing={5}>

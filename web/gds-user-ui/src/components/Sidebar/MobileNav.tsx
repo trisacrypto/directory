@@ -13,18 +13,22 @@ import {
   MenuList,
   MenuItem,
   MenuDivider,
-  Show
+  Show,
+  Tooltip
 } from '@chakra-ui/react';
 import { FiMenu } from 'react-icons/fi';
 import LanguagesDropdown from 'components/LanguagesDropdown';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearCookies } from 'utils/cookies';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import DefaultAvatar from 'assets/default_avatar.svg';
 import { resetStore } from 'application/store';
 import { userSelector, logout } from 'modules/auth/login/user.slice';
 import { Trans } from '@lingui/react';
-
+import { t } from '@lingui/macro';
+import { colors } from 'utils/theme';
+import { APP_PATH } from 'utils/constants';
+import { canCreateOrganization } from 'utils/permission';
 interface MobileProps extends FlexProps {
   onOpen: () => void;
   isLoading?: boolean;
@@ -41,6 +45,7 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
     resetStore();
     navigate('/');
   };
+
   return (
     <Flex
       ml={{ base: 0, md: 60 }}
@@ -67,9 +72,16 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
         <HStack>
           <LanguagesDropdown />
         </HStack>
+        <HStack>
+          <Tooltip label={t`Current Organization name`} hasArrow>
+            <Text fontWeight={'bold'} color={colors.system.blue}>
+              {user?.vasp?.name || 'N/A'}
+            </Text>
+          </Tooltip>
+        </HStack>
         <Divider orientation="vertical" height={8} />
         <Menu>
-          <MenuButton transition="all 0.3s" _focus={{ boxShadow: 'none' }}>
+          <MenuButton data-testid="menu" transition="all 0.3s" _focus={{ boxShadow: 'none' }}>
             <HStack>
               <Show above="lg">
                 <Text fontSize="sm" color="blackAlpha.700">
@@ -89,9 +101,14 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
           <MenuList
             bg={useColorModeValue('white', 'gray.900')}
             borderColor={useColorModeValue('gray.200', 'gray.700')}>
-            <MenuItem onClick={() => navigate('/dashboard/user-profile')}>
+            <MenuItem onClick={() => navigate('/dashboard/profile')}>
               <Trans id="Profile">Profile</Trans>
             </MenuItem>
+            {canCreateOrganization() ? (
+              <MenuItem as={Link} to={APP_PATH.SWITCH} data-testid="switch_accounts">
+                <Trans id="Switch Accounts">Switch accounts</Trans>
+              </MenuItem>
+            ) : null}
             <MenuDivider />
             <MenuItem onClick={handleLogout}>
               <Trans id="Sign out">Sign out</Trans>

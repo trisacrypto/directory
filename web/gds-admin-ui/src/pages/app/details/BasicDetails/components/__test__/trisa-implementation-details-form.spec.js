@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "utils/test-utils"
+import { render, screen, fireEvent, act } from "utils/test-utils"
 import TrisaImplementationDetailsForm from "pages/app/details/BasicDetails/components/TrisaImplementationDetailsForm"
 import { Modal } from 'components/Modal'
 
@@ -29,10 +29,10 @@ describe("TrisaImplementationDetailsForm", () => {
 
         const trisaEndpointEl = screen.getByRole('textbox', { name: /trisa endpoint/i })
 
-
-        await waitFor(() => {
+        await act(async () => {
             fireEvent.change(trisaEndpointEl, { target: { value: 'traveler.ciphertrace.com:043' } })
         })
+
         const errorMessageEl = screen.getByText(/trisa endpoint is not valid/i)
 
         expect(trisaEndpointEl).toHaveClass('is-invalid')
@@ -45,7 +45,7 @@ describe("TrisaImplementationDetailsForm", () => {
 
         const trisaEndpointEl = screen.getByRole('textbox', { name: /trisa endpoint/i })
 
-        await waitFor(() => {
+        await act(async () => {
             fireEvent.change(trisaEndpointEl, { target: { value: 'https://traveler.ciphertrace.com:443' } })
         })
         const errorMessageEl = screen.getByText(/trisa endpoint is not valid/i)
@@ -60,7 +60,7 @@ describe("TrisaImplementationDetailsForm", () => {
 
         const commonNameEl = screen.getByRole('textbox', { name: /certificate common name/i })
 
-        await waitFor(() => {
+        await act(async () => {
             fireEvent.change(commonNameEl, {
                 target: {
                     value: 'traveler.ciphertrace.co'

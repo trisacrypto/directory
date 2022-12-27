@@ -3,7 +3,6 @@ package trtl_test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -49,8 +48,7 @@ func (s *trtlStoreTestSuite) SetupSuite() {
 	logger.Discard()
 
 	var err error
-	s.tmpdb, err = ioutil.TempDir("../testdata", "db-*")
-	require.NoError(err)
+	s.tmpdb = s.T().TempDir()
 
 	conf := config.Config{
 		Maintenance: false,
@@ -121,7 +119,7 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	require := s.Require()
 
 	// Load the VASP fixture
-	data, err := ioutil.ReadFile("../testdata/vasp.json")
+	data, err := os.ReadFile("../testdata/vasp.json")
 	require.NoError(err)
 
 	alice := &pb.VASP{}
@@ -263,7 +261,7 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 	require := s.Require()
 
 	// Load the VASP record from testdata
-	data, err := ioutil.ReadFile("../testdata/cert.json")
+	data, err := os.ReadFile("../testdata/cert.json")
 	s.NoError(err)
 
 	cert := &models.Certificate{}
@@ -409,7 +407,7 @@ func (s *trtlStoreTestSuite) TestCertificateRequestStore() {
 	require := s.Require()
 
 	// Load the VASP record from testdata
-	data, err := ioutil.ReadFile("../testdata/certreq.json")
+	data, err := os.ReadFile("../testdata/certreq.json")
 	s.NoError(err)
 
 	certreq := &models.CertificateRequest{}
@@ -548,7 +546,7 @@ func (s *trtlStoreTestSuite) TestAnnouncementStore() {
 	require := s.Require()
 
 	// Load the announcement month record from testdata
-	data, err := ioutil.ReadFile("../testdata/announcements.json")
+	data, err := os.ReadFile("../testdata/announcements.json")
 	require.NoError(err)
 
 	month := &bff.AnnouncementMonth{}

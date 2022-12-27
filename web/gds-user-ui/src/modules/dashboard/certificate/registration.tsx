@@ -31,14 +31,15 @@ import {
   postRegistrationValue,
   getRegistrationAndStepperData
 } from 'modules/dashboard/registration/utils';
-// add this line to a constant file
-const WAIT_DATA_LOADING_TIME = 3000;
 const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
 import { isProdEnv } from 'application/config';
 import { Trans } from '@lingui/react';
 import { getCurrentStep, getLastStep } from 'application/store/selectors/stepper';
 import MinusLoader from 'components/Loader/MinusLoader';
 import StepButtons from 'components/StepsButtons';
+
+// add this line to a constant file
+const WAIT_DATA_LOADING_TIME = 3000;
 
 const Certificate: React.FC = () => {
   const [, updateState] = React.useState<any>();
@@ -112,7 +113,6 @@ const Certificate: React.FC = () => {
 
   async function handleNextStepClick() {
     if (hasErroredField()) {
-      console.log('has errored field');
       // i think we should not use alert here , but we need to find a way to display the error message
       // eslint-disable-next-line no-alert
       if (window.confirm('Some elements required for registration are missing; continue anyway?')) {
@@ -148,7 +148,6 @@ const Certificate: React.FC = () => {
       values: methods.getValues()
     });
     if (isDirty) {
-      console.log('[isDirty at previous action]', getCurrentFormValue());
       await postRegistrationValue({
         ...methods.getValues(),
         state: {
@@ -289,15 +288,6 @@ const Certificate: React.FC = () => {
                         handleResetForm={handleResetForm}
                       />
                     )}
-                    {/* <Button onClick={handlePreviousStep} isDisabled={currentStep === 1}>
-                          {currentStep === lastStep ? t`Previous` : t`Save & Previous`}
-                        </Button>
-                        <Button type="submit" variant="secondary">
-                          {currentStep === lastStep ? t`Next` : t`Save & Next`}
-                        </Button>
-                        <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
-                          <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
-                        </Button> */}
                   </Stack>
                 </VStack>
               </chakra.form>

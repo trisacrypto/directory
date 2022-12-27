@@ -56,7 +56,6 @@ describe('Contact', () => {
         contactNode = screen.getByTestId('contact-node')
 
         expect(status.textContent).toBe(VERIFIED_CONTACT_STATUS_LABEL.ALTERNATE_VERIFIED)
-        expect(contactNode).toHaveClass('text-warning')
     })
 
     it('should be unverified', () => {
@@ -78,6 +77,5 @@ describe('Contact', () => {
         contactNode = screen.getByTestId('contact-node')
 
         expect(status.textContent).toBe('')
-        expect(contactNode).toHaveClass('text-danger')
     })
 })

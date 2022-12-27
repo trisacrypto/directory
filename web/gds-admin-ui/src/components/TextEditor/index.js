@@ -1,32 +1,38 @@
-
 import React from 'react'
-import ReactQuill from 'react-quill';
+import MarkdownEditor from "@uiw/react-markdown-editor";
+import Tab from 'react-bootstrap/Tab';
+import Tabs from 'react-bootstrap/Tabs';
 
-import 'react-quill/dist/quill.snow.css';
-
-const toolbarOptions = [
-    [{ 'font': [] }],
-    [{ 'header': [1, 2, 3, 4, false] }],
-    [{ 'align': [] }],
-    ['blockquote', 'code-block'],
-    ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
-
-    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-    [{ 'script': 'sub' }, { 'script': 'super' }],      // superscript/subscript
-    [{ 'indent': '-1' }, { 'indent': '+1' }],          // outdent/indent
-    [{ 'direction': 'rtl' }],                         // text direction
-
-    [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
-];
-
-
-
-function TextEditor(props, ref) {
-
+function TextEditor({ value, ...props }, ref) {
     return (
-        <ReactQuill modules={{
-            toolbar: toolbarOptions
-        }} theme="snow" {...props} ref={ref} />
+        <>
+            <Tabs
+                defaultActiveKey="editor"
+                transition={false}
+                id="editor"
+            >
+                <Tab eventKey="editor" title="Editor" className='my-1' data-color-mode="light">
+                    <MarkdownEditor minHeight='100px'
+                        toolbars={['bold', 'italic', 'header', 'quote', 'codeBlock', 'code', 'link', 'undo', 'redo']}
+                        {...props}
+                        value={value}
+                        ref={ref}
+                        enableScroll={false}
+                        style={{
+                            fontFamily: 'Posterama regular'
+                        }}
+                    />
+                </Tab>
+                <Tab eventKey="preview" title="Preview" className='py-1'>
+                    {
+                        value ? (
+                            <MarkdownEditor.Markdown  {...props} source={value} className="bg-white text-black ps-1 pt-1 fs-5" />
+
+                        ) : <span className="fst-italic fs-6">Nothing to preview</span>
+                    }
+                </Tab>
+            </Tabs>
+        </>
     )
 }
 
