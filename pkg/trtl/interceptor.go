@@ -1,6 +1,7 @@
 package trtl
 
 import (
+	"github.com/trisacrypto/directory/pkg/trtl/metrics"
 	"github.com/trisacrypto/directory/pkg/utils/interceptors"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"google.golang.org/grpc"
@@ -31,6 +32,12 @@ func (t *Server) UnaryInterceptors() []grpc.UnaryServerInterceptor {
 		sentry.UnaryInterceptor(t.conf.Sentry),
 	}
 
+	// If monitoring is enabled prepend it to the list of interceptors
+	if t.conf.Metrics.Enabled {
+		opts = append([]grpc.UnaryServerInterceptor{metrics.UnaryMonitoring()}, opts...)
+	}
+
+	// If mTLS is enabled append it to the list of interceptors
 	if !t.conf.MTLS.Insecure {
 		opts = append(opts, interceptors.UnaryMTLS())
 	}
@@ -60,6 +67,12 @@ func (t *Server) StreamInterceptors() []grpc.StreamServerInterceptor {
 		sentry.StreamInterceptor(t.conf.Sentry),
 	}
 
+	// If monitoring is enabled prepend it to the list of interceptors
+	if t.conf.Metrics.Enabled {
+		opts = append([]grpc.StreamServerInterceptor{metrics.StreamMonitoring()}, opts...)
+	}
+
+	// If mTLS is enabled append it to the list of interceptors
 	if !t.conf.MTLS.Insecure {
 		opts = append(opts, interceptors.StreamMTLS())
 	}

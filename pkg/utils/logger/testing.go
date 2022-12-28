@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"io/ioutil"
+	"io"
 	"sync"
 	"testing"
 
@@ -33,5 +33,5 @@ func Discard() {
 	mu.Lock()
 	defer mu.Unlock()
 	orig = &log.Logger
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: ioutil.Discard})
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: io.Discard})
 }

@@ -68,8 +68,8 @@ func TestConfig(t *testing.T) {
 	// Test configuration set from the environment
 	require.True(t, conf.Maintenance)
 	require.Equal(t, testEnv["TRTL_BIND_ADDR"], conf.BindAddr)
-	require.Equal(t, testEnv["TRTL_METRICS_ADDR"], conf.MetricsAddr)
-	require.True(t, conf.MetricsEnabled)
+	require.Equal(t, testEnv["TRTL_METRICS_ADDR"], conf.Metrics.Addr)
+	require.True(t, conf.Metrics.Enabled)
 	require.Equal(t, zerolog.DebugLevel, conf.GetLogLevel())
 	require.True(t, conf.ConsoleLog)
 	require.Equal(t, testEnv["TRTL_DATABASE_URL"], conf.Database.URL)

@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
+	smpb "cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"github.com/googleapis/gax-go"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/config"
-	smpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"

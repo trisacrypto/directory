@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -100,7 +99,7 @@ func FilePID(path string) ReplicaStrategy {
 	return MultiError(func(in ReplicaConfig, err error) (_ ReplicaConfig, nerr error) {
 		// Read the file
 		var data []byte
-		if data, nerr = ioutil.ReadFile(path); nerr != nil {
+		if data, nerr = os.ReadFile(path); nerr != nil {
 			return in, fmt.Errorf("could not read file pid path %q: %s", path, nerr)
 		}
 
@@ -138,7 +137,7 @@ func JSONConfig(path string) ReplicaStrategy {
 
 		// Attempt to read the file
 		var data []byte
-		if data, err = ioutil.ReadFile(path); err != nil {
+		if data, err = os.ReadFile(path); err != nil {
 			return in, fmt.Errorf("could not read json config path %q: %s", path, err)
 		}
 
