@@ -47,6 +47,7 @@ type Server struct {
 	replica *replica.Service     // Service that handles anti-entropy replication
 	metrics *prom.MetricsService // Service for Prometheus metrics
 	backup  *BackupManager       // Manages backups of the trtl database
+	monitor *Monitor             // Monitors the storage usage of the trtl database
 	started time.Time            // The timestamp that the server was started (for uptime)
 	echan   chan error           // Channel for receiving errors from the gRPC server
 }
@@ -114,6 +115,11 @@ func New(conf config.Config) (s *Server, err error) {
 		if s.backup, err = NewBackupManager(s.conf.Backup, s.db); err != nil {
 			return nil, err
 		}
+
+		// Initialize the database monitor
+		if s.monitor, err = NewMonitor(s.conf.Metrics, s.db); err != nil {
+			return nil, err
+		}
 	}
 
 	// Initialize the Honu service
@@ -138,7 +144,6 @@ func New(conf config.Config) (s *Server, err error) {
 	if s.metrics, err = prom.New(conf.Metrics); err != nil {
 		return nil, err
 	}
-
 	return s, nil
 }
 
@@ -164,6 +169,9 @@ func (t *Server) Serve() (err error) {
 
 		// Run the backup manager if enabled
 		go t.backup.Run()
+
+		// Run the monitor if enabeld
+		go t.monitor.Run()
 	}
 
 	// If metrics are enabled, start Prometheus metrics server as separate go routine
@@ -219,8 +227,13 @@ func (t *Server) Shutdown() (err error) {
 		}
 	}
 
-	// Shutdown the Prometheus metrics server
+	// Shutdown the Prometheus metrics server and the monitor
 	if t.conf.Metrics.Enabled {
+		if err = t.monitor.Shutdown(); err != nil {
+			log.Error().Err(err).Msg("Could not shutdown database monitor")
+			errs = append(errs, err)
+		}
+
 		if err = t.metrics.Shutdown(context.Background()); err != nil {
 			log.Error().Err(err).Msg("could not shutdown prometheus metrics server")
 			errs = append(errs, err)

@@ -33,8 +33,9 @@ type Config struct {
 }
 
 type MetricsConfig struct {
-	Addr    string `split_words:"true" default:":7777"`
-	Enabled bool   `split_words:"true" default:"true"`
+	Addr     string        `split_words:"true" default:":7777"`
+	Enabled  bool          `split_words:"true" default:"true"`
+	Interval time.Duration `split_words:"true" default:"5m"`
 }
 
 type DatabaseConfig struct {
