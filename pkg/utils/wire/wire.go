@@ -40,6 +40,7 @@ const (
 )
 
 // Namespaces defines all possible namespaces that GDS manages
+// TODO: do we need to add the BFF namespaces here as well?
 var Namespaces = [3]string{NamespaceVASPs, NamespaceCertReqs, NamespaceReplicas}
 
 // UnmarshalProto expects protocol buffer data and unmarshals it to the correct type

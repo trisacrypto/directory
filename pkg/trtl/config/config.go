@@ -20,10 +20,9 @@ import (
 type Config struct {
 	Maintenance     bool                  `split_words:"true" default:"false"`
 	BindAddr        string                `split_words:"true" default:":4436"`
-	MetricsAddr     string                `split_words:"true" default:":7777"`
-	MetricsEnabled  bool                  `split_words:"true" default:"true"`
 	LogLevel        logger.LevelDecoder   `split_words:"true" default:"info"`
 	ConsoleLog      bool                  `split_words:"true" default:"false"`
+	Metrics         MetricsConfig         `split_words:"true"`
 	Database        DatabaseConfig        `split_words:"true"`
 	Replica         ReplicaConfig         `split_words:"true"`
 	ReplicaStrategy ReplicaStrategyConfig `split_words:"true"`
@@ -31,6 +30,12 @@ type Config struct {
 	Backup          BackupConfig          `split_words:"true"`
 	Sentry          sentry.Config         `split_words:"true"`
 	processed       bool
+}
+
+type MetricsConfig struct {
+	Addr     string        `split_words:"true" default:":7777"`
+	Enabled  bool          `split_words:"true" default:"true"`
+	Interval time.Duration `split_words:"true" default:"5m"`
 }
 
 type DatabaseConfig struct {

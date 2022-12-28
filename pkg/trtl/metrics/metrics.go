@@ -1,25 +1,43 @@
-package trtl
+package metrics
 
 import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/trtl/config"
 )
 
+// Prometheus namespaces for the collectors defined in this package.
+const (
+	PmNamespaceTrtl = "trtl"
+	PmNamespaceGRPC = "grpc"
+)
+
+// All trtl specific collectors for observability are defined here.
 var (
 	// Basic RPC Metrics
-	PmPuts       *prometheus.CounterVec   // count of trtl Puts per namespace
-	PmGets       *prometheus.CounterVec   // count of trtl Gets per namespace
-	PmDels       *prometheus.CounterVec   // count of trtl Deletes per namespace
-	PmIters      *prometheus.CounterVec   // count of trtl Iters per namespace
-	PmRPCLatency *prometheus.HistogramVec // the time it is taking for successful RPC calls to complete, labeled by RPC type, success, and failure
-	// PmObjects    *prometheus.CounterVec   // count of objects being managed by trtl, by namespace
-	// PmTombstones *prometheus.CounterVec   // count of tombstones per namespace; increases on delete, decrease on overwrite of tombstone
+	PmRPCStarted        *prometheus.CounterVec   // RPCs started by method, namespace
+	PmRPCHandled        *prometheus.CounterVec   // RPCs completed by method, namespace, and code
+	PmRPCUnaryLatency   *prometheus.HistogramVec // the time it is taking for successful unary RPC calls to complete, labeled by RPC type, namespace, and code
+	PmRPCStreamDuration *prometheus.HistogramVec // the time it is taking for successful streaming RPC calls to complete, labeled by type, namespace, and code
+	PmMsgsPerStream     *prometheus.HistogramVec // the number of messages sent and recv per streaming RPC, labeled by type, namespace, and code
+
+	// Storage Metrics
+	// TODO: add version metrics
+	PmTrtlReads         *prometheus.CounterVec   // number of reads, e.g. Get and Iter to the embedded database, by namespace
+	PmTrtlBytesRead     *prometheus.CounterVec   // number of bytes read by trtl operations by namespace
+	PmTrtlWrites        *prometheus.CounterVec   // number of writes, e.g. Puts and Deletes to the embedded database, by namespace
+	PmTrtlBytesWritten  *prometheus.CounterVec   // number of bytes written by trtl operations by namespace
+	PmObjectSize        *prometheus.HistogramVec // average size in bytes of objects stored in trtl, by namespace
+	PmDatabaseSize      *prometheus.GaugeVec     // current size in bytes of all objects in the database, by namespace
+	PmCurrentObjects    *prometheus.GaugeVec     // current number of objects in the database, by namespace
+	PmCurrentTombstones *prometheus.GaugeVec     // current number of tombstones int he database, by namespace
 
 	// Anti-Entropy Metrics
 	PmAESyncs         *prometheus.CounterVec   // count of anti entropy sessions per peer, per region, and by perspective (initiator/remote)
@@ -31,220 +49,271 @@ var (
 	PmAERepairs       *prometheus.HistogramVec // pulled objects during anti entropy, by peer and region
 	PmAEStomps        *prometheus.CounterVec   // count of stomped versions, per peer and region
 	PmAESkips         *prometheus.CounterVec   // count of skipped versions, per peer and region
+)
 
+// Ensure that the collectors are only registered once even if multiple metrics servers
+// are created and initialized from external packages.
+var (
+	register    sync.Once
+	registerErr error
 )
 
 // A MetricsService manages Prometheus metrics
 type MetricsService struct {
 	srv *http.Server
+	cfg config.MetricsConfig
 }
 
 // New creates a metrics service and also initializes all of the prometheus metrics.
 // The trtl server *must* create the metrics service by calling New before any
-// metrics are logged to Prometheus. Even in the case of tests, the metrics service
-// must be created before the tests can be run.
-func New() (*MetricsService, error) {
-	initMetrics()
-	return &MetricsService{srv: &http.Server{}}, nil
+// metrics are logged to Prometheus.
+func New(conf config.MetricsConfig) (*MetricsService, error) {
+	if err := RegisterMetrics(); err != nil {
+		return nil, err
+	}
+
+	// Setup the prometheus handler and collectors server
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+
+	return &MetricsService{
+		cfg: conf,
+		srv: &http.Server{
+			Addr:         conf.Addr,
+			Handler:      mux,
+			ErrorLog:     nil,
+			ReadTimeout:  2 * time.Second,
+			WriteTimeout: 2 * time.Second,
+			IdleTimeout:  60 * time.Second,
+		},
+	}, nil
 }
 
 // Serve serves the Prometheus metrics
-func (m *MetricsService) Serve(addr string) error {
-	if err := registerMetrics(); err != nil {
-		return err
+func (m *MetricsService) Serve() error {
+	// If metrics are not enabled return without starting the server.
+	if !m.cfg.Enabled {
+		return nil
 	}
-	m.srv.Addr = addr
-	log.Info().Msg(fmt.Sprintf("serving prometheus metrics at http://%s/metrics", addr))
-	http.Handle("/metrics", promhttp.Handler())
+
+	// Serve the metrics server in its own go routine
 	go func() {
 		if err := m.srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Err(err).Msg("metrics server shutdown prematurely")
 		}
 	}()
+
+	// Log the metrics service starting up
+	log.Info().Str("addr", fmt.Sprintf("http://%s/metrics", m.cfg.Addr)).Msg("metrics server started and ready for prometheus collector")
 	return nil
 }
 
 // Gracefully shutdown the Prometheus metrics service
-func (m *MetricsService) Shutdown() error {
-	// Might want to share context from Trtl more globally?
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+func (m *MetricsService) Shutdown(ctx context.Context) error {
+	// If metrics are not enabled, return without shutting down
+	if !m.cfg.Enabled {
+		return nil
+	}
+
+	if _, ok := ctx.Deadline(); !ok {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+	}
+
 	if err := m.srv.Shutdown(ctx); err != nil {
-		log.Error().Err(err).Msg("unable to gracefully shutdown prometheus metrics")
+		return err
 	}
 	return nil
 }
 
-const (
-	PmNamespace = "trtl"
-)
+// Initializes and registers the metrics collectors in Prometheus. This function can
+// safely be called multiple times and the collectors will only be registered once. This
+// method can be used prior to tests to ensure that there are no nil panics for handlers
+// that make use of the collectors; otherwise it will be called when creating a new
+// metrics server in preparation for exposing application metrics.
+func RegisterMetrics() error {
+	register.Do(func() {
+		registerErr = registerMetrics()
+	})
+	return registerErr
+}
 
-func initMetrics() {
-	PmPuts = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: PmNamespace,
-		Name:      "puts",
-		Help:      "the count of puts, labeled by namespace",
-	}, []string{"namespace"})
+func registerMetrics() error {
+	// Track all collectors to make it easier to register them after initialization
+	collectors := make([]prometheus.Collector, 0, 22)
 
-	PmGets = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: PmNamespace,
-		Name:      "gets",
-		Help:      "the count of gets, labeled by namespace",
-	}, []string{"namespace"})
+	// Basic RPC Metrics
+	PmRPCStarted = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: PmNamespaceGRPC,
+		Name:      "server_started",
+		Help:      "count the number of RPCs started on the server",
+	}, []string{"type", "service", "method"})
+	collectors = append(collectors, PmRPCStarted)
 
-	PmDels = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: PmNamespace,
-		Name:      "deletes",
-		Help:      "the count of deletes, labeled by namespace",
-	}, []string{"namespace"})
+	PmRPCHandled = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: PmNamespaceGRPC,
+		Name:      "server_handled",
+		Help:      "count the number of RPCs completed on the server",
+	}, []string{"namespace", "type", "service", "method", "code"})
+	collectors = append(collectors, PmRPCHandled)
 
-	PmIters = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: PmNamespace,
-		Name:      "iters",
-		Help:      "the count of iters, labeled by namespace",
-	}, []string{"namespace"})
-
-	PmRPCLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: PmNamespace,
-		Name:      "latency",
-		Help:      "time to RPC call completion, labeled by RPC (Put, Get, Delete, Iter)",
+	PmRPCUnaryLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: PmNamespaceGRPC,
+		Name:      "unary_latency",
+		Help:      "response latency (in seconds) of the application handler for unary rpcs",
 		Buckets:   prometheus.ExponentialBuckets(5, 2, 12),
-	}, []string{"call"})
+	}, []string{"namespace", "type", "service", "method"})
+	collectors = append(collectors, PmRPCUnaryLatency)
 
-	// PmObjects = prometheus.NewCounterVec(prometheus.CounterOpts{
-	// 	Namespace: PmNamespace,
-	// 	Name:      "objects",
-	// 	Help:      "the count of trtl objects, labeled by namespace",
-	// }, []string{"namespace"})
+	PmRPCStreamDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: PmNamespaceGRPC,
+		Name:      "streaming_duration",
+		Help:      "durations of streaming application handslers",
+		Buckets:   prometheus.ExponentialBuckets(5, 2, 12),
+	}, []string{"namespace", "type", "service", "method"})
+	collectors = append(collectors, PmRPCStreamDuration)
 
-	// PmTombstones = prometheus.NewCounterVec(prometheus.CounterOpts{
-	// 	Namespace: PmNamespace,
-	// 	Name:      "tombstones",
-	// 	Help:      "the count of tombstones, labeled by namespace",
-	// }, []string{"namespace"})
+	PmMsgsPerStream = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: PmNamespaceGRPC,
+		Name:      "messages_per_stream",
+		Help:      "number of messages sent and recv per streaming rpc handler",
+	}, []string{"namespace", "type", "service", "method"})
+	collectors = append(collectors, PmMsgsPerStream)
 
+	// Storage Metrics
+	PmTrtlReads = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: PmNamespaceTrtl,
+		Name:      "reads",
+		Help:      "the number of reads to the embedded database (e.g. Get and Iter)",
+	}, []string{"namespace"})
+	collectors = append(collectors, PmTrtlReads)
+
+	PmTrtlBytesRead = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: PmNamespaceTrtl,
+		Name:      "bytes_read",
+		Help:      "the number of bytes read by trtl operations",
+	}, []string{"namespace"})
+	collectors = append(collectors, PmTrtlBytesRead)
+
+	PmTrtlWrites = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: PmNamespaceTrtl,
+		Name:      "writes",
+		Help:      "the number of writes to the embedded database (e.g. Put and Delete)",
+	}, []string{"namespace"})
+	collectors = append(collectors, PmTrtlWrites)
+
+	PmTrtlBytesWritten = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: PmNamespaceTrtl,
+		Name:      "bytes_written",
+		Help:      "the number of bytes written by trtl operations",
+	}, []string{"namespace"})
+	collectors = append(collectors, PmTrtlBytesWritten)
+
+	PmObjectSize = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: PmNamespaceTrtl,
+		Name:      "object_size",
+		Help:      "size in bytes of each version saved in the trtl database",
+	}, []string{"namespace"})
+	collectors = append(collectors, PmObjectSize)
+
+	PmDatabaseSize = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: PmNamespaceTrtl,
+		Name:      "database_size",
+		Help:      "current size in bytes of all objects in the database",
+	}, []string{"namespace"})
+	collectors = append(collectors, PmDatabaseSize)
+
+	PmCurrentObjects = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: PmNamespaceTrtl,
+		Name:      "objects",
+		Help:      "current number of objects in the database",
+	}, []string{"namespace"})
+	collectors = append(collectors, PmCurrentObjects)
+
+	PmCurrentTombstones = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: PmNamespaceTrtl,
+		Name:      "tombstones",
+		Help:      "current number of tombstones in the database",
+	}, []string{"namespace"})
+	collectors = append(collectors, PmCurrentTombstones)
+
+	// Anti-Entropy Metrics
 	PmAESyncs = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: PmNamespace,
+		Namespace: PmNamespaceTrtl,
 		Name:      "syncs",
 		Help:      "the count of anti-entropy sessions, labeled by peer, region, and perspective",
 	}, []string{"peer", "region", "perspective"})
+	collectors = append(collectors, PmAESyncs)
 
 	PmAESyncLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: PmNamespace,
+		Namespace: PmNamespaceTrtl,
 		Name:      "sync_latency",
 		Help:      "total duration of anti-entropy (originator perspective), labeled by peer and region",
 		Buckets:   prometheus.LinearBuckets(10, 10, 50),
 	}, []string{"peer", "region"})
+	collectors = append(collectors, PmAESyncLatency)
 
 	PmAEPhase1Latency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: PmNamespace,
+		Namespace: PmNamespaceTrtl,
 		Name:      "phase1_latency",
 		Help:      "duration of anti-entropy phase 1 (originator perspective), labeled by peer",
 		Buckets:   prometheus.LinearBuckets(1, 10, 50),
 	}, []string{"peer"})
+	collectors = append(collectors, PmAEPhase1Latency)
 
 	PmAEPhase2Latency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: PmNamespace,
+		Namespace: PmNamespaceTrtl,
 		Name:      "phase2_latency",
 		Help:      "duration of anti-entropy phase 2 (remote perspective), labeled by peer",
 		Buckets:   prometheus.LinearBuckets(1, 10, 50),
 	}, []string{"peer"})
+	collectors = append(collectors, PmAEPhase2Latency)
 
 	PmAEVersions = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: PmNamespace,
+		Namespace: PmNamespaceTrtl,
 		Name:      "versions",
 		Help:      "count of all observed versions, labeled by peer, region, and perspective",
 		Buckets:   prometheus.LinearBuckets(10, 2000, 1000),
 	}, []string{"peer", "region", "perspective"})
+	collectors = append(collectors, PmAEVersions)
 
 	PmAERepairs = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: PmNamespace,
+		Namespace: PmNamespaceTrtl,
 		Name:      "pulls",
 		Help:      "pulled objects during anti entropy, labeled by peer, region, and perspective",
 		Buckets:   prometheus.LinearBuckets(10, 100, 1000),
 	}, []string{"peer", "region", "perspective"})
+	collectors = append(collectors, PmAERepairs)
 
 	PmAEUpdates = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: PmNamespace,
+		Namespace: PmNamespaceTrtl,
 		Name:      "pushes",
 		Help:      "pushed objects during anti entropy, labeled by peer, region and perspective",
 		Buckets:   prometheus.LinearBuckets(10, 100, 1000),
 	}, []string{"peer", "region", "perspective"})
+	collectors = append(collectors, PmAEUpdates)
 
 	PmAEStomps = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: PmNamespace,
+		Namespace: PmNamespaceTrtl,
 		Name:      "stomps",
 		Help:      "count of stomped versions, labeled by peer and region",
 	}, []string{"peer", "region"})
+	collectors = append(collectors, PmAEStomps)
 
 	PmAESkips = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: PmNamespace,
+		Namespace: PmNamespaceTrtl,
 		Name:      "skips",
 		Help:      "count of skipped versions, labeled by peer and region",
 	}, []string{"peer", "region"})
-}
+	collectors = append(collectors, PmAESkips)
 
-func registerMetrics() error {
-	if err := prometheus.Register(PmPuts); err != nil {
-		log.Debug().Err(err).Msg("unable to register PmPuts")
-		return err
-	}
-	if err := prometheus.Register(PmGets); err != nil {
-		log.Debug().Err(err).Msg("unable to register PmGets")
-		return err
-	}
-	if err := prometheus.Register(PmDels); err != nil {
-		log.Debug().Err(err).Msg("unable to register PmDels")
-		return err
-	}
-	if err := prometheus.Register(PmIters); err != nil {
-		log.Debug().Err(err).Msg("unable to register PmIters")
-		return err
-	}
-	if err := prometheus.Register(PmRPCLatency); err != nil {
-		log.Debug().Err(err).Msg("unable to register PmLatency")
-		return err
-	}
-	// if err := prometheus.Register(PmObjects); err != nil {
-	// 	log.Debug().Err(err).Msg("unable to register PmObjects")
-	// 	return err
-	// }
-	// if err := prometheus.Register(PmTombstones); err != nil {
-	// 	log.Debug().Err(err).Msg("unable to register PmTombstones")
-	// 	return err
-	// }
-
-	if err := prometheus.Register(PmAESyncs); err != nil {
-		log.Debug().Err(err).Msg("unable to register PmAESyncs")
-	}
-	if err := prometheus.Register(PmAESyncLatency); err != nil {
-		log.Debug().Err(err).Msg("unable to register PmAESyncLatency")
-	}
-	if err := prometheus.Register(PmAEPhase1Latency); err != nil {
-		log.Debug().Err(err).Msg("unable to register PmAEPhase1Latency")
-	}
-	if err := prometheus.Register(PmAEPhase2Latency); err != nil {
-		log.Debug().Err(err).Msg("unable to register PmAEPhase2Latency")
-	}
-	if err := prometheus.Register(PmAEVersions); err != nil {
-		log.Debug().Err(err).Msg("unable to register PmAEVersions")
-		return err
-	}
-	if err := prometheus.Register(PmAERepairs); err != nil {
-		log.Debug().Err(err).Msg("unable to register PmAEPulls")
-		return err
-	}
-	if err := prometheus.Register(PmAEUpdates); err != nil {
-		log.Debug().Err(err).Msg("unable to register PmAEPushes")
-		return err
-	}
-	if err := prometheus.Register(PmAEStomps); err != nil {
-		log.Debug().Err(err).Msg("unable to register PmAEStomps")
-		return err
-	}
-	if err := prometheus.Register(PmAESkips); err != nil {
-		log.Debug().Err(err).Msg("unable to register PmAESkips")
-		return err
+	// Register all collectors
+	for _, collector := range collectors {
+		if err := prometheus.Register(collector); err != nil {
+			log.Debug().Err(err).Msg("could not register collector")
+			return err
+		}
 	}
 	return nil
 }
