@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import React from 'react';
 import { Card, Dropdown, Table } from 'react-bootstrap';
 import { useHistory } from 'react-router-dom'
@@ -12,51 +11,9 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import { actionType, useModal } from 'contexts/modal';
 import OvalLoader from 'components/OvalLoader';
 import NoData from 'components/NoData';
-import filter from 'lodash/filter';
-import isDate from 'lodash/isDate';
 dayjs.extend(relativeTime)
 
-/**
- * Verifiy that the passed date is less than 30days
- * @param {date} date 
- * @returns 
- */
-function isRecent(date = '') {
-
-    if (dayjs(date).isValid) {
-        const tirthyDaysInMs = 30 * 24 * 60 * 60 * 1000;
-        const now = dayjs();
-        const dateDiff = now.diff(date)
-
-        return Math.abs(dateDiff) <= tirthyDaysInMs
-    }
-
-    return false
-}
-
-export const getRecentVasps = (vasps) => vasps?.filter(vasp => {
-    const now = dayjs()
-    const certificateExpirationDate = vasp?.certificate_expiration && dayjs(vasp?.certificate_expiration)
-    const certificateIssuedDate = vasp?.certificate_issued && dayjs(vasp?.certificate_issued)
-    const verificationStatus = vasp?.verification_status
-
-    if (verificationStatus === VerificationStatus.PENDING_REVIEW) {
-        return vasp
-    }
-    if (certificateExpirationDate && certificateIssuedDate) {
-
-        if (dayjs(certificateExpirationDate).isValid() || dayjs(certificateIssuedDate).isValid()) {
-
-            if (certificateExpirationDate.isAfter(now) && isRecent(certificateExpirationDate)) {
-                return vasp
-            }
-
-            if (certificateIssuedDate.isBefore(now) && isRecent(certificateIssuedDate)) {
-                return vasp
-            }
-        }
-    }
-})
+export const getRecentVasps = (vasps) => vasps?.filter(vasp => vasp.verification_status === VerificationStatus.PENDING_REVIEW)
 
 const PendingReviewsTable = ({ data }) => {
     const [vasp, setVasp] = React.useState({ name: '', id: '' });

@@ -1,11 +1,9 @@
-import userEvent from "@testing-library/user-event"
 import DeleteModal from "components/DeleteModal"
 import { Modal, ModalContent } from "components/Modal"
-import { render, screen, waitFor } from "utils/test-utils"
+import { render, screen, fireEvent } from "utils/test-utils"
 
 const ModalWrapper = ({ children }) => {
     return (
-        // this mount the modal component
         <Modal
             value={[true, () => { }]}
         >
@@ -29,9 +27,8 @@ describe('<DeleteModal />', () => {
         )
 
         const deleteBtn = screen.getByTestId('deleteBtn')
-        await waitFor(() => {
-            userEvent.click(deleteBtn)
-        })
+
+        fireEvent.click(deleteBtn)
 
         expect(handleDeleteClick).toHaveBeenCalledTimes(1)
     })

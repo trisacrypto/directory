@@ -2,8 +2,9 @@ import { Stack, Table, Tbody, Tr, Td, Tag, TagLabel, Text } from '@chakra-ui/rea
 import { Trans } from '@lingui/react';
 import { COUNTRIES } from 'constants/countries';
 import getColorScheme from 'utils/getColorScheme';
-import { currencyFormatter } from 'utils/utils';
 import { t } from '@lingui/macro';
+import ComplianceThresholdRow from './ComplianceThresholdRow';
+import KycThresholdRow from './KycThresholdRow';
 interface TrixoReviewProps {
   data?: any;
 }
@@ -143,17 +144,7 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
               </Trans>
             </Td>
             <Td pl={0}>
-              {(data?.kyc_threshold && typeof data.kyc_threshold !== 'undefined') ||
-              parseInt(data?.kyc_threshold) !== 0 ? (
-                <Text>
-                  {currencyFormatter(data?.kyc_threshold || 0, {
-                    currency: data?.kyc_threshold_currency
-                  }) || 'USD'}{' '}
-                  {data?.kyc_threshold_currency}
-                </Text>
-              ) : (
-                <Text>{'N/A'}</Text>
-              )}
+              <KycThresholdRow data={data} />
             </Td>
             <Td></Td>
           </Tr>
@@ -190,7 +181,7 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
                     </Tag>
                   );
                 } else {
-                  return <Text>{'N/A'}</Text>;
+                  return <Text key={i}>{'N/A'}</Text>;
                 }
               })}
             </Td>
@@ -203,16 +194,7 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
               </Trans>
             </Td>
             <Td pl={0}>
-              {data?.compliance_threshold || data?.compliance_threshold !== 0 ? (
-                <Text>
-                  {currencyFormatter(data?.compliance_threshold || 0, {
-                    currency: data?.compliance_threshold_currency
-                  }) || 'USD'}{' '}
-                  {data?.compliance_threshold_currency || 'USD'}
-                </Text>
-              ) : (
-                <Text>{'N/A'}</Text>
-              )}
+              <ComplianceThresholdRow data={data} />
             </Td>
             <Td></Td>
           </Tr>

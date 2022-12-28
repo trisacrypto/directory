@@ -3,7 +3,6 @@ package secrets_test
 import (
 	"context"
 	"crypto/x509"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -15,21 +14,33 @@ import (
 
 // Six environment variables are required to run this test:
 // $GDS_TEST_GOOGLE_SECRETS
-//     Required; can be included when the tests are run, e.g.
-//     GDS_TEST_GOOGLE_SECRETS=1 go test ./pkg/gds/secret_test.go
+//
+//	Required; can be included when the tests are run, e.g.
+//	GDS_TEST_GOOGLE_SECRETS=1 go test ./pkg/gds/secret_test.go
+//
 // $GOOGLE_APPLICATION_CREDENTIALS
-//     Required; must be a valid google secret manager service
-//     credentials JSON (absolute path)
+//
+//	Required; must be a valid google secret manager service
+//	credentials JSON (absolute path)
+//
 // $GOOGLE_PROJECT_NAME
-//     Required; must be a valid google secret manager project name
+//
+//	Required; must be a valid google secret manager project name
+//
 // $TRISA_TEST_PASSWORD
-//     Required; must be a valid pkcs12password that matches the TRISA_TEST_CERT
+//
+//	Required; must be a valid pkcs12password that matches the TRISA_TEST_CERT
+//
 // $TRISA_TEST_CERT
-//     Required; must be a valid TRISA certificate that matches the TRISA_TEST_PASSWORD
+//
+//	Required; must be a valid TRISA certificate that matches the TRISA_TEST_PASSWORD
+//
 // $TRISA_TEST_FILE
-//     Required; absolute path for an intermediate tempfile to write the retrieved cert
-//     TODO: Temp file write & delete can be removed once trust serializer can unzip raw bytes, see:
-//     https://github.com/trisacrypto/trisa/issues/51
+//
+//	Required; absolute path for an intermediate tempfile to write the retrieved cert
+//	TODO: Temp file write & delete can be removed once trust serializer can unzip raw bytes, see:
+//	https://github.com/trisacrypto/trisa/issues/51
+//
 // Note: tests execute against live secret manager API, so use caution!
 func TestLiveSecrets(t *testing.T) {
 	if os.Getenv("GDS_TEST_GOOGLE_SECRETS") == "" {
@@ -47,7 +58,7 @@ func TestLiveSecrets(t *testing.T) {
 	testContext := context.Background()
 	tempFile := os.Getenv("TRISA_TEST_FILE")
 	testPassword := os.Getenv("TRISA_TEST_PASSWORD")
-	testPayload, err := ioutil.ReadFile(os.Getenv("TRISA_TEST_CERT"))
+	testPayload, err := os.ReadFile(os.Getenv("TRISA_TEST_CERT"))
 	require.NoError(t, err)
 
 	// Create secret manager
@@ -71,7 +82,7 @@ func TestLiveSecrets(t *testing.T) {
 	require.NoError(t, err)
 
 	// Write the cert to a temp file
-	require.NoError(t, ioutil.WriteFile(tempFile, testResult, 0777))
+	require.NoError(t, os.WriteFile(tempFile, testResult, 0777))
 
 	// Create provider to read in the bytes of the zipfile
 	var provider *trust.Provider

@@ -31,14 +31,15 @@ import {
   postRegistrationValue,
   getRegistrationAndStepperData
 } from 'modules/dashboard/registration/utils';
-// add this line to a constant file
-const WAIT_DATA_LOADING_TIME = 3000;
 const fieldNamesPerStepsEntries = () => Object.entries(fieldNamesPerSteps);
 import { isProdEnv } from 'application/config';
 import { Trans } from '@lingui/react';
 import { getCurrentStep, getLastStep } from 'application/store/selectors/stepper';
 import MinusLoader from 'components/Loader/MinusLoader';
 import StepButtons from 'components/StepsButtons';
+
+// add this line to a constant file
+const WAIT_DATA_LOADING_TIME = 3000;
 
 const Certificate: React.FC = () => {
   const [, updateState] = React.useState<any>();

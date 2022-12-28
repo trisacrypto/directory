@@ -179,6 +179,9 @@ message EmailLogEntry {
 
     // Subject line of the email
     string subject = 3;
+
+    // Email address of the recipient
+    string recipient = 4;
 }
 
 // Implements a protocol buffer struct for state managed pagination. This struct will be

@@ -1,7 +1,6 @@
 package client_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -125,7 +124,7 @@ func TestSave(t *testing.T) {
 	require.Equal(t, profiles, actual)
 
 	// Profiles should be written to the specified config.
-	tmp, err := ioutil.TempDir("", "config-*")
+	tmp, err := os.MkdirTemp("", "config-*")
 	require.NoError(t, err)
 	defer os.RemoveAll(tmp)
 
@@ -159,7 +158,7 @@ func TestInstall(t *testing.T) {
 func setTestConfigDir(t *testing.T) configdir.ConfigDir {
 	var err error
 	cfgd := configdir.New("rotational", "gds-test")
-	cfgd.LocalPath, err = ioutil.TempDir("", "config-*")
+	cfgd.LocalPath, err = os.MkdirTemp("", "config-*")
 	require.NoError(t, err, "could not get tmp dir for configuration")
 	client.SetConfigDir(cfgd)
 
@@ -176,9 +175,9 @@ func makeTestConfigInDir(t *testing.T, fixture interface{}) string {
 	if fixture != nil {
 		data, err := yaml.Marshal(fixture)
 		require.NoError(t, err, "could not marshal fixture")
-		require.NoError(t, ioutil.WriteFile(path, data, 0644), "could not write fixture to disk")
+		require.NoError(t, os.WriteFile(path, data, 0644), "could not write fixture to disk")
 	} else {
-		require.NoError(t, ioutil.WriteFile(path, nil, 0644), "could not write empty fixture to disk")
+		require.NoError(t, os.WriteFile(path, nil, 0644), "could not write empty fixture to disk")
 	}
 
 	return path

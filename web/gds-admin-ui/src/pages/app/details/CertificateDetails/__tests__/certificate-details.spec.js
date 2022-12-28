@@ -1,6 +1,11 @@
-import { render, screen, waitFor } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
+import { render, screen, fireEvent, act } from "@testing-library/react"
 import CertificateDetails from "pages/app/details/CertificateDetails"
+
+Object.assign(navigator, {
+    clipboard: {
+        writeText: () => { },
+    }
+})
 
 
 describe('CertificateDetails', () => {
@@ -85,11 +90,6 @@ describe('CertificateDetails', () => {
     })
 
     describe('IdentityCertificateDropDown', () => {
-        Object.assign(navigator, {
-            clipboard: {
-                writeText: () => { },
-            }
-        })
 
         beforeEach(() => {
             jest.spyOn(navigator.clipboard, "writeText");
@@ -103,11 +103,14 @@ describe('CertificateDetails', () => {
             render(<CertificateDetails data={data} />)
             const threeDots = screen.getByTestId('certificate-details-3-dots')
 
-            await waitFor(() => {
-                userEvent.click(threeDots)
+            await act(async () => {
+                fireEvent.click(threeDots)
+
             })
+
             const copySignatureElement = screen.getByTestId('copy-signature')
-            userEvent.click(copySignatureElement)
+            fireEvent.click(copySignatureElement)
+
             expect(navigator.clipboard.writeText).toHaveBeenCalledWith(data.signature);
 
         })
@@ -119,12 +122,12 @@ describe('CertificateDetails', () => {
             render(<CertificateDetails data={data} />)
             const threeDots = screen.getByTestId('certificate-details-3-dots')
 
-            await waitFor(() => {
-                userEvent.click(threeDots)
+            await act(async () => {
+                fireEvent.click(threeDots)
             })
             const serialNumberElement = screen.getByTestId('copy-serial-number')
 
-            userEvent.click(serialNumberElement)
+            fireEvent.click(serialNumberElement)
             expect(navigator.clipboard.writeText).toHaveBeenCalledWith(data.serial_number);
         })
     })

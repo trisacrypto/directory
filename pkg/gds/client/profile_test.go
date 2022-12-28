@@ -1,7 +1,6 @@
 package client_test
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -22,7 +21,7 @@ func TestOpenLevelDB(t *testing.T) {
 	require.Error(t, err)
 
 	// Valid DB DSN
-	dbpath, err := ioutil.TempDir("", "gdsdb-*")
+	dbpath, err := os.MkdirTemp("", "gdsdb-*")
 	require.NoError(t, err, "could not create temp directory")
 	defer os.RemoveAll(dbpath)
 
