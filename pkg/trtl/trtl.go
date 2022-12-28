@@ -49,6 +49,7 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (_ *pb.GetRepl
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
 	}
+
 	if len(in.Key) == 0 {
 		log.Warn().Msg("missing key in Trtl Get request")
 		return nil, status.Error(codes.InvalidArgument, "key must be provided in Get request")
