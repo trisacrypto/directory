@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -469,7 +468,7 @@ func ldbGet(c *cli.Context) (err error) {
 
 		if out != "" {
 			path := filepath.Join(out, string(key)+".json")
-			if err = ioutil.WriteFile(path, outdata, 0644); err != nil {
+			if err = os.WriteFile(path, outdata, 0644); err != nil {
 				return cli.Exit(err, 1)
 			}
 		} else {
@@ -502,7 +501,7 @@ func ldbPut(c *cli.Context) (err error) {
 		}
 
 		key = []byte(strings.TrimSuffix(name, ext))
-		if data, err = ioutil.ReadFile(path); err != nil {
+		if data, err = os.ReadFile(path); err != nil {
 			return cli.Exit(err, 1)
 		}
 	} else {
@@ -515,7 +514,7 @@ func ldbPut(c *cli.Context) (err error) {
 			if strings.TrimLeft(ext, ".") != format {
 				return cli.Exit(fmt.Errorf("mismatch file extension %q and data format %q: specify --format", ext, format), 1)
 			}
-			if data, err = ioutil.ReadFile(varg); err != nil {
+			if data, err = os.ReadFile(varg); err != nil {
 				return cli.Exit(err, 1)
 			}
 		} else {
