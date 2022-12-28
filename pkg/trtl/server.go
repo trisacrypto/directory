@@ -1,6 +1,7 @@
 package trtl
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -134,7 +135,7 @@ func New(conf config.Config) (s *Server, err error) {
 	replication.RegisterReplicationServer(s.srv, s.replica)
 
 	// Initialize Metrics service for Prometheus
-	if s.metrics, err = prom.New(); err != nil {
+	if s.metrics, err = prom.New(conf.Metrics); err != nil {
 		return nil, err
 	}
 
@@ -166,11 +167,10 @@ func (t *Server) Serve() (err error) {
 	}
 
 	// If metrics are enabled, start Prometheus metrics server as separate go routine
-	// ? should metrics be enabled even if we're in maintenance mode?
-	if t.conf.MetricsEnabled {
-		t.metrics.Serve(t.conf.MetricsAddr)
+	if t.conf.Metrics.Enabled {
+		t.metrics.Serve()
 	} else {
-		log.Warn().Str("listen", t.conf.MetricsAddr).Msg("trtl metrics disabled")
+		log.Warn().Msg("trtl prometheus metrics server disabled")
 	}
 
 	// Listen for TCP requests
@@ -220,8 +220,8 @@ func (t *Server) Shutdown() (err error) {
 	}
 
 	// Shutdown the Prometheus metrics server
-	if t.conf.MetricsEnabled {
-		if err = t.metrics.Shutdown(); err != nil {
+	if t.conf.Metrics.Enabled {
+		if err = t.metrics.Shutdown(context.Background()); err != nil {
 			log.Error().Err(err).Msg("could not shutdown prometheus metrics server")
 			errs = append(errs, err)
 		}

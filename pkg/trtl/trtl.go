@@ -15,7 +15,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/trtl/internal"
-	prom "github.com/trisacrypto/directory/pkg/trtl/metrics"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -46,9 +45,6 @@ var b64e = base64.RawURLEncoding.EncodeToString
 // If a namespace is provided, the namespace is passed to the internal honu Options,
 // to look in that namespace only.
 func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (_ *pb.GetReply, err error) {
-	// Start a timer to track latency
-	start := time.Now()
-
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
@@ -81,13 +77,6 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (_ *pb.GetRepl
 		// User wants metadata
 		log.Debug().Str("key", string(in.Key)).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Get")
 
-		// Compute latency in milliseconds
-		latency := float64(time.Since(start)/1000) / 1000.0
-		prom.PmRPCLatency.WithLabelValues("Get").Observe(latency)
-
-		// Update prometheus metrics
-		prom.PmGets.WithLabelValues(object.Namespace).Inc()
-
 		return &pb.GetReply{
 			Value: object.Data,
 			Meta:  returnMeta(object),
@@ -96,14 +85,6 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (_ *pb.GetRepl
 
 	// No metadata requested; just return the value for the given key
 	log.Debug().Str("key", string(in.Key)).Msg("Trtl Get")
-
-	// Compute Get latency in milliseconds
-	latency := float64(time.Since(start)/1000) / 1000.0
-	prom.PmRPCLatency.WithLabelValues("Get").Observe(latency)
-
-	// Increment prometheus Get count
-	prom.PmGets.WithLabelValues(object.Namespace).Inc()
-
 	return &pb.GetReply{
 		Value: object.Data,
 	}, nil
@@ -113,9 +94,6 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (_ *pb.GetRepl
 // If a namespace is provided, the namespace is passed to the internal honu Options,
 // to put the value to that namespace.
 func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutReply, err error) {
-	// Start a timer to track latency
-	start := time.Now()
-
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
@@ -149,13 +127,6 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 		out.Meta = returnMeta(object)
 	}
 
-	// Compute Put latency in milliseconds
-	latency := float64(time.Since(start)/1000) / 1000.0
-	prom.PmRPCLatency.WithLabelValues("Put").Observe(latency)
-
-	// Increment prometheus Put counter
-	prom.PmPuts.WithLabelValues(object.Namespace).Inc()
-
 	// TODO: prometheus; see sc-2576
 	// If in.Options.ReturnMeta is true, we will get metadata from honu
 	// Unfortunately, we currently we don't get tombstone information, but if we did,
@@ -168,9 +139,6 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 // If a namespace is provided, the namespace is passed to the internal honu Options,
 // to delete the key from a specific namespace. Note that this does not delete tombstones.
 func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb.DeleteReply, err error) {
-	// Start a timer to track latency
-	start := time.Now()
-
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
@@ -203,13 +171,6 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 		out.Meta = returnMeta(object)
 	}
 
-	// Compute Delete latency in milliseconds
-	latency := float64(time.Since(start)/1000) / 1000.0
-	prom.PmRPCLatency.WithLabelValues("Delete").Observe(latency)
-
-	// Increment Prometheus Delete counter
-	prom.PmDels.WithLabelValues(object.Namespace).Inc()
-
 	// TODO: Increment Prometheus Tombstone counter; see sc-2576
 	// Unfortunately we can't decrement yet! (see note in `Put`)
 	// prom.pmTombstones.WithLabelValues(object.Namespace).Inc()
@@ -235,9 +196,6 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 //   - page_token: the page of results that the user wishes to fetch
 //   - page_size: the number of results to be returned in the request
 func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.IterReply, err error) {
-	// Start a timer to track latency
-	start := time.Now()
-
 	// Ensure the namespace is not reserved
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
@@ -387,13 +345,6 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 			return nil, status.Error(codes.FailedPrecondition, "could not serialize next page token")
 		}
 	}
-
-	// Compute Iter latency in milliseconds
-	latency := float64(time.Since(start)/1000) / 1000.0
-	prom.PmRPCLatency.WithLabelValues("Iter").Observe(latency)
-
-	// Increment Prometheus Iter counter
-	prom.PmIters.WithLabelValues(iter.Namespace()).Inc()
 
 	// Request complete
 	log.Info().

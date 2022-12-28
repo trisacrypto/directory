@@ -6,6 +6,7 @@ const (
 	NamespacePeers    = wire.NamespaceReplicas
 	NamespaceIndex    = wire.NamespaceIndices
 	NamespaceDefault  = "default"
+	NamespaceUnknown  = "unknown"
 	NamespaceSequence = wire.NamespaceSequence
 	NamespaceVASPs    = wire.NamespaceVASPs
 	NamespaceCertReqs = wire.NamespaceCertReqs
@@ -17,6 +18,7 @@ var reservedNamespaces = map[string]struct{}{
 	NamespacePeers:    {},
 	NamespaceSequence: {},
 	NamespaceDefault:  {}, // if the user does not specify a namespace
+	NamespaceUnknown:  {},
 
 	// TODO: add index namespace back to reserved namespaces when trtl does indexing.
 	// NamespaceIndex:    {},
