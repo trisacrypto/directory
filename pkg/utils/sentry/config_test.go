@@ -22,7 +22,7 @@ func TestSentryConfigValidation(t *testing.T) {
 	// If Sentry is enabled, then the environment is required
 	conf.DSN = "https://something.ingest.sentry.io"
 	err = conf.Validate()
-	require.EqualError(t, err, "invalid configuration: envrionment must be configured when Sentry is enabled")
+	require.EqualError(t, err, "invalid configuration: environment must be configured when Sentry is enabled")
 
 	conf.Environment = "test"
 	err = conf.Validate()

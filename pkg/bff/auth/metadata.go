@@ -46,10 +46,14 @@ func (meta *AppMetadata) GetOrganizations() []string {
 	return meta.Organizations
 }
 
-func (meta *AppMetadata) Load(appdata map[string]interface{}) (err error) {
+func (meta *AppMetadata) Load(appdata *map[string]interface{}) (err error) {
+	if appdata == nil {
+		return nil
+	}
+
 	// Serialize appdata back to JSON
 	var data []byte
-	if data, err = json.Marshal(appdata); err != nil {
+	if data, err = json.Marshal(*appdata); err != nil {
 		return err
 	}
 
@@ -61,19 +65,19 @@ func (meta *AppMetadata) Load(appdata map[string]interface{}) (err error) {
 	return nil
 }
 
-func (meta *AppMetadata) Dump() (appdata map[string]interface{}, err error) {
+func (meta *AppMetadata) Dump() (_ *map[string]interface{}, err error) {
 	// Serialize meta back to JSON
 	var data []byte
 	if data, err = json.Marshal(meta); err != nil {
 		return nil, err
 	}
 
-	appdata = make(map[string]interface{})
+	appdata := make(map[string]interface{})
 	if err = json.Unmarshal(data, &appdata); err != nil {
 		return nil, err
 	}
 
-	return appdata, nil
+	return &appdata, nil
 }
 
 // ClearOrganization removes all organization-related data from the app metadata.
