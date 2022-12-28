@@ -8,6 +8,7 @@ import { updateReviewNote } from 'services/review-notes';
 import PropTypes from 'prop-types';
 import { updateReviewNoteApiResponseSuccess } from 'redux/vasp-details';
 import TextEditor from 'components/TextEditor';
+import sanitizeMarkdown from 'utils/sanitize-markdown';
 
 function EditReviewNote({ note, handleCancelEditingClick, vaspId, setIsEditable }) {
     const { register, handleSubmit, watch, control } = useForm({
@@ -24,8 +25,9 @@ function EditReviewNote({ note, handleCancelEditingClick, vaspId, setIsEditable 
     const onSubmit = (data) => {
         const { note, noteId } = data
         setIsSubmiting(true)
+        const sanitizedNote = sanitizeMarkdown(note)
 
-        updateReviewNote(note?.trim(), noteId, vaspId).then(response => {
+        updateReviewNote(sanitizedNote?.trim(), noteId, vaspId).then(response => {
             const note = response?.data
             if (note) {
                 safeDispatch(updateReviewNoteApiResponseSuccess(note))

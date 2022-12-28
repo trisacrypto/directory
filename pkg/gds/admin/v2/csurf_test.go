@@ -2,7 +2,7 @@ package admin_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
@@ -151,7 +151,7 @@ func TestDoubleCookies(t *testing.T) {
 
 func readJSON(rep *http.Response) (map[string]interface{}, error) {
 	defer rep.Body.Close()
-	body, err := ioutil.ReadAll(rep.Body)
+	body, err := io.ReadAll(rep.Body)
 	if err != nil {
 		return nil, err
 	}
