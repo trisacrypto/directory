@@ -276,9 +276,10 @@ func (s *certTestSuite) TestCertManagerSevenDayReissuanceReminder() {
 	require.NoError(err, "could not get hotel VASP")
 	hotelVASP = s.setupVASP(hotelVASP)
 
-	// Call the certman function at 6 days, which will send
-	// the seven day cert reissuance reminder to echoVASP.
+	// Call the certman function at 6 days and 1 day, which will send seven day
+	// cert reissuance reminders to charlieVASP and hotelVASP.
 	s.updateVaspIdentityCert(charlieVASP, 6)
+	s.updateVaspIdentityCert(hotelVASP, 1)
 	callTime := time.Now()
 	s.certman.HandleCertificateReissuance()
 
