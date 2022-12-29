@@ -5,9 +5,9 @@ import (
 	"crypto/x509/pkix"
 	"net"
 
-	"github.com/trisacrypto/directory/pkg/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
+	"github.com/trisacrypto/directory/pkg/utils/interceptors"
 )
 
 // TestPeerFromTLS tests that the peerFromTLS function is able to extract peer info
@@ -16,7 +16,7 @@ func (s *trtlTestSuite) TestPeerFromTLS() {
 	require := s.Require()
 
 	// TODO: We probably want to test more variations of the certificate.
-	expected := &trtl.PeerInfo{
+	expected := &interceptors.PeerInfo{
 		Name: &pkix.Name{
 			Country:       []string{"US"},
 			Organization:  []string{"TRISA Development Client"},
@@ -41,12 +41,12 @@ func (s *trtlTestSuite) TestPeerFromTLS() {
 	defer s.remote.CloseClient()
 
 	// Create peer info that the RPC can write to
-	info := &trtl.PeerInfo{}
+	info := &interceptors.PeerInfo{}
 
 	// Configure the remote peer to extract the peer info from the context
 	s.remote.OnGet = func(ctx context.Context, req *pb.GetRequest) (*pb.GetReply, error) {
 		// Extract the peer info from the context
-		info, err = trtl.PeerFromTLS(ctx)
+		info, err = interceptors.PeerFromTLS(ctx)
 		require.NoError(err, "could not extract peer info from TLS")
 
 		return &pb.GetReply{}, nil
@@ -64,7 +64,7 @@ func (s *trtlTestSuite) TestPeerFromTLS() {
 	// Configure the remote peer to extract the peer info from the context
 	s.remote.OnAddPeers = func(ctx context.Context, req *peers.Peer) (*peers.PeersStatus, error) {
 		// Extract the peer info from the context
-		info, err = trtl.PeerFromTLS(ctx)
+		info, err = interceptors.PeerFromTLS(ctx)
 		require.NoError(err, "could not extract peer info from TLS")
 
 		return &peers.PeersStatus{}, nil
@@ -77,7 +77,7 @@ func (s *trtlTestSuite) TestPeerFromTLS() {
 }
 
 // checkPeerInfo checks that the peer info matches the expected one
-func (s *trtlTestSuite) checkPeerInfo(expected *trtl.PeerInfo, actual *trtl.PeerInfo) {
+func (s *trtlTestSuite) checkPeerInfo(expected *interceptors.PeerInfo, actual *interceptors.PeerInfo) {
 	require := s.Require()
 
 	// Remove the RDNSequence fields for comparison

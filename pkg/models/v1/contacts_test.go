@@ -162,18 +162,18 @@ func TestGetSentEmailCount(t *testing.T) {
 		},
 	}
 
-	// Error should be returned if the reason is empty
-	_, err := models.GetSentEmailCount(contacts.Administrative, "", 30)
-	require.EqualError(t, err, "cannot match on empty reason string")
-
-	// Error should be returned if the time window is invalid
-	_, err = models.GetSentEmailCount(contacts.Administrative, "test", -1)
-	require.EqualError(t, err, "time window must be a positive number of days")
-
 	// Log should initially be empty
 	emailLog, err := models.GetEmailLog(contacts.Administrative)
 	require.NoError(t, err)
 	require.Len(t, emailLog, 0)
+
+	// Error should be returned if the reason is empty
+	_, err = models.CountSentEmails(emailLog, "", 30)
+	require.EqualError(t, err, "cannot match on empty reason string")
+
+	// Error should be returned if the time window is invalid
+	_, err = models.CountSentEmails(emailLog, "test", -1)
+	require.EqualError(t, err, "time window must be a positive number of days")
 
 	// Append an entry to an empty log
 	err = models.AppendEmailLog(contacts.Administrative, "verify_contact", "verification")
@@ -191,12 +191,16 @@ func TestGetSentEmailCount(t *testing.T) {
 	require.Equal(t, "verification", emailLog[0].Subject)
 
 	// Should return 2 emails sent for contact
-	sent, err := models.GetSentEmailCount(contacts.Administrative, "verify_contact", 30)
+	sent, err := models.CountSentEmails(emailLog, "verify_contact", 30)
 	require.NoError(t, err)
 	require.Equal(t, 2, sent)
 
+	// Get the technical contact's email log
+	emailLog, err = models.GetEmailLog(contacts.Technical)
+	require.NoError(t, err)
+
 	// Should return 0 emails when the log is empty
-	sent, err = models.GetSentEmailCount(contacts.Technical, "verify_contact", 30)
+	sent, err = models.CountSentEmails(emailLog, "verify_contact", 30)
 	require.NoError(t, err)
 	require.Equal(t, 0, sent)
 
@@ -220,16 +224,20 @@ func TestGetSentEmailCount(t *testing.T) {
 	}
 	require.NoError(t, SetEmailLog(contacts.Billing, log))
 
+	// Get the billing contact's email log
+	emailLog, err = models.GetEmailLog(contacts.Billing)
+	require.NoError(t, err)
+
 	// Should only return a count of emails within the time window
-	sent, err = models.GetSentEmailCount(contacts.Billing, "verify_contact", 32)
+	sent, err = models.CountSentEmails(emailLog, "verify_contact", 32)
 	require.NoError(t, err)
 	require.Equal(t, 3, sent, "expected 3 emails sent within the last 32 days")
 
-	sent, err = models.GetSentEmailCount(contacts.Billing, "verify_contact", 30)
+	sent, err = models.CountSentEmails(emailLog, "verify_contact", 30)
 	require.NoError(t, err)
 	require.Equal(t, 2, sent, "expected 2 emails sent within the last 30 days")
 
-	sent, err = models.GetSentEmailCount(contacts.Billing, "verify_contact", 27)
+	sent, err = models.CountSentEmails(emailLog, "verify_contact", 27)
 	require.NoError(t, err)
 	require.Equal(t, 0, sent, "expected 0 emails sent within the last 27 days")
 
@@ -253,12 +261,16 @@ func TestGetSentEmailCount(t *testing.T) {
 	}
 	require.NoError(t, SetEmailLog(contacts.Legal, log))
 
+	// Get the legal contact's email log
+	emailLog, err = models.GetEmailLog(contacts.Legal)
+	require.NoError(t, err)
+
 	// Should only return a count of emails that match the reason and are within the time window
-	sent, err = models.GetSentEmailCount(contacts.Legal, "verify_contact", 32)
+	sent, err = models.CountSentEmails(emailLog, "verify_contact", 32)
 	require.NoError(t, err)
 	require.Equal(t, 2, sent, "expected 2 emails sent within the last 32 days")
 
-	sent, err = models.GetSentEmailCount(contacts.Legal, "rejection", 30)
+	sent, err = models.CountSentEmails(emailLog, "rejection", 30)
 	require.NoError(t, err)
 	require.Equal(t, 1, sent, "expected 1 emails sent within the last 30 days")
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -9,21 +10,26 @@ import (
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-multierror"
 	"github.com/joho/godotenv"
 	"github.com/trisacrypto/directory/pkg"
+	"github.com/trisacrypto/directory/pkg/bff"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/store"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
+	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc/status"
 )
 
 var (
-	db    store.Store
-	auth0 *management.Management
-	conf  config.Config
+	db        store.Store
+	mainnetDB store.Store
+	testnetDB store.Store
+	auth0     *management.Management
+	conf      config.Config
 )
 
 func main() {
@@ -52,6 +58,62 @@ func main() {
 			Before:    connectDB,
 			After:     closeDB,
 			Flags:     []cli.Flag{},
+		},
+		{
+			Name:   "orgs:missing",
+			Usage:  "list GDS registrations that are missing organizaions",
+			Action: missingOrgs,
+			Before: Before(loadConf, connectDB, connectGDSDatabases),
+			After:  After(closeDB, closeGDSDatabases),
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "no-testnet",
+					Aliases: []string{"T"},
+					Usage:   "don't lookup TestNet registrations in report",
+				},
+				&cli.BoolFlag{
+					Name:    "no-mainnet",
+					Aliases: []string{"M"},
+					Usage:   "don't lookup MainNet registrations in report",
+				},
+			},
+		},
+		{
+			Name:   "orgs:create",
+			Usage:  "create an organization from existing GDS records",
+			Action: createOrgs,
+			Before: Before(loadConf, connectDB, connectGDSDatabases, connectAuth0),
+			After:  After(closeDB, closeGDSDatabases),
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "name",
+					Aliases:  []string{"n"},
+					Usage:    "the name of the organization to create",
+					Required: true,
+				},
+				&cli.StringFlag{
+					Name:     "domain",
+					Aliases:  []string{"d"},
+					Usage:    "the domain name of the organization",
+					Required: true,
+				},
+				&cli.StringFlag{
+					Name:    "testnet-id",
+					Aliases: []string{"t"},
+					Usage:   "the VASP ID of the TestNet record",
+				},
+				&cli.StringFlag{
+					Name:    "mainnet-id",
+					Aliases: []string{"m"},
+					Usage:   "the VASP ID of the MainNet record",
+				},
+				&cli.StringFlag{
+					Name:     "user",
+					Aliases:  []string{"u"},
+					Usage:    "the auth0 user ID to add as organization leader",
+					Required: true,
+				},
+			},
 		},
 		{
 			Name:   "collabs:add",
@@ -107,7 +169,6 @@ func connectDB(c *cli.Context) (err error) {
 	}
 
 	// Connect to the BFF main database
-	// TODO: do we need to connect to the mainnet and testnet databases?
 	if db, err = store.Open(conf.Database); err != nil {
 		if serr, ok := status.FromError(err); ok {
 			return cli.Exit(fmt.Errorf("could not open store: %s", serr.Message()), 1)
@@ -136,6 +197,48 @@ func closeDB(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 	return nil
+}
+
+func connectGDSDatabases(c *cli.Context) (err error) {
+	if conf.IsZero() {
+		if err = loadConf(c); err != nil {
+			return err
+		}
+	}
+
+	// Connect to the GDS TestNet database
+	if testnetDB, err = store.Open(conf.TestNet.Database); err != nil {
+		if serr, ok := status.FromError(err); ok {
+			return cli.Exit(fmt.Errorf("could not open testnet store: %s", serr.Message()), 1)
+		}
+		return cli.Exit(err, 1)
+	}
+
+	// Connect to the GDS MainNet database
+	if mainnetDB, err = store.Open(conf.MainNet.Database); err != nil {
+		if serr, ok := status.FromError(err); ok {
+			return cli.Exit(fmt.Errorf("could not open mainnet store: %s", serr.Message()), 1)
+		}
+		return cli.Exit(err, 1)
+	}
+
+	return nil
+}
+
+func closeGDSDatabases(c *cli.Context) (err error) {
+	if mainnetDB != nil {
+		if dberr := mainnetDB.Close(); dberr != nil {
+			err = multierror.Append(err, dberr)
+		}
+	}
+
+	if testnetDB != nil {
+		if dberr := testnetDB.Close(); dberr != nil {
+			err = multierror.Append(err, dberr)
+		}
+	}
+
+	return err
 }
 
 //===========================================================================
@@ -191,6 +294,262 @@ func detailOrgs(c *cli.Context) (err error) {
 		return printJSON(orgs[0])
 	}
 	return printJSON(orgs)
+}
+
+func missingOrgs(c *cli.Context) (err error) {
+	if c.Bool("no-testnet") && c.Bool("no-mainnet") {
+		return cli.Exit("no GDS networks specified to analyze", 0)
+	}
+
+	// Step one: compile all directory records from existing organizations
+	testnet := make(map[string]struct{})
+	mainnet := make(map[string]struct{})
+
+	orgs := db.ListOrganizations()
+	defer orgs.Release()
+	for orgs.Next() {
+		var org *models.Organization
+		if org, err = orgs.Organization(); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		if org.Testnet != nil && org.Testnet.Id != "" {
+			testnet[org.Testnet.Id] = struct{}{}
+		}
+
+		if org.Mainnet != nil && org.Mainnet.Id != "" {
+			mainnet[org.Mainnet.Id] = struct{}{}
+		}
+	}
+
+	if err = orgs.Error(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Step one and a half: create a CSV document to write records to
+	writer := csv.NewWriter(os.Stdout)
+	writer.Write([]string{"id", "name", "common name", "registered directory"})
+
+	// Step two: loop through TestNet to see what registrations are missing
+	if !c.Bool("no-testnet") {
+		vasps := testnetDB.ListVASPs()
+		defer vasps.Release()
+		for vasps.Next() {
+			var vasp *pb.VASP
+			if vasp, err = vasps.VASP(); err != nil {
+				return cli.Exit(err, 1)
+			}
+
+			if _, ok := testnet[vasp.Id]; !ok {
+				name, _ := vasp.Name()
+				row := []string{vasp.Id, name, vasp.CommonName, vasp.RegisteredDirectory}
+				writer.Write(row)
+			}
+		}
+
+		if err = vasps.Error(); err != nil {
+			return cli.Exit(err, 1)
+		}
+	}
+
+	// Step three: loop through MainNet to see what registrations are missing
+	if !c.Bool("no-mainnet") {
+		vasps := mainnetDB.ListVASPs()
+		defer vasps.Release()
+		for vasps.Next() {
+			var vasp *pb.VASP
+			if vasp, err = vasps.VASP(); err != nil {
+				return cli.Exit(err, 1)
+			}
+
+			if _, ok := mainnet[vasp.Id]; !ok {
+				name, _ := vasp.Name()
+				row := []string{vasp.Id, name, vasp.CommonName, vasp.RegisteredDirectory}
+				writer.Write(row)
+			}
+		}
+
+		if err = vasps.Error(); err != nil {
+			return cli.Exit(err, 1)
+		}
+	}
+
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return cli.Exit(err, 1)
+	}
+	return nil
+}
+
+func createOrgs(c *cli.Context) (err error) {
+	var (
+		mainnetVASP *pb.VASP
+		testnetVASP *pb.VASP
+		user        *management.User
+		permissions *management.PermissionList
+		appdata     *auth.AppMetadata
+		username    string
+		mainname    string
+		testname    string
+	)
+
+	if vaspID := c.String("mainnet-id"); vaspID != "" {
+		if mainnetVASP, err = mainnetDB.RetrieveVASP(vaspID); err != nil {
+			return cli.Exit(err, 1)
+		}
+		mainname, _ = mainnetVASP.Name()
+		if mainname == "" {
+			mainname = mainnetVASP.CommonName
+		}
+	} else {
+		mainname = "N/A"
+	}
+
+	if vaspID := c.String("testnet-id"); vaspID != "" {
+		if testnetVASP, err = testnetDB.RetrieveVASP(vaspID); err != nil {
+			return cli.Exit(err, 1)
+		}
+		testname, _ = testnetVASP.Name()
+		if testname == "" {
+			testname = testnetVASP.CommonName
+		}
+	} else {
+		testname = "N/A"
+	}
+
+	if user, err = auth0.User.Read(c.String("user")); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Fetch the appdata and permissions of the user
+	appdata = &auth.AppMetadata{}
+	if err = appdata.Load(user.AppMetadata); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	if permissions, err = auth0.User.Permissions(*user.ID); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	if !HasPermission(auth.SwitchOrganizations, permissions) {
+		return cli.Exit("the user must be a TSP user", 1)
+	}
+
+	// Ask if we should proceed
+	username, _ = auth.UserDisplayName(user)
+	if !askForConfirmation(fmt.Sprintf("create org for TestNet: %s and MainNet: %s records with user %s?", testname, mainname, username)) {
+		return cli.Exit("canceled at request of user", 0)
+	}
+
+	// Create new organization record
+	org := &models.Organization{
+		Name:      c.String("name"),
+		Domain:    c.String("domain"),
+		CreatedBy: "support@rotational.io",
+	}
+
+	if org.Domain, err = bff.NormalizeDomain(org.Domain); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	if err = bff.ValidateDomain(org.Domain); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// TODO: Check for duplicate domains
+
+	// Add the user as a collaborator to the organization
+	// NOTE: expecting the user to be a TSP so no roles are modified
+	collaborator := &models.Collaborator{
+		Email:    *user.Email,
+		UserId:   *user.ID,
+		Verified: *user.EmailVerified,
+	}
+
+	if err = org.AddCollaborator(collaborator); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Add the directory records
+	if mainnetVASP != nil {
+		org.Mainnet = &models.DirectoryRecord{
+			Id:                  mainnetVASP.Id,
+			RegisteredDirectory: mainnetVASP.RegisteredDirectory,
+			CommonName:          mainnetVASP.CommonName,
+			Submitted:           mainnetVASP.FirstListed,
+		}
+	}
+
+	if testnetVASP != nil {
+		org.Testnet = &models.DirectoryRecord{
+			Id:                  testnetVASP.Id,
+			RegisteredDirectory: testnetVASP.RegisteredDirectory,
+			CommonName:          testnetVASP.CommonName,
+			Submitted:           testnetVASP.FirstListed,
+		}
+	}
+
+	// Create the registration form
+	var vasp *pb.VASP
+	if mainnetVASP != nil {
+		vasp = mainnetVASP
+	} else if testnetVASP != nil {
+		vasp = testnetVASP
+	}
+
+	if vasp != nil {
+		reg := models.NewRegisterForm()
+		reg.Website = vasp.Website
+		reg.BusinessCategory = vasp.BusinessCategory
+		reg.VaspCategories = vasp.VaspCategories
+		reg.EstablishedOn = vasp.EstablishedOn
+		reg.OrganizationName = org.Name
+		reg.Entity = vasp.Entity
+		reg.Contacts = vasp.Contacts
+		reg.Trixo = vasp.Trixo
+
+		if mainnetVASP != nil {
+			reg.Mainnet = &models.NetworkDetails{
+				CommonName: mainnetVASP.CommonName,
+				Endpoint:   mainnetVASP.TrisaEndpoint,
+			}
+		}
+
+		if testnetVASP != nil {
+			reg.Testnet = &models.NetworkDetails{
+				CommonName: testnetVASP.CommonName,
+				Endpoint:   testnetVASP.TrisaEndpoint,
+			}
+		}
+
+		reg.State.Current = 6
+		reg.State.ReadyToSubmit = reg.ReadyToSubmit("all")
+		reg.State.Started = vasp.FirstListed
+		reg.State.Steps = []*models.FormStep{
+			{Key: 1, Status: "done"},
+			{Key: 2, Status: "done"},
+			{Key: 3, Status: "done"},
+			{Key: 4, Status: "done"},
+			{Key: 5, Status: "done"},
+			{Key: 6, Status: "done"},
+		}
+
+		org.Registration = reg
+	} else {
+		org.Registration = models.NewRegisterForm()
+	}
+
+	// Create the organization
+	if _, err = db.CreateOrganization(org); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Add the user to the organization
+	appdata.AddOrganization(org.Id)
+	if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
+		return cli.Exit(err, 1)
+	}
+	return nil
 }
 
 func addCollab(c *cli.Context) (err error) {
@@ -336,6 +695,17 @@ func GetOrg(id string) (_ *models.Organization, err error) {
 }
 
 func Before(funcs ...cli.BeforeFunc) cli.BeforeFunc {
+	return func(c *cli.Context) error {
+		for _, f := range funcs {
+			if err := f(c); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
+func After(funcs ...cli.AfterFunc) cli.AfterFunc {
 	return func(c *cli.Context) error {
 		for _, f := range funcs {
 			if err := f(c); err != nil {

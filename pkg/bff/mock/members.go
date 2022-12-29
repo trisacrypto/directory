@@ -3,7 +3,7 @@ package mock
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
@@ -109,7 +109,7 @@ func (m *Members) Reset() {
 func (m *Members) UseFixture(rpc, path string) (err error) {
 	// Read the fixture data from disk
 	var data []byte
-	if data, err = ioutil.ReadFile(path); err != nil {
+	if data, err = os.ReadFile(path); err != nil {
 		return fmt.Errorf("could not read fixture data: %s", err)
 	}
 

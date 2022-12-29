@@ -2,7 +2,7 @@ package index_test
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -21,7 +21,7 @@ func TestNameIndex(t *testing.T) {
 	index := index.NewNamesIndex()
 	require.True(t, index.Empty(), "new index is not empty")
 
-	data, err := ioutil.ReadFile("testdata/names.json.gz")
+	data, err := os.ReadFile("testdata/names.json.gz")
 	require.NoError(t, err, "could not read testdata/names.json.gz")
 	require.NoError(t, index.Load(data), "could not load index from disk")
 	require.False(t, index.Empty(), "no fixtures were loaded")
@@ -75,7 +75,7 @@ func TestWebsiteIndex(t *testing.T) {
 	index := index.NewWebsiteIndex()
 	require.True(t, index.Empty(), "new index is not empty")
 
-	data, err := ioutil.ReadFile("testdata/websites.json.gz")
+	data, err := os.ReadFile("testdata/websites.json.gz")
 	require.NoError(t, err, "could not read testdata/websites.json.gz")
 	require.NoError(t, index.Load(data), "could not load index from disk")
 	require.False(t, index.Empty(), "no fixtures were loaded")
@@ -129,7 +129,7 @@ func TestCountryIndex(t *testing.T) {
 	index := index.NewCountryIndex()
 	require.True(t, index.Empty(), "new index is not empty")
 
-	data, err := ioutil.ReadFile("testdata/countries.json.gz")
+	data, err := os.ReadFile("testdata/countries.json.gz")
 	require.NoError(t, err, "could not read testdata/countries.json.gz")
 	require.NoError(t, index.Load(data), "could not load index from disk")
 	require.False(t, index.Empty(), "no fixtures were loaded")
@@ -182,7 +182,7 @@ func TestCategoryIndex(t *testing.T) {
 	index := index.NewCategoryIndex()
 	require.True(t, index.Empty(), "new index is not empty")
 
-	data, err := ioutil.ReadFile("testdata/categories.json.gz")
+	data, err := os.ReadFile("testdata/categories.json.gz")
 	require.NoError(t, err, "could not read testdata/categories.json.gz")
 	require.NoError(t, index.Load(data), "could not load index from disk")
 	require.False(t, index.Empty(), "no fixtures were loaded")

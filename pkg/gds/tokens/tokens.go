@@ -6,7 +6,7 @@ import (
 	"crypto/rsa"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v4"
@@ -75,7 +75,7 @@ func New(keys map[string]string, audience string) (tm *TokenManager, err error) 
 
 		// Load the keys from disk
 		var data []byte
-		if data, err = ioutil.ReadFile(path); err != nil {
+		if data, err = os.ReadFile(path); err != nil {
 			return nil, fmt.Errorf("could not read kid %s from %s: %s", kid, path, err)
 		}
 

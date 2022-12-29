@@ -13,6 +13,8 @@ export const APP_PATH = {
   CERTIFICATE_REGISTRATION: '/certificate/registration',
   CERTIFICATE_INVENTORY: '/dashboard/certificate/inventory',
   SWITCH_ORGANIZATION: '/dashboard/organization/switch',
+  SWITCH: '/dashboard/switch',
+
 
 };
 

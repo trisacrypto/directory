@@ -39,7 +39,7 @@ const TrisaImplementation: React.FC = () => {
     if (errors?.tempField?.message) {
       toast({
         position: 'top-right',
-        title: errors?.tempField?.message,
+        title: errors?.tempField?.message as string,
         status: 'error',
         duration: 5000,
         isClosable: true

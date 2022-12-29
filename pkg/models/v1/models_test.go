@@ -945,9 +945,7 @@ func TestGetVASPEmailLog(t *testing.T) {
 	require.NoError(t, err, "could not get email log")
 	require.Len(t, emails, 2)
 	require.Equal(t, verifyAdmin.Subject, emails[0].Subject)
-	require.Equal(t, AdministrativeContact, emails[0].ContactType)
 	require.Equal(t, reissuanceAdmin.Subject, emails[1].Subject)
-	require.Equal(t, AdministrativeContact, emails[1].ContactType)
 
 	// Add a second contact with no log entries
 	tech := &pb.Contact{
@@ -960,9 +958,7 @@ func TestGetVASPEmailLog(t *testing.T) {
 	require.NoError(t, err, "could not get email log")
 	require.Len(t, emails, 2)
 	require.Equal(t, verifyAdmin.Subject, emails[0].Subject)
-	require.Equal(t, AdministrativeContact, emails[0].ContactType)
 	require.Equal(t, reissuanceAdmin.Subject, emails[1].Subject)
-	require.Equal(t, AdministrativeContact, emails[1].ContactType)
 
 	// Add some log entries to the second contact
 	verifyTech := &EmailLogEntry{
@@ -988,13 +984,9 @@ func TestGetVASPEmailLog(t *testing.T) {
 	require.NoError(t, err, "could not get email log")
 	require.Len(t, emails, 4)
 	require.Equal(t, verifyAdmin.Subject, emails[0].Subject)
-	require.Equal(t, AdministrativeContact, emails[0].ContactType)
 	require.Equal(t, verifyTech.Subject, emails[1].Subject)
-	require.Equal(t, TechnicalContact, emails[1].ContactType)
 	require.Equal(t, reissuanceTech.Subject, emails[2].Subject)
-	require.Equal(t, TechnicalContact, emails[2].ContactType)
 	require.Equal(t, reissuanceAdmin.Subject, emails[3].Subject)
-	require.Equal(t, AdministrativeContact, emails[3].ContactType)
 
 	// Add a third contact with some log entries
 	billing := &pb.Contact{
@@ -1030,19 +1022,12 @@ func TestGetVASPEmailLog(t *testing.T) {
 	require.NoError(t, err, "could not get email log")
 	require.Len(t, emails, 7)
 	require.Equal(t, verifyBilling.Subject, emails[0].Subject)
-	require.Equal(t, BillingContact, emails[0].ContactType)
 	require.Equal(t, verifyAdmin.Subject, emails[1].Subject)
-	require.Equal(t, AdministrativeContact, emails[1].ContactType)
 	require.Equal(t, verifyTech.Subject, emails[2].Subject)
-	require.Equal(t, TechnicalContact, emails[2].ContactType)
 	require.Equal(t, reissuanceTech.Subject, emails[3].Subject)
-	require.Equal(t, TechnicalContact, emails[3].ContactType)
 	require.Equal(t, resendBilling.Subject, emails[4].Subject)
-	require.Equal(t, BillingContact, emails[4].ContactType)
 	require.Equal(t, reissuanceAdmin.Subject, emails[5].Subject)
-	require.Equal(t, AdministrativeContact, emails[5].ContactType)
 	require.Equal(t, reissuanceBilling.Subject, emails[6].Subject)
-	require.Equal(t, BillingContact, emails[6].ContactType)
 }
 
 func loadFixture(path string) (vasp *pb.VASP, err error) {
