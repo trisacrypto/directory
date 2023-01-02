@@ -6,7 +6,8 @@ import {
   ModalHeader,
   ModalOverlay,
   useDisclosure,
-  useToast
+  useToast,
+  Stack
 } from '@chakra-ui/react';
 import { t, Trans } from '@lingui/macro';
 import { usePostOrganizations } from 'modules/dashboard/organization/usePostOrganization';
@@ -47,6 +48,7 @@ function AddNewVaspModal() {
   const onSubmit = (values: any) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { accept, ...payload } = values;
+    console.log('[mutate] payload', payload);
 
     mutate(payload, {
       onSuccess() {
@@ -55,7 +57,7 @@ function AddNewVaspModal() {
         closeModal();
       },
       onError: (error) => {
-        // console.log('[mutate] error', error.response?.data.error);
+        console.log('[mutate] error', error.response?.data.error);
         toast({
           title: error.response?.data?.error || error.message,
           status: 'error',
@@ -72,25 +74,26 @@ function AddNewVaspModal() {
       <Button data-testid="add-new-vasp" onClick={onOpen} disabled={!canCreateOrganization()}>
         + Add New VASP
       </Button>
+      <Stack zIndex="9999" position="absolute">
+        <Modal blockScrollOnMount isOpen={isOpen} onClose={closeModal}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader textAlign="center" textTransform="capitalize">
+              <Trans>Add new managed VASP</Trans>
+            </ModalHeader>
 
-      <Modal blockScrollOnMount isOpen={isOpen} onClose={closeModal}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader textAlign="center" textTransform="capitalize">
-            <Trans>Add new managed VASP</Trans>
-          </ModalHeader>
-
-          <ModalBody>
-            <FormProvider {...methods}>
-              <AddNewVaspForm
-                onSubmit={onSubmit}
-                isCreatingVasp={isCreatingVasp}
-                closeModal={closeModal}
-              />
-            </FormProvider>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+            <ModalBody>
+              <FormProvider {...methods}>
+                <AddNewVaspForm
+                  onSubmit={onSubmit}
+                  isCreatingVasp={isCreatingVasp}
+                  closeModal={closeModal}
+                />
+              </FormProvider>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+      </Stack>
     </>
   );
 }

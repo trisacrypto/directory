@@ -7,14 +7,15 @@ import EditReviewNote from './EditReviewNote'
 import PropTypes from 'prop-types';
 import { deleteReviewNoteApiResponse } from 'redux/vasp-details'
 import TimeAgo from 'components/TimeAgo'
-import DOMPurify from 'dompurify';
+import sanitizeMarkdown from 'utils/sanitize-markdown'
+import markdownToHTML from 'utils/markdownToHTML'
 
 
 function ReviewNote({ note, vaspId }) {
     const [isEditable, setIsEditable] = React.useState(false);
     const dispatch = useDispatch()
     const safeDispatch = useSafeDispatch(dispatch)
-    const sanitizedNote = DOMPurify.sanitize(note.text)
+    const sanitizedNote = sanitizeMarkdown(markdownToHTML(note.text))
 
     const handleDeleteClick = () => {
         if (note && vaspId) {

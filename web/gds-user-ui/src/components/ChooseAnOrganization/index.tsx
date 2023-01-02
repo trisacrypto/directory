@@ -1,84 +1,82 @@
-import {
-  // Grid,
-  // GridItem,
-  HStack,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalOverlay,
-  Stack,
-  StackDivider,
-  Text
-} from '@chakra-ui/react';
+import { HStack, IconButton, Stack, StackDivider, Text, VStack, css } from '@chakra-ui/react';
 import { Account } from 'components/Account';
 import AddNewVaspModal from 'components/AddNewVaspModal/AddNewVaspModal';
 import { Trans } from '@lingui/macro';
-// import InputFormControl from 'components/ui/InputFormControl';
-// import SelectFormControl from 'components/ui/SelectFormControl';
 import { useOrganizationListQuery } from 'modules/dashboard/organization/useOrganizationListQuery';
 import { userSelector } from 'modules/auth/login/user.slice';
 import { useSelector } from 'react-redux';
-// const OPTIONS = [
-//   { label: 'Newest registrations', value: 'NEWEST_REGISTRATIONS' },
-//   { label: 'Most recently logged in', value: 'MOST_RECENTLY_LOGGED_IN' },
-//   { label: 'Alphabetical', value: 'ALPHABETICAL' }
-// ];
+import { GrClose } from 'react-icons/gr';
+import { useNavigate } from 'react-router-dom';
+import React from 'react';
 
-export type ChooseAnAccountProps = {
-  isOpen: boolean;
-  onClose: () => void;
-};
-
-function ChooseAnOrganization({ isOpen, onClose }: ChooseAnAccountProps) {
+// import { TransparentBackground } from 'components/TransparentBackground';
+function ChooseAnOrganization() {
   const { organizations } = useOrganizationListQuery();
   const { user } = useSelector(userSelector);
+  const navigate = useNavigate();
+  const handleBack = (e: React.MouseEvent<HTMLElement>) => {
+    e.preventDefault();
+    navigate(-1);
+  };
 
   return (
-    <>
-      <Modal blockScrollOnMount={false} isOpen={isOpen} onClose={onClose} size="full">
-        <ModalOverlay />
-        <ModalContent pt="10vh">
-          <ModalCloseButton />
-          <ModalBody>
-            <Stack spacing={3} maxW="700px" mx="auto">
-              <div>
-                <HStack width="100%" justifyContent="end">
-                  <AddNewVaspModal />
-                </HStack>
-                <Text fontWeight={700}>
-                  <Trans>Select a VASP from the Managed VASP List</Trans>
-                </Text>
-                {/* <Grid templateColumns="repeat(5, 1fr)" gap={4}>
-                  <GridItem colSpan={3}>
-                    <InputFormControl controlId="search" />
-                  </GridItem>
-                  <GridItem colSpan={2}>
-                    <SelectFormControl controlId="filter" options={OPTIONS} />
-                  </GridItem>
-                </Grid> */}
-              </div>
-              <Stack divider={<StackDivider borderColor="#D9D9D9" />} p={2}>
-                {organizations && organizations?.length > 0 ? (
-                  organizations?.map((organization) => (
-                    <Account
-                      key={organization.id}
-                      id={organization.id}
-                      name={organization?.name}
-                      domain={organization?.domain}
-                      isCurrent={organization.id === user?.vasp?.id}
-                      onClose={onClose}
-                    />
-                  ))
-                ) : (
-                  <Text>No VASPs found</Text>
-                )}
-              </Stack>
-            </Stack>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-    </>
+    <VStack
+      position="absolute"
+      top="0"
+      left="0"
+      w="100%"
+      h="100%"
+      bg={'rgba(255,255,255,255)'}
+      spacing={3}
+      width={'full'}
+      mx="auto"
+      pt="10vh">
+      <IconButton
+        onClick={handleBack}
+        icon={<GrClose />}
+        aria-label="Get back to dashboard"
+        position="absolute"
+        top={5}
+        right={5}
+        variant="ghost"
+        title="Get back to dashboard"
+      />
+      <Stack
+        width={'50%'}
+        mx="auto"
+        overflowY={'scroll'}
+        css={css({
+          boxShadow: 'inset 0 -2px 0 rgba(0, 0, 0, 0.1)',
+          border: '0 none'
+        })}>
+        <div>
+          <HStack width="100%" justifyContent="end">
+            <AddNewVaspModal />
+          </HStack>
+          <Text fontWeight={700}>
+            <Trans>Select a VASP from the Managed VASP List</Trans>
+          </Text>
+        </div>
+
+        <Stack>
+          <Stack divider={<StackDivider borderColor="#D9D9D9" />} p={2}>
+            {organizations && organizations?.length > 0 ? (
+              organizations?.map((organization) => (
+                <Account
+                  key={organization.id}
+                  id={organization.id}
+                  name={organization?.name}
+                  domain={organization?.domain}
+                  isCurrent={organization.id === user?.vasp?.id}
+                />
+              ))
+            ) : (
+              <Text>No VASPs found</Text>
+            )}
+          </Stack>
+        </Stack>
+      </Stack>
+    </VStack>
   );
 }
 

@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/auth0/go-jwt-middleware/v2/validator"
@@ -46,7 +46,7 @@ func TestClaims(t *testing.T) {
 
 func TestClaimsContext(t *testing.T) {
 	// Load claims fixture
-	data, err := ioutil.ReadFile("testdata/validated_claims.json")
+	data, err := os.ReadFile("testdata/validated_claims.json")
 	require.NoError(t, err, "could not read validated claims fixture")
 
 	vclaims := &validator.ValidatedClaims{CustomClaims: &auth.Claims{}, RegisteredClaims: validator.RegisteredClaims{}}
@@ -125,7 +125,7 @@ func TestAuthenticate(t *testing.T) {
 	require.True(t, claims.IsAnonymous(), "expected anonymous claims on context")
 
 	// Test forbidden error with incorrectly signed token
-	token, err := ioutil.ReadFile("testdata/invalid_token.txt")
+	token, err := os.ReadFile("testdata/invalid_token.txt")
 	require.NoError(t, err, "could not read invalid token fixture")
 
 	// Create context, gin.Engine, and http test writer to execute tests
@@ -320,7 +320,7 @@ func doRequest(srv *gin.Engine, w *httptest.ResponseRecorder, c *gin.Context) (d
 
 	data = make(map[string]interface{})
 	var raw []byte
-	if raw, err = ioutil.ReadAll(rep.Body); err != nil {
+	if raw, err = io.ReadAll(rep.Body); err != nil {
 		return nil, 0, err
 	}
 

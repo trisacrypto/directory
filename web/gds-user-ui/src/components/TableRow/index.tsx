@@ -2,11 +2,11 @@ import RowItem from './RowItem';
 import { Td } from '@chakra-ui/react';
 import { ReactNode } from 'react';
 
-type TableRowProps<T> = {
-  row: T | { [k: string]: ReactNode };
+type TableRowProps = {
+  row: { [k: string]: ReactNode };
 };
 
-function TableRow<T>({ row }: TableRowProps<T>) {
+function TableRow({ row }: TableRowProps) {
   return (
     <RowItem>
       {Object.entries(row).map(([k, v]) => (

@@ -86,13 +86,15 @@ func TestAppMetadata(t *testing.T) {
 	for _, tc := range testCases {
 		actual := &AppMetadata{}
 
-		err := actual.Load(tc.appdata)
+		err := actual.Load(&tc.appdata)
 		require.NoError(t, err, "could not load appdata")
 		require.Equal(t, tc.expected, actual, "app_metadata did not load correctly")
 
-		appdata, err := actual.Dump()
+		pappdata, err := actual.Dump()
 		require.NoError(t, err, "could not dump app_metdata")
+		require.NotNil(t, pappdata, "no appdata returned")
 
+		appdata := *pappdata
 		require.Contains(t, appdata, "orgid")
 		require.Equal(t, actual.OrgID, appdata["orgid"])
 

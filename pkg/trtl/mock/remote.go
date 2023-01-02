@@ -3,7 +3,7 @@ package mock
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/rotationalio/honu/replica"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
@@ -154,7 +154,7 @@ func (s *RemoteTrtl) Reset() {
 // the protocol buffer response to the specified RPC, simplifying handler mocking.
 func (s *RemoteTrtl) UseFixture(rpc, path string) (err error) {
 	var data []byte
-	if data, err = ioutil.ReadFile(path); err != nil {
+	if data, err = os.ReadFile(path); err != nil {
 		return fmt.Errorf("could not read fixture: %v", err)
 	}
 

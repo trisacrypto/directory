@@ -1,6 +1,6 @@
 import { Modal } from "components/Modal"
 import BusinessInfosForm from "pages/app/details/BasicDetails/components/BusinessInfosForm"
-import { render, fireEvent, screen, waitFor } from "utils/test-utils"
+import { render, fireEvent, screen, act } from "utils/test-utils"
 
 describe("BusinessInfosForm", () => {
     const data = {
@@ -20,7 +20,7 @@ describe("BusinessInfosForm", () => {
             render(<Modal><BusinessInfosForm data={data} /></Modal>)
 
             const websiteEl = screen.getByRole('textbox', { name: /website/i })
-            await waitFor(() => {
+            await act(() => {
                 fireEvent.change(websiteEl, { target: { value: 'http://opalcliff.co' } })
             })
 
@@ -31,7 +31,7 @@ describe("BusinessInfosForm", () => {
             render(<Modal><BusinessInfosForm data={data} /></Modal>)
 
             const websiteEl = screen.getByRole('textbox', { name: /website/i })
-            await waitFor(() => {
+            await act(() => {
                 fireEvent.change(websiteEl, { target: { value: 'http:/opalcliff' } })
             })
             const websiteErrorMessageEl = screen.getByText(/website should be a valid url/i)
@@ -46,7 +46,7 @@ describe("BusinessInfosForm", () => {
             render(<Modal><BusinessInfosForm data={data} /></Modal>)
 
             const establishedOnEl = screen.getByLabelText(/date of incorporation\/establishment/i)
-            await waitFor(() => {
+            await act(() => {
                 fireEvent.change(establishedOnEl, { target: { value: "2020-10-12" } })
             })
 
@@ -57,7 +57,7 @@ describe("BusinessInfosForm", () => {
             render(<Modal><BusinessInfosForm data={data} /></Modal>)
 
             const establishedOnEl = screen.getByLabelText(/date of incorporation\/establishment/i)
-            await waitFor(async () => {
+            await act(async () => {
                 fireEvent.change(establishedOnEl, { target: { value: "10-12-2020" } })
             })
 

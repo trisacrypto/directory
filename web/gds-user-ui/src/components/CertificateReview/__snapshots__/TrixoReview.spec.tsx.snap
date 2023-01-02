@@ -529,8 +529,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 <p
                   class="chakra-text emotion-7"
                 >
-                  $0.00
-                   
+                  $NaN undefined
                 </p>
               </td>
               <td
@@ -603,9 +602,7 @@ exports[`<TrixoReview /> should match snapshot 1`] = `
                 <p
                   class="chakra-text emotion-7"
                 >
-                  $0.00
-                   
-                  USD
+                  $NaN undefined
                 </p>
               </td>
               <td

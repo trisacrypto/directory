@@ -2,7 +2,6 @@ package replica_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -83,7 +82,7 @@ func TestSelectPeerAll(t *testing.T) {
 func loadFixtures(t *testing.T) map[string]*peers.Peer {
 	// Load peer fixtures
 	fixtures := make(map[string]*peers.Peer)
-	data, err := ioutil.ReadFile("testdata/peers.json")
+	data, err := os.ReadFile("testdata/peers.json")
 	require.NoError(t, err)
 	require.NoError(t, json.Unmarshal(data, &fixtures), "could not unmarshal peers fixtures")
 	require.Len(t, fixtures, 4, "unexpected number of peers fixtures")
@@ -91,7 +90,7 @@ func loadFixtures(t *testing.T) map[string]*peers.Peer {
 }
 
 func createDB(t *testing.T, fixtures []*peers.Peer) *honu.DB {
-	tmp, err := ioutil.TempDir("testdata", "*-db")
+	tmp, err := os.MkdirTemp("testdata", "*-db")
 	require.NoError(t, err)
 	t.Cleanup(func() { os.RemoveAll(tmp) })
 
