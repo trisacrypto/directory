@@ -1,5 +1,5 @@
-import {marked} from 'marked';
+import { marked } from 'marked';
 
-export default function markdownToHTML(markdown){
-    return marked.parse(markdown)
+export default function markdownToHTML(markdown) {
+  return marked.parse(markdown);
 }

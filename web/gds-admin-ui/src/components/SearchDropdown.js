@@ -3,14 +3,14 @@ import React, { useState } from 'react';
 import { Dropdown } from 'react-bootstrap';
 
 const SearchDropdown = (): React$Element<any> => {
-    const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-    const toggleDropdown = () => {
-        setDropdownOpen(!dropdownOpen);
-    };
-    return (
-        <Dropdown show={dropdownOpen} onToggle={toggleDropdown}>
-            {/* <Dropdown.Toggle
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+  return (
+    <Dropdown show={dropdownOpen} onToggle={toggleDropdown}>
+      {/* <Dropdown.Toggle
                 variant="link"
                 id="dropdown-apps"
                 as={Link}
@@ -25,8 +25,8 @@ const SearchDropdown = (): React$Element<any> => {
                     <input type="text" className="form-control" placeholder="Search ..." />
                 </form>
             </Dropdown.Menu> */}
-        </Dropdown>
-    );
+    </Dropdown>
+  );
 };
 
 export default SearchDropdown;

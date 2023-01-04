@@ -1,12 +1,10 @@
 import React from 'react';
 import { Page, Text, View, Font, Document, StyleSheet, Link } from '@react-pdf/renderer';
 import Html from 'react-pdf-html';
-import { formatDate, formatDisplayedData, getConductsCustomerKYC, getMustComplyRegulations, getMustSafeguardPii, getSafeguardPii, hasAddressField, hasAddressFieldAndLine, hasAddressLine, intlFormatter, verifiedContactStatus } from 'utils';
-import { BUSINESS_CATEGORY, NAME_IDENTIFIER_TYPE } from 'constants/basic-details';
-import { AddressTypeHeaders, StatusLabel, VERIFIED_CONTACT_STATUS_LABEL } from 'constants/index';
-import { financialTransfersPermitted, hasRequiredRegulatoryProgram } from 'constants/trixo';
-import { isoCountries } from 'utils/country';
-import { NATIONAL_IDENTIFIER_TYPE } from 'constants/national-identification';
+import { formatDate, formatDisplayedData, getConductsCustomerKYC, getMustComplyRegulations, getMustSafeguardPii, getSafeguardPii, hasAddressField, hasAddressFieldAndLine, hasAddressLine, intlFormatter, verifiedContactStatus } from '@/utils';
+import { BUSINESS_CATEGORY, NAME_IDENTIFIER_TYPE, AddressTypeHeaders, StatusLabel, VERIFIED_CONTACT_STATUS_LABEL, NATIONAL_IDENTIFIER_TYPE } from '@/constants';
+import { isoCountries } from '@/utils/country';
+import { financialTransfersPermitted, hasRequiredRegulatoryProgram } from '@/constants/trixo';
 
 Font.register({
     family: 'Source Sans Pro',

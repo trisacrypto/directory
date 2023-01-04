@@ -1,11 +1,9 @@
-import { defaultEndpointPrefix } from "..";
+import { defaultEndpointPrefix } from '..';
 
-describe("defaultEndpointPrefix", () => {
+describe('defaultEndpointPrefix', () => {
+  it('should return the correct dev url prefix', () => {
+    const devUrlPrefix = 'http://localhost:4434/v2';
 
-
-    it("should return the correct dev url prefix", () => {
-        const devUrlPrefix = "http://localhost:4434/v2"
-
-        expect(defaultEndpointPrefix()).toBe(devUrlPrefix);
-    })
-})
+    expect(defaultEndpointPrefix()).toBe(devUrlPrefix);
+  });
+});

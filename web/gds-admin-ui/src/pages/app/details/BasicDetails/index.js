@@ -1,15 +1,14 @@
 
-import React from 'react'
 import { Card, Col, Row } from 'react-bootstrap';
-import { Status, StatusLabel } from 'constants/index';
-import { formatDisplayedData, getStatusClassName, isValidHttpUrl } from 'utils';
+import { Status, StatusLabel } from '@/constants';
+import { formatDisplayedData, getStatusClassName, isValidHttpUrl } from '@/utils';
 import dayjs from 'dayjs';
 import Name from './components/Name';
 import NationalIdentification from './components/NationalIdentification';
-import { BUSINESS_CATEGORY } from 'constants/basic-details';
+import { BUSINESS_CATEGORY } from '@/constants';
 import Geographic from './components/Geographic';
-import countryCodeEmoji from 'utils/country';
-import { downloadFile } from 'helpers/api/utils';
+import countryCodeEmoji from '@/utils/country';
+import { downloadFile } from '@/helpers/api/utils';
 import classNames from 'classnames';
 import BasicDetailsDropDown from './components/BasicDetailsDropdown';
 import PropTypes from 'prop-types'

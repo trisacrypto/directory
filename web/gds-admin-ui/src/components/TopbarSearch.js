@@ -2,12 +2,12 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Select, { components } from 'react-select';
 import { useDispatch, useSelector } from 'react-redux';
-import useSafeDispatch from 'hooks/useSafeDispatch';
-import { fetchAutocomplete } from 'redux/actions';
-import { fetchAllAutocomplete } from 'redux/selectors';
+import useSafeDispatch from '@/hooks/useSafeDispatch';
+import { fetchAutocomplete } from '@/redux/actions';
+import { fetchAllAutocomplete } from '@/redux/selectors';
 import { useHistory } from 'react-router-dom';
 import classNames from 'classnames';
-import { formateOptionsToLabelValueObject } from 'utils'
+import { formateOptionsToLabelValueObject } from '@/utils'
 
 
 const TopbarSearch = (props) => {

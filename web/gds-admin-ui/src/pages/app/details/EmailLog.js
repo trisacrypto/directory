@@ -1,8 +1,7 @@
-import React from "react";
 import { Card } from "react-bootstrap";
 import SimpleBar from 'simplebar-react';
-import TimelineItem from "components/TimelineItem";
-import Timeline from 'components/Timeline'
+import TimelineItem from "@/components/TimelineItem";
+import Timeline from '@/components/Timeline'
 import dayjs from "dayjs";
 import PropTypes from 'prop-types';
 
