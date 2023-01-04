@@ -1,14 +1,14 @@
 import React from 'react'
 import Gravatar from 'react-gravatar'
 import { useDispatch } from 'react-redux'
-import useSafeDispatch from 'hooks/useSafeDispatch'
-import { generateMd5 } from 'utils'
+import useSafeDispatch from '@/hooks/useSafeDispatch'
+import { generateMd5 } from '@/utils'
 import EditReviewNote from './EditReviewNote'
 import PropTypes from 'prop-types';
-import { deleteReviewNoteApiResponse } from 'redux/vasp-details'
-import TimeAgo from 'components/TimeAgo'
-import sanitizeMarkdown from 'utils/sanitize-markdown'
-import markdownToHTML from 'utils/markdownToHTML'
+import { deleteReviewNoteApiResponse } from '@/redux/vasp-details'
+import TimeAgo from '@/components/TimeAgo'
+import sanitizeMarkdown from '@/utils/sanitize-markdown'
+import markdownToHTML from '@/utils/markdownToHTML'
 
 
 function ReviewNote({ note, vaspId }) {

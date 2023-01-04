@@ -1,5 +1,5 @@
 import React from "react";
-import { copyToClipboard } from 'utils';
+import { copyToClipboard } from '@/utils';
 import Button from 'react-bootstrap/Button'
 import PropTypes from 'prop-types'
 

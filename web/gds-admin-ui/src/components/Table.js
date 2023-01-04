@@ -12,7 +12,7 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types'
 import qs from 'query-string'
 import { useHistory } from 'react-router-dom'
-import useQuery from 'hooks/useQuery'
+import useQuery from '@/hooks/useQuery'
 
 // components
 import Pagination from './Pagination';

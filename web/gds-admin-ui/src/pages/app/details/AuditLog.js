@@ -1,11 +1,10 @@
-import React from "react";
 import { Card } from "react-bootstrap";
 import SimpleBar from 'simplebar-react';
-import TimelineItem from "../../../components/TimelineItem";
-import Timeline from '../../../components/Timeline'
-import { StatusLabel } from "../../../constants";
 import dayjs from "dayjs";
 import PropTypes from 'prop-types';
+import { StatusLabel } from "@/constants";
+import TimelineItem from "@/components/TimelineItem";
+import Timeline from "@/components/Timeline";
 
 function sortByTimestamp(data = []) {
     return data.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())

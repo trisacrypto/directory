@@ -1,9 +1,7 @@
-const { APICore } = require("helpers/api/apiCore")
+import { APICore } from '@/helpers/api/apiCore';
 
-const api = new APICore()
+const api = new APICore();
 
-const getAllAutocomplete = () => {
-    return api.get('/autocomplete')
-}
+const getAllAutocomplete = () => api.get('/autocomplete');
 
-export default getAllAutocomplete
+export default getAllAutocomplete;
