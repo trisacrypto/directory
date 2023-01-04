@@ -1,7 +1,7 @@
-import { isoCountries } from "utils/country";
+import { isoCountries } from 'utils/country';
 
 function getIsoCountry(country = '') {
-    return isoCountries[country]
+  return isoCountries[country];
 }
 
-export default getIsoCountry
+export default getIsoCountry;

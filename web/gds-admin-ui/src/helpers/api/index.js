@@ -1,4 +1,4 @@
 // @flow
-import { login, signup, forgotPassword, forgotPasswordConfirm } from './auth';
+import { forgotPassword, forgotPasswordConfirm, login, signup } from './auth';
 
-export { login, signup, forgotPassword, forgotPasswordConfirm };
+export { forgotPassword, forgotPasswordConfirm, login, signup };

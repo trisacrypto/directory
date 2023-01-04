@@ -1,31 +1,28 @@
-import { Provider } from "react-redux";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render as rtlRender } from '@testing-library/react';
-import { configureStore } from "../redux/store";
-import { ModalProvider } from "contexts/modal";
-import { createMemoryHistory } from 'history'
-import { Router } from "react-router-dom";
-import { Suspense } from "react";
-import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
+import { ModalProvider } from '@/contexts/modal';
+import { createMemoryHistory } from 'history';
+import { Suspense } from 'react';
+import { Provider } from 'react-redux';
+import { Router } from 'react-router-dom';
 
-
+import { configureStore } from '../redux/store';
 
 const queryClient = new QueryClient();
 export const render = (ui) => {
-    const history = createMemoryHistory()
+  const history = createMemoryHistory();
 
-    return rtlRender(
-        <Provider store={configureStore({})}>
-            <QueryClientProvider client={queryClient}>
-                <Suspense fallback="loading...">
-                    <Router history={history}>
-                        <ModalProvider>
-                            {ui}
-                        </ModalProvider>
-                    </Router>
-                </Suspense>
-            </QueryClientProvider>
-        </Provider>
-    )
-}
+  return rtlRender(
+    <Provider store={configureStore({})}>
+      <QueryClientProvider client={queryClient}>
+        <Suspense fallback="loading...">
+          <Router history={history}>
+            <ModalProvider>{ui}</ModalProvider>
+          </Router>
+        </Suspense>
+      </QueryClientProvider>
+    </Provider>
+  );
+};
 
-export * from '@testing-library/react'
+export * from '@testing-library/react';

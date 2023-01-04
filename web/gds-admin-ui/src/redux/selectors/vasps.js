@@ -1,8 +1,8 @@
-const { createSelector } = require("reselect")
+const { createSelector } = require('reselect');
 
-const Vasps = state => state.Vasps
+const Vasps = (state) => state.Vasps;
 
-const getAllVasps = createSelector(Vasps, state => state.data)
-const getVaspsLoadingState = createSelector(Vasps, state => state.loading)
+const getAllVasps = createSelector(Vasps, (state) => state.data);
+const getVaspsLoadingState = createSelector(Vasps, (state) => state.loading);
 
-export { getAllVasps, getVaspsLoadingState }
+export { getAllVasps, getVaspsLoadingState };

@@ -1,8 +1,8 @@
 import React from 'react'
-import { financialTransfersPermitted, hasRequiredRegulatoryProgram } from 'constants/trixo';
+import { financialTransfersPermitted, hasRequiredRegulatoryProgram } from '@/constants/trixo';
 import { Card, Col, Row } from 'react-bootstrap';
-import { getConductsCustomerKYC, getMustComplyRegulations, getMustSafeguardPii, getSafeguardPii, intlFormatter, validateIsoCode } from "utils"
-import countryCodeEmoji, { isoCountries } from 'utils/country';
+import { getConductsCustomerKYC, getMustComplyRegulations, getMustSafeguardPii, getSafeguardPii, intlFormatter, validateIsoCode } from "@/utils"
+import countryCodeEmoji, { isoCountries } from '@/utils/country';
 import TrixoDropdown from './TrixoDropdown';
 
 function TrixoForm({ data }) {
