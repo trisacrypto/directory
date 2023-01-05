@@ -434,7 +434,7 @@ func NewCertificate(vasp *pb.VASP, certRequest *CertificateRequest, data *pb.Cer
 	}
 
 	cert = &Certificate{
-		Id:      fmt.Sprintf("%X", data.SerialNumber), // capital hex encoded serial number to match sectigo
+		Id:      GetCertID(data), // capital hex encoded serial number to match sectigo
 		Request: certRequest.Id,
 		Vasp:    vasp.Id,
 		Status:  CertificateState_ISSUED,
@@ -515,6 +515,10 @@ func UpdateCertificateRequestStatus(request *CertificateRequest, state Certifica
 	// Set the new state on the CertificateRequest.
 	request.Status = state
 	return nil
+}
+
+func GetCertID(identityCert *pb.Certificate) string {
+	return fmt.Sprintf("%X", identityCert.SerialNumber)
 }
 
 // GetReviewNotes returns all of the review notes for a VASP as a map.

@@ -319,12 +319,12 @@ func (s *certTestSuite) TestCertManagerExpiration() {
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
 
-	// setup the datastore to contain the modified charlieVASP
+	// setup the datastore to contain the modified hotelVASP
 	hotelVASP, err := s.fixtures.GetVASP("hotel")
 	require.NoError(err, "could not get hotel VASP")
 	hotelVASP = s.setupVASP(hotelVASP)
 
-	certID := certman.RetrieveCertID(hotelVASP.IdentityCertificate)
+	certID := models.GetCertID(hotelVASP.IdentityCertificate)
 	cert := &models.Certificate{
 		Id:     certID,
 		Status: models.CertificateState_ISSUED,

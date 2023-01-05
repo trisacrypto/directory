@@ -525,7 +525,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 			RegisteredDirectory:   "trisatest.net",
 			VerifiedOn:            hotel.VerifiedOn,
 			VerificationStatus:    pb.VerificationState_VERIFIED.String(),
-			CertificateSerial:     fmt.Sprintf("%X", hotel.IdentityCertificate.SerialNumber),
+			CertificateSerial:     models.GetCertID(hotel.IdentityCertificate),
 			CertificateIssued:     hotel.IdentityCertificate.NotBefore,
 			CertificateExpiration: hotel.IdentityCertificate.NotAfter,
 			VerifiedContacts: map[string]bool{
@@ -751,7 +751,7 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 	require.Len(actual.VerifiedContacts, 2)
 
 	// Verify that the identity certificate serial number was converted to a capital hex encoded string
-	expectedSerial := fmt.Sprintf("%X", hotel.IdentityCertificate.SerialNumber)
+	expectedSerial := models.GetCertID(hotel.IdentityCertificate)
 	actualSerial, ok := actual.VASP["identity_certificate"].(map[string]interface{})["serial_number"]
 	require.True(ok, "identity_certificate.serial_number not found in VASP json")
 	require.Equal(expectedSerial, actualSerial)
@@ -763,7 +763,7 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 	for i, cert := range actualCerts {
 		actualSerial, ok := cert.(map[string]interface{})["serial_number"]
 		require.True(ok, "signing certificate serial number not found in VASP json")
-		expectedSerial := fmt.Sprintf("%X", hotel.SigningCertificates[i].SerialNumber)
+		expectedSerial := models.GetCertID(hotel.SigningCertificates[i])
 		require.Equal(expectedSerial, actualSerial)
 	}
 
