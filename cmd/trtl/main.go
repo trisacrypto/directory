@@ -16,14 +16,17 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/trisacrypto/directory/pkg"
 	profiles "github.com/trisacrypto/directory/pkg/gds/client"
+	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/trtl"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
+	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 	"gopkg.in/yaml.v2"
 )
 
@@ -98,6 +101,20 @@ func main() {
 			ArgsUsage: "src dst",
 			Category:  "server",
 			Action:    migrate,
+		},
+		{
+			Name:     "migrate:recipients",
+			Usage:    "add missing recipient email addresses to contact log entries",
+			Category: "client",
+			Before:   initDBClient,
+			Action:   migrateRecipients,
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "dry-run",
+					Aliases: []string{"d"},
+					Usage:   "do not write any changes to the database",
+				},
+			},
 		},
 		{
 			Name:     "status",
@@ -557,6 +574,95 @@ func initPeersClient(c *cli.Context) (err error) {
 //===========================================================================
 // Trtl (DB) Client Functions
 //===========================================================================
+
+func migrateRecipients(c *cli.Context) (err error) {
+	ctx, cancel := profile.Context()
+	defer cancel()
+
+	// Iterate over the VASPs in the database
+	req := &pb.CursorRequest{
+		Namespace: wire.NamespaceVASPs,
+	}
+	var stream pb.Trtl_CursorClient
+	if stream, err = dbClient.Cursor(ctx, req); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	for {
+		var rep *pb.KVPair
+		if rep, err = stream.Recv(); err != nil {
+			if err == io.EOF {
+				return nil
+			}
+			return cli.Exit(err, 1)
+		}
+
+		// Decode the VASP
+		vasp := &gds.VASP{}
+		if err = proto.Unmarshal(rep.Value, vasp); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		// Iterate over all contacts with an email address
+		var updated int
+		iter := models.NewContactIterator(vasp.Contacts, true, false)
+	contactsLoop:
+		for iter.Next() {
+			var entries int
+			contact, kind := iter.Value()
+
+			// Sanity check - the contact should have an email address
+			if contact.Email == "" {
+				return cli.Exit(fmt.Errorf("%s contact for vasp %s has no email address", kind, vasp.Id), 1)
+			}
+
+			// Get the extra data for the contact
+			extra := &models.GDSContactExtraData{}
+			if contact.Extra == nil {
+				continue contactsLoop
+			}
+
+			if err = contact.Extra.UnmarshalTo(extra); err != nil {
+				return cli.Exit(err, 1)
+			}
+
+			// Iterate over the email log and populate the recipients
+			for _, email := range extra.EmailLog {
+				if email.Recipient == "" {
+					email.Recipient = contact.Email
+					entries++
+				}
+			}
+			if entries > 0 {
+				fmt.Printf("found %d missing entries for %s contact %s on VASP %s\n", entries, kind, contact.Email, vasp.Id)
+			}
+
+			// Save the updated email log back to the contact
+			if contact.Extra, err = anypb.New(extra); err != nil {
+				return cli.Exit(err, 1)
+			}
+
+			updated += entries
+		}
+
+		// If any entries were updated, save the new VASP to the database
+		if updated > 0 && !c.Bool("dry-run") {
+			var data []byte
+			if data, err = proto.Marshal(vasp); err != nil {
+				return cli.Exit(err, 1)
+			}
+			if _, err = dbClient.Put(ctx, &pb.PutRequest{
+				Key:       []byte(vasp.Id),
+				Value:     data,
+				Namespace: wire.NamespaceVASPs,
+			}); err != nil {
+				return cli.Exit(err, 1)
+			}
+
+			fmt.Printf("updated %d entries for VASP %s\n\n", updated, vasp.Id)
+		}
+	}
+}
 
 // dbGet prints values from the trtl database given a set of keys.
 func dbGet(c *cli.Context) (err error) {
