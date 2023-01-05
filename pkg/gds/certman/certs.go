@@ -758,12 +758,14 @@ vaspsLoop:
 		// If a certificate has expired, update the certificate record.
 		case daysBeforeExpiration <= 0:
 			var cert *models.Certificate
-			if cert, err = c.db.RetrieveCert(RetrieveCertID(identityCert)); err != nil {
-				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not update expired certificate record status")
+			if cert, err = c.db.RetrieveCert(models.GetCertID(identityCert)); err != nil {
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not retrieve expired certificate record")
 				continue vaspsLoop
 			}
 			cert.Status = models.CertificateState_EXPIRED
-			c.db.UpdateCert(cert)
+			if err = c.db.UpdateCert(cert); err != nil {
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not update expired certificate record status")
+			}
 
 		// Seven days before expiration, send a cert reissuance reminder to VASP.
 		// NOTE: the SendContactReissuanceReminder will not send emails more than
@@ -833,10 +835,6 @@ vaspsLoop:
 	if err := vasps.Error(); err != nil {
 		log.Error().Err(err).Msg("could not iterate through database")
 	}
-}
-
-func RetrieveCertID(identityCert *pb.Certificate) string {
-	return fmt.Sprintf("%X", identityCert.SerialNumber)
 }
 
 // Helper to check if the reissuance process has already started for a VASP.
