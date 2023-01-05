@@ -2,17 +2,19 @@ import React from 'react';
 import { Redirect, Route } from 'react-router-dom';
 
 import PrivateRoute from './PrivateRoute';
+import { lazyImport } from '@/lib/lazy-import';
 
-const Login = React.lazy(() => import('../pages/account/Login'));
+const Login = React.lazy(() => import('@/features/misc/components/account/Login'));
 
-const Dashboard = React.lazy(() => import('../pages/app/details/BasicDetails/dashboard'));
-const VaspsList = React.lazy(() => import('../pages/app/lists'));
-const VaspsDetails = React.lazy(() => import('../pages/app/details'));
+const {Dashboard} = lazyImport(() => import('@/features/misc'), 'Dashboard');
 
-const ErrorPageNotFound = React.lazy(() => import('../pages/error/PageNotFound'));
-const ErrorPageNotFoundAlt = React.lazy(() => import('../pages/error/PageNotFoundAlt'));
-const ServerError = React.lazy(() => import('../pages/error/ServerError'));
-const PageError = React.lazy(() => import('../pages/error/PageError'));
+const {VaspsList} = lazyImport(() => import('../features/vasps'), 'VaspsList');
+const {VaspDetails} = lazyImport(() => import('../features/vasps'), 'VaspDetails');
+
+const {PageError} = lazyImport(() => import('@/features/misc'), 'PageError');
+const {PageNotFound} = lazyImport(() => import('@/features/misc'), 'PageNotFound');
+const {PageNotFoundAlt} = lazyImport(() => import('@/features/misc'), 'PageNotFoundAlt');
+const {ServerError} = lazyImport(() => import('@/features/misc'), 'ServerError');
 
 // root routes
 const rootRoute = {
@@ -36,7 +38,7 @@ const rootRoute = {
     {
       path: '/vasps/:id',
       name: 'Detail',
-      component: VaspsDetails,
+      component: VaspDetails,
       route: PrivateRoute,
       exact: true,
     },
@@ -51,7 +53,7 @@ const rootRoute = {
     {
       path: '/not-found',
       name: 'NotFound',
-      component: ErrorPageNotFoundAlt,
+      component: PageNotFoundAlt,
       route: PrivateRoute,
     },
     {
@@ -82,7 +84,7 @@ const otherPublicRoutes = [
   {
     path: '/error-404',
     name: 'Error - 404',
-    component: ErrorPageNotFound,
+    component: PageNotFound,
     route: PrivateRoute,
   },
   {
