@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -122,7 +121,7 @@ type validator func(path string) error
 func ValidProfiles(path string) (err error) {
 	var p *Profiles
 	var data []byte
-	if data, err = ioutil.ReadFile(path); err != nil {
+	if data, err = os.ReadFile(path); err != nil {
 		return err
 	}
 
@@ -168,7 +167,7 @@ func expand(path string) string {
 
 func mktmpf() (_ string, err error) {
 	var f *os.File
-	if f, err = ioutil.TempFile("", "goedit-*"); err != nil {
+	if f, err = os.CreateTemp("", "goedit-*"); err != nil {
 		return "", err
 	}
 	f.Close()

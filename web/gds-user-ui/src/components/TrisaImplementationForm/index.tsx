@@ -44,8 +44,8 @@ const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({
   }, [commonName, trisaEndpoint]);
 
   const getCommonNameFormHelperText = () => {
-    if (errors[name]?.common_name) {
-      return errors[name]?.common_name.message;
+    if ((errors[name] as any)?.common_name) {
+      return (errors[name] as any)?.common_name.message;
     }
     if (commonNameWarning) {
       return (
@@ -67,19 +67,19 @@ const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({
         label={t`TRISA Endpoint`}
         placeholder={`${env[type]}.${domain}:443`}
         formHelperText={
-          errors[name]?.endpoint
-            ? errors[name]?.endpoint?.message
+          (errors[name] as any)?.endpoint
+            ? (errors[name] as any)?.endpoint?.message
             : t`The address and port of the TRISA endpoint for partner VASPs to connect on via gRPC.`
         }
         controlId="trisaEndpoint"
-        isInvalid={!!errors[name]?.endpoint}
+        isInvalid={!!(errors[name] as any)?.endpoint}
         {...register(`${name}.endpoint`)}
       />
 
       <InputFormControl
         label={t`Certificate Common Name`}
         placeholder={`${env[type]}.${domain}`}
-        isInvalid={!!errors[name]?.common_name}
+        isInvalid={!!(errors[name] as any)?.common_name}
         formHelperText={getCommonNameFormHelperText()}
         controlId="certificateCommonName"
         {...register(`${name}.common_name`)}

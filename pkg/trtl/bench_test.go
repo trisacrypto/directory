@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"testing"
@@ -42,8 +41,8 @@ func setupTrtl(t testing.TB) (bench *trtlBench, err error) {
 	bench = new(trtlBench)
 
 	// Create a tmp directory for the database
-	if bench.tmpdb, err = ioutil.TempDir("", "trtldb-*"); err != nil {
-		return nil, err
+	if bench.tmpdb, err = os.MkdirTemp("", "trtldb-*"); err != nil {
+		return nil, fmt.Errorf("could not create tmpdb: %w", err)
 	}
 
 	// Manually create a configuration

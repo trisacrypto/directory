@@ -34,8 +34,8 @@ func NewGDS(svc *Service) (gds *GDS, err error) {
 
 	// Initialize the gRPC server
 	gds.srv = grpc.NewServer(
-		grpc.UnaryInterceptor(svc.unaryInterceptor),
-		grpc.StreamInterceptor(svc.streamInterceptor),
+		grpc.ChainUnaryInterceptor(svc.UnaryInterceptors()...),
+		grpc.ChainStreamInterceptor(svc.StreamInterceptors()...),
 	)
 	api.RegisterTRISADirectoryServer(gds.srv, gds)
 	return gds, nil

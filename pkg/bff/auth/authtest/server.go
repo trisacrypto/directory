@@ -401,12 +401,12 @@ func (s *Server) GetUser() *management.User {
 }
 
 // Expose the test user's app metadata to the tests.
-func (s *Server) GetUserAppMetadata() map[string]interface{} {
+func (s *Server) GetUserAppMetadata() *map[string]interface{} {
 	return s.users[UserID].AppMetadata
 }
 
 // Update the test user with unstructured app metadata.
-func (s *Server) SetUserAppMetadata(appdata map[string]interface{}) {
+func (s *Server) SetUserAppMetadata(appdata *map[string]interface{}) {
 	s.users[UserID].AppMetadata = appdata
 }
 
@@ -424,7 +424,7 @@ func (s *Server) ResetUserEmail() {
 
 // Reset the test user's app metadata to the default.
 func (s *Server) ResetUserAppMetadata() {
-	s.users[UserID].AppMetadata = map[string]interface{}{}
+	s.users[UserID].AppMetadata = &map[string]interface{}{}
 }
 
 // Set the current user's roles.

@@ -15,7 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/trtl/internal"
-	prom "github.com/trisacrypto/directory/pkg/trtl/metrics"
+	"github.com/trisacrypto/directory/pkg/trtl/metrics"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -45,16 +45,18 @@ var b64e = base64.RawURLEncoding.EncodeToString
 // request will use honu.Get() to get only the value.
 // If a namespace is provided, the namespace is passed to the internal honu Options,
 // to look in that namespace only.
-func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (_ *pb.GetReply, err error) {
-	// Start a timer to track latency
-	start := time.Now()
+func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (out *pb.GetReply, err error) {
+	// Update namespace for monitoring purposes
+	metrics.UpdateNamespace(ctx, in.Namespace)
 
+	// Validate request
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
 	}
+
 	if len(in.Key) == 0 {
-		log.Warn().Msg("missing key in Trtl Get request")
+		log.Warn().Msg("missing key in trtl Get request")
 		return nil, status.Error(codes.InvalidArgument, "key must be provided in Get request")
 	}
 
@@ -65,102 +67,87 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (_ *pb.GetRepl
 	if object, err = h.db.Object(in.Key, options.WithNamespace(in.Namespace)); err != nil {
 		// TODO: Check for the honu not found error instead.
 		if err == engine.ErrNotFound {
-			log.Debug().Err(err).Str("key", string(in.Key)).Msg("specified key not found")
+			// Increment the number of reads even on not found
+			// TODO: this should be part of honu not trtl
+			metrics.PmTrtlReads.WithLabelValues(in.Namespace).Inc()
+
+			log.Debug().Err(err).Bytes("key", in.Key).Msg("specified key not found")
 			return nil, status.Error(codes.NotFound, err.Error())
 		}
 
-		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to retrieve object")
+		log.Error().Err(err).Bytes("key", in.Key).Msg("unable to retrieve object")
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
+	// Increment the number of reads and the number of bytes read
+	// TODO: this should be part of honu not trtl
+	// NOTE: this only shows the number of user bytes read and excludes object metadata
+	metrics.PmTrtlReads.WithLabelValues(in.Namespace).Inc()
+	metrics.PmTrtlBytesRead.WithLabelValues(in.Namespace).Add(float64(len(object.Data)))
+
 	if object.Version.Tombstone {
-		log.Debug().Err(engine.ErrNotFound).Str("key", string(in.Key)).Msg("specified key not found")
+		log.Debug().Err(engine.ErrNotFound).Bytes("key", in.Key).Msg("specified key not found")
 		return nil, status.Error(codes.NotFound, engine.ErrNotFound.Error())
+	}
+
+	out = &pb.GetReply{
+		Value: object.Data,
 	}
 
 	if in.Options != nil && in.Options.ReturnMeta {
 		// User wants metadata
-		log.Debug().Str("key", string(in.Key)).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Get")
-
-		// Compute latency in milliseconds
-		latency := float64(time.Since(start)/1000) / 1000.0
-		prom.PmRPCLatency.WithLabelValues("Get").Observe(latency)
-
-		// Update prometheus metrics
-		prom.PmGets.WithLabelValues(object.Namespace).Inc()
-
-		return &pb.GetReply{
-			Value: object.Data,
-			Meta:  returnMeta(object),
-		}, nil
+		out.Meta = returnMeta(object)
 	}
 
 	// No metadata requested; just return the value for the given key
-	log.Debug().Str("key", string(in.Key)).Msg("Trtl Get")
-
-	// Compute Get latency in milliseconds
-	latency := float64(time.Since(start)/1000) / 1000.0
-	prom.PmRPCLatency.WithLabelValues("Get").Observe(latency)
-
-	// Increment prometheus Get count
-	prom.PmGets.WithLabelValues(object.Namespace).Inc()
-
-	return &pb.GetReply{
-		Value: object.Data,
-	}, nil
+	log.Debug().Bytes("key", in.Key).Bool("return_meta", out.Meta != nil).Msg("trtl Get")
+	return out, nil
 }
 
 // Put is a unary request to store a value for a key.
 // If a namespace is provided, the namespace is passed to the internal honu Options,
 // to put the value to that namespace.
 func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutReply, err error) {
-	// Start a timer to track latency
-	start := time.Now()
+	// Update namespace for monitoring purposes
+	metrics.UpdateNamespace(ctx, in.Namespace)
 
+	// Validate Request
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
 	}
+
 	if len(in.Key) == 0 {
-		log.Warn().Msg("missing key in Trtl Put request")
+		log.Warn().Msg("missing key in trtl Put request")
 		return nil, status.Error(codes.InvalidArgument, "key must be provided in Put request")
 	}
-	if len(in.Value) == 0 {
-		log.Warn().Msg("missing value in Trtl Put request")
-		return nil, status.Error(codes.InvalidArgument, "value must be provided in Put request")
-	}
 
-	if in.Options != nil {
-		log.Debug().Bytes("key", in.Key).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Put")
-	} else {
-		log.Debug().Bytes("key", in.Key).Msg("Trtl Put")
+	if len(in.Value) == 0 {
+		log.Warn().Msg("missing value in trtl Put request")
+		return nil, status.Error(codes.InvalidArgument, "value must be provided in Put request")
 	}
 
 	// Check if we have a namespace
 	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
 	var object *object.Object
 	if object, err = h.db.Put(in.Key, in.Value, options.WithNamespace(in.Namespace)); err != nil {
-		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to put object")
+		log.Error().Err(err).Bytes("key", in.Key).Msg("unable to put object")
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	out = &pb.PutReply{Success: true}
+	// Increment the number of writes, the number of bytes written, and the object size
+	// TODO: this should be part of honu not trtl
+	// NOTE: this only shows the number of user bytes written and excludes object metadata
+	metrics.PmTrtlWrites.WithLabelValues(in.Namespace).Inc()
+	metrics.PmTrtlBytesWritten.WithLabelValues(in.Namespace).Add(float64(len(in.Value)))
+	metrics.PmObjectSize.WithLabelValues(in.Namespace).Observe(float64(len(in.Value)))
 
+	out = &pb.PutReply{Success: true}
 	if in.Options != nil && in.Options.ReturnMeta {
 		out.Meta = returnMeta(object)
 	}
 
-	// Compute Put latency in milliseconds
-	latency := float64(time.Since(start)/1000) / 1000.0
-	prom.PmRPCLatency.WithLabelValues("Put").Observe(latency)
-
-	// Increment prometheus Put counter
-	prom.PmPuts.WithLabelValues(object.Namespace).Inc()
-
-	// TODO: prometheus; see sc-2576
-	// If in.Options.ReturnMeta is true, we will get metadata from honu
-	// Unfortunately, we currently we don't get tombstone information, but if we did,
-	// we could use it to decrement our `pmTombstone` counter here
-
+	log.Debug().Bytes("key", in.Key).Bool("return_meta", out.Meta != nil).Msg("trtl Put")
 	return out, nil
 }
 
@@ -168,22 +155,17 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 // If a namespace is provided, the namespace is passed to the internal honu Options,
 // to delete the key from a specific namespace. Note that this does not delete tombstones.
 func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb.DeleteReply, err error) {
-	// Start a timer to track latency
-	start := time.Now()
+	// Update namespace for monitoring purposes
+	metrics.UpdateNamespace(ctx, in.Namespace)
 
+	// Validate Request
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
 	}
 	if len(in.Key) == 0 {
-		log.Warn().Msg("missing key in Trtl Delete request")
+		log.Warn().Msg("missing key in trtl Delete request")
 		return nil, status.Error(codes.InvalidArgument, "key must be provided in Delete request")
-	}
-
-	if in.Options != nil {
-		log.Debug().Bytes("key", in.Key).Bool("return_meta", in.Options.ReturnMeta).Msg("Trtl Delete")
-	} else {
-		log.Debug().Bytes("key", in.Key).Msg("Trtl Delete")
 	}
 
 	// Check if we have a namespace
@@ -193,27 +175,21 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 		if err == engine.ErrNotFound {
 			return nil, status.Error(codes.NotFound, err.Error())
 		}
-		log.Error().Err(err).Str("key", string(in.Key)).Msg("unable to delete object")
+		log.Error().Err(err).Bytes("key", in.Key).Msg("unable to delete object")
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	out = &pb.DeleteReply{Success: true}
+	// Increment the number of writes (but no bytes can be written here)
+	// TODO: this should be part of honu not trtl
+	// NOTE: the number of bytes written for the tombstone cannot be updated here since that data is in honu.
+	metrics.PmTrtlWrites.WithLabelValues(in.Namespace).Inc()
 
+	out = &pb.DeleteReply{Success: true}
 	if in.Options != nil && in.Options.ReturnMeta {
 		out.Meta = returnMeta(object)
 	}
 
-	// Compute Delete latency in milliseconds
-	latency := float64(time.Since(start)/1000) / 1000.0
-	prom.PmRPCLatency.WithLabelValues("Delete").Observe(latency)
-
-	// Increment Prometheus Delete counter
-	prom.PmDels.WithLabelValues(object.Namespace).Inc()
-
-	// TODO: Increment Prometheus Tombstone counter; see sc-2576
-	// Unfortunately we can't decrement yet! (see note in `Put`)
-	// prom.pmTombstones.WithLabelValues(object.Namespace).Inc()
-
+	log.Debug().Bytes("key", in.Key).Bool("return_meta", out.Meta != nil).Msg("trtl Delete")
 	return out, nil
 }
 
@@ -235,8 +211,8 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 //   - page_token: the page of results that the user wishes to fetch
 //   - page_size: the number of results to be returned in the request
 func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.IterReply, err error) {
-	// Start a timer to track latency
-	start := time.Now()
+	// Update namespace for monitoring purposes
+	metrics.UpdateNamespace(ctx, in.Namespace)
 
 	// Ensure the namespace is not reserved
 	if _, found := reservedNamespaces[in.Namespace]; found {
@@ -268,7 +244,7 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 			Msg("iter request would return no data")
 		return nil, status.Error(codes.InvalidArgument, "cannot specify no keys, values, and no return meta: no data would be returned")
 	} else {
-		log.Debug().Msg("Trtl Iter")
+		log.Debug().Msg("trtl Iter")
 	}
 
 	// If a page cursor is provided load it, otherwise create the cursor for iteration
@@ -309,6 +285,10 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 		return nil, status.Errorf(codes.FailedPrecondition, "could not create iterator: %s", err)
 	}
 	defer iter.Release()
+
+	// Opening an iterator is considered a single read since it scans the database.
+	// TODO: this should be part of honu not trtl
+	metrics.PmTrtlReads.WithLabelValues(in.Namespace).Inc()
 
 	// Perform namespace check to ensure that the page cursor matches the iterator namespace
 	// NOTE: this section must come after the iterator is created, though it would be preferable
@@ -352,6 +332,9 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 			return nil, status.Error(codes.FailedPrecondition, "database is in invalid state")
 		}
 
+		// Update the number of bytes read during the iteration
+		metrics.PmTrtlBytesRead.WithLabelValues(in.Namespace).Add(float64(len(object.Data)))
+
 		// Ignore deleted objects
 		if object.Version.Tombstone {
 			continue
@@ -388,13 +371,6 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 		}
 	}
 
-	// Compute Iter latency in milliseconds
-	latency := float64(time.Since(start)/1000) / 1000.0
-	prom.PmRPCLatency.WithLabelValues("Iter").Observe(latency)
-
-	// Increment Prometheus Iter counter
-	prom.PmIters.WithLabelValues(iter.Namespace()).Inc()
-
 	// Request complete
 	log.Info().
 		Str("namespace", in.Namespace).
@@ -405,8 +381,13 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 }
 
 // Batch is a client-side streaming request to issue multiple commands, usually Put and Delete.
+// TODO: should we track individual Put and Delete commands?
+// TODO: this method is not fully implemented yet.
 func (h *TrtlService) Batch(stream pb.Trtl_BatchServer) error {
-	log.Debug().Msg("Trtl Batch")
+	msgs := 0
+	log.Debug().Msg("starting trtl Batch stream")
+	defer log.Debug().Int("msgs", msgs).Msg("trtl Batch stream closed")
+
 	out := &pb.BatchReply{}
 	for {
 		// Read the next request from the stream.
@@ -495,6 +476,9 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 	// Fetch the stream context
 	ctx := stream.Context()
 
+	// Update namespace for monitoring purposes
+	metrics.UpdateNamespace(ctx, in.Namespace)
+
 	// Ensure the namespace is not reserved
 	if _, found := reservedNamespaces[in.Namespace]; found {
 		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
@@ -520,7 +504,7 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 			Msg("cursor request would return no data")
 		return status.Error(codes.InvalidArgument, "cannot specify no keys, values, and no return meta: no data would be returned")
 	} else {
-		log.Debug().Msg("Trtl Cursor")
+		log.Debug().Msg("trtl Cursor")
 	}
 
 	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
@@ -530,6 +514,10 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 		return status.Errorf(codes.FailedPrecondition, "could not create iterator: %s", err)
 	}
 	defer iter.Release()
+
+	// Opening an iterator is considered a single read since it scans the database.
+	// TODO: this should be part of honu not trtl
+	metrics.PmTrtlReads.WithLabelValues(in.Namespace).Inc()
 
 	// If a seek key is provided, seek to that key before iteration
 	// NOTE: that because we'll be calling iter.Next to start the loop, we need set the
@@ -562,6 +550,9 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 			log.Error().Err(err).Str("key", b64e(iter.Key())).Msg("could not fetch object metadata")
 			return status.Error(codes.FailedPrecondition, "database is in invalid state")
 		}
+
+		// Update the number of bytes read during the iteration
+		metrics.PmTrtlBytesRead.WithLabelValues(in.Namespace).Add(float64(len(object.Data)))
 
 		// Ignore deleted objects
 		if object.Version.Tombstone {
