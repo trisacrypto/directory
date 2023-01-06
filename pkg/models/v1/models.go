@@ -421,7 +421,7 @@ func NewCertificate(vasp *pb.VASP, certRequest *CertificateRequest, data *pb.Cer
 	}
 
 	cert = &Certificate{
-		Id:      fmt.Sprintf("%X", data.SerialNumber), // capital hex encoded serial number to match sectigo
+		Id:      GetCertID(data), // capital hex encoded serial number to match sectigo
 		Request: certRequest.Id,
 		Vasp:    vasp.Id,
 		Status:  CertificateState_ISSUED,
@@ -429,6 +429,11 @@ func NewCertificate(vasp *pb.VASP, certRequest *CertificateRequest, data *pb.Cer
 	}
 
 	return cert, nil
+}
+
+// String encode the SerialNumber of a certificate
+func GetCertID(identityCert *pb.Certificate) string {
+	return fmt.Sprintf("%X", identityCert.SerialNumber)
 }
 
 // NewCertificateRequest creates and returns a new certificate request to be associated with a VASP.
