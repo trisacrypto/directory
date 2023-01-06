@@ -431,6 +431,11 @@ func NewCertificate(vasp *pb.VASP, certRequest *CertificateRequest, data *pb.Cer
 	return cert, nil
 }
 
+// String encode the SerialNumber of a certificate
+func GetCertID(identityCert *pb.Certificate) string {
+	return fmt.Sprintf("%X", identityCert.SerialNumber)
+}
+
 // NewCertificateRequest creates and returns a new certificate request to be associated with a VASP.
 func NewCertificateRequest(vasp *pb.VASP) (certRequest *CertificateRequest, err error) {
 	var (
@@ -502,10 +507,6 @@ func UpdateCertificateRequestStatus(request *CertificateRequest, state Certifica
 	// Set the new state on the CertificateRequest.
 	request.Status = state
 	return nil
-}
-
-func GetCertID(identityCert *pb.Certificate) string {
-	return fmt.Sprintf("%X", identityCert.SerialNumber)
 }
 
 // GetReviewNotes returns all of the review notes for a VASP as a map.
