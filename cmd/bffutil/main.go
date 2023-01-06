@@ -116,6 +116,29 @@ func main() {
 			},
 		},
 		{
+			Name:      "orgs:delete",
+			Usage:     "delete an organization and remove it from its users",
+			Action:    deleteOrgs,
+			ArgsUsage: "orgID",
+			Before:    connectDB,
+			After:     closeDB,
+			Flags:     []cli.Flag{},
+		},
+		{
+			Name:   "orgs:cleanup",
+			Usage:  "removes any organizations that have zero collaborators",
+			Action: cleanupOrgs,
+			Before: connectDB,
+			After:  closeDB,
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "force",
+					Aliases: []string{"f"},
+					Usage:   "do not prompt to confirm org delete",
+				},
+			},
+		},
+		{
 			Name:   "collabs:add",
 			Usage:  "add a collaborator to an organization",
 			Action: addCollab,
@@ -549,6 +572,111 @@ func createOrgs(c *cli.Context) (err error) {
 	if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
 		return cli.Exit(err, 1)
 	}
+	return nil
+}
+
+func deleteOrgs(c *cli.Context) (err error) {
+	if c.NArg() != 1 {
+		if c.NArg() == 0 {
+			return cli.Exit("specify an orgID to delete", 1)
+		}
+		return cli.Exit("can only delete one organization at a time", 1)
+	}
+
+	var org *models.Organization
+	if org, err = GetOrg(c.Args().Get(0)); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Fetch collaborator auth0 appdata and verify that all collaborators are part of
+	// at least one additional organization besides the one being deleted.
+	appdata := make(map[string]*auth.AppMetadata)
+	for email, collaborator := range org.Collaborators {
+		var user *management.User
+		if user, err = auth0.User.Read(collaborator.UserId); err != nil {
+			return cli.Exit(fmt.Errorf("could not fetch user for %s", email), 1)
+		}
+
+		meta := &auth.AppMetadata{}
+		if err = meta.Load(user.AppMetadata); err != nil {
+			return cli.Exit(fmt.Errorf("could not load app metadata for %s", email), 1)
+		}
+
+		// Check to make sure the orgID isn't the only org the user belongs to.
+		uorgs := make(map[string]struct{})
+		for _, uorg := range meta.Organizations {
+			if uorg != org.Id {
+				uorgs[uorg] = struct{}{}
+			}
+		}
+
+		if len(uorgs) == 0 {
+			if !askForConfirmation(fmt.Sprintf("user %s only belongs to this organization, a new organization will be created the next time they login, continue?", email)) {
+				return cli.Exit("operation cancelled by user", 0)
+			}
+		}
+
+		fmt.Printf("%s will be removed from organization\n", email)
+		appdata[collaborator.UserId] = meta
+	}
+
+	// Prompt for confirmation to delete
+	if !askForConfirmation(fmt.Sprintf("delete %s with %d collaborators?", org.ResolveName(), len(org.Collaborators))) {
+		return cli.Exit("operation cancelled by user", 0)
+	}
+
+	// Remove the organization from all of the collaborators
+	for uid, umeta := range appdata {
+		umeta.RemoveOrganization(org.Id)
+		if umeta.OrgID == org.Id {
+			if len(umeta.Organizations) > 0 {
+				umeta.OrgID = umeta.Organizations[0]
+			} else {
+				umeta.OrgID = ""
+			}
+		}
+
+		if err = SaveAppMetadata(uid, *umeta); err != nil {
+			return cli.Exit(err, 1)
+		}
+	}
+
+	// Last step: delete the organization from the database
+	if err = db.DeleteOrganization(org.UUID()); err != nil {
+		return cli.Exit(err, 1)
+	}
+	return nil
+}
+
+func cleanupOrgs(c *cli.Context) (err error) {
+	orgsDeleted := 0
+	force := c.Bool("force")
+
+	iter := db.ListOrganizations()
+	defer iter.Release()
+	for iter.Next() {
+		var org *models.Organization
+		if org, err = iter.Organization(); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		if len(org.Collaborators) == 0 {
+			if !force && !askForConfirmation(fmt.Sprintf("org %s has 0 collaborators, delete?", org.ResolveName())) {
+				continue
+			}
+
+			if err = db.DeleteOrganization(org.UUID()); err != nil {
+				return cli.Exit(fmt.Errorf("could not delete %s: %w", org.ResolveName(), err), 1)
+			}
+			orgsDeleted++
+		}
+	}
+
+	if err = iter.Error(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	fmt.Printf("deleted %d organizations\n", orgsDeleted)
 	return nil
 }
 
