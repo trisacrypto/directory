@@ -1,6 +1,6 @@
 export {default as StatisticCard} from './StatisticCard'
 export {default as Statistics} from './Statistics'
 export {default as Status} from './Status'
-export {default as Tasks} from './Tasks'
+export {default as PendingAndRecentActivity} from './PendingAndRecentActivity'
 export {default as TasksChart} from './TasksChart'
 export {default as VaspsByCountryChart} from './VaspsByCountryChart'

@@ -1,12 +1,8 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Col, Row } from 'react-bootstrap';
-import { useDispatch, useSelector } from 'react-redux';
-import { useHistory, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import PageTitle from '@/components/PageTitle';
-import useSafeDispatch from '@/hooks/useSafeDispatch';
-import { getVaspDetails } from '@/redux/selectors';
-import { fetchVaspDetailsApiResponse } from '@/redux/vasp-details';
 
 import AuditLog from '../components/details/AuditLog';
 import BasicDetails from '../components/details/BasicDetails/BasicDetails';
@@ -14,25 +10,15 @@ import CertificateDetails from '../components/details/CertificateDetails/Certifi
 import Contact from '../components/details/contact';
 import EmailLog from '../components/details/EmailLog';
 import TrixoQuestionnaire from '../components/details/TrixoQuestionnaire';
+import { useGetVasp } from '../services';
+import OvalLoader from '@/components/OvalLoader';
 
 const ReviewNotes = React.lazy(() => import('../components/details/ReviewNotes'));
 
 const VaspDetails = () => {
     const params = useParams<{ id: string }>();
-    const vasp = useSelector(getVaspDetails);
-    const dispatch = useDispatch();
-    const safeDispatch = useSafeDispatch(dispatch);
-    const history = useHistory();
+    const { data: vasp, isLoading } = useGetVasp({ vaspId: params.id });
 
-    React.useEffect(() => {
-        if (params && params.id) {
-            safeDispatch(fetchVaspDetailsApiResponse(params.id, history));
-        }
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [params.id, safeDispatch]);
-
-    // TO-DO: should review later by adding error page
     return (
         <>
             <PageTitle
@@ -42,12 +28,15 @@ const VaspDetails = () => {
                 ]}
                 title="Registration Details"
             />
+            {isLoading ? <OvalLoader /> : null}
             {vasp && (
                 <Row>
                     <Col md={6} xl={8} xxl={8}>
                         <BasicDetails data={vasp} />
                         <TrixoQuestionnaire data={vasp?.vasp?.trixo} />
-                        <ReviewNotes />
+                        <Suspense fallback={<OvalLoader />}>
+                            <ReviewNotes />
+                        </Suspense>
                     </Col>
                     <Col md={6} xl={4} xxl={4}>
                         <Contact data={vasp?.vasp?.contacts} verifiedContact={vasp?.verified_contacts} />

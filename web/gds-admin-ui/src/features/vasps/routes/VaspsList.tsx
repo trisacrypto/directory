@@ -3,16 +3,12 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import qs from 'query-string';
 import React from 'react';
 import { Button, Card, Col, Row } from 'react-bootstrap';
-import { useDispatch, useSelector } from 'react-redux';
 import { useHistory, useLocation } from 'react-router-dom';
 import Select from 'react-select';
 
 import OvalLoader from '@/components/OvalLoader';
 import PageTitle from '@/components/PageTitle';
 import Table from '@/components/Table';
-import useSafeDispatch from '@/hooks/useSafeDispatch';
-import { fetchVasps } from '@/redux/dashboard/actions';
-import { getAllVasps, getVaspsLoadingState } from '@/redux/selectors/vasps';
 import { exportToCsv } from '@/utils';
 
 import CertificateExpirationColumn from '../components/lists/CertificateExpirationColumn';
@@ -20,6 +16,7 @@ import LastUpdatedColumn from '../components/lists/LastUpdatedColumn';
 import NameColumn from '../components/lists/NameColumn';
 import StatusColumn from '../components/lists/StatusColumn';
 import { StatusLabel } from '@/constants';
+import { useGetVasps } from '../services';
 
 dayjs.extend(relativeTime);
 
@@ -107,16 +104,9 @@ const VaspsList = () => {
     const query = qs.stringify(parsedQuery);
 
     const [queryParams, setQueryParams] = React.useState(query);
-    const dispatch = useDispatch();
-    const safeDispatch = useSafeDispatch(dispatch);
-    const data = useSelector(getAllVasps);
-    const isLoading = useSelector(getVaspsLoadingState);
     const history = useHistory();
     const [selectedRows, setSelectedData] = React.useState<any>([]);
-
-    React.useEffect(() => {
-        safeDispatch(fetchVasps({ queryParams }));
-    }, [safeDispatch, queryParams]);
+    const { data, isLoading } = useGetVasps({ queryParams });
 
     const getQueryString = (arr: any) => {
         const queries = arr && Array.isArray(arr) ? arr.map((v) => v.value.toLowerCase()) : '';

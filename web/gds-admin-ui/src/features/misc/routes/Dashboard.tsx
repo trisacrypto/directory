@@ -1,56 +1,46 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Col, Row } from 'react-bootstrap';
-import { useDispatch, useSelector } from 'react-redux';
 
 // components
 import PageTitle from '@/components/PageTitle';
-import useSafeDispatch from '@/hooks/useSafeDispatch';
-import { fecthRegistrationsReviews, fetchCertificates, fetchSummary, fetchVasps } from '@/redux/dashboard/actions';
-import {
-    getPendingVaspsData,
-    // getPendingVaspsError,
-    getPendingVaspsLoadingState,
-    getSummaryData,
-} from '@/redux/selectors/dashboard';
-import { Statistics, Status, Tasks, TasksChart, VaspsByCountryChart } from '../components/dashboard';
+import { Statistics, Status } from '../components/dashboard';
+import { useGetSummary } from '../services';
+import { lazyImport } from '@/lib/lazy-import';
+import OvalLoader from '@/components/OvalLoader';
+
+const { VaspsByCountryChart } = lazyImport(() => import('../components/dashboard'), 'VaspsByCountryChart');
+const { TasksChart } = lazyImport(() => import('../components/dashboard'), 'TasksChart');
+const { PendingAndRecentActivity } = lazyImport(() => import('../components/dashboard'), 'PendingAndRecentActivity');
 
 const Dashboard = () => {
-    const _dispatch = useDispatch();
-    const safeDispatch = useSafeDispatch(_dispatch);
-    const summary = useSelector(getSummaryData);
-    const vasps = useSelector(getPendingVaspsData);
-    const isVaspsLoading = useSelector(getPendingVaspsLoadingState);
-    // const pendingVaspsError = useSelector(getPendingVaspsError);
-
-    React.useEffect(() => {
-        safeDispatch(fetchCertificates());
-        safeDispatch(fetchVasps({}));
-        safeDispatch(fetchSummary());
-        safeDispatch(fecthRegistrationsReviews());
-    }, [safeDispatch]);
+    const { data: summary } = useGetSummary();
 
     return (
         <>
             <PageTitle breadCrumbItems={[{ label: 'Summary', path: '/dashboard', active: true }]} title="Dashboard" />
-
             <Statistics data={summary} />
-
             <Row>
                 <Col lg={4}>
                     <Status statuses={summary?.statuses} />
                 </Col>
                 <Col sm={12} lg={8} className="d-flex">
-                    <Tasks data={vasps} isLoading={isVaspsLoading} />
+                    <Suspense fallback={<OvalLoader />}>
+                        <PendingAndRecentActivity />
+                    </Suspense>
                 </Col>
             </Row>
             <Row>
                 <Col>
-                    <TasksChart />
+                    <Suspense fallback={<OvalLoader />}>
+                        <TasksChart />
+                    </Suspense>
                 </Col>
             </Row>
             <Row>
                 <Col>
-                    <VaspsByCountryChart />
+                    <Suspense fallback={<OvalLoader />}>
+                        <VaspsByCountryChart />
+                    </Suspense>
                 </Col>
             </Row>
         </>

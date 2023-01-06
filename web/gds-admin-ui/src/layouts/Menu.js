@@ -180,4 +180,4 @@ const AppMenu = ({ menuItems, location }) => {
     );
 };
 
-export default (withRouter(AppMenu));
+export default withRouter(AppMenu);

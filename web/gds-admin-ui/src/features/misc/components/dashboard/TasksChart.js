@@ -1,9 +1,9 @@
 import { Card } from 'react-bootstrap';
 import { Bar } from 'react-chartjs-2';
-import { useSelector } from 'react-redux';
 
 import OvalLoader from '@/components/OvalLoader';
 import { Status, StatusLabel } from '@/features/vasps/constants/dashboard';
+import { useGetReviews } from '../../services';
 
 const barChartOpts = {
   maintainAspectRatio: false,
@@ -52,10 +52,7 @@ const barChartOpts = {
 };
 
 const TasksChart = () => {
-  const { reviews, isLoading } = useSelector((state) => ({
-    reviews: state.Reviews.data,
-    isLoading: state.Reviews.loading,
-  }));
+  const { data: reviews, isLoading } = useGetReviews()
 
   const getWeeks = () => {
     if (reviews && Array.isArray(reviews.weeks)) {

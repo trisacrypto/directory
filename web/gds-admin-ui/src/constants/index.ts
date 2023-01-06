@@ -10,3 +10,4 @@ export * from '../features/vasps/constants/name-identifier-type';
 export * from '../features/vasps/constants/national-identification-type';
 export * from '../features/vasps/constants/valid-email-pattern';
 export * from '../features/vasps/constants/verified-contact-status';
+export * from './csrf-token-header-key';
