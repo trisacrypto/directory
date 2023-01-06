@@ -902,7 +902,7 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 
 			// Add certificate serial number if it exists
 			if vasp.IdentityCertificate != nil {
-				snippet.CertificateSerial = fmt.Sprintf("%X", vasp.IdentityCertificate.SerialNumber)
+				snippet.CertificateSerial = models.GetCertID(vasp.IdentityCertificate)
 				snippet.CertificateIssued = vasp.IdentityCertificate.NotBefore
 				snippet.CertificateExpiration = vasp.IdentityCertificate.NotAfter
 			}
@@ -1036,7 +1036,7 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 			log.Warn().Msg("could not parse identity certificate serial number from vasp json")
 			return nil, errors.New("could not parse identity certificate serial number from vasp json")
 		}
-		out.VASP["identity_certificate"].(map[string]interface{})["serial_number"] = fmt.Sprintf("%X", vasp.IdentityCertificate.SerialNumber)
+		out.VASP["identity_certificate"].(map[string]interface{})["serial_number"] = models.GetCertID(vasp.IdentityCertificate)
 	}
 
 	// Convert the signing certificate serial numbers to capital hex encoded strings
@@ -1045,7 +1045,7 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 			log.Warn().Msg("could not parse signing certificate serial number from vasp json")
 			return nil, errors.New("could not parse signing certificate serial number from vasp json")
 		}
-		out.VASP["signing_certificates"].([]interface{})[i].(map[string]interface{})["serial_number"] = fmt.Sprintf("%X", cert.SerialNumber)
+		out.VASP["signing_certificates"].([]interface{})[i].(map[string]interface{})["serial_number"] = models.GetCertID(cert)
 	}
 
 	return out, nil
