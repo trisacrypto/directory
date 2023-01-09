@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/gds"
 	"github.com/trisacrypto/directory/pkg/gds/certman"
@@ -44,20 +45,25 @@ type certTestSuite struct {
 	certman  *certman.CertificateManager
 }
 
-func TestCertMan(t *testing.T) {
-	suite.Run(t, new(certTestSuite))
+func TestCertManLevelDB(t *testing.T) {
+	var err error
+	s := new(certTestSuite)
+	s.fixtures, err = fixtures.New(fixturesPath, dbPath, fixtures.StoreLevelDB)
+	require.NoError(t, err, "could not init leveldb fixtures")
+	suite.Run(t, s)
+}
+
+func TestCertManTrtl(t *testing.T) {
+	var err error
+	s := new(certTestSuite)
+	s.fixtures, err = fixtures.New(fixturesPath, dbPath, fixtures.StoreTrtl)
+	require.NoError(t, err, "could not init trtl fixtures")
+	suite.Run(t, s)
 }
 
 func (s *certTestSuite) SetupSuite() {
-	require := s.Require()
-
 	// Discard logging to focus on test logs
 	logger.Discard()
-
-	// Initialize the fixtures library
-	var err error
-	s.fixtures, err = fixtures.New(fixturesPath, dbPath, fixtures.StoreTrtl)
-	require.NoError(err)
 }
 
 func (s *certTestSuite) TearDownSuite() {
@@ -1006,11 +1012,21 @@ func (s *certTestSuite) setupCertManager(profile string, fType fixtures.FixtureT
 	s.conf.CertMan.RequestInterval = time.Millisecond
 	s.conf.CertMan.Sectigo.Profile = profile
 
-	// Initialize the trtl store
-	conn, err := s.fixtures.ConnectTrtl(context.Background())
-	require.NoError(err, "could not connect to trtl database")
-	s.db, err = trtlstore.NewMock(conn)
-	require.NoError(err, "could not create trtl store")
+	// Initialize the configured store
+	switch s.fixtures.StoreType() {
+	case fixtures.StoreLevelDB:
+		s.conf.Database.URL = "leveldb:///" + s.fixtures.DBPath()
+		if s.db, err = store.Open(s.conf.Database); err != nil {
+			require.NoError(err, "could not open leveldb store")
+		}
+	case fixtures.StoreTrtl:
+		conn, err := s.fixtures.ConnectTrtl(context.Background())
+		require.NoError(err, "could not connect to trtl database")
+		s.db, err = trtlstore.NewMock(conn)
+		require.NoError(err, "could not create trtl store")
+	default:
+		require.Fail("unrecognized store type %d", s.fixtures.StoreType())
+	}
 
 	// Initialize the secret manager
 	s.secret, err = secrets.NewMock(s.conf.Secrets)
