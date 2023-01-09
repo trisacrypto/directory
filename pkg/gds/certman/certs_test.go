@@ -1016,14 +1016,13 @@ func (s *certTestSuite) setupCertManager(profile string, fType fixtures.FixtureT
 	switch s.fixtures.StoreType() {
 	case fixtures.StoreLevelDB:
 		s.conf.Database.URL = "leveldb:///" + s.fixtures.DBPath()
-		if s.db, err = store.Open(s.conf.Database); err != nil {
-			require.NoError(err, "could not open leveldb store")
-		}
+		s.db, err = store.Open(s.conf.Database)
+		require.NoError(err, "could not open leveldb store")
 	case fixtures.StoreTrtl:
 		conn, err := s.fixtures.ConnectTrtl(context.Background())
 		require.NoError(err, "could not connect to trtl database")
 		s.db, err = trtlstore.NewMock(conn)
-		require.NoError(err, "could not create trtl store")
+		require.NoError(err, "could not open trtl store")
 	default:
 		require.Fail("unrecognized store type %d", s.fixtures.StoreType())
 	}
