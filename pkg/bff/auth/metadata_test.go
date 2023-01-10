@@ -152,3 +152,40 @@ func TestEquals(t *testing.T) {
 	b.Organizations = []string{"67428be4-3fa4-4bf2-9e15-edbf043f8670"}
 	require.True(t, a.Equals(b), "all fields are equal, but Equals returned false")
 }
+
+func TestOrganizationList(t *testing.T) {
+	appdata := &AppMetadata{}
+
+	// Add an organization to an empty list
+	appdata.AddOrganization("bob")
+	require.Equal(t, []string{"bob"}, appdata.Organizations, "organization was not added")
+
+	// Should not be able to add an organization twice
+	appdata.AddOrganization("bob")
+	require.Equal(t, []string{"bob"}, appdata.Organizations, "organization was added twice")
+
+	// Add a second organization
+	appdata.AddOrganization("alice")
+	require.Equal(t, []string{"alice", "bob"}, appdata.Organizations, "unexpected result adding a second organization")
+
+	// Add a third organization
+	appdata.AddOrganization("carol")
+	require.Equal(t, []string{"alice", "bob", "carol"}, appdata.Organizations, "unexpected result adding a third organization")
+
+	// Remove an organization
+	appdata.RemoveOrganization("bob")
+	require.Equal(t, []string{"alice", "carol"}, appdata.Organizations, "unexpected result removing an organization")
+
+	// Removing a non-existent organization should not change the list
+	appdata.RemoveOrganization("dave")
+	require.Equal(t, []string{"alice", "carol"}, appdata.Organizations, "unexpected result removing a non-existent organization")
+
+	// Removing the last organization should clear the list
+	appdata.RemoveOrganization("carol")
+	appdata.RemoveOrganization("alice")
+	require.Equal(t, []string{}, appdata.Organizations, "unexpected result removing the last organization")
+
+	// Removing an organization from an empty list should not change the list
+	appdata.RemoveOrganization("alice")
+	require.Equal(t, []string{}, appdata.Organizations, "unexpected result removing an organization from an empty list")
+}
