@@ -276,9 +276,10 @@ func (s *certTestSuite) TestCertManagerSevenDayReissuanceReminder() {
 	require.NoError(err, "could not get hotel VASP")
 	hotelVASP = s.setupVASP(hotelVASP)
 
-	// Call the certman function at 6 days, which will send
-	// the seven day cert reissuance reminder to echoVASP.
+	// Call the certman function at 6 days and 1 day, which will send seven day
+	// cert reissuance reminders to charlieVASP and hotelVASP.
 	s.updateVaspIdentityCert(charlieVASP, 6)
+	s.updateVaspIdentityCert(hotelVASP, 1)
 	callTime := time.Now()
 	s.certman.HandleCertificateReissuance()
 
@@ -310,6 +311,36 @@ func (s *certTestSuite) TestCertManagerSevenDayReissuanceReminder() {
 		},
 	}
 	emails.CheckEmails(s.T(), messages)
+}
+
+func (s *certTestSuite) TestCertManagerExpiration() {
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Small)
+	defer s.teardownCertManager()
+	defer s.fixtures.LoadReferenceFixtures()
+	require := s.Require()
+
+	// setup the datastore to contain the modified hotelVASP
+	hotelVASP, err := s.fixtures.GetVASP("hotel")
+	require.NoError(err, "could not get hotel VASP")
+	hotelVASP = s.setupVASP(hotelVASP)
+
+	certID := models.GetCertID(hotelVASP.IdentityCertificate)
+	cert := &models.Certificate{
+		Id:     certID,
+		Status: models.CertificateState_ISSUED,
+	}
+	err = s.db.UpdateCert(cert)
+	require.NoError(err)
+
+	// Run the loop again to ensure that emails are not resent to contacts
+	s.certman.HandleCertificateReissuance()
+
+	cert, err = s.db.RetrieveCert(certID)
+	require.NoError(err)
+	require.Equal(cert.Status, models.CertificateState_EXPIRED)
+
+	// Ensure that emails have been sent with the mock email client.
+	emails.CheckEmails(s.T(), []*emails.EmailMeta{})
 }
 
 func (s *certTestSuite) TestCertManagerReissuance() {

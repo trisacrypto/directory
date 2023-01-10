@@ -729,13 +729,14 @@ vaspsLoop:
 		}
 
 		// Make sure the VASP has an identity certificate to avoid a panic.
-		if vasp.IdentityCertificate == nil {
+		identityCert := vasp.IdentityCertificate
+		if identityCert == nil {
 			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("vasp is verified but does not have an identity certificate")
 			continue vaspsLoop
 		}
 
 		// Calculate the number of days before the VASP's certificate expires.
-		if expirationDate, err = time.Parse(time.RFC3339, vasp.IdentityCertificate.NotAfter); err != nil {
+		if expirationDate, err = time.Parse(time.RFC3339, identityCert.NotAfter); err != nil {
 			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not parse %s's cert reissuance date")
 			continue vaspsLoop
 		}
@@ -751,9 +752,21 @@ vaspsLoop:
 		reissuanceDate := expirationDate.Add(-time.Hour * 240)
 		timeBeforeExpiration := time.Until(expirationDate)
 
-		// TODO: handle the case where the certificate has expired, we should update the certificate record to the EXPIRED state
 		// NOTE: This computation returns fractional days rather than rounding up or down to the nearest day.
 		switch daysBeforeExpiration := timeBeforeExpiration.Hours() / 24; {
+
+		// If a certificate has expired, update the certificate record.
+		case daysBeforeExpiration <= 0:
+			var cert *models.Certificate
+			if cert, err = c.db.RetrieveCert(models.GetCertID(identityCert)); err != nil {
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not retrieve expired certificate record")
+				continue vaspsLoop
+			}
+			cert.Status = models.CertificateState_EXPIRED
+			if err = c.db.UpdateCert(cert); err != nil {
+				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not update expired certificate record status")
+			}
+
 		// Seven days before expiration, send a cert reissuance reminder to VASP.
 		// NOTE: the SendContactReissuanceReminder will not send emails more than
 		// once to a contact.
