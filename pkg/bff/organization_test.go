@@ -248,3 +248,148 @@ func (s *bffTestSuite) TestListOrganizations() {
 	require.NoError(err, "list organizations call failed")
 	require.Equal(expected, reply, "expected returned organizations to match")
 }
+
+func (s *bffTestSuite) TestDeleteOrganization() {
+	require := s.Require()
+	defer s.ResetDB()
+
+	// Create initial claims fixture
+	claims := &authtest.Claims{
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{"read:nothing"},
+	}
+
+	// Endpoint must be authenticated
+	require.NoError(s.SetClientCSRFProtection(), "could not set csrf protection on client")
+	err := s.client.DeleteOrganization(context.TODO(), "invalid")
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
+
+	// Endpoint requires the delete:organizations permission
+	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
+	err = s.client.DeleteOrganization(context.TODO(), "invalid")
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
+
+	// Should return an error if the organization does not exist
+	claims.Permissions = []string{auth.DeleteOrganizations}
+	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
+	err = s.client.DeleteOrganization(context.TODO(), "invalid")
+	s.requireError(err, http.StatusNotFound, "organization not found", "expected error when organization does not exist")
+
+	// Should return an error if the user is not a collaborator on the organization
+	org := &models.Organization{
+		Name:   "Alice VASP",
+		Domain: "alicevasp.io",
+	}
+	_, err = s.DB().CreateOrganization(org)
+	require.NoError(err, "could not create organization")
+	err = s.client.DeleteOrganization(context.TODO(), org.Id)
+	s.requireError(err, http.StatusForbidden, "user is not authorized to access this organization", "expected error when user is not a collaborator on the organization")
+
+	// Create an unverified collaborator on the organization
+	collab := &models.Collaborator{
+		Email: claims.Email,
+	}
+	require.NoError(org.AddCollaborator(collab), "could not add collaborator to organization")
+	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
+
+	// Should be able to delete the organization
+	require.NoError(s.client.DeleteOrganization(context.TODO(), org.Id), "error response from DeleteOrganization")
+	_, err = s.DB().RetrieveOrganization(org.UUID())
+	require.EqualError(err, "entity not found", "expected error when organization does not exist")
+	metadata := &auth.AppMetadata{}
+	require.NoError(metadata.Load(s.auth.GetUserAppMetadata()), "could not load app metadata")
+	require.Empty(metadata.OrgID, "user org id should be empty")
+
+	// Create an organization with a verified collaborator
+	collab.Verified = true
+	collab.Email = authtest.Email
+	collab.UserId = authtest.UserID
+	org = &models.Organization{
+		Name:   "Bob VASP",
+		Domain: "bobvasp.io",
+	}
+	_, err = s.DB().CreateOrganization(org)
+	require.NoError(err, "could not create organization")
+	require.NoError(org.AddCollaborator(collab), "could not add collaborator to organization")
+	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
+
+	// Organization info should be deleted for non-TSP users
+	metadata = &auth.AppMetadata{
+		OrgID: org.Id,
+		VASPs: auth.VASPs{
+			MainNet: "1bcacaf5-4b43-4e14-b70c-a47107d3a56c",
+			TestNet: "87d92fd1-53cf-47d8-85b1-048e8a38ced9",
+		},
+	}
+	appdata, err := metadata.Dump()
+	require.NoError(err, "could not dump app metadata")
+	s.auth.SetUserAppMetadata(appdata)
+	require.NoError(s.client.DeleteOrganization(context.TODO(), org.Id), "error response from DeleteOrganization")
+	_, err = s.DB().RetrieveOrganization(org.UUID())
+	require.EqualError(err, "entity not found", "expected error when organization does not exist")
+	metadata = &auth.AppMetadata{}
+	require.NoError(metadata.Load(s.auth.GetUserAppMetadata()), "could not load app metadata")
+	require.Empty(metadata.OrgID, "user org id should be empty")
+	require.Empty(metadata.VASPs, "user vasps should be empty")
+
+	// Create a few more organizations
+	charlie := &models.Organization{
+		Name:   "Charlie VASP",
+		Domain: "charlievasp.io",
+		Testnet: &models.DirectoryRecord{
+			Id: "87d92fd1-53cf-47d8-85b1-048e8a38ced9",
+		},
+		Mainnet: &models.DirectoryRecord{
+			Id: "1bcacaf5-4b43-4e14-b70c-a47107d3a56c",
+		},
+	}
+	_, err = s.DB().CreateOrganization(charlie)
+	require.NoError(err, "could not create organization")
+	require.NoError(charlie.AddCollaborator(collab), "could not add collaborator to organization")
+	require.NoError(s.DB().UpdateOrganization(charlie), "could not update organization")
+
+	delta := &models.Organization{
+		Name:   "Delta VASP",
+		Domain: "deltavasp.io",
+		Testnet: &models.DirectoryRecord{
+			Id: "12345678-53cf-47d8-85b1-048e8a38ced9",
+		},
+		Mainnet: &models.DirectoryRecord{
+			Id: "abc12345-4b43-4e14-b70c-a47107d3a56c",
+		},
+	}
+	_, err = s.DB().CreateOrganization(delta)
+	require.NoError(err, "could not create organization")
+	require.NoError(delta.AddCollaborator(collab), "could not add collaborator to organization")
+	require.NoError(s.DB().UpdateOrganization(delta), "could not update organization")
+
+	// Create a TSP user on multiple organizations
+	metadata = &auth.AppMetadata{
+		OrgID: charlie.Id,
+		VASPs: auth.VASPs{
+			MainNet: charlie.Mainnet.Id,
+			TestNet: charlie.Testnet.Id,
+		},
+	}
+	metadata.AddOrganization(charlie.Id)
+	metadata.AddOrganization(delta.Id)
+	appdata, err = metadata.Dump()
+	require.NoError(err, "could not dump app metadata")
+	s.auth.SetUserAppMetadata(appdata)
+
+	// TSP user should have their current organization and organization list updated
+	expected := &auth.AppMetadata{
+		OrgID: delta.Id,
+		VASPs: auth.VASPs{
+			MainNet: delta.Mainnet.Id,
+			TestNet: delta.Testnet.Id,
+		},
+		Organizations: []string{delta.Id},
+	}
+	require.NoError(s.client.DeleteOrganization(context.TODO(), charlie.Id), "error response from DeleteOrganization")
+	_, err = s.DB().RetrieveOrganization(charlie.UUID())
+	require.EqualError(err, "entity not found", "expected error when organization does not exist")
+	metadata = &auth.AppMetadata{}
+	require.NoError(metadata.Load(s.auth.GetUserAppMetadata()), "could not load app metadata")
+	require.Equal(expected, metadata, "user app metadata should be updated")
+}

@@ -197,6 +197,93 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
+// DeleteOrganization deletes an organization from the database. The user must have the
+// delete:organizations permission and also be a collaborator in the organization to
+// perform this action.
+//
+// @Summary Delete an organization [delete:organizations]
+// @Description Completely delete an organization, including the registration and collaborators.
+// @Tags organizations
+// @Success 200 {object} api.Reply
+// @Failure 401 {object} api.Reply
+// @Failure 403 {object} api.Reply "User is not a collaborator in the organization"
+// @Failure 404 {object} api.Reply "Organization not found"
+// @Failure 500 {object} api.Reply
+// @Router /organizations/{id} [delete]
+func (s *Server) DeleteOrganization(c *gin.Context) {
+	var (
+		err  error
+		user *management.User
+		org  *models.Organization
+	)
+
+	// Fetch the user from the context
+	if user, err = auth.GetUserInfo(c); err != nil {
+		log.Error().Err(err).Msg("delete organization handler requires user info; expected middleware to return 401")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify user to delete organization"))
+		return
+	}
+
+	// Parse the organization ID from the URL
+	orgID := c.Param("orgID")
+
+	// Fetch the organization to be deleted
+	if org, err = s.OrganizationFromID(orgID); err != nil {
+		log.Error().Err(err).Str("org_id", orgID).Msg("could not retrieve organization from database")
+		c.JSON(http.StatusNotFound, api.ErrorResponse("organization not found"))
+		return
+	}
+
+	// The user must be a collaborator in the organization to delete it
+	if org.GetCollaborator(*user.Email) == nil {
+		log.Error().Err(err).Str("org_id", orgID).Str("email", *user.Email).Msg("could not find user in organization collaborators")
+		c.JSON(http.StatusForbidden, api.ErrorResponse("user is not authorized to access this organization"))
+		return
+	}
+
+	// Delete the organization from the database
+	if err = s.db.DeleteOrganization(org.UUID()); err != nil {
+		log.Error().Err(err).Str("org_id", orgID).Msg("could not delete organization from database")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not delete organization from database"))
+		return
+	}
+
+	// Remove the organization from all collaborators so that they don't get an error
+	// when they try to log in. If a user no longer has an organization, they will be
+	// assigned one automatically the next time they log in.
+	for _, collab := range org.GetCollaborators() {
+		// If the collaborator doesn't have an Auth0 ID then they haven't logged in yet
+		if collab.UserId == "" {
+			log.Debug().Str("org_id", orgID).Str("email", collab.Email).Msg("ignoring unverified collaborator during organization deletion")
+			continue
+		}
+
+		// Retrieve the Auth0 user record from the user ID.
+		var collabUser *management.User
+		if collabUser, err = s.auth0.User.Read(collab.UserId); err != nil {
+			log.Error().Err(err).Str("user_id", collab.UserId).Msg("could not retrieve user from Auth0")
+			continue
+		}
+
+		// Remove the organization from the user's organization list.
+		appdata := &auth.AppMetadata{}
+		if err = appdata.Load(collabUser.AppMetadata); err != nil {
+			log.Error().Err(err).Str("user_id", collab.UserId).Msg("could not parse user app metadata")
+			continue
+		}
+		appdata.RemoveOrganization(org.Id)
+
+		// Attempt to switch the user's current organization
+		// This method updates the user's app metadata on Auth0
+		if err = s.SwitchUserOrganization(collabUser, appdata); err != nil {
+			log.Error().Err(err).Str("user_id", collab.UserId).Msg("could not switch user to new organization")
+			continue
+		}
+	}
+
+	c.JSON(http.StatusOK, api.Reply{Success: true, RefreshToken: true})
+}
+
 // ValidateOrganizationDomain performs any necessary normalization and validation of an
 // organization domain name, ensuring that the domain is not already in use by another
 // organization on the specified app metadata and returning the normalized domain name

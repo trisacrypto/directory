@@ -233,6 +233,21 @@ func (s *APIv1) ListOrganizations(ctx context.Context) (out []*OrganizationReply
 	return out, nil
 }
 
+// Delete an organization by ID.
+func (s *APIv1) DeleteOrganization(ctx context.Context, id string) (err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodDelete, "/v1/organizations/"+id, nil, nil); err != nil {
+		return err
+	}
+
+	// Execute the request and get a response
+	if _, err = s.Do(req, nil, true); err != nil {
+		return err
+	}
+	return nil
+}
+
 // Add a collaborator to an organization.
 func (s *APIv1) AddCollaborator(ctx context.Context, request *models.Collaborator) (collaborator *models.Collaborator, err error) {
 	// Make the HTTP request

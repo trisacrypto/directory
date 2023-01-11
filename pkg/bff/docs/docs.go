@@ -564,6 +564,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/organizations/{id}": {
+            "delete": {
+                "description": "Completely delete an organization, including the registration and collaborators.",
+                "tags": [
+                    "organizations"
+                ],
+                "summary": "Delete an organization [delete:organizations]",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    },
+                    "403": {
+                        "description": "User is not a collaborator in the organization",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    },
+                    "404": {
+                        "description": "Organization not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    }
+                }
+            }
+        },
         "/overview": {
             "get": {
                 "description": "Returns a high level summary representing the state of each directory service and VASP registrations.",
