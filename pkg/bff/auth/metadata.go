@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"sort"
 
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 )
@@ -106,23 +107,41 @@ func (meta *AppMetadata) UpdateOrganization(org *models.Organization) {
 // part of. This method is idempotent and will not add the organization ID if it
 // already exists.
 func (meta *AppMetadata) AddOrganization(orgID string) {
-	for _, id := range meta.Organizations {
-		if id == orgID {
-			return
-		}
+	// Find the index of insertion using a binary search
+	i := indexOf(meta.Organizations, orgID)
+
+	// If the organization ID is already in the list, do nothing
+	if i < len(meta.Organizations) && meta.Organizations[i] == orgID {
+		return
 	}
 
-	meta.Organizations = append(meta.Organizations, orgID)
+	// Otherwise, insert the organization ID into the list
+	meta.Organizations = append(meta.Organizations, "")
+	copy(meta.Organizations[i+1:], meta.Organizations[i:])
+	meta.Organizations[i] = orgID
 }
 
 // RemoveOrganization removes an organization ID from the set of organizations the user
 // is a part of. This method is idempotent and will not error if the organization ID
 // does not exist in the metadata.
 func (meta *AppMetadata) RemoveOrganization(orgID string) {
-	for i, id := range meta.Organizations {
-		if id == orgID {
-			meta.Organizations = append(meta.Organizations[:i], meta.Organizations[i+1:]...)
-			return
-		}
+	// Find the index of removal using a binary search
+	i := indexOf(meta.Organizations, orgID)
+
+	// If the organization ID is not in the list, do nothing
+	if i >= len(meta.Organizations) || meta.Organizations[i] != orgID {
+		return
 	}
+
+	// Otherwise, remove the organization ID from the list
+	copy(meta.Organizations[i:], meta.Organizations[i+1:])
+	meta.Organizations[len(meta.Organizations)-1] = ""
+	meta.Organizations = meta.Organizations[:len(meta.Organizations)-1]
+}
+
+// indexOf uses a binary search to return the index where the target string should be
+// inserted or found in the list. The list must already be sorted in ascending order,
+// otherwise this method will have undefined behavior.
+func indexOf(list []string, target string) int {
+	return sort.Search(len(list), func(i int) bool { return list[i] >= target })
 }
