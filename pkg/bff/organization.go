@@ -258,14 +258,14 @@ func (s *Server) DeleteOrganization(c *gin.Context) {
 			continue
 		}
 
-		// Retrieve the Auth0 user record from the user ID.
+		// Retrieve the Auth0 user record from the user ID
 		var collabUser *management.User
 		if collabUser, err = s.auth0.User.Read(collab.UserId); err != nil {
 			log.Error().Err(err).Str("user_id", collab.UserId).Msg("could not retrieve user from Auth0")
 			continue
 		}
 
-		// Remove the organization from the user's organization list.
+		// Remove the organization from the user's organization list
 		appdata := &auth.AppMetadata{}
 		if err = appdata.Load(collabUser.AppMetadata); err != nil {
 			log.Error().Err(err).Str("user_id", collab.UserId).Msg("could not parse user app metadata")
@@ -273,11 +273,15 @@ func (s *Server) DeleteOrganization(c *gin.Context) {
 		}
 		appdata.RemoveOrganization(org.Id)
 
-		// Attempt to switch the user's current organization
-		// This method updates the user's app metadata on Auth0
-		if err = s.SwitchUserOrganization(collabUser, appdata); err != nil {
-			log.Error().Err(err).Str("user_id", collab.UserId).Msg("could not switch user to new organization")
-			continue
+		// If the user is currently assigned to the deleted organization, then switch
+		// them to a different one to allow them to login.
+		if appdata.OrgID == org.Id {
+			// This method both modifies the app metadata and pushes the updates to
+			// Auth0.
+			if err = s.SwitchUserOrganization(collabUser, appdata); err != nil {
+				log.Error().Err(err).Str("user_id", collab.UserId).Msg("could not switch user to new organization")
+				continue
+			}
 		}
 	}
 

@@ -332,6 +332,32 @@ func (s *bffTestSuite) TestDeleteOrganization() {
 	require.Empty(metadata.OrgID, "user org id should be empty")
 	require.Empty(metadata.VASPs, "user vasps should be empty")
 
+	// Organization info should not be deleted if the user is currently assigned to a different organization
+	org = &models.Organization{
+		Name:   "Bob VASP",
+		Domain: "bobvasp.io",
+	}
+	_, err = s.DB().CreateOrganization(org)
+	require.NoError(err, "could not create organization")
+	require.NoError(org.AddCollaborator(collab), "could not add collaborator to organization")
+	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
+	metadata = &auth.AppMetadata{
+		OrgID: "e0b3f9d0-3f39-4e8a-9b8d-2a6b3d4701d7",
+		VASPs: auth.VASPs{
+			MainNet: "1bcacaf5-4b43-4e14-b70c-a47107d3a56c",
+			TestNet: "87d92fd1-53cf-47d8-85b1-048e8a38ced9",
+		},
+	}
+	appdata, err = metadata.Dump()
+	require.NoError(err, "could not dump app metadata")
+	s.auth.SetUserAppMetadata(appdata)
+	require.NoError(s.client.DeleteOrganization(context.TODO(), org.Id), "error response from DeleteOrganization")
+	_, err = s.DB().RetrieveOrganization(org.UUID())
+	require.EqualError(err, "entity not found", "expected error when organization does not exist")
+	resultMeta := &auth.AppMetadata{}
+	require.NoError(resultMeta.Load(s.auth.GetUserAppMetadata()), "could not load app metadata")
+	require.Equal(metadata, resultMeta, "user app metadata should not have changed")
+
 	// Create a few more organizations
 	charlie := &models.Organization{
 		Name:   "Charlie VASP",
