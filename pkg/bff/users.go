@@ -492,7 +492,7 @@ func (s *Server) SwitchUserOrganization(user *management.User, appdata *auth.App
 	// Find the first organization that the user is a collaborator in
 	var org *models.Organization
 	for _, id := range appdata.GetOrganizations() {
-		if org, err = s.OrganizationFromID(id); err == nil && org.GetCollaborator(*user.Email) != nil {
+		if org, err = s.OrganizationFromID(id); err == nil && user.Email != nil && org.GetCollaborator(*user.Email) != nil {
 			break
 		}
 	}
