@@ -248,3 +248,125 @@ func (s *bffTestSuite) TestListOrganizations() {
 	require.NoError(err, "list organizations call failed")
 	require.Equal(expected, reply, "expected returned organizations to match")
 }
+
+func (s *bffTestSuite) TestPatchOrganization() {
+	require := s.Require()
+	defer s.ResetDB()
+
+	// Create initial claims fixture
+	claims := &authtest.Claims{
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{"read:nothing"},
+	}
+
+	// Endpoint must be authenticated
+	require.NoError(s.SetClientCSRFProtection(), "could not set csrf protection on client")
+	_, err := s.client.PatchOrganization(context.TODO(), "invalid", &api.OrganizationParams{})
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
+
+	// Endpoint requires the update:organizations permission
+	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
+	_, err = s.client.PatchOrganization(context.TODO(), "invalid", &api.OrganizationParams{})
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
+
+	// Should return an error if no fields are provided
+	claims.Permissions = []string{auth.UpdateOrganizations}
+	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
+	_, err = s.client.PatchOrganization(context.TODO(), "invalid", &api.OrganizationParams{})
+	s.requireError(err, http.StatusBadRequest, "no fields provided to patch", "expected error when no fields are provided")
+
+	// Should return an error if the organization does not exist
+	params := &api.OrganizationParams{
+		Name: "Bob's Exchange",
+	}
+	_, err = s.client.PatchOrganization(context.TODO(), "00000000-0000-0000-0000-000000000000", params)
+	s.requireError(err, http.StatusNotFound, "organization not found", "expected error when organization does not exist")
+
+	// Create a few organizations in the database
+	alice := &models.Organization{
+		Name:   "Alice VASP",
+		Domain: "alicevasp.io",
+	}
+	_, err = s.DB().CreateOrganization(alice)
+	require.NoError(err, "could not create organization")
+
+	bob := &models.Organization{
+		Name:   "Bob VASP",
+		Domain: "bobvasp.io",
+	}
+	_, err = s.DB().CreateOrganization(bob)
+	require.NoError(err, "could not create organization")
+
+	// Should return an error if the user is not a collaborator
+	_, err = s.client.PatchOrganization(context.TODO(), bob.Id, params)
+	s.requireError(err, http.StatusForbidden, "user is not authorized to access this organization", "expected error when user is not a collaborator")
+
+	// Make the user a collaborator
+	collab := &models.Collaborator{
+		Email:     claims.Email,
+		LastLogin: time.Now().Format(time.RFC3339),
+	}
+	require.NoError(bob.AddCollaborator(collab), "could not add collaborator to organization")
+	require.NoError(s.DB().UpdateOrganization(bob), "could not update organization")
+
+	// Invalid domains are rejected
+	params = &api.OrganizationParams{
+		Domain: "bobvasp",
+	}
+	_, err = s.client.PatchOrganization(context.TODO(), bob.Id, params)
+	s.requireError(err, http.StatusBadRequest, "invalid domain provided", "expected error when domain is invalid")
+
+	// Create some user app metadata
+	metadata := &auth.AppMetadata{
+		Organizations: []string{alice.Id, bob.Id},
+	}
+	appdata, err := metadata.Dump()
+	require.NoError(err, "could not dump app metadata")
+	s.auth.SetUserAppMetadata(appdata)
+
+	// Should return an error if the domain is already taken
+	params = &api.OrganizationParams{
+		Domain: "alicevasp.io",
+	}
+	_, err = s.client.PatchOrganization(context.TODO(), bob.Id, params)
+	s.requireError(err, http.StatusConflict, "organization with domain already exists", "expected error when domain is already taken")
+
+	// Successfully updating an organization name
+	params = &api.OrganizationParams{
+		Name: "Bob's Exchange",
+	}
+	expected := &api.OrganizationReply{
+		ID:        bob.Id,
+		Name:      params.Name,
+		Domain:    bob.Domain,
+		CreatedAt: bob.Created,
+		LastLogin: collab.LastLogin,
+	}
+	rep, err := s.client.PatchOrganization(context.TODO(), bob.Id, params)
+	require.NoError(err, "patch organization call failed")
+	require.Equal(expected, rep, "expected returned organization to match")
+
+	// Organization should be updated in the database
+	updated, err := s.DB().RetrieveOrganization(bob.UUID())
+	require.NoError(err, "could not retrieve organization")
+	require.Equal(params.Name, updated.Name, "expected organization name to match")
+	require.Equal(bob.Domain, updated.Domain, "expected organization domain to be unchanged")
+
+	// Successfully updating an organization domain
+	params = &api.OrganizationParams{
+		Domain: "bobexchange.io",
+	}
+	expected.Domain = params.Domain
+	rep, err = s.client.PatchOrganization(context.TODO(), bob.Id, params)
+	require.NoError(err, "patch organization call failed")
+	require.Equal(expected, rep, "expected returned organization to match")
+
+	// Update should have no effect if the fields are the same
+	params = &api.OrganizationParams{
+		Name:   rep.Name,
+		Domain: rep.Domain,
+	}
+	rep, err = s.client.PatchOrganization(context.TODO(), bob.Id, params)
+	require.NoError(err, "patch organization call failed")
+	require.Equal(expected, rep, "expected returned organization to match")
+}

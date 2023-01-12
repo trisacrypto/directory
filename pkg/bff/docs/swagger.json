@@ -556,6 +556,83 @@
                 }
             }
         },
+        "/organizations/{id}": {
+            "patch": {
+                "description": "Patch an organization with the provided fields.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "summary": "Patch organization [update:organizations]",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields to update",
+                        "name": "params",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.OrganizationParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.OrganizationReply"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid organization domain",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    },
+                    "403": {
+                        "description": "User is not authorized to access this organization",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    },
+                    "404": {
+                        "description": "Organization not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    },
+                    "409": {
+                        "description": "Organization with domain already exists",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    }
+                }
+            }
+        },
         "/overview": {
             "get": {
                 "description": "Returns a high level summary representing the state of each directory service and VASP registrations.",
