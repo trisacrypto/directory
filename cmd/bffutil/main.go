@@ -159,6 +159,19 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:   "appdata:sortorgs",
+			Usage:  "sort the organization list on each user's app_metadata",
+			Action: sortAppdataOrgs,
+			Before: Before(loadConf, connectAuth0),
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "dry-run",
+					Aliases: []string{"d"},
+					Usage:   "display user app_metadata changes without updating them",
+				},
+			},
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
@@ -769,6 +782,54 @@ func addCollab(c *cli.Context) (err error) {
 	if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
 		return cli.Exit(err, 1)
 	}
+	return nil
+}
+
+func sortAppdataOrgs(c *cli.Context) (err error) {
+	// Get all users in the tenant
+	var users *management.UserList
+	if users, err = auth0.User.List(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Recreate the org list for each user
+	var updated int
+	for _, user := range users.Users {
+		appdata := &auth.AppMetadata{}
+		if err = appdata.Load(user.AppMetadata); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		// Get the user's current org list
+		orgs := appdata.GetOrganizations()
+		if len(orgs) == 0 {
+			continue
+		}
+
+		fmt.Printf("current org list for user %s (%s): %v\n", *user.Email, *user.ID, orgs)
+
+		// Create the sorted list, using the internal method which ensures that the
+		// organizations are sorted in the intended order
+		appdata.Organizations = []string{}
+		for _, org := range orgs {
+			appdata.AddOrganization(org)
+		}
+		fmt.Printf("sorted org list for user %s (%s): %v\n", *user.Email, *user.ID, appdata.GetOrganizations())
+
+		// Update the user's app metadata on the Auth0 tenant
+		if !c.Bool("dry-run") {
+			if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
+				return cli.Exit(err, 1)
+			}
+			fmt.Printf("updated app metadata for user %s (%s)\n", *user.Email, *user.ID)
+			updated++
+		}
+
+		fmt.Println()
+	}
+
+	fmt.Printf("updated app metadata for %d users\n", updated)
+
 	return nil
 }
 
