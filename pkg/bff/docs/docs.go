@@ -486,11 +486,27 @@ const docTemplate = `{
                     "organizations"
                 ],
                 "summary": "List organizations [read:organizations]",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 8,
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "list"
+                            "$ref": "#/definitions/api.ListOrganizationsReply"
                         }
                     },
                     "401": {
@@ -1150,6 +1166,26 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/models.Collaborator"
                     }
+                }
+            }
+        },
+        "api.ListOrganizationsReply": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "organizations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.OrganizationReply"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
                 }
             }
         },

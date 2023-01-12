@@ -144,20 +144,35 @@ func (s *bffTestSuite) TestListOrganizations() {
 	}
 
 	// Endpoint must be authenticated
-	_, err := s.client.ListOrganizations(context.TODO())
+	_, err := s.client.ListOrganizations(context.TODO(), &api.ListOrganizationsParams{})
 	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
 	// Endpoint requires the update:collaborator permission
 	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
-	_, err = s.client.ListOrganizations(context.TODO())
+	_, err = s.client.ListOrganizations(context.TODO(), &api.ListOrganizationsParams{})
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Should return empty response when user has no organizations
 	claims.Permissions = []string{auth.ReadOrganizations}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
-	reply, err := s.client.ListOrganizations(context.TODO())
+	expected := &api.ListOrganizationsReply{
+		Organizations: []*api.OrganizationReply{},
+		Count:         0,
+		Page:          1,
+		PageSize:      8,
+	}
+	reply, err := s.client.ListOrganizations(context.TODO(), &api.ListOrganizationsParams{})
 	require.NoError(err, "list organizations call failed")
-	require.Empty(reply, "expected empty response")
+	require.Equal(expected, reply, "expected default response")
+
+	// Should enforce defaults for query parameters
+	req := &api.ListOrganizationsParams{
+		Page:     -1,
+		PageSize: -1,
+	}
+	reply, err = s.client.ListOrganizations(context.TODO(), req)
+	require.NoError(err, "list organizations call failed")
+	require.Equal(expected, reply, "expected default response for invalid query parameters")
 
 	// Should not return an error if there is an organization on the app metadata that's not in the database
 	metadata := &auth.AppMetadata{}
@@ -166,9 +181,9 @@ func (s *bffTestSuite) TestListOrganizations() {
 	appdata, err := metadata.Dump()
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
-	reply, err = s.client.ListOrganizations(context.TODO())
+	reply, err = s.client.ListOrganizations(context.TODO(), &api.ListOrganizationsParams{})
 	require.NoError(err, "list organizations call failed")
-	require.Empty(reply, "expected empty response")
+	require.Equal(expected, reply, "expected default response")
 
 	// Create some organizations for the user
 	alice := &models.Organization{
@@ -219,7 +234,7 @@ func (s *bffTestSuite) TestListOrganizations() {
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
 
-	expected := []*api.OrganizationReply{
+	orgReplies := []*api.OrganizationReply{
 		{
 			ID:        alice.Id,
 			Name:      alice.Name,
@@ -241,12 +256,40 @@ func (s *bffTestSuite) TestListOrganizations() {
 			LastLogin: charlieCollab.LastLogin,
 		},
 	}
+	expected.Organizations = orgReplies
+	expected.Count = 3
 
 	// Should return all organizations the user is a collaborator on
 	// If the user is not a collaborator, the endpoint should not return an error
-	reply, err = s.client.ListOrganizations(context.TODO())
+	reply, err = s.client.ListOrganizations(context.TODO(), &api.ListOrganizationsParams{})
 	require.NoError(err, "list organizations call failed")
 	require.Equal(expected, reply, "expected returned organizations to match")
+
+	// List organizations across multiple pages
+	req = &api.ListOrganizationsParams{
+		Page:     1,
+		PageSize: 2,
+	}
+	expected.Organizations = orgReplies[0:2]
+	expected.PageSize = 2
+	reply, err = s.client.ListOrganizations(context.TODO(), req)
+	require.NoError(err, "list organizations call failed")
+	require.Equal(expected, reply, "wrong results for page 1")
+
+	req.Page = 2
+	expected.Organizations = orgReplies[2:3]
+	expected.Page = 2
+	reply, err = s.client.ListOrganizations(context.TODO(), req)
+	require.NoError(err, "list organizations call failed")
+	require.Equal(expected, reply, "wrong results for page 2")
+
+	// Should return no organizations if the page is out of bounds
+	req.Page = 3
+	expected.Organizations = []*api.OrganizationReply{}
+	expected.Page = 3
+	reply, err = s.client.ListOrganizations(context.TODO(), req)
+	require.NoError(err, "list organizations call failed")
+	require.Equal(expected, reply, "wrong results for page out of bounds")
 }
 
 func (s *bffTestSuite) TestPatchOrganization() {

@@ -144,7 +144,9 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 // @Description Return the list of organizations that the user is assigned to.
 // @Tags organizations
 // @Produce json
-// @Success 200 {list} api.OrganizationReply
+// @Param page query int false "Page number" default(1)
+// @Param page_size query int false "Page size" default(8)
+// @Success 200 {object} api.ListOrganizationsReply
 // @Failure 401 {object} api.Reply
 // @Failure 500 {object} api.Reply
 // @Router /organizations [get]
@@ -169,22 +171,55 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 		return
 	}
 
-	// Build the response
-	out := make([]*api.OrganizationReply, 0)
-	for _, id := range appdata.GetOrganizations() {
-		if org, err := s.OrganizationFromID(id); err != nil {
-			log.Error().Err(err).Str("org_id", id).Msg("could not retrieve organization from database")
-		} else {
-			// User data is on the collaborator record.
-			// Note: The UserInfo middleware ensures that the user email address is
-			// present in the claims so we can safely dereference it here.
-			var collaborator *models.Collaborator
-			if collaborator = org.GetCollaborator(*user.Email); collaborator == nil {
-				log.Error().Str("org_id", id).Str("email", *user.Email).Msg("could not find user in organization collaborators")
-				continue
-			}
+	// Parse the params from the GET request
+	params := &api.ListOrganizationsParams{}
+	if err = c.ShouldBindQuery(params); err != nil {
+		log.Warn().Err(err).Msg("could not bind request with query params")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
 
-			out = append(out, &api.OrganizationReply{
+	// Set pagination defaults
+	if params.Page <= 0 {
+		params.Page = 1
+	}
+
+	if params.PageSize <= 0 {
+		params.PageSize = 8
+	}
+
+	// Determine pagination index range (indexed by 1)
+	minIndex := (params.Page - 1) * params.PageSize
+	maxIndex := minIndex + params.PageSize
+	log.Debug().Int("page", params.Page).Int("page_size", params.PageSize).Int("min_index", minIndex).Int("max_index", maxIndex).Msg("paginating organizations")
+
+	// Build the response
+	out := &api.ListOrganizationsReply{
+		Organizations: make([]*api.OrganizationReply, 0),
+		Page:          params.Page,
+		PageSize:      params.PageSize,
+	}
+
+	// Iterate over the user's organization assignments and retrieve each organization
+	for _, id := range appdata.GetOrganizations() {
+		var org *models.Organization
+		if org, err = s.OrganizationFromID(id); err != nil {
+			log.Error().Err(err).Str("org_id", id).Msg("could not retrieve organization from database")
+			continue
+		}
+
+		// Make sure the user is a collaborator in the organization
+		// Note: The UserInfo middleware ensures that the user email address is
+		// present in the claims so we can safely dereference it here.
+		var collaborator *models.Collaborator
+		if collaborator = org.GetCollaborator(*user.Email); collaborator == nil {
+			log.Error().Str("org_id", id).Str("email", *user.Email).Msg("could not find user in organization collaborators")
+			continue
+		}
+
+		if out.Count >= minIndex && out.Count < maxIndex {
+			// Within the page range so add the organization to the response
+			out.Organizations = append(out.Organizations, &api.OrganizationReply{
 				ID:        org.Id,
 				Name:      org.ResolveName(),
 				Domain:    org.Domain,
@@ -192,6 +227,8 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 				LastLogin: collaborator.LastLogin,
 			})
 		}
+
+		out.Count++
 	}
 
 	c.JSON(http.StatusOK, out)

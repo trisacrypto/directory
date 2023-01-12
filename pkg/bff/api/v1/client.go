@@ -218,16 +218,22 @@ func (s *APIv1) CreateOrganization(ctx context.Context, in *OrganizationParams) 
 }
 
 // List available organizations.
-func (s *APIv1) ListOrganizations(ctx context.Context) (out []*OrganizationReply, err error) {
+func (s *APIv1) ListOrganizations(ctx context.Context, in *ListOrganizationsParams) (out *ListOrganizationsReply, err error) {
+	// Create the query params from the input
+	var params url.Values
+	if params, err = query.Values(in); err != nil {
+		return nil, fmt.Errorf("could not encode query params: %s", err)
+	}
+
 	// Make the HTTP request
 	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/organizations", nil, nil); err != nil {
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/organizations", nil, &params); err != nil {
 		return nil, err
 	}
 
 	// Execute the request and get a response
-	out = make([]*OrganizationReply, 0)
-	if _, err = s.Do(req, &out, true); err != nil {
+	out = &ListOrganizationsReply{}
+	if _, err = s.Do(req, out, true); err != nil {
 		return nil, err
 	}
 	return out, nil

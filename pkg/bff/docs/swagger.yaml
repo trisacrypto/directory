@@ -59,6 +59,19 @@ definitions:
           $ref: '#/definitions/models.Collaborator'
         type: array
     type: object
+  api.ListOrganizationsReply:
+    properties:
+      count:
+        type: integer
+      organizations:
+        items:
+          $ref: '#/definitions/api.OrganizationReply'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+    type: object
   api.LoginParams:
     properties:
       orgid:
@@ -596,13 +609,24 @@ paths:
   /organizations:
     get:
       description: Return the list of organizations that the user is assigned to.
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 8
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: list
+            $ref: '#/definitions/api.ListOrganizationsReply'
         "401":
           description: Unauthorized
           schema:

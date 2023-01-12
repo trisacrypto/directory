@@ -340,23 +340,29 @@ func TestUserOrganization(t *testing.T) {
 }
 
 func TestListOrganizations(t *testing.T) {
-	fixture := []*api.OrganizationReply{
-		{
-			ID:     "8b2e9e78-baca-4c34-a382-8b285503c901",
-			Name:   "Alice VASP",
-			Domain: "alicevasp.io",
+	fixture := &api.ListOrganizationsReply{
+		Organizations: []*api.OrganizationReply{
+			{
+				ID:     "8b2e9e78-baca-4c34-a382-8b285503c901",
+				Name:   "Alice VASP",
+				Domain: "alicevasp.io",
+			},
+			{
+				ID:     "c22ef329-2b8a-4b0c-9c1f-2b8a4b0c9c1f",
+				Name:   "Bob VASP",
+				Domain: "bobvasp.io",
+			},
 		},
-		{
-			ID:     "c22ef329-2b8a-4b0c-9c1f-2b8a4b0c9c1f",
-			Name:   "Bob VASP",
-			Domain: "bobvasp.io",
-		},
+		Count:    2,
+		Page:     2,
+		PageSize: 10,
 	}
 
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, http.MethodGet, r.Method)
 		require.Equal(t, "/v1/organizations", r.URL.Path)
+		require.Equal(t, "page=2&page_size=10", r.URL.RawQuery)
 
 		w.Header().Add("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
@@ -368,7 +374,10 @@ func TestListOrganizations(t *testing.T) {
 	client, err := api.New(ts.URL)
 	require.NoError(t, err)
 
-	out, err := client.ListOrganizations(context.TODO())
+	out, err := client.ListOrganizations(context.TODO(), &api.ListOrganizationsParams{
+		Page:     2,
+		PageSize: 10,
+	})
 	require.NoError(t, err)
 	require.Equal(t, fixture, out)
 }
