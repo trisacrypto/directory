@@ -25,6 +25,7 @@ type BFFClient interface {
 	UpdateUser(context.Context, *UpdateUserParams) error
 	UserOrganization(context.Context) (*OrganizationReply, error)
 	CreateOrganization(context.Context, *OrganizationParams) (*OrganizationReply, error)
+	PatchOrganization(_ context.Context, id string, request *OrganizationParams) (*OrganizationReply, error)
 	ListOrganizations(context.Context, *ListOrganizationsParams) (*ListOrganizationsReply, error)
 	AddCollaborator(context.Context, *models.Collaborator) (*models.Collaborator, error)
 	ListCollaborators(context.Context) (*ListCollaboratorsReply, error)
@@ -76,7 +77,7 @@ type UpdateUserParams struct {
 	Name string `json:"name,omitempty"`
 }
 
-// OrganizationParams is used to create new organizations.
+// OrganizationParams is used to create and update organizations.
 type OrganizationParams struct {
 	Name   string `json:"name"`
 	Domain string `json:"domain"`

@@ -234,6 +234,112 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
+// PatchOrganization patches an organization in the database with the provided fields.
+//
+// @Summary Patch organization [update:organizations]
+// @Description Patch an organization with the provided fields.
+// @Tags organizations
+// @Accept json
+// @Produce json
+// @Param id path string true "Organization ID"
+// @Param params body api.OrganizationParams true "Fields to update"
+// @Success 200 {object} api.OrganizationReply
+// @Failure 400 {object} api.Reply "Invalid organization domain"
+// @Failure 401 {object} api.Reply
+// @Failure 403 {object} api.Reply "User is not authorized to access this organization"
+// @Failure 404 {object} api.Reply "Organization not found"
+// @Failure 409 {object} api.Reply "Organization with domain already exists"
+// @Failure 500 {object} api.Reply
+// @Router /organizations/{id} [patch]
+func (s *Server) PatchOrganization(c *gin.Context) {
+	var (
+		err  error
+		user *management.User
+	)
+
+	// Fetch the user from the context
+	if user, err = auth.GetUserInfo(c); err != nil {
+		log.Error().Err(err).Msg("create organization handler requires user info; expected middleware to return 401")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify user to patch organization"))
+		return
+	}
+
+	// Load the user app metadata to check their organization assignments
+	appdata := &auth.AppMetadata{}
+	if err = appdata.Load(user.AppMetadata); err != nil {
+		log.Error().Err(err).Msg("could not parse user app metadata")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not parse user app metadata"))
+		return
+	}
+
+	// Unmarshal the params from the PATCH request
+	params := &api.OrganizationParams{}
+	if err = c.ShouldBind(params); err != nil {
+		log.Warn().Err(err).Msg("could not bind request")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
+
+	// At least one field must be provided
+	if *params == (api.OrganizationParams{}) {
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("no fields provided to patch"))
+		return
+	}
+
+	// Retrieve the organization to be updated
+	var org *models.Organization
+	id := c.Param("orgID")
+	if org, err = s.OrganizationFromID(id); err != nil {
+		log.Error().Err(err).Str("org_id", id).Msg("could not retrieve organization from database")
+		c.JSON(http.StatusNotFound, api.ErrorResponse("organization not found"))
+		return
+	}
+
+	// LastLogin timestamp is on the collaborator record
+	var collab *models.Collaborator
+	if collab = org.GetCollaborator(*user.Email); collab == nil {
+		log.Warn().Str("org_id", id).Str("email", *user.Email).Msg("user is not a collaborator on organization")
+		c.JSON(http.StatusForbidden, api.ErrorResponse("user is not authorized to access this organization"))
+		return
+	}
+
+	domain := params.Domain
+	if domain != "" && domain != org.Domain {
+		// Prevent duplicate names for organizations
+		// TODO: Perform universal check against the database using an index
+		if org.Domain, err = s.ValidateOrganizationDomain(domain, appdata); err != nil {
+			log.Error().Err(err).Str("domain", domain).Msg("could not validate organization domain")
+			if errors.Is(err, ErrDomainAlreadyExists) {
+				c.JSON(http.StatusConflict, api.ErrorResponse("organization with domain already exists"))
+				return
+			}
+			c.JSON(http.StatusBadRequest, api.ErrorResponse("invalid domain provided"))
+			return
+		}
+	}
+
+	if params.Name != "" {
+		org.Name = params.Name
+	}
+
+	// Save the updated organization
+	if err = s.db.UpdateOrganization(org); err != nil {
+		log.Error().Err(err).Str("org_id", id).Msg("could not update organization in database")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
+	}
+
+	// Create the organization response
+	out := &api.OrganizationReply{
+		ID:        org.Id,
+		Name:      org.ResolveName(),
+		Domain:    org.Domain,
+		CreatedAt: org.Created,
+		LastLogin: collab.LastLogin,
+	}
+	c.JSON(http.StatusOK, out)
+}
+
 // ValidateOrganizationDomain performs any necessary normalization and validation of an
 // organization domain name, ensuring that the domain is not already in use by another
 // organization on the specified app metadata and returning the normalized domain name

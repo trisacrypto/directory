@@ -374,6 +374,7 @@ func (s *Server) setupRoutes() (err error) {
 		{
 			organizations.GET("", auth.Authorize(auth.ReadOrganizations), userinfo, s.ListOrganizations)
 			organizations.POST("", auth.DoubleCookie(), auth.Authorize(auth.CreateOrganizations), userinfo, s.CreateOrganization)
+			organizations.PATCH("/:orgID", auth.DoubleCookie(), auth.Authorize(auth.UpdateOrganizations), userinfo, s.PatchOrganization)
 		}
 		collaborators := v1.Group("/collaborators")
 		{

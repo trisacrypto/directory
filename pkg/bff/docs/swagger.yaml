@@ -676,6 +676,57 @@ paths:
       summary: Create a new organization [create:organizations]
       tags:
       - organizations
+  /organizations/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Patch an organization with the provided fields.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: params
+        required: true
+        schema:
+          $ref: '#/definitions/api.OrganizationParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.OrganizationReply'
+        "400":
+          description: Invalid organization domain
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "403":
+          description: User is not authorized to access this organization
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "404":
+          description: Organization not found
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "409":
+          description: Organization with domain already exists
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Patch organization [update:organizations]
+      tags:
+      - organizations
   /overview:
     get:
       description: Returns a high level summary representing the state of each directory

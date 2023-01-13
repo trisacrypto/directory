@@ -382,6 +382,36 @@ func TestListOrganizations(t *testing.T) {
 	require.Equal(t, fixture, out)
 }
 
+func TestPatchOrganization(t *testing.T) {
+	fixture := &api.OrganizationReply{
+		Name:   "Alice VASP",
+		Domain: "alicevasp.io",
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodPatch, r.Method)
+		require.Equal(t, "/v1/organizations/8b2e9e78-baca-4c34-a382-8b285503c901", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	req := &api.OrganizationParams{
+		Name:   fixture.Name,
+		Domain: fixture.Domain,
+	}
+	out, err := client.PatchOrganization(context.TODO(), "8b2e9e78-baca-4c34-a382-8b285503c901", req)
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
+}
+
 func TestAddCollaborator(t *testing.T) {
 	fixture := &models.Collaborator{
 		Email:     "alice@example.com",
