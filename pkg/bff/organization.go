@@ -144,7 +144,9 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 // @Description Return the list of organizations that the user is assigned to.
 // @Tags organizations
 // @Produce json
-// @Success 200 {list} api.OrganizationReply
+// @Param page query int false "Page number" default(1)
+// @Param page_size query int false "Page size" default(8)
+// @Success 200 {object} api.ListOrganizationsReply
 // @Failure 401 {object} api.Reply
 // @Failure 500 {object} api.Reply
 // @Router /organizations [get]
@@ -169,22 +171,55 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 		return
 	}
 
-	// Build the response
-	out := make([]*api.OrganizationReply, 0)
-	for _, id := range appdata.GetOrganizations() {
-		if org, err := s.OrganizationFromID(id); err != nil {
-			log.Error().Err(err).Str("org_id", id).Msg("could not retrieve organization from database")
-		} else {
-			// User data is on the collaborator record.
-			// Note: The UserInfo middleware ensures that the user email address is
-			// present in the claims so we can safely dereference it here.
-			var collaborator *models.Collaborator
-			if collaborator = org.GetCollaborator(*user.Email); collaborator == nil {
-				log.Error().Str("org_id", id).Str("email", *user.Email).Msg("could not find user in organization collaborators")
-				continue
-			}
+	// Parse the params from the GET request
+	params := &api.ListOrganizationsParams{}
+	if err = c.ShouldBindQuery(params); err != nil {
+		log.Warn().Err(err).Msg("could not bind request with query params")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
 
-			out = append(out, &api.OrganizationReply{
+	// Set pagination defaults
+	if params.Page <= 0 {
+		params.Page = 1
+	}
+
+	if params.PageSize <= 0 {
+		params.PageSize = 8
+	}
+
+	// Determine pagination index range (indexed by 1)
+	minIndex := (params.Page - 1) * params.PageSize
+	maxIndex := minIndex + params.PageSize
+	log.Debug().Int("page", params.Page).Int("page_size", params.PageSize).Int("min_index", minIndex).Int("max_index", maxIndex).Msg("paginating organizations")
+
+	// Build the response
+	out := &api.ListOrganizationsReply{
+		Organizations: make([]*api.OrganizationReply, 0),
+		Page:          params.Page,
+		PageSize:      params.PageSize,
+	}
+
+	// Iterate over the user's organization assignments and retrieve each organization
+	for _, id := range appdata.GetOrganizations() {
+		var org *models.Organization
+		if org, err = s.OrganizationFromID(id); err != nil {
+			log.Error().Err(err).Str("org_id", id).Msg("could not retrieve organization from database")
+			continue
+		}
+
+		// Make sure the user is a collaborator in the organization
+		// Note: The UserInfo middleware ensures that the user email address is
+		// present in the claims so we can safely dereference it here.
+		var collaborator *models.Collaborator
+		if collaborator = org.GetCollaborator(*user.Email); collaborator == nil {
+			log.Error().Str("org_id", id).Str("email", *user.Email).Msg("could not find user in organization collaborators")
+			continue
+		}
+
+		if out.Count >= minIndex && out.Count < maxIndex {
+			// Within the page range so add the organization to the response
+			out.Organizations = append(out.Organizations, &api.OrganizationReply{
 				ID:        org.Id,
 				Name:      org.ResolveName(),
 				Domain:    org.Domain,
@@ -192,6 +227,8 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 				LastLogin: collaborator.LastLogin,
 			})
 		}
+
+		out.Count++
 	}
 
 	c.JSON(http.StatusOK, out)
@@ -202,7 +239,7 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 // perform this action.
 //
 // @Summary Delete an organization [delete:organizations]
-// @Description Completely delete an organization, including the registration and collaborators.
+// @Description Permanently delete an organization, including the registration and collaborators. This action is irreversible so the frontend should obtain confirmation from the user before calling this endpoint.
 // @Tags organizations
 // @Success 200 {object} api.Reply
 // @Failure 401 {object} api.Reply
@@ -286,6 +323,112 @@ func (s *Server) DeleteOrganization(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, api.Reply{Success: true, RefreshToken: true})
+}
+
+// PatchOrganization patches an organization in the database with the provided fields.
+//
+// @Summary Patch organization [update:organizations]
+// @Description Patch an organization with the provided fields.
+// @Tags organizations
+// @Accept json
+// @Produce json
+// @Param id path string true "Organization ID"
+// @Param params body api.OrganizationParams true "Fields to update"
+// @Success 200 {object} api.OrganizationReply
+// @Failure 400 {object} api.Reply "Invalid organization domain"
+// @Failure 401 {object} api.Reply
+// @Failure 403 {object} api.Reply "User is not authorized to access this organization"
+// @Failure 404 {object} api.Reply "Organization not found"
+// @Failure 409 {object} api.Reply "Organization with domain already exists"
+// @Failure 500 {object} api.Reply
+// @Router /organizations/{id} [patch]
+func (s *Server) PatchOrganization(c *gin.Context) {
+	var (
+		err  error
+		user *management.User
+	)
+
+	// Fetch the user from the context
+	if user, err = auth.GetUserInfo(c); err != nil {
+		log.Error().Err(err).Msg("patch organization handler requires user info; expected middleware to return 401")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify user to delete organization"))
+		return
+	}
+
+	// Load the user app metadata to check their organization assignments
+	appdata := &auth.AppMetadata{}
+	if err = appdata.Load(user.AppMetadata); err != nil {
+		log.Error().Err(err).Msg("could not parse user app metadata")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not parse user app metadata"))
+		return
+	}
+
+	// Unmarshal the params from the PATCH request
+	params := &api.OrganizationParams{}
+	if err = c.ShouldBind(params); err != nil {
+		log.Warn().Err(err).Msg("could not bind request")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
+
+	// At least one field must be provided
+	if *params == (api.OrganizationParams{}) {
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("no fields provided to patch"))
+		return
+	}
+
+	// Retrieve the organization to be updated
+	var org *models.Organization
+	id := c.Param("orgID")
+	if org, err = s.OrganizationFromID(id); err != nil {
+		log.Error().Err(err).Str("org_id", id).Msg("could not retrieve organization from database")
+		c.JSON(http.StatusNotFound, api.ErrorResponse("organization not found"))
+		return
+	}
+
+	// LastLogin timestamp is on the collaborator record
+	var collab *models.Collaborator
+	if collab = org.GetCollaborator(*user.Email); collab == nil {
+		log.Warn().Str("org_id", id).Str("email", *user.Email).Msg("user is not a collaborator on organization")
+		c.JSON(http.StatusForbidden, api.ErrorResponse("user is not authorized to access this organization"))
+		return
+	}
+
+	domain := params.Domain
+	if domain != "" && domain != org.Domain {
+		// Prevent duplicate names for organizations
+		// TODO: Perform universal check against the database using an index
+		if org.Domain, err = s.ValidateOrganizationDomain(domain, appdata); err != nil {
+			log.Error().Err(err).Str("domain", domain).Msg("could not validate organization domain")
+			if errors.Is(err, ErrDomainAlreadyExists) {
+				c.JSON(http.StatusConflict, api.ErrorResponse("organization with domain already exists"))
+				return
+			}
+			c.JSON(http.StatusBadRequest, api.ErrorResponse("invalid domain provided"))
+			return
+		}
+	}
+
+	if params.Name != "" {
+		org.Name = params.Name
+	}
+
+	// Save the updated organization
+	if err = s.db.UpdateOrganization(org); err != nil {
+		log.Error().Err(err).Str("org_id", id).Msg("could not update organization in database")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
+	}
+
+	// Create the organization response
+	out := &api.OrganizationReply{
+		ID:        org.Id,
+		Name:      org.ResolveName(),
+		Domain:    org.Domain,
+		CreatedAt: org.Created,
+		LastLogin: collab.LastLogin,
+	}
+	c.JSON(http.StatusOK, out)
 }
 
 // ValidateOrganizationDomain performs any necessary normalization and validation of an

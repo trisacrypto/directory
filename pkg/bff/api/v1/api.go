@@ -25,8 +25,9 @@ type BFFClient interface {
 	UpdateUser(context.Context, *UpdateUserParams) error
 	UserOrganization(context.Context) (*OrganizationReply, error)
 	CreateOrganization(context.Context, *OrganizationParams) (*OrganizationReply, error)
-	ListOrganizations(context.Context) ([]*OrganizationReply, error)
 	DeleteOrganization(_ context.Context, id string) error
+	PatchOrganization(_ context.Context, id string, request *OrganizationParams) (*OrganizationReply, error)
+	ListOrganizations(context.Context, *ListOrganizationsParams) (*ListOrganizationsReply, error)
 	AddCollaborator(context.Context, *models.Collaborator) (*models.Collaborator, error)
 	ListCollaborators(context.Context) (*ListCollaboratorsReply, error)
 	UpdateCollaboratorRoles(_ context.Context, id string, request *UpdateRolesParams) (*models.Collaborator, error)
@@ -77,7 +78,7 @@ type UpdateUserParams struct {
 	Name string `json:"name,omitempty"`
 }
 
-// OrganizationParams is used to create new organizations.
+// OrganizationParams is used to create and update organizations.
 type OrganizationParams struct {
 	Name   string `json:"name"`
 	Domain string `json:"domain"`
@@ -91,6 +92,20 @@ type OrganizationReply struct {
 	CreatedAt    string `json:"created_at"`
 	LastLogin    string `json:"last_login"`
 	RefreshToken bool   `json:"refresh_token,omitempty"`
+}
+
+// ListOrganizationsParams contains query parameters for listing organizations.
+type ListOrganizationsParams struct {
+	Page     int `url:"page,omitempty" form:"page" default:"1"`
+	PageSize int `url:"page_size,omitempty" form:"page_size" default:"8"`
+}
+
+// ListOrganizationsReply contains a page of organizations.
+type ListOrganizationsReply struct {
+	Organizations []*OrganizationReply `json:"organizations"`
+	Count         int                  `json:"count"`
+	Page          int                  `json:"page"`
+	PageSize      int                  `json:"page_size"`
 }
 
 // LoginParams contains additional information needed for post-authentication checks

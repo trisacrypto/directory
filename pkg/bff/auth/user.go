@@ -13,6 +13,7 @@ const (
 	CreateOrganizations = "create:organizations"
 	SwitchOrganizations = "switch:organizations"
 	DeleteOrganizations = "delete:organizations"
+	UpdateOrganizations = "update:organizations"
 
 	// Collaborators management
 	ReadCollaborators   = "read:collaborators"

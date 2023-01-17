@@ -59,6 +59,19 @@ definitions:
           $ref: '#/definitions/models.Collaborator'
         type: array
     type: object
+  api.ListOrganizationsReply:
+    properties:
+      count:
+        type: integer
+      organizations:
+        items:
+          $ref: '#/definitions/api.OrganizationReply'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+    type: object
   api.LoginParams:
     properties:
       orgid:
@@ -596,13 +609,24 @@ paths:
   /organizations:
     get:
       description: Return the list of organizations that the user is assigned to.
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 8
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: list
+            $ref: '#/definitions/api.ListOrganizationsReply'
         "401":
           description: Unauthorized
           schema:
@@ -654,8 +678,9 @@ paths:
       - organizations
   /organizations/{id}:
     delete:
-      description: Completely delete an organization, including the registration and
-        collaborators.
+      description: Permanently delete an organization, including the registration
+        and collaborators. This action is irreversible so the frontend should obtain
+        confirmation from the user before calling this endpoint.
       responses:
         "200":
           description: OK
@@ -678,6 +703,56 @@ paths:
           schema:
             $ref: '#/definitions/api.Reply'
       summary: Delete an organization [delete:organizations]
+      tags:
+      - organizations
+    patch:
+      consumes:
+      - application/json
+      description: Patch an organization with the provided fields.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: params
+        required: true
+        schema:
+          $ref: '#/definitions/api.OrganizationParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.OrganizationReply'
+        "400":
+          description: Invalid organization domain
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "403":
+          description: User is not authorized to access this organization
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "404":
+          description: Organization not found
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "409":
+          description: Organization with domain already exists
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Patch organization [update:organizations]
       tags:
       - organizations
   /overview:
