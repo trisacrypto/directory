@@ -412,6 +412,24 @@ func TestPatchOrganization(t *testing.T) {
 	require.Equal(t, fixture, out)
 }
 
+func TestDeleteOrganization(t *testing.T) {
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodDelete, r.Method)
+		require.Equal(t, "/v1/organizations/8b2e9e78-baca-4c34-a382-8b285503c901", r.URL.Path)
+
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	// Do the request
+	require.NoError(t, client.DeleteOrganization(context.TODO(), "8b2e9e78-baca-4c34-a382-8b285503c901"))
+}
+
 func TestAddCollaborator(t *testing.T) {
 	fixture := &models.Collaborator{
 		Email:     "alice@example.com",

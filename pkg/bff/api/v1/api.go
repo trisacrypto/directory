@@ -25,6 +25,7 @@ type BFFClient interface {
 	UpdateUser(context.Context, *UpdateUserParams) error
 	UserOrganization(context.Context) (*OrganizationReply, error)
 	CreateOrganization(context.Context, *OrganizationParams) (*OrganizationReply, error)
+	DeleteOrganization(_ context.Context, id string) error
 	PatchOrganization(_ context.Context, id string, request *OrganizationParams) (*OrganizationReply, error)
 	ListOrganizations(context.Context, *ListOrganizationsParams) (*ListOrganizationsReply, error)
 	AddCollaborator(context.Context, *models.Collaborator) (*models.Collaborator, error)

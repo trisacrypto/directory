@@ -581,6 +581,45 @@ const docTemplate = `{
             }
         },
         "/organizations/{id}": {
+            "delete": {
+                "description": "Permanently delete an organization, including the registration and collaborators. This action is irreversible so the frontend should obtain confirmation from the user before calling this endpoint.",
+                "tags": [
+                    "organizations"
+                ],
+                "summary": "Delete an organization [delete:organizations]",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    },
+                    "403": {
+                        "description": "User is not a collaborator in the organization",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    },
+                    "404": {
+                        "description": "Organization not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    }
+                }
+            },
             "patch": {
                 "description": "Patch an organization with the provided fields.",
                 "consumes": [
