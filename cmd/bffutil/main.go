@@ -116,11 +116,56 @@ func main() {
 			},
 		},
 		{
+			Name:      "orgs:update",
+			Usage:     "update an organizations name and domain",
+			Action:    updateOrgs,
+			ArgsUsage: "orgID",
+			Before:    connectDB,
+			After:     closeDB,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "name",
+					Aliases: []string{"n"},
+					Usage:   "update the name of the organization",
+				},
+				&cli.StringFlag{
+					Name:    "domain",
+					Aliases: []string{"d"},
+					Usage:   "update the domain of the organization",
+				},
+			},
+		},
+		{
+			Name:      "orgs:rmsub",
+			Usage:     "remove an organization's registration record for either testnet or mainnet",
+			Action:    rmsubOrgs,
+			ArgsUsage: "orgID",
+			Before:    connectDB,
+			After:     closeDB,
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "mainnet",
+					Aliases: []string{"m"},
+					Usage:   "delete mainnet registration record",
+				},
+				&cli.BoolFlag{
+					Name:    "testnet",
+					Aliases: []string{"t"},
+					Usage:   "delete testnet registration record",
+				},
+				&cli.BoolFlag{
+					Name:    "force",
+					Aliases: []string{"f"},
+					Usage:   "do not prompt to confirm operation",
+				},
+			},
+		},
+		{
 			Name:      "orgs:delete",
 			Usage:     "delete an organization and remove it from its users",
 			Action:    deleteOrgs,
 			ArgsUsage: "orgID",
-			Before:    connectDB,
+			Before:    Before(loadConf, connectDB, connectAuth0),
 			After:     closeDB,
 			Flags:     []cli.Flag{},
 		},
@@ -142,6 +187,27 @@ func main() {
 			Name:   "collabs:add",
 			Usage:  "add a collaborator to an organization",
 			Action: addCollab,
+			Before: Before(loadConf, connectDB, connectAuth0),
+			After:  closeDB,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "org",
+					Aliases:  []string{"o"},
+					Usage:    "specify the organization id to add the collaborator to",
+					Required: true,
+				},
+				&cli.StringFlag{
+					Name:     "user",
+					Aliases:  []string{"u"},
+					Usage:    "specify the auth0 id of the user to make a collaborator",
+					Required: true,
+				},
+			},
+		},
+		{
+			Name:   "collabs:delete",
+			Usage:  "remove a collaborator from an organization",
+			Action: deleteCollab,
 			Before: Before(loadConf, connectDB, connectAuth0),
 			After:  closeDB,
 			Flags: []cli.Flag{
@@ -588,6 +654,100 @@ func createOrgs(c *cli.Context) (err error) {
 	return nil
 }
 
+func updateOrgs(c *cli.Context) (err error) {
+	if c.NArg() != 1 {
+		if c.NArg() == 0 {
+			return cli.Exit("specify an orgID to update", 1)
+		}
+		return cli.Exit("can only update one organization at a time", 1)
+	}
+
+	if c.String("name") == "" && c.String("domain") == "" {
+		return cli.Exit("specify name or domain to update", 1)
+	}
+
+	var org *models.Organization
+	if org, err = GetOrg(c.Args().Get(0)); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	save := false
+	if name := c.String("name"); name != "" && name != org.Name {
+		org.Name = name
+		save = true
+	}
+
+	if domain := c.String("domain"); domain != "" && domain != org.Domain {
+		org.Domain = domain
+		save = true
+	}
+
+	if save {
+		if err = db.UpdateOrganization(org); err != nil {
+			return cli.Exit(err, 1)
+		}
+	} else {
+		fmt.Println("no changes made to organization")
+	}
+	return nil
+}
+
+func rmsubOrgs(c *cli.Context) (err error) {
+	if c.NArg() != 1 {
+		if c.NArg() == 0 {
+			return cli.Exit("specify an orgID to modify", 1)
+		}
+		return cli.Exit("can only modify one organization at a time", 1)
+	}
+
+	mainnet := c.Bool("mainnet")
+	testnet := c.Bool("testnet")
+
+	if !mainnet && !testnet {
+		return cli.Exit("specify either mainnet, testnet, or both to remove submission for", 1)
+	}
+
+	var org *models.Organization
+	if org, err = GetOrg(c.Args().Get(0)); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	save := false
+
+	if mainnet {
+		if org.Mainnet != nil {
+			// Prompt for confirmation to delete
+			if !c.Bool("force") && !askForConfirmation(fmt.Sprintf("delete mainnet registration from %s?", org.ResolveName())) {
+				return cli.Exit("operation cancelled by user", 0)
+			}
+			org.Mainnet = nil
+			save = true
+		} else {
+			fmt.Println("organization has no mainnet submission")
+		}
+	}
+
+	if testnet {
+		if org.Testnet != nil {
+			// Prompt for confirmation to delete
+			if !c.Bool("force") && !askForConfirmation(fmt.Sprintf("delete testnet registration from %s?", org.ResolveName())) {
+				return cli.Exit("operation cancelled by user", 0)
+			}
+			org.Testnet = nil
+			save = true
+		} else {
+			fmt.Println("organization has no testnet submission")
+		}
+	}
+
+	if save {
+		if err = db.UpdateOrganization(org); err != nil {
+			return cli.Exit(err, 1)
+		}
+	}
+	return nil
+}
+
 func deleteOrgs(c *cli.Context) (err error) {
 	if c.NArg() != 1 {
 		if c.NArg() == 0 {
@@ -604,15 +764,20 @@ func deleteOrgs(c *cli.Context) (err error) {
 	// Fetch collaborator auth0 appdata and verify that all collaborators are part of
 	// at least one additional organization besides the one being deleted.
 	appdata := make(map[string]*auth.AppMetadata)
-	for email, collaborator := range org.Collaborators {
+	for _, collaborator := range org.Collaborators {
+		if collaborator.UserId == "" {
+			// Invited user who hasn't joined yet
+			continue
+		}
+
 		var user *management.User
 		if user, err = auth0.User.Read(collaborator.UserId); err != nil {
-			return cli.Exit(fmt.Errorf("could not fetch user for %s", email), 1)
+			return cli.Exit(fmt.Errorf("could not fetch user for %s", collaborator.Email), 1)
 		}
 
 		meta := &auth.AppMetadata{}
 		if err = meta.Load(user.AppMetadata); err != nil {
-			return cli.Exit(fmt.Errorf("could not load app metadata for %s", email), 1)
+			return cli.Exit(fmt.Errorf("could not load app metadata for %s", collaborator.Email), 1)
 		}
 
 		// Check to make sure the orgID isn't the only org the user belongs to.
@@ -624,12 +789,12 @@ func deleteOrgs(c *cli.Context) (err error) {
 		}
 
 		if len(uorgs) == 0 {
-			if !askForConfirmation(fmt.Sprintf("user %s only belongs to this organization, a new organization will be created the next time they login, continue?", email)) {
+			if !askForConfirmation(fmt.Sprintf("user %s only belongs to this organization, a new organization will be created the next time they login, continue?", collaborator.Email)) {
 				return cli.Exit("operation cancelled by user", 0)
 			}
 		}
 
-		fmt.Printf("%s will be removed from organization\n", email)
+		fmt.Printf("%s will be removed from organization\n", collaborator.Email)
 		appdata[collaborator.UserId] = meta
 	}
 
@@ -782,6 +947,68 @@ func addCollab(c *cli.Context) (err error) {
 	if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
 		return cli.Exit(err, 1)
 	}
+	return nil
+}
+
+func deleteCollab(c *cli.Context) (err error) {
+	// Collect the organization from the database
+	var org *models.Organization
+	if org, err = GetOrg(c.String("org")); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Fetch the user from auth0.
+	var user *management.User
+	if user, err = auth0.User.Read(c.String("user")); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Get the user appdata, roles, and permissions
+	appdata := &auth.AppMetadata{}
+	if err = appdata.Load(user.AppMetadata); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	var roles *management.RoleList
+	if roles, err = auth0.User.Roles(*user.ID); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	var permissions *management.PermissionList
+	if permissions, err = auth0.User.Permissions(*user.ID); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	if !HasPermission(auth.SwitchOrganizations, permissions) {
+		return cli.Exit("cannot remove a collaborator without TRISA Service Provider role", 1)
+	}
+
+	if len(appdata.Organizations) < 2 {
+		return cli.Exit("cannot remove collaborator without another organization to fall back on", 1)
+	}
+
+	// Ask if we should proceed
+	username, _ := auth.UserDisplayName(user)
+	fmt.Printf("User %s (%s, switch_organizations=%t) has appdata.OrgID %q\n", username, StringifyRoles(roles), HasPermission(auth.SwitchOrganizations, permissions), appdata.OrgID)
+	if !askForConfirmation(fmt.Sprintf("add user %q to organization %q?", username, org.ResolveName())) {
+		return cli.Exit("canceled at request of user", 0)
+	}
+
+	// Remove collaborator from the organization (won't error if not exists)
+	org.DeleteCollaborator(*user.Email)
+	if err = db.UpdateOrganization(org); err != nil {
+		return cli.Exit(fmt.Errorf("could not update organization: %w", err), 1)
+	}
+
+	appdata.RemoveOrganization(org.Id)
+	if appdata.OrgID == org.Id {
+		appdata.OrgID = appdata.Organizations[0]
+	}
+
+	if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
+		return cli.Exit(err, 1)
+	}
+
 	return nil
 }
 

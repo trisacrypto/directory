@@ -309,7 +309,7 @@ func issue(c *cli.Context) (err error) {
 			PostalCode:    []string{c.String("postcode")},
 		},
 		NotBefore:    time.Now(),
-		NotAfter:     time.Now().AddDate(0, 6, 0),
+		NotAfter:     time.Now().AddDate(10, 0, 0),
 		SubjectKeyId: []byte{1, 2, 3, 4, 5, 6},
 		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		KeyUsage:     x509.KeyUsageDigitalSignature,
