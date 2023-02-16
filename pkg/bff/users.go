@@ -480,6 +480,36 @@ func (s *Server) FindRoleByName(name string) (*management.Role, error) {
 	return nil, fmt.Errorf("could not find role %q in %d available roles", name, len(roles.Roles))
 }
 
+// Switch the user to an available organization by updating their app metadata on Auth0.
+// This always clears the current organization info from the app metadata but only
+// replaces it if another organization is found.
+// TODO: This switches the user to the first valid organization in the list. Should we
+// switch the user to their last used organization instead?
+func (s *Server) SwitchUserOrganization(user *management.User, appdata *auth.AppMetadata) (err error) {
+	// Clear out the old organization info
+	appdata.ClearOrganization()
+
+	// Find the first organization that the user is a collaborator in
+	var org *models.Organization
+	for _, id := range appdata.GetOrganizations() {
+		if org, err = s.OrganizationFromID(id); err == nil && user.Email != nil && org.GetCollaborator(*user.Email) != nil {
+			break
+		}
+	}
+
+	// Update the app metadata with the organization ID if one was found
+	if org != nil {
+		appdata.UpdateOrganization(org)
+	}
+
+	// Save the updated app metadata to Auth0
+	if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *Server) SaveAuth0AppMetadata(uid string, appdata auth.AppMetadata) (err error) {
 	// Create a blank user with no data but the appdata
 	user := &management.User{}
