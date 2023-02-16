@@ -144,20 +144,35 @@ func (s *bffTestSuite) TestListOrganizations() {
 	}
 
 	// Endpoint must be authenticated
-	_, err := s.client.ListOrganizations(context.TODO())
+	_, err := s.client.ListOrganizations(context.TODO(), &api.ListOrganizationsParams{})
 	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
 	// Endpoint requires the update:collaborator permission
 	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
-	_, err = s.client.ListOrganizations(context.TODO())
+	_, err = s.client.ListOrganizations(context.TODO(), &api.ListOrganizationsParams{})
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Should return empty response when user has no organizations
 	claims.Permissions = []string{auth.ReadOrganizations}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
-	reply, err := s.client.ListOrganizations(context.TODO())
+	expected := &api.ListOrganizationsReply{
+		Organizations: []*api.OrganizationReply{},
+		Count:         0,
+		Page:          1,
+		PageSize:      8,
+	}
+	reply, err := s.client.ListOrganizations(context.TODO(), &api.ListOrganizationsParams{})
 	require.NoError(err, "list organizations call failed")
-	require.Empty(reply, "expected empty response")
+	require.Equal(expected, reply, "expected default response")
+
+	// Should enforce defaults for query parameters
+	req := &api.ListOrganizationsParams{
+		Page:     -1,
+		PageSize: -1,
+	}
+	reply, err = s.client.ListOrganizations(context.TODO(), req)
+	require.NoError(err, "list organizations call failed")
+	require.Equal(expected, reply, "expected default response for invalid query parameters")
 
 	// Should not return an error if there is an organization on the app metadata that's not in the database
 	metadata := &auth.AppMetadata{}
@@ -166,9 +181,9 @@ func (s *bffTestSuite) TestListOrganizations() {
 	appdata, err := metadata.Dump()
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
-	reply, err = s.client.ListOrganizations(context.TODO())
+	reply, err = s.client.ListOrganizations(context.TODO(), &api.ListOrganizationsParams{})
 	require.NoError(err, "list organizations call failed")
-	require.Empty(reply, "expected empty response")
+	require.Equal(expected, reply, "expected default response")
 
 	// Create some organizations for the user
 	alice := &models.Organization{
@@ -219,7 +234,7 @@ func (s *bffTestSuite) TestListOrganizations() {
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
 
-	expected := []*api.OrganizationReply{
+	orgReplies := []*api.OrganizationReply{
 		{
 			ID:        alice.Id,
 			Name:      alice.Name,
@@ -241,10 +256,331 @@ func (s *bffTestSuite) TestListOrganizations() {
 			LastLogin: charlieCollab.LastLogin,
 		},
 	}
+	expected.Organizations = orgReplies
+	expected.Count = 3
 
 	// Should return all organizations the user is a collaborator on
 	// If the user is not a collaborator, the endpoint should not return an error
-	reply, err = s.client.ListOrganizations(context.TODO())
+	reply, err = s.client.ListOrganizations(context.TODO(), &api.ListOrganizationsParams{})
 	require.NoError(err, "list organizations call failed")
 	require.Equal(expected, reply, "expected returned organizations to match")
+
+	// List organizations across multiple pages
+	req = &api.ListOrganizationsParams{
+		Page:     1,
+		PageSize: 2,
+	}
+	expected.Organizations = orgReplies[0:2]
+	expected.PageSize = 2
+	reply, err = s.client.ListOrganizations(context.TODO(), req)
+	require.NoError(err, "list organizations call failed")
+	require.Equal(expected, reply, "wrong results for page 1")
+
+	req.Page = 2
+	expected.Organizations = orgReplies[2:3]
+	expected.Page = 2
+	reply, err = s.client.ListOrganizations(context.TODO(), req)
+	require.NoError(err, "list organizations call failed")
+	require.Equal(expected, reply, "wrong results for page 2")
+
+	// Should return no organizations if the page is out of bounds
+	req.Page = 3
+	expected.Organizations = []*api.OrganizationReply{}
+	expected.Page = 3
+	reply, err = s.client.ListOrganizations(context.TODO(), req)
+	require.NoError(err, "list organizations call failed")
+	require.Equal(expected, reply, "wrong results for page out of bounds")
+}
+
+func (s *bffTestSuite) TestPatchOrganization() {
+	require := s.Require()
+	defer s.ResetDB()
+
+	// Create initial claims fixture
+	claims := &authtest.Claims{
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{"read:nothing"},
+	}
+
+	// Endpoint must be authenticated
+	require.NoError(s.SetClientCSRFProtection(), "could not set csrf protection on client")
+	_, err := s.client.PatchOrganization(context.TODO(), "invalid", &api.OrganizationParams{})
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
+
+	// Endpoint requires the update:organizations permission
+	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
+	_, err = s.client.PatchOrganization(context.TODO(), "invalid", &api.OrganizationParams{})
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
+
+	// Should return an error if no fields are provided
+	claims.Permissions = []string{auth.UpdateOrganizations}
+	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
+	_, err = s.client.PatchOrganization(context.TODO(), "invalid", &api.OrganizationParams{})
+	s.requireError(err, http.StatusBadRequest, "no fields provided to patch", "expected error when no fields are provided")
+
+	// Should return an error if the organization does not exist
+	params := &api.OrganizationParams{
+		Name: "Bob's Exchange",
+	}
+	_, err = s.client.PatchOrganization(context.TODO(), "00000000-0000-0000-0000-000000000000", params)
+	s.requireError(err, http.StatusNotFound, "organization not found", "expected error when organization does not exist")
+
+	// Create a few organizations in the database
+	alice := &models.Organization{
+		Name:   "Alice VASP",
+		Domain: "alicevasp.io",
+	}
+	_, err = s.DB().CreateOrganization(alice)
+	require.NoError(err, "could not create organization")
+
+	bob := &models.Organization{
+		Name:   "Bob VASP",
+		Domain: "bobvasp.io",
+	}
+	_, err = s.DB().CreateOrganization(bob)
+	require.NoError(err, "could not create organization")
+
+	// Should return an error if the user is not a collaborator
+	_, err = s.client.PatchOrganization(context.TODO(), bob.Id, params)
+	s.requireError(err, http.StatusForbidden, "user is not authorized to access this organization", "expected error when user is not a collaborator")
+
+	// Make the user a collaborator
+	collab := &models.Collaborator{
+		Email:     claims.Email,
+		LastLogin: time.Now().Format(time.RFC3339),
+	}
+	require.NoError(bob.AddCollaborator(collab), "could not add collaborator to organization")
+	require.NoError(s.DB().UpdateOrganization(bob), "could not update organization")
+
+	// Invalid domains are rejected
+	params = &api.OrganizationParams{
+		Domain: "bobvasp",
+	}
+	_, err = s.client.PatchOrganization(context.TODO(), bob.Id, params)
+	s.requireError(err, http.StatusBadRequest, "invalid domain provided", "expected error when domain is invalid")
+
+	// Create some user app metadata
+	metadata := &auth.AppMetadata{
+		Organizations: []string{alice.Id, bob.Id},
+	}
+	appdata, err := metadata.Dump()
+	require.NoError(err, "could not dump app metadata")
+	s.auth.SetUserAppMetadata(appdata)
+
+	// Should return an error if the domain is already taken
+	params = &api.OrganizationParams{
+		Domain: "alicevasp.io",
+	}
+	_, err = s.client.PatchOrganization(context.TODO(), bob.Id, params)
+	s.requireError(err, http.StatusConflict, "organization with domain already exists", "expected error when domain is already taken")
+
+	// Successfully updating an organization name
+	params = &api.OrganizationParams{
+		Name: "Bob's Exchange",
+	}
+	expected := &api.OrganizationReply{
+		ID:        bob.Id,
+		Name:      params.Name,
+		Domain:    bob.Domain,
+		CreatedAt: bob.Created,
+		LastLogin: collab.LastLogin,
+	}
+	rep, err := s.client.PatchOrganization(context.TODO(), bob.Id, params)
+	require.NoError(err, "patch organization call failed")
+	require.Equal(expected, rep, "expected returned organization to match")
+
+	// Organization should be updated in the database
+	updated, err := s.DB().RetrieveOrganization(bob.UUID())
+	require.NoError(err, "could not retrieve organization")
+	require.Equal(params.Name, updated.Name, "expected organization name to match")
+	require.Equal(bob.Domain, updated.Domain, "expected organization domain to be unchanged")
+
+	// Successfully updating an organization domain
+	params = &api.OrganizationParams{
+		Domain: "bobexchange.io",
+	}
+	expected.Domain = params.Domain
+	rep, err = s.client.PatchOrganization(context.TODO(), bob.Id, params)
+	require.NoError(err, "patch organization call failed")
+	require.Equal(expected, rep, "expected returned organization to match")
+
+	// Update should have no effect if the fields are the same
+	params = &api.OrganizationParams{
+		Name:   rep.Name,
+		Domain: rep.Domain,
+	}
+	rep, err = s.client.PatchOrganization(context.TODO(), bob.Id, params)
+	require.NoError(err, "patch organization call failed")
+	require.Equal(expected, rep, "expected returned organization to match")
+}
+
+func (s *bffTestSuite) TestDeleteOrganization() {
+	require := s.Require()
+	defer s.ResetDB()
+
+	// Create initial claims fixture
+	claims := &authtest.Claims{
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{"read:nothing"},
+	}
+
+	// Endpoint must be authenticated
+	require.NoError(s.SetClientCSRFProtection(), "could not set csrf protection on client")
+	err := s.client.DeleteOrganization(context.TODO(), "invalid")
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
+
+	// Endpoint requires the delete:organizations permission
+	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
+	err = s.client.DeleteOrganization(context.TODO(), "invalid")
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
+
+	// Should return an error if the organization does not exist
+	claims.Permissions = []string{auth.DeleteOrganizations}
+	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
+	err = s.client.DeleteOrganization(context.TODO(), "invalid")
+	s.requireError(err, http.StatusNotFound, "organization not found", "expected error when organization does not exist")
+
+	// Should return an error if the user is not a collaborator on the organization
+	org := &models.Organization{
+		Name:   "Alice VASP",
+		Domain: "alicevasp.io",
+	}
+	_, err = s.DB().CreateOrganization(org)
+	require.NoError(err, "could not create organization")
+	err = s.client.DeleteOrganization(context.TODO(), org.Id)
+	s.requireError(err, http.StatusForbidden, "user is not authorized to access this organization", "expected error when user is not a collaborator on the organization")
+
+	// Create an unverified collaborator on the organization
+	collab := &models.Collaborator{
+		Email: claims.Email,
+	}
+	require.NoError(org.AddCollaborator(collab), "could not add collaborator to organization")
+	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
+
+	// Should be able to delete the organization
+	require.NoError(s.client.DeleteOrganization(context.TODO(), org.Id), "error response from DeleteOrganization")
+	_, err = s.DB().RetrieveOrganization(org.UUID())
+	require.EqualError(err, "entity not found", "expected error when organization does not exist")
+	metadata := &auth.AppMetadata{}
+	require.NoError(metadata.Load(s.auth.GetUserAppMetadata()), "could not load app metadata")
+	require.Empty(metadata.OrgID, "user org id should be empty")
+
+	// Create an organization with a verified collaborator
+	collab.Verified = true
+	collab.Email = authtest.Email
+	collab.UserId = authtest.UserID
+	org = &models.Organization{
+		Name:   "Bob VASP",
+		Domain: "bobvasp.io",
+	}
+	_, err = s.DB().CreateOrganization(org)
+	require.NoError(err, "could not create organization")
+	require.NoError(org.AddCollaborator(collab), "could not add collaborator to organization")
+	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
+
+	// Organization info should be deleted for non-TSP users
+	metadata = &auth.AppMetadata{
+		OrgID: org.Id,
+		VASPs: auth.VASPs{
+			MainNet: "1bcacaf5-4b43-4e14-b70c-a47107d3a56c",
+			TestNet: "87d92fd1-53cf-47d8-85b1-048e8a38ced9",
+		},
+	}
+	appdata, err := metadata.Dump()
+	require.NoError(err, "could not dump app metadata")
+	s.auth.SetUserAppMetadata(appdata)
+	require.NoError(s.client.DeleteOrganization(context.TODO(), org.Id), "error response from DeleteOrganization")
+	_, err = s.DB().RetrieveOrganization(org.UUID())
+	require.EqualError(err, "entity not found", "expected error when organization does not exist")
+	metadata = &auth.AppMetadata{}
+	require.NoError(metadata.Load(s.auth.GetUserAppMetadata()), "could not load app metadata")
+	require.Empty(metadata.OrgID, "user org id should be empty")
+	require.Empty(metadata.VASPs, "user vasps should be empty")
+
+	// Organization info should not be deleted if the user is currently assigned to a different organization
+	org = &models.Organization{
+		Name:   "Bob VASP",
+		Domain: "bobvasp.io",
+	}
+	_, err = s.DB().CreateOrganization(org)
+	require.NoError(err, "could not create organization")
+	require.NoError(org.AddCollaborator(collab), "could not add collaborator to organization")
+	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
+	metadata = &auth.AppMetadata{
+		OrgID: "e0b3f9d0-3f39-4e8a-9b8d-2a6b3d4701d7",
+		VASPs: auth.VASPs{
+			MainNet: "1bcacaf5-4b43-4e14-b70c-a47107d3a56c",
+			TestNet: "87d92fd1-53cf-47d8-85b1-048e8a38ced9",
+		},
+	}
+	appdata, err = metadata.Dump()
+	require.NoError(err, "could not dump app metadata")
+	s.auth.SetUserAppMetadata(appdata)
+	require.NoError(s.client.DeleteOrganization(context.TODO(), org.Id), "error response from DeleteOrganization")
+	_, err = s.DB().RetrieveOrganization(org.UUID())
+	require.EqualError(err, "entity not found", "expected error when organization does not exist")
+	resultMeta := &auth.AppMetadata{}
+	require.NoError(resultMeta.Load(s.auth.GetUserAppMetadata()), "could not load app metadata")
+	require.Equal(metadata, resultMeta, "user app metadata should not have changed")
+
+	// Create a few more organizations
+	charlie := &models.Organization{
+		Name:   "Charlie VASP",
+		Domain: "charlievasp.io",
+		Testnet: &models.DirectoryRecord{
+			Id: "87d92fd1-53cf-47d8-85b1-048e8a38ced9",
+		},
+		Mainnet: &models.DirectoryRecord{
+			Id: "1bcacaf5-4b43-4e14-b70c-a47107d3a56c",
+		},
+	}
+	_, err = s.DB().CreateOrganization(charlie)
+	require.NoError(err, "could not create organization")
+	require.NoError(charlie.AddCollaborator(collab), "could not add collaborator to organization")
+	require.NoError(s.DB().UpdateOrganization(charlie), "could not update organization")
+
+	delta := &models.Organization{
+		Name:   "Delta VASP",
+		Domain: "deltavasp.io",
+		Testnet: &models.DirectoryRecord{
+			Id: "12345678-53cf-47d8-85b1-048e8a38ced9",
+		},
+		Mainnet: &models.DirectoryRecord{
+			Id: "abc12345-4b43-4e14-b70c-a47107d3a56c",
+		},
+	}
+	_, err = s.DB().CreateOrganization(delta)
+	require.NoError(err, "could not create organization")
+	require.NoError(delta.AddCollaborator(collab), "could not add collaborator to organization")
+	require.NoError(s.DB().UpdateOrganization(delta), "could not update organization")
+
+	// Create a TSP user on multiple organizations
+	metadata = &auth.AppMetadata{
+		OrgID: charlie.Id,
+		VASPs: auth.VASPs{
+			MainNet: charlie.Mainnet.Id,
+			TestNet: charlie.Testnet.Id,
+		},
+	}
+	metadata.AddOrganization(charlie.Id)
+	metadata.AddOrganization(delta.Id)
+	appdata, err = metadata.Dump()
+	require.NoError(err, "could not dump app metadata")
+	s.auth.SetUserAppMetadata(appdata)
+
+	// TSP user should have their current organization and organization list updated
+	expected := &auth.AppMetadata{
+		OrgID: delta.Id,
+		VASPs: auth.VASPs{
+			MainNet: delta.Mainnet.Id,
+			TestNet: delta.Testnet.Id,
+		},
+		Organizations: []string{delta.Id},
+	}
+	require.NoError(s.client.DeleteOrganization(context.TODO(), charlie.Id), "error response from DeleteOrganization")
+	_, err = s.DB().RetrieveOrganization(charlie.UUID())
+	require.EqualError(err, "entity not found", "expected error when organization does not exist")
+	metadata = &auth.AppMetadata{}
+	require.NoError(metadata.Load(s.auth.GetUserAppMetadata()), "could not load app metadata")
+	require.Equal(expected, metadata, "user app metadata should be updated")
 }
