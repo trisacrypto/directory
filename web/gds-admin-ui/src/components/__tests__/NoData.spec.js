@@ -1,5 +1,3 @@
-
 describe('<NoData />', () => {
-
-    it.todo('should render text correctly')
-})
+  it.todo('should render text correctly');
+});

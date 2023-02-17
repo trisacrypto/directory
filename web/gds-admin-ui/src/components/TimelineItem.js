@@ -1,20 +1,19 @@
-import React from 'react';
 import classNames from 'classnames';
-
+import React from 'react';
 
 const TimelineItem = (props) => {
-    const children = props.children || null;
-    const Tag = props.tag;
+  const children = props.children || null;
+  const Tag = props.tag;
 
-    return (
-        <Tag className={classNames('timeline-item', props.className)} {...props}>
-            {children}
-        </Tag>
-    );
+  return (
+    <Tag className={classNames('timeline-item', props.className)} {...props}>
+      {children}
+    </Tag>
+  );
 };
 
 TimelineItem.defaultProps = {
-    tag: 'div',
+  tag: 'div',
 };
 
 export default TimelineItem;

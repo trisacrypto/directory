@@ -1,24 +1,21 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import classNames from 'classnames';
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 
+import profilePic from '@/assets/images/avatar-1.jpg';
+import logo from '@/assets/images/gds-trisatest-logo.png';
+import LanguageDropdown from '@/components/LanguageDropdown';
 // components
-import ProfileDropdown from 'components/ProfileDropdown';
-import SearchDropdown from 'components/SearchDropdown';
-import TopbarSearch from 'components/TopbarSearch';
-
-import profilePic from 'assets/images/avatar-1.jpg';
-import logo from 'assets/images/gds-trisatest-logo.png';
-
-//constants
-import * as layoutConstants from 'constants/layout';
-import LanguageDropdown from 'components/LanguageDropdown';
-import useAuth from 'contexts/auth/use-auth';
+import ProfileDropdown from '@/components/ProfileDropdown';
+import SearchDropdown from '@/components/SearchDropdown';
+import TopbarSearch from '@/components/TopbarSearch';
+// constants
+import * as layoutConstants from '@/constants/layout';
+import useAuth from '@/contexts/auth/use-auth';
 
 // dummy search results
 const SearchResults = [];
-
 
 const Topbar = ({ hideLogo, navCssClasses, openLeftMenuCallBack, topbarDark }) => {
     const [isopen, setIsopen] = useState(false);
@@ -56,15 +53,13 @@ const Topbar = ({ hideLogo, navCssClasses, openLeftMenuCallBack, topbarDark }) =
                             <LanguageDropdown />
                         </li>
                         <li className="dropdown notification-list">
-                            {
-                                !!user ? (
-                                    <ProfileDropdown
-                                        profilePic={user?.picture || profilePic}
-                                        username={user?.name}
-                                        userTitle={user?.email}
-                                    />
-                                ) : null
-                            }
+                            {user ? (
+                                <ProfileDropdown
+                                    profilePic={user?.picture || profilePic}
+                                    username={user?.name}
+                                    userTitle={user?.email}
+                                />
+                            ) : null}
                         </li>
                     </ul>
 
@@ -82,9 +77,9 @@ const Topbar = ({ hideLogo, navCssClasses, openLeftMenuCallBack, topbarDark }) =
                             className={classNames('navbar-toggle', { open: isopen })}
                             onClick={handleLeftMenuCallBack}>
                             <div className="lines">
-                                <span></span>
-                                <span></span>
-                                <span></span>
+                                <span />
+                                <span />
+                                <span />
                             </div>
                         </Link>
                     )}
@@ -93,9 +88,9 @@ const Topbar = ({ hideLogo, navCssClasses, openLeftMenuCallBack, topbarDark }) =
                     {layoutType === layoutConstants.LAYOUT_DETACHED && (
                         <Link to="#" className="button-menu-mobile disable-btn" onClick={handleLeftMenuCallBack}>
                             <div className="lines">
-                                <span></span>
-                                <span></span>
-                                <span></span>
+                                <span />
+                                <span />
+                                <span />
                             </div>
                         </Link>
                     )}

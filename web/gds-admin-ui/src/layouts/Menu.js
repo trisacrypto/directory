@@ -3,7 +3,7 @@ import { Link, withRouter } from 'react-router-dom';
 import { Collapse } from 'react-bootstrap';
 import classNames from 'classnames';
 
-import { findAllParent, findMenuItem } from 'helpers/menu';
+import { findAllParent, findMenuItem } from '@/helpers/menu';
 
 const MenuItemWithChildren = ({ item, linkClassName, subMenuClassNames, activeMenuItems, toggleMenu }) => {
     const [open, setOpen] = useState(activeMenuItems.includes(item.key));
@@ -180,4 +180,4 @@ const AppMenu = ({ menuItems, location }) => {
     );
 };
 
-export default (withRouter(AppMenu));
+export default withRouter(AppMenu);

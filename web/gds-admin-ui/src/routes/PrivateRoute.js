@@ -1,10 +1,11 @@
-import useAuth from 'contexts/auth/use-auth';
-import React from 'react';
-import { Route, Redirect } from 'react-router-dom';
+import { Redirect, Route } from 'react-router-dom';
 
+import useAuth from '@/contexts/auth/use-auth';
+import { Suspense } from 'react';
+import OvalLoader from '@/components/OvalLoader';
 
 const PrivateRoute = ({ component: Component, ...rest }) => {
-    const { isUserAuthenticated } = useAuth()
+    const { isUserAuthenticated } = useAuth();
 
     return (
         <Route
@@ -13,7 +14,16 @@ const PrivateRoute = ({ component: Component, ...rest }) => {
                 if (!isUserAuthenticated()) {
                     return <Redirect to={{ pathname: '/login', state: { from: props.location } }} />;
                 }
-                return <Component {...props} />;
+                return (
+                    <Suspense
+                        fallback={
+                            <div className="relative mt-3">
+                                <OvalLoader />
+                            </div>
+                        }>
+                        <Component {...props} />
+                    </Suspense>
+                );
             }}
         />
     );

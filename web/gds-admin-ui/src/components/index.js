@@ -1,5 +1,5 @@
 // @flow
-import VerticalForm from './VerticalForm';
 import FormInput from './FormInput';
+import VerticalForm from './VerticalForm';
 
-export { VerticalForm, FormInput };
+export { FormInput, VerticalForm };

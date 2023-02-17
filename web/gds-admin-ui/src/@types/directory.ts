@@ -1,0 +1,1 @@
+export type Directory = 'TRISATEST' | 'VASP_DIRECTORY'

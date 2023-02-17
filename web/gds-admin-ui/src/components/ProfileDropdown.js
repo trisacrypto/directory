@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Dropdown } from 'react-bootstrap';
-import useAuth from 'contexts/auth/use-auth';
+import useAuth from '@/contexts/auth/use-auth';
 
 
-const ProfileDropdown = (props, state) => {
+const ProfileDropdown = (props) => {
     const profilePic = props.profilePic || null;
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const { logout } = useAuth()
