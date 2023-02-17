@@ -112,6 +112,7 @@ def delete_image(image, digest):
     result = subprocess.run([
         "gcloud", "container", "images", "delete",
         f"{image}@{digest}",
+        "--force-delete-tags",
         "--quiet",
     ], capture_output=True)
 
@@ -192,7 +193,8 @@ def main(args):
                         try:
                             delete_image(image, digest["digest"])
                             n_deleted += 1
-                        except:
+                        except Exception as e:
+                            print(e)
                             continue
 
                 if n_deleted != len(delete):
