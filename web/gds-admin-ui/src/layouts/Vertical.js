@@ -1,18 +1,16 @@
 import React, { Suspense, useCallback, useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
 import { Container } from 'react-bootstrap';
-
-
-// actions
-import { changeSidebarType, changeSidebarTheme } from '../redux/actions';
+import { useDispatch, useSelector } from 'react-redux';
 
 import * as layoutConstants from '../constants/layout';
+// actions
+import { changeSidebarTheme, changeSidebarType } from '../redux/actions';
 
 const Topbar = React.lazy(() => import('./Topbar'));
-const LeftSidebar = React.lazy(() => import('./LeftSidebar'));
-const Footer = React.lazy(() => import('./Footer'));
+const LeftSidebar = React.lazy(() => import(/* webpackPreload: true */ './LeftSidebar'));
+const Footer = React.lazy(() => import(/* webpackPreload: true */ './Footer'));
 
-const loading = () => <div className=""></div>;
+const loading = () => <div className="" />;
 
 const VerticalLayout = ({ children }, state) => {
     const dispatch = useDispatch();
@@ -71,27 +69,18 @@ const VerticalLayout = ({ children }, state) => {
     const isLight = leftSideBarTheme === layoutConstants.LEFT_SIDEBAR_THEME_LIGHT;
 
     return (
-        <>
-            <div className="wrapper">
-                <Suspense fallback={loading()}>
-                    <LeftSidebar isCondensed={isCondensed} isLight={isLight} hideUserProfile={true} />
-                </Suspense>
-                <div className="content-page">
-                    <div className="content">
-                        <Suspense fallback={loading()}>
-                            <Topbar openLeftMenuCallBack={openMenu} hideLogo={true} />
-                        </Suspense>
-                        <Container fluid>
-                            <Suspense fallback={loading()}>{children}</Suspense>
-                        </Container>
-                    </div>
-
-                    <Suspense fallback={loading()}>
-                        <Footer />
-                    </Suspense>
+        <div className="wrapper">
+            <LeftSidebar isCondensed={isCondensed} isLight={isLight} hideUserProfile={true} />
+            <div className="content-page">
+                <div className="content">
+                    <Topbar openLeftMenuCallBack={openMenu} hideLogo={true} />
+                    <Container fluid>
+                        <Suspense fallback={loading()}>{children}</Suspense>
+                    </Container>
                 </div>
+                <Footer />
             </div>
-        </>
+        </div>
     );
 };
 export default VerticalLayout;

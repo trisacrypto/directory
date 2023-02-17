@@ -1,18 +1,21 @@
-import React from 'react';
-import { Route, Redirect } from 'react-router-dom';
+import React, { Suspense } from 'react';
+import { Redirect, Route } from 'react-router-dom';
+
 import PrivateRoute from './PrivateRoute';
+import { lazyImport } from '@/lib/lazy-import';
+import OvalLoader from '@/components/OvalLoader';
 
-const Login = React.lazy(() => import('../pages/account/Login'));
+const Login = React.lazy(() => import('@/features/misc/components/account/Login'));
 
-const Dashboard = React.lazy(() => import('../pages/app/details/BasicDetails/dashboard'));
-const VaspsList = React.lazy(() => import('../pages/app/lists'));
-const VaspsDetails = React.lazy(() => import('../pages/app/details'))
+const { Dashboard } = lazyImport(() => import('@/features/misc'), 'Dashboard');
 
+const { VaspsList } = lazyImport(() => import('../features/vasps'), 'VaspsList');
+const { VaspDetails } = lazyImport(() => import('../features/vasps'), 'VaspDetails');
 
-const ErrorPageNotFound = React.lazy(() => import('../pages/error/PageNotFound'));
-const ErrorPageNotFoundAlt = React.lazy(() => import('../pages/error/PageNotFoundAlt'));
-const ServerError = React.lazy(() => import('../pages/error/ServerError'));
-const PageError = React.lazy(() => import('../pages/error/PageError'));
+const { PageError } = lazyImport(() => import('@/features/misc'), 'PageError');
+const { PageNotFound } = lazyImport(() => import('@/features/misc'), 'PageNotFound');
+const { PageNotFoundAlt } = lazyImport(() => import('@/features/misc'), 'PageNotFoundAlt');
+const { ServerError } = lazyImport(() => import('@/features/misc'), 'ServerError');
 
 // root routes
 const rootRoute = {
@@ -24,21 +27,21 @@ const rootRoute = {
             name: 'Project',
             component: () => <Redirect to="/dashboard" />,
             route: PrivateRoute,
-            exact: true
+            exact: true,
         },
         {
             path: '/dashboard',
             name: 'Project',
             component: Dashboard,
             route: PrivateRoute,
-            exact: true
+            exact: true,
         },
         {
             path: '/vasps/:id',
             name: 'Detail',
-            component: VaspsDetails,
+            component: VaspDetails,
             route: PrivateRoute,
-            exact: true
+            exact: true,
         },
 
         {
@@ -46,25 +49,25 @@ const rootRoute = {
             name: 'List',
             component: VaspsList,
             route: PrivateRoute,
-            exact: true
+            exact: true,
         },
         {
             path: '/not-found',
             name: 'NotFound',
-            component: ErrorPageNotFoundAlt,
-            route: PrivateRoute
+            component: PageNotFoundAlt,
+            route: PrivateRoute,
         },
         {
             path: '/error',
             name: 'Error',
             component: PageError,
-            route: PrivateRoute
+            route: PrivateRoute,
         },
         {
             path: '',
             name: '',
             component: () => <Redirect to="/error-404" />,
-            route: Route
+            route: Route,
         },
     ],
 };
@@ -73,16 +76,27 @@ const authRoutes = [
     {
         path: '/login',
         name: 'Login',
-        component: Login,
+        component: () => (
+            <Suspense
+                fallback={
+                    <div
+                        className="relative d-flex justify-content-center align-items-center"
+                        style={{ height: '100vh', width: '100vw' }}>
+                        <OvalLoader height={50} width={50} />
+                    </div>
+                }>
+                <Login />
+            </Suspense>
+        ),
         route: Route,
-    }
-]
+    },
+];
 
 const otherPublicRoutes = [
     {
         path: '/error-404',
         name: 'Error - 404',
-        component: ErrorPageNotFound,
+        component: PageNotFound,
         route: PrivateRoute,
     },
     {
@@ -108,7 +122,6 @@ const flattenRoutes = (routes) => {
     return flatRoutes;
 };
 
-
 // All routes
 const authProtectedRoutes = [rootRoute];
 const publicRoutes = [...authRoutes, ...otherPublicRoutes];
@@ -116,4 +129,4 @@ const publicRoutes = [...authRoutes, ...otherPublicRoutes];
 const authProtectedFlattenRoutes = flattenRoutes([...authProtectedRoutes]);
 const publicProtectedFlattenRoutes = flattenRoutes([...publicRoutes]);
 
-export { publicRoutes, authProtectedRoutes, authProtectedFlattenRoutes, publicProtectedFlattenRoutes };
+export { authProtectedFlattenRoutes, authProtectedRoutes, publicProtectedFlattenRoutes, publicRoutes };

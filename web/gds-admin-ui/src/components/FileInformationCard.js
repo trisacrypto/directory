@@ -1,7 +1,7 @@
 import React from 'react'
 import { Card, Col, Row } from 'react-bootstrap'
 import PropTypes from 'prop-types'
-import { formatBytes, getBase64Size } from 'utils';
+import { formatBytes, getBase64Size } from '@/utils';
 
 function FileInformationCard({ name, file, ext, onDownload }) {
     const fileSize = React.useCallback(() => file ? formatBytes(getBase64Size(file)) : '', [file])

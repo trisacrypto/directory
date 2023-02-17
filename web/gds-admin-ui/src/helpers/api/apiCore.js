@@ -1,30 +1,31 @@
 import axios from 'axios';
-import { defaultEndpointPrefix, getCookie } from 'utils';
+
+import { defaultEndpointPrefix, getCookie } from '@/utils';
 
 const instance = axios.create({
     baseURL: defaultEndpointPrefix(),
     headers: {
-        'Content-Type': 'application/json'
-    }
-})
+        'Content-Type': 'application/json',
+    },
+});
 
 // withCredentials ensures that axios fetch includes `HttpOnly` cookies in the request for CSRF protectioin
-instance.defaults.withCredentials = true
+instance.defaults.withCredentials = true;
 
 const AUTH_SESSION_KEY = '__SESSION_TOKEN__';
 
 function reauthenticate() {
-    const csrfToken = getCookie('csrf_token')
-    const refreshToken = getRefreshToken()
+    const csrfToken = getCookie('csrf_token');
+    const refreshToken = getRefreshToken();
     const payload = {
-        credential: refreshToken
-    }
+        credential: refreshToken,
+    };
 
     return instance.post('/reauthenticate', payload, {
         headers: {
-            'X-CSRF-TOKEN': csrfToken
-        }
-    })
+            'X-CSRF-TOKEN': csrfToken,
+        },
+    });
 }
 
 let isRefreshing = false;
@@ -39,52 +40,52 @@ function onRrefreshed(token) {
 }
 
 instance.interceptors.response.use(
-    (response) => {
-        return response;
-    },
+    (response) => response,
     async (error) => {
         let message;
-        const originalRequest = error.config
+        const originalRequest = error.config;
 
         if (error && !error.response) {
-            return Promise.reject('Network connection error')
+            return Promise.reject('Network connection error');
         }
 
         if (error && error.response && error.response.status === 401) {
-            const configData = error.response.config && error.response.config.data ? JSON.parse(error.response.config.data)?.credential : ''
+            const configData =
+                error.response.config && error.response.config.data
+                    ? JSON.parse(error.response.config.data)?.credential
+                    : '';
 
             if (error.response.config.url === '/authenticate' && configData) {
-                return Promise.reject(error)
+                return Promise.reject(error);
             }
 
             if (!isRefreshing) {
-                isRefreshing = true
-                reauthenticate().then(response => {
-                    isRefreshing = false
+                isRefreshing = true;
+                reauthenticate().then((response) => {
+                    isRefreshing = false;
 
-                    onRrefreshed(response.data)
+                    onRrefreshed(response.data);
                     subscribers = [];
-                })
-
+                });
             }
 
             return new Promise((resolve) => {
-                subscribeTokenRefresh(token => {
-                    originalRequest.headers['Authorization'] = 'Bearer ' + token.access_token;
-                    setAuthorization(token.access_token)
-                    sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(token))
+                subscribeTokenRefresh((token) => {
+                    originalRequest.headers.Authorization = `Bearer ${token.access_token}`;
+                    setAuthorization(token.access_token);
+                    sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(token));
 
                     resolve(instance(originalRequest));
-                })
-            })
+                });
+            });
         }
 
         switch (error.response.status) {
             case 403:
                 message = 'Session expired';
-                sessionStorage.removeItem(AUTH_SESSION_KEY)
-                setAuthorization(null)
-                window.location.href = '/login'
+                sessionStorage.removeItem(AUTH_SESSION_KEY);
+                setAuthorization(null);
+                window.location.href = '/login';
                 break;
             case 404:
                 message = error || 'Sorry! the data you are looking for could not be found';
@@ -93,8 +94,7 @@ instance.interceptors.response.use(
                 message = error ?? 'Something went wrong';
                 break;
             default: {
-                message =
-                    error.response && error.response.data ? error.response.data['error'] : error.message || error;
+                message = error.response && error.response.data ? error.response.data.error : error.message || error;
             }
         }
         return Promise.reject(message);
@@ -106,37 +106,44 @@ instance.interceptors.response.use(
  * @param {*} token
  */
 const setAuthorization = (token) => {
-    if (token) instance.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-    else delete instance.defaults.headers.common['Authorization'];
+    if (token) instance.defaults.headers.common.Authorization = `Bearer ${token}`;
+    else delete instance.defaults.headers.common.Authorization;
 };
 
 const setCookie = (cookie) => {
     if (cookie) {
-        instance.defaults.headers.common['X-CSRF-TOKEN'] = `${cookie}`
+        instance.defaults.headers.common['X-CSRF-TOKEN'] = `${cookie}`;
     }
-}
-
+};
 
 const getUserFromSession = () => {
     const user = sessionStorage.getItem(AUTH_SESSION_KEY);
-    return user ? (typeof user == 'object' ? user : JSON.parse(user)) : null;
+    return user ? (typeof user === 'object' ? user : JSON.parse(user)) : null;
 };
 
 const getRefreshToken = () => {
-    const user = getUserFromSession()
-    return user?.refresh_token
-}
+    const user = getUserFromSession();
+    return user?.refresh_token;
+};
 class APICore {
+    /**
+     * get the csrf token
+     * @returns string
+     */
+    getCsrfToken = () => {
+        return getCookie('csrf_token');
+    };
+
     /**
      * Fetches data from given url
      */
     get = (url, params) => {
         let response;
         if (params) {
-            var queryString = params ? params : ''
+            const queryString = params || '';
             response = instance.get(`${url}?${queryString}`);
         } else {
-            response = instance.get(`${url}`, params)
+            response = instance.get(`${url}`, params);
         }
         return response;
     };
@@ -144,10 +151,10 @@ class APICore {
     getFile = (url, params) => {
         let response;
         if (params) {
-            var queryString = params
+            const queryString = params
                 ? Object.keys(params)
-                    .map((key) => key + '=' + params[key])
-                    .join('&')
+                      .map((key) => `${key}=${params[key]}`)
+                      .join('&')
                 : '';
             response = axios.get(`${url}?${queryString}`, { responseType: 'blob' });
         } else {
@@ -162,8 +169,8 @@ class APICore {
         if (params) {
             queryString = params
                 ? Object.keys(params)
-                    .map((key) => key + '=' + params[key])
-                    .join('&')
+                      .map((key) => `${key}=${params[key]}`)
+                      .join('&')
                 : '';
         }
 
@@ -176,27 +183,19 @@ class APICore {
     /**
      * post given data to url
      */
-    create = (url, data, config) => {
-        return instance.post(url, data, config);
-    };
+    create = (url, data, config) => instance.post(url, data, config);
 
     /**
      * Updates data
      */
-    update = (url, data, config) => {
-        return instance.put(url, data, config);
-    };
+    update = (url, data, config) => instance.put(url, data, config);
 
-    patch = (url, data, config) => {
-        return instance.patch(url, data, config)
-    }
+    patch = (url, data, config) => instance.patch(url, data, config);
 
     /**
      * Deletes data
      */
-    delete = (url, params) => {
-        return instance.delete(url, params);
-    };
+    delete = (url, params) => instance.delete(url, params);
 
     /**
      * post given data to url with file
@@ -244,19 +243,15 @@ class APICore {
     /**
      * Returns the logged in user
      */
-    getLoggedInUser = () => {
-        return getUserFromSession();
-    };
+    getLoggedInUser = () => getUserFromSession();
 
     deleteUserSession = () => {
-        this.setLoggedInUser(null)
-        setAuthorization(null)
-        window.location.href = '/login'
-    }
+        this.setLoggedInUser(null);
+        setAuthorization(null);
+        window.location.href = '/login';
+    };
 
-    getRefreshSessionToken = () => {
-        return getRefreshToken()
-    }
+    getRefreshSessionToken = () => getRefreshToken();
 }
 
 /*
