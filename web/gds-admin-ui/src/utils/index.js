@@ -9,6 +9,7 @@ import { DIRECTORY_NAME, ENVIRONMENT, Status, VERIFIED_CONTACT_STATUS } from '@/
 import { downloadFile, generateCSV } from '@/helpers/api/utils';
 
 import config from '../config';
+import { captureException } from '@sentry/react';
 
 export * from './array';
 
@@ -179,7 +180,7 @@ async function copyToClipboard(data = '') {
         await navigator.clipboard.writeText(data);
         toast.success('Copied to clipboard');
     } catch (err) {
-        // TODO: catch error with sentry
+        captureException(err);
         console.error('[copyToClipboard]', err);
     }
 }
