@@ -101,6 +101,7 @@
         "@testing-library/user-event": "^12.1.10",
         "@types/faker": "^6.6.9",
         "@types/jest": "^29.2.5",
+        "@types/nprogress": "^0.2.0",
         "@types/react-gravatar": "^2.6.10",
         "@types/react-router-dom": "^5.3.3",
         "assert": "^2.0.0",

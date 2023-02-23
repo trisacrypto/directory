@@ -4,3 +4,6 @@ export * from './get-review-notes';
 export * from './delete-review-notes';
 export * from './create-review-note';
 export * from './update-review-note';
+export * from './update-contact';
+export * from './use-contact-form';
+export * from './delete-contact';

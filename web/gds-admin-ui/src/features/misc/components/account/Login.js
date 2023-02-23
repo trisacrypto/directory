@@ -10,6 +10,7 @@ import AccountLayout from './AccountLayout';
 import { useGetAuthenticate } from '../../services';
 import useScript from '@/hooks/useScript';
 import { getCookie } from '@/utils';
+import { captureException } from '@sentry/react';
 
 const Login = () => {
     const [loginError, setLoginError] = React.useState('');
@@ -35,7 +36,7 @@ const Login = () => {
                 })
                 .catch((error) => {
                     setLoginError('Address could not be authenticated (not a @trisa.io account).');
-                    console.error('[handleCredentialResponse]', error);
+                    captureException(error);
                 });
         }
     };

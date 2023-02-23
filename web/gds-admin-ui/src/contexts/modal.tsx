@@ -1,12 +1,25 @@
 import React from 'react';
 
-const modalContext = React.createContext<any>(null);
+type Payload = { name: string; id: string };
+type State = {
+    toggle: boolean;
+    vasp: Payload;
+    openSendEmailModal: (vasp: Payload) => void;
+    closeSendEmailModal: () => void;
+};
+const modalContext = React.createContext<State | null>(null);
 
 export const actionType = {
     SEND_EMAIL_MODAL: 'SEND_EMAIL_MODAL',
     CLOSE_MODAL: 'CLOSE_MODAL',
 };
-const reducer = (state: any, action: any) => {
+
+type Action = {
+    type: keyof typeof actionType;
+    payload?: any;
+};
+
+const reducer = (state: State, action: Action) => {
     switch (action.type) {
         case actionType.SEND_EMAIL_MODAL:
             return { ...state, toggle: true, ...action.payload };
@@ -23,9 +36,14 @@ const ModalProvider = (props: any) => {
         vasp: { name: '', id: '' },
     });
 
+    const openSendEmailModal = (vasp: Payload) => dispatch({ type: 'SEND_EMAIL_MODAL', payload: { vasp } });
+
+    const closeSendEmailModal = () => dispatch({ type: 'CLOSE_MODAL' });
+
     const value = {
         ...state,
-        dispatch,
+        openSendEmailModal,
+        closeSendEmailModal,
     };
 
     return <modalContext.Provider value={value} {...props} />;

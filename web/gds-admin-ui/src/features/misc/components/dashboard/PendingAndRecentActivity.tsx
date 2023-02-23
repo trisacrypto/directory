@@ -9,7 +9,7 @@ import CiphertraceFavicon from '@/assets/images/ciphertrace.ico';
 import TrisaFavicon from '@/assets/images/trisa_favicon.png';
 import NoData from '@/components/NoData';
 import { StatusLabel } from '@/constants/index';
-import { actionType, useModal } from '@/contexts/modal';
+import { useModal } from '@/contexts/modal';
 import { useGetVasps } from '@/features/vasps';
 
 dayjs.extend(relativeTime);
@@ -18,12 +18,12 @@ const PENDING_REVIEW_QUERY_PARAMS = 'status=pending_review';
 
 const PendingReviewsTable = ({ data }: any) => {
     const [vasp, setVasp] = React.useState({ name: '', id: '' });
-    const { dispatch } = useModal();
+    const { openSendEmailModal } = useModal();
     const history = useHistory();
 
     const handleResendEmailClick = (name: any) => {
         setVasp(name);
-        dispatch({ type: actionType.SEND_EMAIL_MODAL, payload: { vasp } });
+        openSendEmailModal(vasp);
     };
 
     return (
