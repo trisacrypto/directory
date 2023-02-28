@@ -780,10 +780,17 @@ func (s *Admin) ListCountries(c *gin.Context) {
 			continue
 		}
 
+		// Prevent nil panics -- if this happens then the VASP is in an invalid state.
+		if vasp.Entity == nil {
+			log.Warn().Str("vasp_id", vasp.Id).Msg("VASP entity is nil")
+			continue
+		}
+
 		// Counts are aggregated by country ISO code
 		var code string
 		if code = vasp.Entity.CountryOfRegistration; code == "" {
-			log.Error().Str("vasp_id", vasp.Id).Msg("VASP country code is empty")
+			// TODO: is there a valid reason why the country code might be empty?
+			log.Warn().Str("vasp_id", vasp.Id).Msg("VASP country code is empty")
 			continue
 		}
 
