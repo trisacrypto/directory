@@ -16,12 +16,12 @@ import { userSelector } from 'modules/auth/login/user.slice';
 import { useSelector } from 'react-redux';
 import { GrClose } from 'react-icons/gr';
 import { useNavigate } from 'react-router-dom';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Loader from 'components/Loader';
 
 // import { TransparentBackground } from 'components/TransparentBackground';
 function ChooseAnOrganization() {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   // const [prevPage, setPrevPage] = useState(0);
   const [orgList, setOrgList] = useState<any>([]);
   const [wasLastList] = useState(false);
@@ -29,8 +29,6 @@ function ChooseAnOrganization() {
     useOrganizationListQuery(currentPage);
 
   const listInnerRef = useRef<any>();
-  console.log('[organizations list]', orgList);
-  console.log('[organizations organizations]', organizations?.organizations);
   const { user } = useSelector(userSelector);
   const navigate = useNavigate();
   const handleBack = (e: React.MouseEvent<HTMLElement>) => {
@@ -44,13 +42,17 @@ function ChooseAnOrganization() {
 
   const NextPage = () => {
     setCurrentPage(currentPage + 1);
-    getAllOrganizations();
   };
 
   const PreviousPage = () => {
     setCurrentPage(currentPage - 1);
-    getAllOrganizations();
   };
+
+  useEffect(() => {
+    if (currentPage >= 1) {
+      getAllOrganizations();
+    }
+  }, [currentPage, getAllOrganizations]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   // useEffect(() => {
@@ -63,19 +65,19 @@ function ChooseAnOrganization() {
   // }, [currentPage, organizations, orgList, prevPage]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const onScroll = () => {
-    if (listInnerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = listInnerRef.current;
-      // console.log('[scrollTop]', scrollTop);
-      // console.log('[scrollHeight]', scrollHeight);
-      // console.log('[clientHeight]', clientHeight);
-      // console.log('[scrollTop + clientHeight]', scrollTop + clientHeight);
+  // const onScroll = () => {
+  //   if (listInnerRef.current) {
+  //     const { scrollTop, scrollHeight, clientHeight } = listInnerRef.current;
+  //     // console.log('[scrollTop]', scrollTop);
+  //     // console.log('[scrollHeight]', scrollHeight);
+  //     // console.log('[clientHeight]', clientHeight);
+  //     // console.log('[scrollTop + clientHeight]', scrollTop + clientHeight);
 
-      if (scrollTop + clientHeight === scrollHeight) {
-        setCurrentPage(currentPage + 1);
-      }
-    }
-  };
+  //     if (scrollTop + clientHeight === scrollHeight) {
+  //       setCurrentPage(currentPage + 1);
+  //     }
+  //   }
+  // };
 
   return (
     <VStack
@@ -109,11 +111,10 @@ function ChooseAnOrganization() {
         </HStack>
       </div>
       <Stack
-        onScroll={onScroll}
+        // onScroll={onScroll}
         ref={listInnerRef}
         width={'50%'}
         mx="auto"
-        height="700px"
         overflowY={'auto'}
         css={css({
           boxShadow: 'inset 0 -2px 0 rgba(0, 0, 0, 0.1)',
