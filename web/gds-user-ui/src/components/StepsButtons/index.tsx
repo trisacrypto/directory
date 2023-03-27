@@ -3,6 +3,7 @@ import { t, Trans } from '@lingui/macro';
 
 type StepButtonsProps = {
   handlePreviousStep: () => void;
+  handleNextStep?: () => void;
   currentStep: number;
   isCurrentStepLastStep: boolean;
   handleResetForm: () => void;
@@ -14,6 +15,7 @@ function StepButtons({
   currentStep,
   isCurrentStepLastStep,
   handleResetForm,
+  handleNextStep,
   isDefaultValue
 }: StepButtonsProps) {
   const isFirstStep = currentStep === 1;
@@ -22,7 +24,7 @@ function StepButtons({
       <Button onClick={handlePreviousStep} isDisabled={isFirstStep}>
         {isCurrentStepLastStep ? t`Previous` : t`Save & Previous`}
       </Button>
-      <Button type="submit" variant="secondary">
+      <Button onClick={handleNextStep} variant="secondary">
         {isCurrentStepLastStep ? t`Next` : t`Save & Next`}
       </Button>
       <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>

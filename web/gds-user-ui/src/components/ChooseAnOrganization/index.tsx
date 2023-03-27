@@ -17,6 +17,7 @@ import { useSelector } from 'react-redux';
 import { GrClose } from 'react-icons/gr';
 import { useNavigate } from 'react-router-dom';
 import React, { useRef, useState } from 'react';
+import Loader from 'components/Loader';
 
 // import { TransparentBackground } from 'components/TransparentBackground';
 function ChooseAnOrganization() {
@@ -24,7 +25,7 @@ function ChooseAnOrganization() {
   // const [prevPage, setPrevPage] = useState(0);
   const [orgList, setOrgList] = useState<any>([]);
   const [wasLastList] = useState(false);
-  const { organizations, getAllOrganizations, wasOrganizationFetched } =
+  const { organizations, getAllOrganizations, wasOrganizationFetched, isFetching } =
     useOrganizationListQuery(currentPage);
 
   const listInnerRef = useRef<any>();
@@ -41,14 +42,14 @@ function ChooseAnOrganization() {
     setOrgList(organizations?.organizations);
   }
 
-  const fetchMore = () => {
+  const NextPage = () => {
+    setCurrentPage(currentPage + 1);
     getAllOrganizations();
-    // merge new data with old data and remove duplicate data
-    setOrgList((prev: any) => {
-      console.log('[prev]', prev);
-      // eslint-disable-next-line no-unsafe-optional-chaining
-      return [...new Set([...prev, ...organizations?.organizations])];
-    });
+  };
+
+  const PreviousPage = () => {
+    setCurrentPage(currentPage - 1);
+    getAllOrganizations();
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -119,9 +120,10 @@ function ChooseAnOrganization() {
           border: '0 none'
         })}>
         <Stack>
+          {isFetching && <Loader h="50vh" />}
           <Stack divider={<StackDivider borderColor="#D9D9D9" />} p={2}>
-            {orgList?.length > 0 ? (
-              orgList?.map((organization: any) => (
+            {organizations?.organizations?.length > 0 ? (
+              organizations?.organizations?.map((organization: any) => (
                 <Account
                   key={organization.id}
                   id={organization.id}
@@ -136,9 +138,14 @@ function ChooseAnOrganization() {
           </Stack>
         </Stack>
       </Stack>
-      <Button onClick={fetchMore} disabled={wasLastList}>
-        Load more
-      </Button>
+      <HStack>
+        <Button onClick={PreviousPage} disabled={wasLastList}>
+          Previous
+        </Button>
+        <Button onClick={NextPage} disabled={wasLastList}>
+          Next
+        </Button>
+      </HStack>
     </VStack>
   );
 }
