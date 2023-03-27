@@ -1,4 +1,5 @@
 import axiosInstance from 'utils/axios';
+import type { OrganizationPagination } from './organizationType';
 export const getAllOrganisations = async (page?: number) => {
   const currentPage = page || 1;
   const pageSize = 8;

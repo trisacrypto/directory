@@ -1,13 +1,4 @@
-import {
-  HStack,
-  IconButton,
-  Stack,
-  StackDivider,
-  Text,
-  VStack,
-  css,
-  Button
-} from '@chakra-ui/react';
+import { HStack, IconButton, Stack, StackDivider, Text, VStack, css } from '@chakra-ui/react';
 import { Account } from 'components/Account';
 import AddNewVaspModal from 'components/AddNewVaspModal/AddNewVaspModal';
 import { Trans } from '@lingui/macro';
@@ -16,14 +7,14 @@ import { userSelector } from 'modules/auth/login/user.slice';
 import { useSelector } from 'react-redux';
 import { GrClose } from 'react-icons/gr';
 import { useNavigate } from 'react-router-dom';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 // import { TransparentBackground } from 'components/TransparentBackground';
 function ChooseAnOrganization() {
   const [currentPage, setCurrentPage] = useState(1);
-  // const [prevPage, setPrevPage] = useState(0);
+  const [prevPage, setPrevPage] = useState(0);
   const [orgList, setOrgList] = useState<any>([]);
-  const [wasLastList] = useState(false);
+  const [wasLastList, setWasLastList] = useState(false);
   const { organizations, getAllOrganizations, wasOrganizationFetched } =
     useOrganizationListQuery(currentPage);
 
@@ -51,27 +42,43 @@ function ChooseAnOrganization() {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // useEffect(() => {
-  //   if (prevPage !== currentPage) {
-  //     setPrevPage(currentPage + 1);
-  //     if (organizations && organizations.organizations.length === 0) {
-  //       setOrgList([...orgList, ...organizations.organizations]);
-  //     }
-  //   }
-  // }, [currentPage, organizations, orgList, prevPage]);
+  useEffect(() => {
+    if (!organizations?.organizations.length) {
+      setWasLastList(true);
+      return;
+    }
+    setPrevPage(currentPage);
+    // setOrgList((prev: any) => {
+    //   console.log('[prev]', prev);
+    //   // eslint-disable-next-line no-unsafe-optional-chaining
+    //   return [...new Set([...prev, ...organizations?.organizations])];
+    // });
+    if (!wasLastList && prevPage !== currentPage) {
+      fetchMore();
+    }
+  }, [
+    currentPage,
+    organizations?.organizations,
+    prevPage,
+    wasLastList,
+    setOrgList,
+    setWasLastList,
+    setPrevPage,
+    fetchMore
+  ]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onScroll = () => {
     if (listInnerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = listInnerRef.current;
-      // console.log('[scrollTop]', scrollTop);
-      // console.log('[scrollHeight]', scrollHeight);
-      // console.log('[clientHeight]', clientHeight);
-      // console.log('[scrollTop + clientHeight]', scrollTop + clientHeight);
+      console.log('[scrollTop]', scrollTop);
+      console.log('[scrollHeight]', scrollHeight);
+      console.log('[clientHeight]', clientHeight);
+      console.log('[scrollTop + clientHeight]', scrollTop + clientHeight);
 
       if (scrollTop + clientHeight === scrollHeight) {
         setCurrentPage(currentPage + 1);
+        console.log('[currentPage]', currentPage);
       }
     }
   };
@@ -136,9 +143,9 @@ function ChooseAnOrganization() {
           </Stack>
         </Stack>
       </Stack>
-      <Button onClick={fetchMore} disabled={wasLastList}>
+      {/* <Button onClick={fetchMore} disabled={wasLastList}>
         Load more
-      </Button>
+      </Button> */}
     </VStack>
   );
 }

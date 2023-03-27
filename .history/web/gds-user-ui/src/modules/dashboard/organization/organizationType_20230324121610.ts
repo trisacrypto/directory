@@ -6,13 +6,6 @@ export interface Organization {
   refreshToken?: string;
 }
 
-export interface organizationResponse {
-  count: number;
-  organizations: Organization[];
-  page: number;
-  page_size: number;
-}
-
 export type NewOrganization = Pick<Organization, 'id' | 'name' | 'domain'>;
 
 export type OrganizationMutation = {

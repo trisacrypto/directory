@@ -22,7 +22,7 @@ import React, { useRef, useState } from 'react';
 function ChooseAnOrganization() {
   const [currentPage, setCurrentPage] = useState(1);
   // const [prevPage, setPrevPage] = useState(0);
-  const [orgList, setOrgList] = useState<any>([]);
+  const [orgList, setOrgList] = useState<any>([]); // storing list
   const [wasLastList] = useState(false);
   const { organizations, getAllOrganizations, wasOrganizationFetched } =
     useOrganizationListQuery(currentPage);
@@ -42,6 +42,7 @@ function ChooseAnOrganization() {
   }
 
   const fetchMore = () => {
+    setCurrentPage(currentPage + 1);
     getAllOrganizations();
     // merge new data with old data and remove duplicate data
     setOrgList((prev: any) => {
@@ -65,13 +66,13 @@ function ChooseAnOrganization() {
   const onScroll = () => {
     if (listInnerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = listInnerRef.current;
-      // console.log('[scrollTop]', scrollTop);
-      // console.log('[scrollHeight]', scrollHeight);
-      // console.log('[clientHeight]', clientHeight);
-      // console.log('[scrollTop + clientHeight]', scrollTop + clientHeight);
+      console.log('[scrollTop]', scrollTop);
+      console.log('[scrollHeight]', scrollHeight);
+      console.log('[clientHeight]', clientHeight);
+      console.log('[scrollTop + clientHeight]', scrollTop + clientHeight);
 
-      if (scrollTop + clientHeight === scrollHeight) {
-        setCurrentPage(currentPage + 1);
+      if (scrollTop + clientHeight > scrollHeight) {
+        fetchMore();
       }
     }
   };
@@ -113,7 +114,7 @@ function ChooseAnOrganization() {
         width={'50%'}
         mx="auto"
         height="700px"
-        overflowY={'auto'}
+        overflowY={'scroll'}
         css={css({
           boxShadow: 'inset 0 -2px 0 rgba(0, 0, 0, 0.1)',
           border: '0 none'

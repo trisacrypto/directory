@@ -16,12 +16,12 @@ import { userSelector } from 'modules/auth/login/user.slice';
 import { useSelector } from 'react-redux';
 import { GrClose } from 'react-icons/gr';
 import { useNavigate } from 'react-router-dom';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 // import { TransparentBackground } from 'components/TransparentBackground';
 function ChooseAnOrganization() {
   const [currentPage, setCurrentPage] = useState(1);
-  // const [prevPage, setPrevPage] = useState(0);
+  const [prevPage, setPrevPage] = useState(0);
   const [orgList, setOrgList] = useState<any>([]);
   const [wasLastList] = useState(false);
   const { organizations, getAllOrganizations, wasOrganizationFetched } =
@@ -42,6 +42,7 @@ function ChooseAnOrganization() {
   }
 
   const fetchMore = () => {
+    setCurrentPage(currentPage + 1);
     getAllOrganizations();
     // merge new data with old data and remove duplicate data
     setOrgList((prev: any) => {
@@ -51,27 +52,23 @@ function ChooseAnOrganization() {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // useEffect(() => {
-  //   if (prevPage !== currentPage) {
-  //     setPrevPage(currentPage + 1);
-  //     if (organizations && organizations.organizations.length === 0) {
-  //       setOrgList([...orgList, ...organizations.organizations]);
-  //     }
-  //   }
-  // }, [currentPage, organizations, orgList, prevPage]);
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchMore();
+    }
+  }, [currentPage]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onScroll = () => {
     if (listInnerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = listInnerRef.current;
-      // console.log('[scrollTop]', scrollTop);
-      // console.log('[scrollHeight]', scrollHeight);
-      // console.log('[clientHeight]', clientHeight);
-      // console.log('[scrollTop + clientHeight]', scrollTop + clientHeight);
+      console.log('[scrollTop]', scrollTop);
+      console.log('[scrollHeight]', scrollHeight);
+      console.log('[clientHeight]', clientHeight);
+      console.log('[scrollTop + clientHeight]', scrollTop + clientHeight);
 
       if (scrollTop + clientHeight === scrollHeight) {
-        setCurrentPage(currentPage + 1);
+        fetchMore();
       }
     }
   };

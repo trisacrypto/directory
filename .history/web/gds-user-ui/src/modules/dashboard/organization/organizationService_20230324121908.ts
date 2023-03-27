@@ -1,10 +1,9 @@
 import axiosInstance from 'utils/axios';
-export const getAllOrganisations = async (page?: number) => {
-  const currentPage = page || 1;
-  const pageSize = 8;
-  const response = await axiosInstance.get(
-    `/organizations?page=${currentPage}&page_size=${pageSize}`
-  );
+import type { OrganizationPagination } from './organizationType';
+export const GetAllOrganisations = async (params: OrganizationPagination) => {
+  const page = params.page || 1;
+  const pageSize = params.pageSize || 8;
+  const response = await axiosInstance.get(`/organizations?page=${page}&page_size=${pageSize}`);
   return response;
 };
 

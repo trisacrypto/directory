@@ -1,10 +1,7 @@
 import axiosInstance from 'utils/axios';
-export const getAllOrganisations = async (page?: number) => {
-  const currentPage = page || 1;
-  const pageSize = 8;
-  const response = await axiosInstance.get(
-    `/organizations?page=${currentPage}&page_size=${pageSize}`
-  );
+
+export const GetAllOrganisations = async () => {
+  const response = await axiosInstance.get(`/organizations`);
   return response;
 };
 

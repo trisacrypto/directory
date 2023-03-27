@@ -65,10 +65,10 @@ function ChooseAnOrganization() {
   const onScroll = () => {
     if (listInnerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = listInnerRef.current;
-      // console.log('[scrollTop]', scrollTop);
-      // console.log('[scrollHeight]', scrollHeight);
-      // console.log('[clientHeight]', clientHeight);
-      // console.log('[scrollTop + clientHeight]', scrollTop + clientHeight);
+      console.log('[scrollTop]', scrollTop);
+      console.log('[scrollHeight]', scrollHeight);
+      console.log('[clientHeight]', clientHeight);
+      console.log('[scrollTop + clientHeight]', scrollTop + clientHeight);
 
       if (scrollTop + clientHeight === scrollHeight) {
         setCurrentPage(currentPage + 1);

@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { getAllOrganisations } from './organizationService';
-import type { OrganizationQuery } from './organizationType';
+import { GetAllOrganisations } from './organizationService';
+import type { Organization, OrganizationQuery } from './organizationType';
 import { FETCH_ORGANIZATION } from 'constants/query-keys';
 
-export function useOrganizationListQuery(page?: number): OrganizationQuery {
-  const query = useQuery([FETCH_ORGANIZATION], () => getAllOrganisations(page), {
+export function useOrganizationListQuery(): OrganizationQuery {
+  const query = useQuery([FETCH_ORGANIZATION], GetAllOrganisations, {
     refetchOnWindowFocus: false,
     refetchOnMount: true,
     // set state time to 5 minutes
@@ -13,7 +13,7 @@ export function useOrganizationListQuery(page?: number): OrganizationQuery {
 
   return {
     getAllOrganizations: query.refetch,
-    organizations: query.data?.data as any,
+    organizations: query.data?.data,
     hasOrganizationFailed: query.isError,
     wasOrganizationFetched: query.isSuccess,
     isFetching: query.isFetching,
