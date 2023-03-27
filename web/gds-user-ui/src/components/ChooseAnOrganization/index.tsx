@@ -44,7 +44,7 @@ function ChooseAnOrganization() {
   };
 
   useEffect(() => {
-    if (currentPage >= 1) {
+    if (currentPage !== 1) {
       getAllOrganizations();
     }
   }, [currentPage, getAllOrganizations]);
