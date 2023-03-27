@@ -23,10 +23,9 @@ import Loader from 'components/Loader';
 function ChooseAnOrganization() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   // const [prevPage, setPrevPage] = useState(0);
-  const [orgList, setOrgList] = useState<any>([]);
-  const [wasLastList] = useState(false);
-  const { organizations, getAllOrganizations, wasOrganizationFetched, isFetching } =
-    useOrganizationListQuery(currentPage);
+  // const [orgList, setOrgList] = useState<any>([]);
+  const [wasLastPage, setWasLastPage] = useState<boolean>(false);
+  const { organizations, getAllOrganizations, isFetching } = useOrganizationListQuery(currentPage);
 
   const listInnerRef = useRef<any>();
   const { user } = useSelector(userSelector);
@@ -35,10 +34,6 @@ function ChooseAnOrganization() {
     e.preventDefault();
     navigate(-1);
   };
-
-  if (wasOrganizationFetched && orgList?.length === 0) {
-    setOrgList(organizations?.organizations);
-  }
 
   const NextPage = () => {
     setCurrentPage(currentPage + 1);
@@ -53,6 +48,15 @@ function ChooseAnOrganization() {
       getAllOrganizations();
     }
   }, [currentPage, getAllOrganizations]);
+
+  useEffect(() => {
+    if (organizations && organizations.organizations.length === 0) {
+      setWasLastPage(true);
+    }
+    return () => {
+      setWasLastPage(false);
+    };
+  }, [organizations]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   // useEffect(() => {
@@ -140,10 +144,10 @@ function ChooseAnOrganization() {
         </Stack>
       </Stack>
       <HStack>
-        <Button onClick={PreviousPage} disabled={wasLastList}>
+        <Button onClick={PreviousPage} disabled={currentPage === 1}>
           Previous
         </Button>
-        <Button onClick={NextPage} disabled={wasLastList}>
+        <Button onClick={NextPage} disabled={!!wasLastPage}>
           Next
         </Button>
       </HStack>
