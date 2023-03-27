@@ -26,7 +26,7 @@ function ChooseAnOrganization() {
   // const [orgList, setOrgList] = useState<any>([]);
   const [wasLastPage, setWasLastPage] = useState<boolean>(false);
   const { organizations, getAllOrganizations, isFetching } = useOrganizationListQuery(currentPage);
-
+  const { count, page_size, page } = organizations || {};
   const listInnerRef = useRef<any>();
   const { user } = useSelector(userSelector);
   const navigate = useNavigate();
@@ -50,13 +50,13 @@ function ChooseAnOrganization() {
   }, [currentPage, getAllOrganizations]);
 
   useEffect(() => {
-    if (organizations && organizations.organizations.length === 0) {
+    if (page && page_size && count && page * page_size >= count) {
       setWasLastPage(true);
     }
     return () => {
       setWasLastPage(false);
     };
-  }, [organizations]);
+  }, [page, page_size, count]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   // useEffect(() => {

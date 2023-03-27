@@ -4,7 +4,7 @@ import type { OrganizationQuery } from './organizationType';
 import { FETCH_ORGANIZATION } from 'constants/query-keys';
 
 export function useOrganizationListQuery(page?: number): OrganizationQuery {
-  const query = useQuery([FETCH_ORGANIZATION], () => getAllOrganisations(page), {
+  const query = useQuery([FETCH_ORGANIZATION, page], () => getAllOrganisations(page), {
     refetchOnWindowFocus: false,
     refetchOnMount: true,
     // set state time to 5 minutes
