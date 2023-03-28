@@ -9,10 +9,13 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/rand"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/pem"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"strings"
 	"time"
@@ -205,6 +208,33 @@ func main() {
 					Aliases:  []string{"vasp-id", "v"},
 					Usage:    "the VASP ID to get the status of",
 					Required: true,
+				},
+			},
+		},
+		{
+			Name:   "acme",
+			Usage:  "verify a domain name via acme-dns challenge",
+			Action: verifyDomain,
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "token",
+					Aliases: []string{"t"},
+					Usage:   "if true, generate a challenge token for DNS verification",
+				},
+				&cli.StringFlag{
+					Name:    "domain",
+					Aliases: []string{"d"},
+					Usage:   "the domain to query the txt record for",
+				},
+				&cli.StringFlag{
+					Name:    "challenge",
+					Aliases: []string{"c"},
+					Usage:   "the challenge token to verify",
+				},
+				&cli.BoolFlag{
+					Name:    "debug",
+					Aliases: []string{"D"},
+					Usage:   "print the TXT records retrieved from DNS query",
 				},
 			},
 		},
@@ -657,6 +687,54 @@ func vaspStatus(c *cli.Context) (err error) {
 
 	}
 	return nil
+}
+
+func verifyDomain(c *cli.Context) (err error) {
+	if token := c.Bool("token"); token {
+		// Generate a challenge token, print and return
+		// TODO: also generate whisper link to send to user
+		nonce := make([]byte, 32)
+		if _, err = rand.Read(nonce); err != nil {
+			return cli.Exit(err, 1)
+		}
+		fmt.Printf("Challenge Token: TRISA-DOMAIN-VERIFICATION=%s\n", base64.RawURLEncoding.EncodeToString(nonce))
+		return nil
+	}
+
+	var (
+		domain    string
+		challenge string
+		debug     bool
+	)
+
+	debug = c.Bool("debug")
+
+	if domain = c.String("domain"); domain == "" {
+		return cli.Exit("domain required for challenge", 1)
+	}
+
+	if challenge = c.String("challenge"); challenge == "" {
+		return cli.Exit("challenge required for domain verification", 1)
+	}
+
+	var answers []string
+	if answers, err = net.LookupTXT(domain); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	challenge = strings.TrimSpace(challenge)
+	for _, answer := range answers {
+		if debug {
+			fmt.Println(answer)
+		}
+
+		if strings.TrimSpace(answer) == challenge {
+			fmt.Println("domain verified!")
+			return nil
+		}
+	}
+
+	return cli.Exit(fmt.Errorf("%d TXT records returned did not match challenge", len(answers)), 1)
 }
 
 func askForConfirmation(s string) bool {
