@@ -308,7 +308,7 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 		return
 	}
 
-	// If the collabroator is already verified in Auth0, then remove them from the
+	// If the collaborator is already verified in Auth0, then remove them from the
 	// organization
 	if collaborator.Verified && collaborator.UserId != "" {
 		// Fetch the user from Auth0

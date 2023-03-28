@@ -1,6 +1,7 @@
 package leveldb
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -63,12 +64,12 @@ func (s *leveldbTestSuite) TestDirectoryStore() {
 	s.Empty(alice.Id)
 
 	// Attempt to Create the VASP
-	id, err := s.db.CreateVASP(alice)
+	id, err := s.db.CreateVASP(context.Background(), alice)
 	s.NoError(err)
 	s.NotEmpty(id)
 
 	// Attempt to Retrieve the VASP
-	alicer, err := s.db.RetrieveVASP(id)
+	alicer, err := s.db.RetrieveVASP(context.Background(), id)
 	s.NoError(err)
 	s.Equal(id, alicer.Id)
 	s.Equal(alicer.FirstListed, alicer.LastUpdated)
@@ -83,10 +84,10 @@ func (s *leveldbTestSuite) TestDirectoryStore() {
 	alicer.Entity.Name.NameIdentifiers[0].LegalPersonName = "AliceLiteCoin, LLC"
 	alicer.VerificationStatus = pb.VerificationState_VERIFIED
 	alicer.VerifiedOn = "2021-06-30T10:40:40Z"
-	err = s.db.UpdateVASP(alicer)
+	err = s.db.UpdateVASP(context.Background(), alicer)
 	s.NoError(err)
 
-	alicer, err = s.db.RetrieveVASP(id)
+	alicer, err = s.db.RetrieveVASP(context.Background(), id)
 	s.NoError(err)
 	s.Equal(id, alicer.Id)
 	s.NotEmpty(alicer.LastUpdated)
@@ -96,9 +97,9 @@ func (s *leveldbTestSuite) TestDirectoryStore() {
 	s.Equal(alicer.VerificationStatus, pb.VerificationState_VERIFIED)
 
 	// Delete the VASP
-	err = s.db.DeleteVASP(id)
+	err = s.db.DeleteVASP(context.Background(), id)
 	s.NoError(err)
-	alicer, err = s.db.RetrieveVASP(id)
+	alicer, err = s.db.RetrieveVASP(context.Background(), id)
 	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
 	s.Empty(alicer)
 
@@ -117,18 +118,18 @@ func (s *leveldbTestSuite) TestDirectoryStore() {
 			},
 			CommonName: fmt.Sprintf("trisa%d.test.net", i+1),
 		}
-		_, err := s.db.CreateVASP(vasp)
+		_, err := s.db.CreateVASP(context.Background(), vasp)
 		s.NoError(err)
 	}
 
 	// Test listing all of the VASPs
-	reqs, err := s.db.ListVASPs().All()
+	reqs, err := s.db.ListVASPs(context.Background()).All()
 	s.NoError(err)
 	s.Len(reqs, 10)
 
 	// Test iterating over all the VASPs
 	var niters int
-	iter := s.db.ListVASPs()
+	iter := s.db.ListVASPs(context.Background())
 	for iter.Next() {
 		s.NotEmpty(iter.VASP())
 		niters++
@@ -157,11 +158,11 @@ func (s *leveldbTestSuite) TestCertificateStore() {
 	s.NotEmpty(cert.Details.NotAfter)
 
 	// Attempt to Create the Cert
-	id, err := s.db.CreateCert(cert)
+	id, err := s.db.CreateCert(context.Background(), cert)
 	s.NoError(err)
 
 	// Attempt to Retrieve the Cert
-	crr, err := s.db.RetrieveCert(id)
+	crr, err := s.db.RetrieveCert(context.Background(), id)
 	s.NoError(err)
 	s.Equal(id, crr.Id)
 	s.Equal(cert.Request, crr.Request)
@@ -177,27 +178,27 @@ func (s *leveldbTestSuite) TestCertificateStore() {
 		Status:  models.CertificateState_ISSUED,
 		Details: crr.Details,
 	}
-	_, err = s.db.CreateCert(icrr)
+	_, err = s.db.CreateCert(context.Background(), icrr)
 	s.ErrorIs(err, storeerrors.ErrIDAlreadySet)
 
 	// Update the Cert
 	crr.Status = models.CertificateState_REVOKED
-	err = s.db.UpdateCert(crr)
+	err = s.db.UpdateCert(context.Background(), crr)
 	s.NoError(err)
 
-	crr, err = s.db.RetrieveCert(id)
+	crr, err = s.db.RetrieveCert(context.Background(), id)
 	s.NoError(err)
 	s.Equal(id, crr.Id)
 	s.Equal(models.CertificateState_REVOKED, crr.Status)
 
 	// Attempt to update a certificate with no Id on it
 	cert.Id = ""
-	s.ErrorIs(s.db.UpdateCert(cert), storeerrors.ErrIncompleteRecord)
+	s.ErrorIs(s.db.UpdateCert(context.Background(), cert), storeerrors.ErrIncompleteRecord)
 
 	// Delete the Cert
-	err = s.db.DeleteCert(id)
+	err = s.db.DeleteCert(context.Background(), id)
 	s.NoError(err)
-	crr, err = s.db.RetrieveCert(id)
+	crr, err = s.db.RetrieveCert(context.Background(), id)
 	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
 	s.Empty(crr)
 
@@ -211,18 +212,18 @@ func (s *leveldbTestSuite) TestCertificateStore() {
 				SerialNumber: []byte(uuid.New().String()),
 			},
 		}
-		_, err := s.db.CreateCert(crr)
+		_, err := s.db.CreateCert(context.Background(), crr)
 		s.NoError(err)
 	}
 
 	// Test listing all of the certificates
-	certs, err := s.db.ListCerts().All()
+	certs, err := s.db.ListCerts(context.Background()).All()
 	s.NoError(err)
 	s.Len(certs, 10)
 
 	// Test iterating over all the certificates
 	var niters int
-	iter := s.db.ListCerts()
+	iter := s.db.ListCerts(context.Background())
 	for iter.Next() {
 		s.NotEmpty(iter.Cert())
 		niters++
@@ -250,11 +251,11 @@ func (s *leveldbTestSuite) TestCertificateRequestStore() {
 	s.Empty(certreq.Modified)
 
 	// Attempt to Create the CertReq
-	id, err := s.db.CreateCertReq(certreq)
+	id, err := s.db.CreateCertReq(context.Background(), certreq)
 	s.NoError(err)
 
 	// Attempt to Retrieve the CertReq
-	crr, err := s.db.RetrieveCertReq(id)
+	crr, err := s.db.RetrieveCertReq(context.Background(), id)
 	s.NoError(err)
 	s.Equal(id, crr.Id)
 	s.NotEmpty(crr.Created)
@@ -269,7 +270,7 @@ func (s *leveldbTestSuite) TestCertificateRequestStore() {
 		CommonName: crr.CommonName,
 		Status:     models.CertificateRequestState_INITIALIZED,
 	}
-	_, err = s.db.CreateCertReq(icrr)
+	_, err = s.db.CreateCertReq(context.Background(), icrr)
 	s.ErrorIs(err, storeerrors.ErrIDAlreadySet)
 
 	// Sleep for a second to roll over the clock for the modified time stamp
@@ -277,10 +278,10 @@ func (s *leveldbTestSuite) TestCertificateRequestStore() {
 
 	// Update the CertReq
 	crr.Status = models.CertificateRequestState_COMPLETED
-	err = s.db.UpdateCertReq(crr)
+	err = s.db.UpdateCertReq(context.Background(), crr)
 	s.NoError(err)
 
-	crr, err = s.db.RetrieveCertReq(id)
+	crr, err = s.db.RetrieveCertReq(context.Background(), id)
 	s.NoError(err)
 	s.Equal(id, crr.Id)
 	s.Equal(models.CertificateRequestState_COMPLETED, crr.Status)
@@ -289,12 +290,12 @@ func (s *leveldbTestSuite) TestCertificateRequestStore() {
 
 	// Attempt to update a certificate request with no Id on it
 	certreq.Id = ""
-	s.ErrorIs(s.db.UpdateCertReq(certreq), storeerrors.ErrIncompleteRecord)
+	s.ErrorIs(s.db.UpdateCertReq(context.Background(), certreq), storeerrors.ErrIncompleteRecord)
 
 	// Delete the CertReq
-	err = s.db.DeleteCertReq(id)
+	err = s.db.DeleteCertReq(context.Background(), id)
 	s.NoError(err)
-	crr, err = s.db.RetrieveCertReq(id)
+	crr, err = s.db.RetrieveCertReq(context.Background(), id)
 	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
 	s.Empty(crr)
 
@@ -305,18 +306,18 @@ func (s *leveldbTestSuite) TestCertificateRequestStore() {
 			CommonName: fmt.Sprintf("trisa%d.example.com", i+1),
 			Status:     models.CertificateRequestState_COMPLETED,
 		}
-		_, err := s.db.CreateCertReq(crr)
+		_, err := s.db.CreateCertReq(context.Background(), crr)
 		s.NoError(err)
 	}
 
 	// Test listing all of the certificates
-	reqs, err := s.db.ListCertReqs().All()
+	reqs, err := s.db.ListCertReqs(context.Background()).All()
 	s.NoError(err)
 	s.Len(reqs, 10)
 
 	// Test iterating over all the certificates
 	var niters int
-	iter := s.db.ListCertReqs()
+	iter := s.db.ListCertReqs(context.Background())
 	for iter.Next() {
 		s.NotEmpty(iter.CertReq())
 		niters++
@@ -342,10 +343,10 @@ func (s *leveldbTestSuite) TestAnnouncementStore() {
 	s.Empty(month.Modified)
 
 	// Create the announcement month
-	s.NoError(s.db.UpdateAnnouncementMonth(month))
+	s.NoError(s.db.UpdateAnnouncementMonth(context.Background(), month))
 
 	// Attempt to Retrieve the announcement month
-	m, err := s.db.RetrieveAnnouncementMonth(month.Date)
+	m, err := s.db.RetrieveAnnouncementMonth(context.Background(), month.Date)
 	s.NoError(err)
 	s.Equal(month.Date, m.Date)
 	s.NotEmpty(m.Created)
@@ -353,16 +354,16 @@ func (s *leveldbTestSuite) TestAnnouncementStore() {
 	s.Len(m.Announcements, len(month.Announcements))
 
 	// Attempt to Retrieve a non-existent announcement month
-	_, err = s.db.RetrieveAnnouncementMonth("")
+	_, err = s.db.RetrieveAnnouncementMonth(context.Background(), "")
 	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
-	_, err = s.db.RetrieveAnnouncementMonth("2022-01-01")
+	_, err = s.db.RetrieveAnnouncementMonth(context.Background(), "2022-01-01")
 	s.Error(err)
-	_, err = s.db.RetrieveAnnouncementMonth("2021-01")
+	_, err = s.db.RetrieveAnnouncementMonth(context.Background(), "2021-01")
 	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
 
 	// Attempt to save an announcement month without a date on it
 	month.Date = ""
-	err = s.db.UpdateAnnouncementMonth(month)
+	err = s.db.UpdateAnnouncementMonth(context.Background(), month)
 	s.ErrorIs(err, storeerrors.ErrIncompleteRecord)
 
 	// Sleep to advance the clock for the modified timestamp
@@ -370,10 +371,10 @@ func (s *leveldbTestSuite) TestAnnouncementStore() {
 
 	// Update the announcement month
 	m.Announcements[0].Title = "Happy New Year!"
-	err = s.db.UpdateAnnouncementMonth(m)
+	err = s.db.UpdateAnnouncementMonth(context.Background(), m)
 	s.NoError(err)
 
-	m, err = s.db.RetrieveAnnouncementMonth(m.Date)
+	m, err = s.db.RetrieveAnnouncementMonth(context.Background(), m.Date)
 	s.NoError(err)
 	s.Equal("Happy New Year!", m.Announcements[0].Title)
 	s.NotEmpty(m.Modified)
@@ -391,29 +392,29 @@ func (s *leveldbTestSuite) TestAnnouncementStore() {
 			},
 		},
 	}
-	s.NoError(s.db.UpdateAnnouncementMonth(month))
+	s.NoError(s.db.UpdateAnnouncementMonth(context.Background(), month))
 
 	// Test that we can still retrieve both months
-	january, err := s.db.RetrieveAnnouncementMonth("2022-01")
+	january, err := s.db.RetrieveAnnouncementMonth(context.Background(), "2022-01")
 	s.NoError(err)
 	s.Equal("Happy New Year!", january.Announcements[0].Title)
 
-	february, err := s.db.RetrieveAnnouncementMonth("2022-02")
+	february, err := s.db.RetrieveAnnouncementMonth(context.Background(), "2022-02")
 	s.NoError(err)
 	s.Equal("Happy Groundhog Day", february.Announcements[0].Title)
 
 	// Delete an announcement month
-	s.NoError(s.db.DeleteAnnouncementMonth("2022-01"))
+	s.NoError(s.db.DeleteAnnouncementMonth(context.Background(), "2022-01"))
 
 	// Should not be able to retrieve the deleted announcement month
-	_, err = s.db.RetrieveAnnouncementMonth("2022-01")
+	_, err = s.db.RetrieveAnnouncementMonth(context.Background(), "2022-01")
 	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
 }
 
 func (s *leveldbTestSuite) TestOrganizationStore() {
 	// Create a new organization in the database
 	org := &bff.Organization{}
-	id, err := s.db.CreateOrganization(org)
+	id, err := s.db.CreateOrganization(context.Background(), org)
 	s.NoError(err)
 
 	// Verify that the created record has an ID and timestamps
@@ -425,14 +426,14 @@ func (s *leveldbTestSuite) TestOrganizationStore() {
 	// Retrieve the organization by UUID
 	uu, err := bff.ParseOrgID(org.Id)
 	s.NoError(err)
-	o, err := s.db.RetrieveOrganization(uu)
+	o, err := s.db.RetrieveOrganization(context.Background(), uu)
 	s.NoError(err)
 	s.True(proto.Equal(org, o), "retrieved organization does not match created organization")
 
 	// Attempt to retrieve a non-existent organization
-	_, err = s.db.RetrieveOrganization(uuid.Nil)
+	_, err = s.db.RetrieveOrganization(context.Background(), uuid.Nil)
 	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
-	_, err = s.db.RetrieveOrganization(uuid.New())
+	_, err = s.db.RetrieveOrganization(context.Background(), uuid.New())
 	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
 
 	// Sleep to advance the clock for the modified timestamp
@@ -440,10 +441,10 @@ func (s *leveldbTestSuite) TestOrganizationStore() {
 
 	// Update the organization
 	org.Name = "Alice Corp"
-	err = s.db.UpdateOrganization(org)
+	err = s.db.UpdateOrganization(context.Background(), org)
 	s.NoError(err)
 
-	o, err = s.db.RetrieveOrganization(uu)
+	o, err = s.db.RetrieveOrganization(context.Background(), uu)
 	s.NoError(err)
 	s.Equal("Alice Corp", o.Name)
 	s.NotEmpty(o.Modified)
@@ -451,11 +452,11 @@ func (s *leveldbTestSuite) TestOrganizationStore() {
 
 	// Attempt to update an organization with no Id on it
 	org.Id = ""
-	s.ErrorIs(s.db.UpdateOrganization(org), storeerrors.ErrIncompleteRecord)
+	s.ErrorIs(s.db.UpdateOrganization(context.Background(), org), storeerrors.ErrIncompleteRecord)
 
 	// Delete the organization
-	err = s.db.DeleteOrganization(uu)
+	err = s.db.DeleteOrganization(context.Background(), uu)
 	s.NoError(err)
-	_, err = s.db.RetrieveOrganization(uu)
+	_, err = s.db.RetrieveOrganization(context.Background(), uu)
 	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
 }

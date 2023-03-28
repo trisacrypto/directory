@@ -108,11 +108,11 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	// Create organization in the database, but without registration form.
 	// An empty registration form should be returned without panic.
 	org := &records.Organization{}
-	_, err = s.DB().CreateOrganization(org)
+	_, err = s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.DB().DeleteOrganization(org.UUID())
+		s.DB().DeleteOrganization(context.Background(), org.UUID())
 	}()
 
 	claims.OrgID = org.Id
@@ -134,7 +134,7 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	require.NoError(err, "could not load registration form fixture")
 	require.False(proto.Equal(form, org.Registration), "expected fixture to not be empty")
 
-	err = s.DB().UpdateOrganization(org)
+	err = s.DB().UpdateOrganization(context.Background(), org)
 	require.NoError(err, "could not update organization in database")
 
 	form, err = s.client.LoadRegistrationForm(context.TODO())
@@ -185,11 +185,11 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 
 	// Create an organization in the database that does not contain a registration form
 	org := &records.Organization{}
-	_, err = s.DB().CreateOrganization(org)
+	_, err = s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.DB().DeleteOrganization(org.UUID())
+		s.DB().DeleteOrganization(context.Background(), org.UUID())
 	}()
 
 	// Create valid credentials for the remaining tests
@@ -202,7 +202,7 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	require.Nil(reply, "should receive 204 No Content when saving an empty registration form")
 
 	// Empty registration form should be saved in the database
-	org, err = s.DB().RetrieveOrganization(org.UUID())
+	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.NoError(err, "could not retrieve organization from database")
 	require.True(proto.Equal(org.Registration, &records.RegistrationForm{}), "expected empty registration form")
 
@@ -214,7 +214,7 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	reply.State.Started = ""
 	require.True(proto.Equal(form, reply), "expected returned registration form to match uploaded form")
 
-	org, err = s.DB().RetrieveOrganization(org.UUID())
+	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.NoError(err, "could not retrieve updated org from database")
 	require.NotEmpty(org.Registration.State.Started, "expected registration form started timestamp to be populated")
 	org.Registration.State.Started = ""
@@ -225,7 +225,7 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	require.NoError(err, "should not receive an error when saving an empty registration form")
 	require.Nil(reply, "should receive 204 No Content when saving an empty registration form")
 
-	org, err = s.DB().RetrieveOrganization(org.UUID())
+	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.NoError(err, "could not retrieve updated org from database")
 	require.False(proto.Equal(org.Registration, form), "expected form saved in database to be cleared")
 }
@@ -239,13 +239,13 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 	// been submitted yet - at the end of the test both mainnet and testnet should be
 	// submitted and the response from the directory updated on the organization.
 	org := &records.Organization{}
-	_, err = s.DB().CreateOrganization(org)
+	_, err = s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization in the database")
 
 	// Save the registration form fixture on the organization
 	org.Registration = &records.RegistrationForm{}
 	require.NoError(loadFixture("testdata/registration_form.pb.json", org.Registration), "could not load registration form from the fixtures")
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization with registration form")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization with registration form")
 
 	// Test both the testnet and the mainnet registration
 	for _, network := range []string{"testnet", "mainnet"} {
@@ -371,18 +371,18 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 	}
 
 	// Ensure that the directory record is stored on the database after registration
-	org, err = s.DB().RetrieveOrganization(org.UUID())
+	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.NoError(err, "could not update organization from the database")
 
 	require.NotNil(org.Testnet, "missing testnet directory record after registration")
 	require.Equal(org.Testnet.Id, "6041571e-09b4-47e7-870a-723f8032cd6c", "incorrect testnet directory id")
-	require.Equal(org.Testnet.RegisteredDirectory, "trisatest.net", "incorrect testnet registerd directory ")
+	require.Equal(org.Testnet.RegisteredDirectory, "trisatest.net", "incorrect testnet registered directory ")
 	require.Equal(org.Testnet.CommonName, "test.trisa.example.ua", "incorrect testnet directory common name")
 	require.NotEmpty(org.Testnet.Submitted, "expected testnet submitted timestamp stored in database")
 
 	require.NotNil(org.Mainnet, "missing mainnet directory record after registration")
 	require.Equal(org.Mainnet.Id, "5bafb054-5868-439e-9b3c-75db91810714", "incorrect mainnet directory id")
-	require.Equal(org.Mainnet.RegisteredDirectory, "vaspdirectory.net", "incorrect mainnet registerd directory ")
+	require.Equal(org.Mainnet.RegisteredDirectory, "vaspdirectory.net", "incorrect mainnet registered directory ")
 	require.Equal(org.Mainnet.CommonName, "trisa.example.ua", "incorrect mainnet directory common name")
 	require.NotEmpty(org.Mainnet.Submitted, "expected mainnet submitted timestamp stored in database")
 
@@ -400,11 +400,11 @@ func (s *bffTestSuite) TestSubmitRegistrationNotReady() {
 	// ready to submit. Create an organization that has a registration form without
 	// network details and valid claims to access the record.
 	org := &records.Organization{}
-	_, err := s.DB().CreateOrganization(org)
+	_, err := s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.DB().DeleteOrganization(org.UUID())
+		s.DB().DeleteOrganization(context.Background(), org.UUID())
 	}()
 
 	// Ensure the registration is not ready to submit by removing mainnet and testnet
@@ -415,7 +415,7 @@ func (s *bffTestSuite) TestSubmitRegistrationNotReady() {
 	require.False(org.Registration.ReadyToSubmit("both"), "registration should not be ready to submit")
 
 	// Save the registration form fixture on the organization
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization with registration form")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization with registration form")
 
 	// Create authenticated user context
 	claims := &authtest.Claims{
@@ -444,11 +444,11 @@ func (s *bffTestSuite) TestCannotResubmitRegistration() {
 	// been ready to submitted. Create an organization that has directory records for
 	// both networks and valid claims to access the record.
 	org := &records.Organization{}
-	_, err := s.DB().CreateOrganization(org)
+	_, err := s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization in the database")
 	defer func() {
 		// Ensure organization is deleted at the end of the tests
-		s.DB().DeleteOrganization(org.UUID())
+		s.DB().DeleteOrganization(context.Background(), org.UUID())
 	}()
 
 	// Ensure the registration is not ready to submit by removing mainnet and testnet
@@ -466,7 +466,7 @@ func (s *bffTestSuite) TestCannotResubmitRegistration() {
 	}
 
 	// Save the registration form fixture on the organization
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization with registration form")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization with registration form")
 
 	// Create authenticated user context
 	claims := &authtest.Claims{
@@ -632,7 +632,7 @@ func (s *bffTestSuite) TestCertificates() {
 	require.NoError(s.SetClientCredentials(claims), "could not create token from valid credentials")
 
 	// Test error message is populated when only testnet returns an error
-	_, err = s.MainNetDB().CreateVASP(mainnetVASP)
+	_, err = s.MainNetDB().CreateVASP(context.Background(), mainnetVASP)
 	require.NoError(err, "could not create mainnet VASP")
 	reply, err := s.client.Certificates(context.TODO())
 	require.NoError(err, "expected no error when only testnet returns an error")
@@ -642,9 +642,9 @@ func (s *bffTestSuite) TestCertificates() {
 	require.Empty(reply.Error.MainNet, "expected no error when mainnet returns a valid response")
 
 	// Test error message is populated when only mainnet returns an error
-	_, err = s.TestNetDB().CreateVASP(testnetVASP)
+	_, err = s.TestNetDB().CreateVASP(context.Background(), testnetVASP)
 	require.NoError(err, "could not create testnet VASP")
-	require.NoError(s.MainNetDB().DeleteVASP(mainnetVASP.Id), "could not delete VASP from mainnet database")
+	require.NoError(s.MainNetDB().DeleteVASP(context.Background(), mainnetVASP.Id), "could not delete VASP from mainnet database")
 	reply, err = s.client.Certificates(context.TODO())
 	require.NoError(err, "expected no error when only mainnet returns an error")
 	require.Empty(reply.TestNet)
@@ -662,18 +662,18 @@ func (s *bffTestSuite) TestCertificates() {
 	require.Empty(reply.Error, "expected no errors")
 
 	// Create certificate fixtures in the databases
-	require.NoError(s.TestNetDB().UpdateCert(uniform), "could not create uniform certificate")
+	require.NoError(s.TestNetDB().UpdateCert(context.Background(), uniform), "could not create uniform certificate")
 	require.NoError(models.AppendCertID(testnetVASP, uniform.Id), "could not append testnet certificate ID to VASP")
-	require.NoError(s.TestNetDB().UpdateVASP(testnetVASP), "could not update testnet VASP")
+	require.NoError(s.TestNetDB().UpdateVASP(context.Background(), testnetVASP), "could not update testnet VASP")
 
-	require.NoError(s.MainNetDB().UpdateCert(victor), "could not create victor certificate")
+	require.NoError(s.MainNetDB().UpdateCert(context.Background(), victor), "could not create victor certificate")
 	require.NoError(models.AppendCertID(mainnetVASP, victor.Id), "could not append mainnet certificate ID to VASP")
-	_, err = s.MainNetDB().CreateVASP(mainnetVASP)
+	_, err = s.MainNetDB().CreateVASP(context.Background(), mainnetVASP)
 	require.NoError(err, "could not create mainnet VASP")
 
-	require.NoError(s.MainNetDB().UpdateCert(zulu), "could not create zulu certificate")
+	require.NoError(s.MainNetDB().UpdateCert(context.Background(), zulu), "could not create zulu certificate")
 	require.NoError(models.AppendCertID(mainnetVASP, zulu.Id), "could not append mainnet certificate ID to VASP")
-	require.NoError(s.MainNetDB().UpdateVASP(mainnetVASP), "could not update mainnet VASP")
+	require.NoError(s.MainNetDB().UpdateVASP(context.Background(), mainnetVASP), "could not update mainnet VASP")
 
 	// Test certificates are returned from both testnet and mainnet
 	claims.VASPs["mainnet"] = mainnetVASP.Id
@@ -734,7 +734,7 @@ func (s *bffTestSuite) TestAttention() {
 
 	// Create an organization in the database with no registration form
 	org := &records.Organization{}
-	_, err := s.DB().CreateOrganization(org)
+	_, err := s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization in the database")
 
 	// Create initial claims fixture
@@ -780,7 +780,7 @@ func (s *bffTestSuite) TestAttention() {
 
 	// Start registration message should still be returned if the registration form state is empty
 	org.Registration = &records.RegistrationForm{}
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization in the database")
 	reply, err = s.client.Attention(context.TODO())
 	require.NoError(err, "received error from attention endpoint")
 	require.Len(reply.Messages, 1, "expected start registration message")
@@ -788,7 +788,7 @@ func (s *bffTestSuite) TestAttention() {
 
 	// Start registration message should still be returned if the registration form has not been started
 	org.Registration = records.NewRegisterForm()
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization in the database")
 	reply, err = s.client.Attention(context.TODO())
 	require.NoError(err, "received error from attention endpoint")
 	require.Len(reply.Messages, 1, "expected start registration message")
@@ -796,7 +796,7 @@ func (s *bffTestSuite) TestAttention() {
 
 	// Complete registration message should be returned when the registration form has been started but not submitted
 	org.Registration.State.Started = time.Now().Format(time.RFC3339)
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization in the database")
 	expected = &api.AttentionMessage{
 		Message:  bff.CompleteRegistration,
 		Severity: records.AttentionSeverity_INFO.String(),
@@ -811,7 +811,7 @@ func (s *bffTestSuite) TestAttention() {
 	org.Testnet = &records.DirectoryRecord{
 		Submitted: time.Now().Format(time.RFC3339),
 	}
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization in the database")
 	expected = &api.AttentionMessage{
 		Message:  bff.SubmitMainnet,
 		Severity: records.AttentionSeverity_INFO.String(),
@@ -827,7 +827,7 @@ func (s *bffTestSuite) TestAttention() {
 	org.Mainnet = &records.DirectoryRecord{
 		Submitted: time.Now().Format(time.RFC3339),
 	}
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization in the database")
 	submitTestnet := &api.AttentionMessage{
 		Message:  bff.SubmitTestnet,
 		Severity: records.AttentionSeverity_INFO.String(),
@@ -854,7 +854,7 @@ func (s *bffTestSuite) TestAttention() {
 	// Verify emails message should be returned when the VASP has been submitted but
 	// emails are not yet verified
 	mainnetVASP.VerificationStatus = pb.VerificationState_SUBMITTED
-	_, err = s.MainNetDB().CreateVASP(mainnetVASP)
+	_, err = s.MainNetDB().CreateVASP(context.Background(), mainnetVASP)
 	require.NoError(err, "could not create VASP in the mainnet database")
 	verifyMainnet := &api.AttentionMessage{
 		Message:  fmt.Sprintf(bff.VerifyEmails, "MainNet"),
@@ -873,7 +873,7 @@ func (s *bffTestSuite) TestAttention() {
 	// Registration pending message should be returned when the VASP has been submitted
 	// and is pending email verification
 	mainnetVASP.VerificationStatus = pb.VerificationState_PENDING_REVIEW
-	require.NoError(s.MainNetDB().UpdateVASP(mainnetVASP), "could not update VASP in the database")
+	require.NoError(s.MainNetDB().UpdateVASP(context.Background(), mainnetVASP), "could not update VASP in the database")
 	pendingMainnet := &api.AttentionMessage{
 		Message:  fmt.Sprintf(bff.RegistrationPending, "MainNet"),
 		Severity: records.AttentionSeverity_INFO.String(),
@@ -890,7 +890,7 @@ func (s *bffTestSuite) TestAttention() {
 
 	// Registration approved message should be returned when the VASP is verified
 	mainnetVASP.VerificationStatus = pb.VerificationState_VERIFIED
-	require.NoError(s.MainNetDB().UpdateVASP(mainnetVASP), "could not update VASP in the database")
+	require.NoError(s.MainNetDB().UpdateVASP(context.Background(), mainnetVASP), "could not update VASP in the database")
 	approvedMainnet := &api.AttentionMessage{
 		Message:  fmt.Sprintf(bff.RegistrationApproved, "MainNet"),
 		Severity: records.AttentionSeverity_SUCCESS.String(),
@@ -907,7 +907,7 @@ func (s *bffTestSuite) TestAttention() {
 
 	// Rejected message should be returned when the VASP state is rejected
 	mainnetVASP.VerificationStatus = pb.VerificationState_REJECTED
-	require.NoError(s.MainNetDB().UpdateVASP(mainnetVASP), "could not update VASP in the database")
+	require.NoError(s.MainNetDB().UpdateVASP(context.Background(), mainnetVASP), "could not update VASP in the database")
 	rejectMainnet := &api.AttentionMessage{
 		Message:  fmt.Sprintf(bff.RegistrationRejected, "MainNet"),
 		Severity: records.AttentionSeverity_ALERT.String(),
@@ -927,7 +927,7 @@ func (s *bffTestSuite) TestAttention() {
 	mainnetVASP.IdentityCertificate = &pb.Certificate{
 		Revoked: true,
 	}
-	require.NoError(s.MainNetDB().UpdateVASP(mainnetVASP), "could not update VASP in the database")
+	require.NoError(s.MainNetDB().UpdateVASP(context.Background(), mainnetVASP), "could not update VASP in the database")
 	revokedMainnet := &api.AttentionMessage{
 		Message:  fmt.Sprintf(bff.CertificateRevoked, "MainNet"),
 		Severity: records.AttentionSeverity_ALERT.String(),
@@ -946,14 +946,14 @@ func (s *bffTestSuite) TestAttention() {
 	claims.VASPs["testnet"] = "alice0a0-a0a0-a0a0-a0a0-a0a0a0a0a0a0"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 	org.Testnet.Submitted = time.Now().Format(time.RFC3339)
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization in the database")
 	expires := time.Now().AddDate(0, 0, 28)
 	testnetVASP.VerificationStatus = pb.VerificationState_VERIFIED
 	testnetVASP.IdentityCertificate.Revoked = false
 	testnetVASP.IdentityCertificate.NotAfter = expires.Format(time.RFC3339)
 
 	// Expired message should be returned when the certificate is expired
-	_, err = s.TestNetDB().CreateVASP(testnetVASP)
+	_, err = s.TestNetDB().CreateVASP(context.Background(), testnetVASP)
 	require.NoError(err, "could not create VASP in the testnet database")
 	expiredTestnet := &api.AttentionMessage{
 		Message:  fmt.Sprintf(bff.RenewCertificate, "TestNet", expires.Format("January 2, 2006")),
@@ -984,7 +984,7 @@ func (s *bffTestSuite) TestRegistrationStatus() {
 
 	// Create an organization in the database with no directory records
 	org := &records.Organization{}
-	_, err := s.DB().CreateOrganization(org)
+	_, err := s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization in the database")
 
 	// Create initial claims fixture
@@ -1026,7 +1026,7 @@ func (s *bffTestSuite) TestRegistrationStatus() {
 	org.Testnet = &records.DirectoryRecord{
 		Submitted: time.Now().Format(time.RFC3339),
 	}
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization in the database")
 	reply, err = s.client.RegistrationStatus(context.TODO())
 	require.NoError(err, "received error from registration status endpoint")
 	require.Equal(org.Testnet.Submitted, reply.TestNetSubmitted, "expected testnet timestamp to be returned")
@@ -1037,7 +1037,7 @@ func (s *bffTestSuite) TestRegistrationStatus() {
 	org.Mainnet = &records.DirectoryRecord{
 		Submitted: time.Now().Format(time.RFC3339),
 	}
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization in the database")
 	reply, err = s.client.RegistrationStatus(context.TODO())
 	require.NoError(err, "received error from registration status endpoint")
 	require.Equal(org.Mainnet.Submitted, reply.MainNetSubmitted, "expected mainnet timestamp to be returned")
@@ -1046,7 +1046,7 @@ func (s *bffTestSuite) TestRegistrationStatus() {
 	// Should return both timestamps when both registrations have been submitted
 	org.Testnet.Submitted = time.Now().Format(time.RFC3339)
 	org.Mainnet.Submitted = time.Now().Format(time.RFC3339)
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization in the database")
 	reply, err = s.client.RegistrationStatus(context.TODO())
 	require.NoError(err, "received error from registration status endpoint")
 	require.Equal(org.Testnet.Submitted, reply.TestNetSubmitted, "expected testnet timestamp to be returned")

@@ -22,6 +22,7 @@ the namespace. E.g. ListVASPs, CreateCertReq, etc.
 package store
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
@@ -90,48 +91,52 @@ type Store interface {
 	OrganizationStore
 }
 
+// leveldb.Store and trtl.Store must implement the Store interface.
+var _ Store = &leveldb.Store{}
+var _ Store = &trtl.Store{}
+
 // DirectoryStore describes how services interact with VASP identity records.
 type DirectoryStore interface {
-	ListVASPs() iterator.DirectoryIterator
-	SearchVASPs(query map[string]interface{}) ([]*pb.VASP, error)
-	CreateVASP(v *pb.VASP) (string, error)
-	RetrieveVASP(id string) (*pb.VASP, error)
-	UpdateVASP(v *pb.VASP) error
-	DeleteVASP(id string) error
+	ListVASPs(ctx context.Context) iterator.DirectoryIterator
+	SearchVASPs(ctx context.Context, query map[string]interface{}) ([]*pb.VASP, error)
+	CreateVASP(ctx context.Context, v *pb.VASP) (string, error)
+	RetrieveVASP(ctx context.Context, id string) (*pb.VASP, error)
+	UpdateVASP(ctx context.Context, v *pb.VASP) error
+	DeleteVASP(ctx context.Context, id string) error
 }
 
 // CertificateRequestStore describes how services interact with Certificate requests.
 type CertificateRequestStore interface {
-	ListCertReqs() iterator.CertificateRequestIterator
-	CreateCertReq(r *models.CertificateRequest) (string, error)
-	RetrieveCertReq(id string) (*models.CertificateRequest, error)
-	UpdateCertReq(r *models.CertificateRequest) error
-	DeleteCertReq(id string) error
+	ListCertReqs(ctx context.Context) iterator.CertificateRequestIterator
+	CreateCertReq(ctx context.Context, r *models.CertificateRequest) (string, error)
+	RetrieveCertReq(ctx context.Context, id string) (*models.CertificateRequest, error)
+	UpdateCertReq(ctx context.Context, r *models.CertificateRequest) error
+	DeleteCertReq(ctx context.Context, id string) error
 }
 
 // CertificateStore describes how services interact with Certificate records.
 type CertificateStore interface {
-	ListCerts() iterator.CertificateIterator
-	CreateCert(c *models.Certificate) (string, error)
-	RetrieveCert(id string) (*models.Certificate, error)
-	UpdateCert(c *models.Certificate) error
-	DeleteCert(id string) error
+	ListCerts(ctx context.Context) iterator.CertificateIterator
+	CreateCert(ctx context.Context, c *models.Certificate) (string, error)
+	RetrieveCert(ctx context.Context, id string) (*models.Certificate, error)
+	UpdateCert(ctx context.Context, c *models.Certificate) error
+	DeleteCert(ctx context.Context, id string) error
 }
 
 // AnnouncementStore describes how services interact with the Announcement records.
 type AnnouncementStore interface {
-	RetrieveAnnouncementMonth(date string) (*bff.AnnouncementMonth, error)
-	UpdateAnnouncementMonth(m *bff.AnnouncementMonth) error
-	DeleteAnnouncementMonth(date string) error
+	RetrieveAnnouncementMonth(ctx context.Context, date string) (*bff.AnnouncementMonth, error)
+	UpdateAnnouncementMonth(ctx context.Context, m *bff.AnnouncementMonth) error
+	DeleteAnnouncementMonth(ctx context.Context, date string) error
 }
 
 // OrganizationStore describes how services interact with the Organization records.
 type OrganizationStore interface {
-	ListOrganizations() iterator.OrganizationIterator
-	CreateOrganization(o *bff.Organization) (string, error)
-	RetrieveOrganization(id uuid.UUID) (*bff.Organization, error)
-	UpdateOrganization(o *bff.Organization) error
-	DeleteOrganization(id uuid.UUID) error
+	ListOrganizations(ctx context.Context) iterator.OrganizationIterator
+	CreateOrganization(ctx context.Context, o *bff.Organization) (string, error)
+	RetrieveOrganization(ctx context.Context, id uuid.UUID) (*bff.Organization, error)
+	UpdateOrganization(ctx context.Context, o *bff.Organization) error
+	DeleteOrganization(ctx context.Context, id uuid.UUID) error
 }
 
 // Indexer allows external methods to access the index function of the store if it has

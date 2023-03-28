@@ -66,7 +66,7 @@ func (s *trtlStoreTestSuite) TestSearch() {
 		"category": "PRIVATE_ORGANIZATION",
 	}
 
-	vasps, err := db.SearchVASPs(query)
+	vasps, err := db.SearchVASPs(context.Background(), query)
 	require.NoError(err, "could not search vasps with query")
 	require.Len(vasps, 1, "no vasps returned from search")
 	require.Equal("trisa0003.test.net", vasps[0].CommonName)

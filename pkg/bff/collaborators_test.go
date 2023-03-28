@@ -51,7 +51,7 @@ func (s *bffTestSuite) TestAddCollaborator() {
 
 	// Create an organization in the database without any collaborators
 	org := &models.Organization{}
-	_, err = s.DB().CreateOrganization(org)
+	_, err = s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization in the database")
 
 	// Create valid credentials with the organization ID
@@ -74,7 +74,7 @@ func (s *bffTestSuite) TestAddCollaborator() {
 	require.NotEmpty(collab.ExpiresAt, "expected collaborator to have an expires at timestamp")
 
 	// Collaborator should be in the database
-	org, err = s.DB().RetrieveOrganization(org.UUID())
+	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.NoError(err, "could not retrieve organization from the database")
 	require.Len(org.Collaborators, 1, "expected one collaborator in the organization")
 	collab, ok := org.Collaborators[request.Key()]
@@ -137,7 +137,7 @@ func (s *bffTestSuite) TestListCollaborators() {
 
 	// Create an organization in the database without any collaborators
 	org := &models.Organization{}
-	_, err = s.DB().CreateOrganization(org)
+	_, err = s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization in the database")
 
 	// Create valid credentials with the organization ID
@@ -158,7 +158,7 @@ func (s *bffTestSuite) TestListCollaborators() {
 	leopoldRoles := []string{authtest.UserRole}
 	org.Collaborators = make(map[string]*models.Collaborator)
 	org.Collaborators[leopold.Key()] = leopold
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization in the database")
 
 	// Should return a list with one collaborator in it
 	collabs, err = s.client.ListCollaborators(context.TODO())
@@ -168,7 +168,7 @@ func (s *bffTestSuite) TestListCollaborators() {
 	require.Equal(leopoldRoles, collabs.Collaborators[0].Roles, "expected collaborator roles to match")
 
 	// Collaborator should be updated in the database
-	org, err = s.DB().RetrieveOrganization(org.UUID())
+	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.NoError(err, "could not retrieve organization from the database")
 	require.Len(org.Collaborators, 1, "expected one collaborator in the organization")
 	collab, ok := org.Collaborators[leopold.Key()]
@@ -177,7 +177,7 @@ func (s *bffTestSuite) TestListCollaborators() {
 	require.Equal(leopoldRoles, collab.Roles, "expected collaborator roles in database to match")
 
 	// Add some more collaborators to the organization
-	org, err = s.DB().RetrieveOrganization(org.UUID())
+	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.NoError(err, "could not retrieve organization from the database")
 	bob := &models.Collaborator{
 		Email: "bob@example.com",
@@ -193,7 +193,7 @@ func (s *bffTestSuite) TestListCollaborators() {
 		Email: "yogg-sothoth@hpl.org",
 	}
 	org.Collaborators[yogg.Key()] = yogg
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization in the database")
 
 	// Should return a list with collaborators ordered by email address
 	collabs, err = s.client.ListCollaborators(context.TODO())
@@ -241,7 +241,7 @@ func (s *bffTestSuite) TestUpdateCollaboratorRoles() {
 
 	// Create an organization in the database without any collaborators
 	org := &models.Organization{}
-	_, err = s.DB().CreateOrganization(org)
+	_, err = s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization in the database")
 
 	// Create valid credentials with the organization ID
@@ -269,10 +269,10 @@ func (s *bffTestSuite) TestUpdateCollaboratorRoles() {
 	// Create a verified collaborator in the database
 	collab.Verified = true
 	collab.UserId = authtest.UserID
-	org, err = s.DB().RetrieveOrganization(org.UUID())
+	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.NoError(err, "could not retrieve organization from the database")
 	org.Collaborators[collab.Key()] = collab
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization in the database")
 
 	// Should return an error if there is an invalid role
 	_, err = s.client.UpdateCollaboratorRoles(context.TODO(), collab.Id, params)
@@ -285,7 +285,7 @@ func (s *bffTestSuite) TestUpdateCollaboratorRoles() {
 	require.Equal(collab.Id, modified.Id, "expected collaborator ID to match")
 
 	// Updated collaborator should be in the database
-	org, err = s.DB().RetrieveOrganization(org.UUID())
+	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.NoError(err, "could not retrieve organization from the database")
 	require.Len(org.Collaborators, 1, "expected one collaborator in the organization")
 	_, ok := org.Collaborators[collab.Key()]
@@ -330,7 +330,7 @@ func (s *bffTestSuite) TestDeleteCollaborator() {
 
 	// Create an organization in the database without any collaborators
 	org := &models.Organization{}
-	_, err = s.DB().CreateOrganization(org)
+	_, err = s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization in the database")
 
 	// Create valid credentials with the organization ID
@@ -351,7 +351,7 @@ func (s *bffTestSuite) TestDeleteCollaborator() {
 	// If the collaborator is not verified, then the record is just deleted from the
 	// organization
 	require.NoError(s.client.DeleteCollaborator(context.TODO(), collab.Id))
-	org, err = s.DB().RetrieveOrganization(org.UUID())
+	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.NoError(err, "could not retrieve organization from the database")
 	require.Len(org.Collaborators, 0, "expected no collaborators in the organization")
 
@@ -362,10 +362,10 @@ func (s *bffTestSuite) TestDeleteCollaborator() {
 	// Configure a verified collaborator in the database
 	collab.Verified = true
 	collab.UserId = authtest.UserID
-	org, err = s.DB().RetrieveOrganization(org.UUID())
+	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.NoError(err, "could not retrieve organization from the database")
 	org.Collaborators[collab.Key()] = collab
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization in the database")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization in the database")
 
 	// Make sure the user has some app metadata
 	userMeta := &auth.AppMetadata{
@@ -382,7 +382,7 @@ func (s *bffTestSuite) TestDeleteCollaborator() {
 	// If a verified collaborator is deleted, then the record should still be deleted
 	// from the organization
 	require.NoError(s.client.DeleteCollaborator(context.TODO(), collab.Id))
-	org, err = s.DB().RetrieveOrganization(org.UUID())
+	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.NoError(err, "could not retrieve organization from the database")
 	require.Len(org.Collaborators, 0, "expected no collaborators in the organization")
 
