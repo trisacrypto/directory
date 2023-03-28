@@ -1,23 +1,35 @@
-import { HStack, IconButton, Stack, StackDivider, Text, VStack, css } from '@chakra-ui/react';
+import {
+  HStack,
+  IconButton,
+  Stack,
+  StackDivider,
+  Text,
+  VStack,
+  css,
+  Button
+} from '@chakra-ui/react';
 import { Account } from 'components/Account';
 import AddNewVaspModal from 'components/AddNewVaspModal/AddNewVaspModal';
 import { Trans } from '@lingui/macro';
-import { useOrganizationListQuery } from 'modules/dashboard/organization/useOrganizationListQuery';
+
 import { userSelector } from 'modules/auth/login/user.slice';
 import { useSelector } from 'react-redux';
 import { GrClose } from 'react-icons/gr';
 import { useNavigate } from 'react-router-dom';
-import React from 'react';
-
-// import { TransparentBackground } from 'components/TransparentBackground';
+import Loader from 'components/Loader';
+import { usePaginate } from './usePaginate';
 function ChooseAnOrganization() {
-  const { organizations } = useOrganizationListQuery();
+  const { NextPage, PreviousPage, currentPage, wasLastPage, isFetching, organizations } =
+    usePaginate();
   const { user } = useSelector(userSelector);
   const navigate = useNavigate();
+
   const handleBack = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
     navigate(-1);
   };
+
+  const isFirstPage = currentPage === 1;
 
   return (
     <VStack
@@ -41,27 +53,28 @@ function ChooseAnOrganization() {
         variant="ghost"
         title="Get back to dashboard"
       />
+
+      <HStack justify={'space-between'} spacing="20px">
+        <Text fontWeight={700}>
+          <Trans>Select a VASP from the Managed VASP List</Trans>
+        </Text>
+
+        <AddNewVaspModal />
+      </HStack>
+
       <Stack
         width={'50%'}
         mx="auto"
-        overflowY={'scroll'}
+        overflowY={'auto'}
         css={css({
           boxShadow: 'inset 0 -2px 0 rgba(0, 0, 0, 0.1)',
           border: '0 none'
         })}>
-        <div>
-          <HStack width="100%" justifyContent="end">
-            <AddNewVaspModal />
-          </HStack>
-          <Text fontWeight={700}>
-            <Trans>Select a VASP from the Managed VASP List</Trans>
-          </Text>
-        </div>
-
         <Stack>
+          {isFetching && <Loader h="50vh" />}
           <Stack divider={<StackDivider borderColor="#D9D9D9" />} p={2}>
-            {organizations && organizations?.length > 0 ? (
-              organizations?.map((organization) => (
+            {organizations?.length > 0 ? (
+              organizations?.map((organization: any) => (
                 <Account
                   key={organization.id}
                   id={organization.id}
@@ -76,6 +89,14 @@ function ChooseAnOrganization() {
           </Stack>
         </Stack>
       </Stack>
+      <HStack>
+        <Button onClick={PreviousPage} disabled={isFirstPage}>
+          Previous
+        </Button>
+        <Button onClick={NextPage} disabled={!!wasLastPage}>
+          Next
+        </Button>
+      </HStack>
     </VStack>
   );
 }

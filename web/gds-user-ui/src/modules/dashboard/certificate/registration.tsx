@@ -285,6 +285,7 @@ const Certificate: React.FC = () => {
                         isCurrentStepLastStep={currentStep === lastStep}
                         isDefaultValue={isDefaultValue}
                         handlePreviousStep={handlePreviousStep}
+                        handleNextStep={handleNextStepClick}
                         handleResetForm={handleResetForm}
                       />
                     )}
