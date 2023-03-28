@@ -11,77 +11,25 @@ import {
 import { Account } from 'components/Account';
 import AddNewVaspModal from 'components/AddNewVaspModal/AddNewVaspModal';
 import { Trans } from '@lingui/macro';
-import { useOrganizationListQuery } from 'modules/dashboard/organization/useOrganizationListQuery';
+
 import { userSelector } from 'modules/auth/login/user.slice';
 import { useSelector } from 'react-redux';
 import { GrClose } from 'react-icons/gr';
 import { useNavigate } from 'react-router-dom';
-import React, { useRef, useState, useEffect } from 'react';
 import Loader from 'components/Loader';
-
-// import { TransparentBackground } from 'components/TransparentBackground';
+import { usePaginate } from './usePaginate';
 function ChooseAnOrganization() {
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  // const [prevPage, setPrevPage] = useState(0);
-  // const [orgList, setOrgList] = useState<any>([]);
-  const [wasLastPage, setWasLastPage] = useState<boolean>(false);
-  const { organizations, getAllOrganizations, isFetching } = useOrganizationListQuery(currentPage);
-  const { count, page_size, page } = organizations || {};
-  const listInnerRef = useRef<any>();
+  const { NextPage, PreviousPage, currentPage, wasLastPage, isFetching, organizations } =
+    usePaginate();
   const { user } = useSelector(userSelector);
   const navigate = useNavigate();
+
   const handleBack = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
     navigate(-1);
   };
 
-  const NextPage = () => {
-    setCurrentPage(currentPage + 1);
-  };
-
-  const PreviousPage = () => {
-    setCurrentPage(currentPage - 1);
-  };
-
-  useEffect(() => {
-    if (currentPage !== 1) {
-      getAllOrganizations();
-    }
-  }, [currentPage, getAllOrganizations]);
-
-  useEffect(() => {
-    if (page && page_size && count && page * page_size >= count) {
-      setWasLastPage(true);
-    }
-    return () => {
-      setWasLastPage(false);
-    };
-  }, [page, page_size, count]);
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // useEffect(() => {
-  //   if (prevPage !== currentPage) {
-  //     setPrevPage(currentPage + 1);
-  //     if (organizations && organizations.organizations.length === 0) {
-  //       setOrgList([...orgList, ...organizations.organizations]);
-  //     }
-  //   }
-  // }, [currentPage, organizations, orgList, prevPage]);
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // const onScroll = () => {
-  //   if (listInnerRef.current) {
-  //     const { scrollTop, scrollHeight, clientHeight } = listInnerRef.current;
-  //     // console.log('[scrollTop]', scrollTop);
-  //     // console.log('[scrollHeight]', scrollHeight);
-  //     // console.log('[clientHeight]', clientHeight);
-  //     // console.log('[scrollTop + clientHeight]', scrollTop + clientHeight);
-
-  //     if (scrollTop + clientHeight === scrollHeight) {
-  //       setCurrentPage(currentPage + 1);
-  //     }
-  //   }
-  // };
+  const isFirstPage = currentPage === 1;
 
   return (
     <VStack
@@ -105,18 +53,16 @@ function ChooseAnOrganization() {
         variant="ghost"
         title="Get back to dashboard"
       />
-      <div>
-        <HStack width="100%" justify={'space-between'} spacing={20}>
-          <Text fontWeight={700}>
-            <Trans>Select a VASP from the Managed VASP List</Trans>
-          </Text>
 
-          <AddNewVaspModal />
-        </HStack>
-      </div>
+      <HStack justify={'space-between'} spacing="20px">
+        <Text fontWeight={700}>
+          <Trans>Select a VASP from the Managed VASP List</Trans>
+        </Text>
+
+        <AddNewVaspModal />
+      </HStack>
+
       <Stack
-        // onScroll={onScroll}
-        ref={listInnerRef}
         width={'50%'}
         mx="auto"
         overflowY={'auto'}
@@ -127,8 +73,8 @@ function ChooseAnOrganization() {
         <Stack>
           {isFetching && <Loader h="50vh" />}
           <Stack divider={<StackDivider borderColor="#D9D9D9" />} p={2}>
-            {organizations?.organizations?.length > 0 ? (
-              organizations?.organizations?.map((organization: any) => (
+            {organizations?.length > 0 ? (
+              organizations?.map((organization: any) => (
                 <Account
                   key={organization.id}
                   id={organization.id}
@@ -144,7 +90,7 @@ function ChooseAnOrganization() {
         </Stack>
       </Stack>
       <HStack>
-        <Button onClick={PreviousPage} disabled={currentPage === 1}>
+        <Button onClick={PreviousPage} disabled={isFirstPage}>
           Previous
         </Button>
         <Button onClick={NextPage} disabled={!!wasLastPage}>

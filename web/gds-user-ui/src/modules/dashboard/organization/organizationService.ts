@@ -1,12 +1,10 @@
 import axiosInstance from 'utils/axios';
-export const getAllOrganisations = async (page?: number) => {
-  const currentPage = page || 1;
-  const pageSize = 8;
-  const response = await axiosInstance.get(
-    `/organizations?page=${currentPage}&page_size=${pageSize}`
-  );
+export const getAllOrganisations = async (page: number, pageSize: number) => {
+  const response = await axiosInstance.get(`/organizations?page=${page}&page_size=${pageSize}`);
   return response;
 };
+
+// rename all the functions to camelCase and remove the 'Organisation' spelling later
 
 export const GetOrganisation = async (id: string) => {
   const response = await axiosInstance.get(`/organizations/${id}`);

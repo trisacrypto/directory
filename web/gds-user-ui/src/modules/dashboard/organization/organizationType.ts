@@ -6,7 +6,7 @@ export interface Organization {
   refreshToken?: string;
 }
 
-export interface organizationResponse {
+export interface OrganizationResponse {
   count: number;
   organizations: Organization[];
   page: number;
@@ -28,7 +28,7 @@ export type OrganizationMutation = {
 export type OrganizationQuery = {
   getAllOrganizations(): void;
   reset?(): void;
-  organizations?: any;
+  organizations: OrganizationResponse;
   hasOrganizationFailed: boolean;
   wasOrganizationFetched: boolean;
   isFetching: boolean;
