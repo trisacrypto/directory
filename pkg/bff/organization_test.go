@@ -105,7 +105,7 @@ func (s *bffTestSuite) TestCreateOrganization() {
 	appdata, err = metadata.Dump()
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
-	require.NoError(s.DB().DeleteOrganization(org.UUID()), "could not delete organization from database")
+	require.NoError(s.DB().DeleteOrganization(context.Background(), org.UUID()), "could not delete organization from database")
 	reply, err = s.client.CreateOrganization(context.TODO(), params)
 	require.NoError(err, "create organization call failed")
 	require.NotEmpty(reply.ID, "expected organization id to be set")
@@ -179,7 +179,7 @@ func (s *bffTestSuite) TestListOrganizations() {
 		Email: claims.Email,
 	}
 	require.NoError(alice.AddCollaborator(aliceCollab))
-	_, err = s.DB().CreateOrganization(alice)
+	_, err = s.DB().CreateOrganization(context.Background(), alice)
 	require.NoError(err, "could not create organization")
 
 	bob := &models.Organization{
@@ -191,7 +191,7 @@ func (s *bffTestSuite) TestListOrganizations() {
 		LastLogin: time.Now().Format(time.RFC3339Nano),
 	}
 	require.NoError(bob.AddCollaborator(bobCollab))
-	_, err = s.DB().CreateOrganization(bob)
+	_, err = s.DB().CreateOrganization(context.Background(), bob)
 	require.NoError(err, "could not create organization")
 
 	charlie := &models.Organization{
@@ -203,14 +203,14 @@ func (s *bffTestSuite) TestListOrganizations() {
 		LastLogin: time.Now().Format(time.RFC3339Nano),
 	}
 	require.NoError(charlie.AddCollaborator(charlieCollab))
-	_, err = s.DB().CreateOrganization(charlie)
+	_, err = s.DB().CreateOrganization(context.Background(), charlie)
 	require.NoError(err, "could not create organization")
 
 	delta := &models.Organization{
 		Name:   "Delta VASP",
 		Domain: "deltavasp.io",
 	}
-	_, err = s.DB().CreateOrganization(delta)
+	_, err = s.DB().CreateOrganization(context.Background(), delta)
 	require.NoError(err, "could not create organization")
 
 	// Update the app metadata to contain the organizations

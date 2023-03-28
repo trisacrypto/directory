@@ -22,7 +22,7 @@ func (s *bffTestSuite) TestAnnouncements() {
 	months := make(map[string]struct{})
 	defer func() {
 		for month := range months {
-			err := s.DB().DeleteAnnouncementMonth(month)
+			err := s.DB().DeleteAnnouncementMonth(context.Background(), month)
 			require.NoError(err, "could not cleanup announcements")
 		}
 	}()
@@ -96,7 +96,7 @@ func (s *bffTestSuite) TestMakeAnnouncement() {
 
 	defer func() {
 		for _, month := range months {
-			s.DB().DeleteAnnouncementMonth(month)
+			s.DB().DeleteAnnouncementMonth(context.Background(), month)
 		}
 	}()
 
@@ -134,7 +134,7 @@ func (s *bffTestSuite) TestMakeAnnouncement() {
 	require.NoError(err, "was not able to make an announcement")
 
 	// Check that the announcement exists in the database
-	month, err := s.DB().RetrieveAnnouncementMonth(months[0])
+	month, err := s.DB().RetrieveAnnouncementMonth(context.Background(), months[0])
 	require.NoError(err, "could not get announcements container")
 	require.NotEmpty(month.Date, "expected month date to be set")
 	require.Len(month.Announcements, 1, "expected announcements to contain 1 item")
@@ -143,8 +143,8 @@ func (s *bffTestSuite) TestMakeAnnouncement() {
 
 	compat := month.Announcements[0]
 	require.NotEmpty(compat.Id, "expected announcement ID to be set")
-	require.Equal(post.Title, compat.Title, "expected announcement title to be same as orginal")
-	require.Equal(post.Body, compat.Body, "expected announcement body to be same as orginal")
+	require.Equal(post.Title, compat.Title, "expected announcement title to be same as original")
+	require.Equal(post.Body, compat.Body, "expected announcement body to be same as original")
 	require.Equal(time.Now().Format("2006-01-02"), compat.PostDate, "expected announcement post date to be set")
 	require.Equal(claims.Email, compat.Author, "expected author to be set from claims")
 	require.NotEmpty(compat.Created, "expected created timestamp set")
@@ -179,7 +179,7 @@ func (s *bffTestSuite) TestAnnouncementsHelpers() {
 	months := make(map[string]struct{})
 	defer func() {
 		for month := range months {
-			err := s.DB().DeleteAnnouncementMonth(month)
+			err := s.DB().DeleteAnnouncementMonth(context.Background(), month)
 			require.NoError(err, "could not cleanup announcements")
 		}
 	}()

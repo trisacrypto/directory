@@ -94,7 +94,7 @@ func (s *Store) Close() error {
 //===========================================================================
 
 // ListVASPs returns an iterator over all VASPs in the database.
-func (s *Store) ListVASPs() iterator.DirectoryIterator {
+func (s *Store) ListVASPs(ctx context.Context) iterator.DirectoryIterator {
 	return &vaspIterator{
 		NewTrtlStreamingIterator(s.client, wire.NamespaceVASPs),
 	}
@@ -105,7 +105,7 @@ func (s *Store) ListVASPs() iterator.DirectoryIterator {
 // search. The query can contain a one or more name or website terms. Names are prefixed
 // matched to the index and websites are hostname matched. The query can contain one or
 // more country and category filters as well, which reduce the number of search results.
-func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*gds.VASP, err error) {
+func (s *Store) SearchVASPs(ctx context.Context, query map[string]interface{}) (vasps []*gds.VASP, err error) {
 	// A set of records that match the query and need to be fetched
 	records := make(map[string]struct{})
 
@@ -156,7 +156,7 @@ func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*gds.VASP, er
 		vasps = make([]*gds.VASP, 0, len(records))
 		for id := range records {
 			var vasp *gds.VASP
-			if vasp, err = s.RetrieveVASP(id); err != nil {
+			if vasp, err = s.RetrieveVASP(ctx, id); err != nil {
 				if err == storeerrors.ErrEntityNotFound {
 					continue
 				}
@@ -171,7 +171,7 @@ func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*gds.VASP, er
 
 // CreateVASP into the directory. This method requires the VASP to have a unique
 // name and ignores any ID fields that are set on the VASP, instead assigning new IDs.
-func (s *Store) CreateVASP(v *gds.VASP) (id string, err error) {
+func (s *Store) CreateVASP(ctx context.Context, v *gds.VASP) (id string, err error) {
 	// Create UUID for record
 	if v.Id == "" {
 		v.Id = uuid.New().String()
@@ -210,7 +210,7 @@ func (s *Store) CreateVASP(v *gds.VASP) (id string, err error) {
 		return "", err
 	}
 
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       key,
@@ -232,10 +232,10 @@ func (s *Store) CreateVASP(v *gds.VASP) (id string, err error) {
 }
 
 // RetrieveVASP record by id. Returns ErrEntityNotFound if the record does not exist.
-func (s *Store) RetrieveVASP(id string) (v *gds.VASP, err error) {
+func (s *Store) RetrieveVASP(ctx context.Context, id string) (v *gds.VASP, err error) {
 	key := []byte(id)
 
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.GetRequest{
 		Key:       key,
@@ -259,7 +259,7 @@ func (s *Store) RetrieveVASP(id string) (v *gds.VASP, err error) {
 
 // UpdateVASP by the VASP ID (required). This method simply overwrites the
 // entire VASP record and does not update individual fields.
-func (s *Store) UpdateVASP(v *gds.VASP) (err error) {
+func (s *Store) UpdateVASP(ctx context.Context, v *gds.VASP) (err error) {
 	if v.Id == "" {
 		return storeerrors.ErrIncompleteRecord
 	}
@@ -291,7 +291,7 @@ func (s *Store) UpdateVASP(v *gds.VASP) (err error) {
 	// NOTE: the lock doesn't prevent concurrent writes from multiple GDS instances,
 	// just from this instance ... we need trtl transactions to guarantee this (or
 	// indices managed by trtl itself, since this is the only reason we're doing a Get).
-	o, err := s.RetrieveVASP(v.Id)
+	o, err := s.RetrieveVASP(ctx, v.Id)
 	if err != nil {
 		return err
 	}
@@ -305,7 +305,7 @@ func (s *Store) UpdateVASP(v *gds.VASP) (err error) {
 	// Update the VASP record
 	// This must be inside the lock so that there is no race condition between the index
 	// and the stored index inside of the database.
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       key,
@@ -333,7 +333,7 @@ func (s *Store) UpdateVASP(v *gds.VASP) (err error) {
 }
 
 // DeleteVASP record, removing it completely from the database and indices.
-func (s *Store) DeleteVASP(id string) error {
+func (s *Store) DeleteVASP(ctx context.Context, id string) error {
 	key := []byte(id)
 
 	// Critical section (optimizing for safety rather than speed)
@@ -344,7 +344,7 @@ func (s *Store) DeleteVASP(id string) error {
 	// This must be inside the lock to ensure indices are updated correctly with what
 	// is on disk. However, this doesn't prevent a concurrency issue with another
 	// GDS replica interacting with trtl.
-	o, err := s.RetrieveVASP(id)
+	o, err := s.RetrieveVASP(ctx, id)
 	if err != nil {
 		if err == storeerrors.ErrEntityNotFound {
 			return nil
@@ -352,7 +352,7 @@ func (s *Store) DeleteVASP(id string) error {
 		return err
 	}
 
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.DeleteRequest{
 		Key:       key,
@@ -377,14 +377,14 @@ func (s *Store) DeleteVASP(id string) error {
 //===========================================================================
 
 // ListCerts returns all certificates that are currently in the store.
-func (s *Store) ListCerts() iterator.CertificateIterator {
+func (s *Store) ListCerts(ctx context.Context) iterator.CertificateIterator {
 	return &certIterator{
 		NewTrtlStreamingIterator(s.client, wire.NamespaceCerts),
 	}
 }
 
 // CreateCert and assign a new ID and return the version.
-func (s *Store) CreateCert(c *models.Certificate) (id string, err error) {
+func (s *Store) CreateCert(ctx context.Context, c *models.Certificate) (id string, err error) {
 	if c.Id != "" {
 		return "", storeerrors.ErrIDAlreadySet
 	}
@@ -399,7 +399,7 @@ func (s *Store) CreateCert(c *models.Certificate) (id string, err error) {
 		return "", err
 	}
 
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       key,
@@ -417,12 +417,12 @@ func (s *Store) CreateCert(c *models.Certificate) (id string, err error) {
 }
 
 // RetrieveCert returns a certificate by certificate ID.
-func (s *Store) RetrieveCert(id string) (c *models.Certificate, err error) {
+func (s *Store) RetrieveCert(ctx context.Context, id string) (c *models.Certificate, err error) {
 	if id == "" {
 		return nil, storeerrors.ErrEntityNotFound
 	}
 
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.GetRequest{
 		Key:       []byte(id),
@@ -446,7 +446,7 @@ func (s *Store) RetrieveCert(id string) (c *models.Certificate, err error) {
 
 // UpdateCert can create or update a certificate. The certificate should be as
 // complete as possible, including an ID generated by the caller.
-func (s *Store) UpdateCert(c *models.Certificate) (err error) {
+func (s *Store) UpdateCert(ctx context.Context, c *models.Certificate) (err error) {
 	if c.Id == "" {
 		return storeerrors.ErrIncompleteRecord
 	}
@@ -457,7 +457,7 @@ func (s *Store) UpdateCert(c *models.Certificate) (err error) {
 		return err
 	}
 
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       key,
@@ -474,8 +474,8 @@ func (s *Store) UpdateCert(c *models.Certificate) (err error) {
 }
 
 // DeleteCert removes a certificate from the store.
-func (s *Store) DeleteCert(id string) (err error) {
-	ctx, cancel := withContext(context.Background())
+func (s *Store) DeleteCert(ctx context.Context, id string) (err error) {
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.DeleteRequest{
 		Key:       []byte(id),
@@ -495,14 +495,14 @@ func (s *Store) DeleteCert(id string) (err error) {
 //===========================================================================
 
 // ListCertReqs returns all certificate requests that are currently in the store.
-func (s *Store) ListCertReqs() iterator.CertificateRequestIterator {
+func (s *Store) ListCertReqs(ctx context.Context) iterator.CertificateRequestIterator {
 	return &certReqIterator{
 		NewTrtlStreamingIterator(s.client, wire.NamespaceCertReqs),
 	}
 }
 
 // CreateCertReq and assign a new ID and return the version.
-func (s *Store) CreateCertReq(r *models.CertificateRequest) (id string, err error) {
+func (s *Store) CreateCertReq(ctx context.Context, r *models.CertificateRequest) (id string, err error) {
 	if r.Id != "" {
 		return "", storeerrors.ErrIDAlreadySet
 	}
@@ -524,7 +524,7 @@ func (s *Store) CreateCertReq(r *models.CertificateRequest) (id string, err erro
 		return "", err
 	}
 
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       key,
@@ -542,12 +542,12 @@ func (s *Store) CreateCertReq(r *models.CertificateRequest) (id string, err erro
 }
 
 // RetrieveCertReq returns a certificate request by certificate request ID.
-func (s *Store) RetrieveCertReq(id string) (r *models.CertificateRequest, err error) {
+func (s *Store) RetrieveCertReq(ctx context.Context, id string) (r *models.CertificateRequest, err error) {
 	if id == "" {
 		return nil, storeerrors.ErrEntityNotFound
 	}
 
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.GetRequest{
 		Key:       []byte(id),
@@ -571,7 +571,7 @@ func (s *Store) RetrieveCertReq(id string) (r *models.CertificateRequest, err er
 
 // UpdateCertReq can create or update a certificate request. The request should be as
 // complete as possible, including an ID generated by the caller.
-func (s *Store) UpdateCertReq(r *models.CertificateRequest) (err error) {
+func (s *Store) UpdateCertReq(ctx context.Context, r *models.CertificateRequest) (err error) {
 	if r.Id == "" {
 		return storeerrors.ErrIncompleteRecord
 	}
@@ -588,7 +588,7 @@ func (s *Store) UpdateCertReq(r *models.CertificateRequest) (err error) {
 		return err
 	}
 
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       key,
@@ -605,8 +605,8 @@ func (s *Store) UpdateCertReq(r *models.CertificateRequest) (err error) {
 }
 
 // DeleteCertReq removes a certificate request from the store.
-func (s *Store) DeleteCertReq(id string) (err error) {
-	ctx, cancel := withContext(context.Background())
+func (s *Store) DeleteCertReq(ctx context.Context, id string) (err error) {
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.DeleteRequest{
 		Key:       []byte(id),
@@ -627,7 +627,7 @@ func (s *Store) DeleteCertReq(id string) (err error) {
 
 // RetrieveAnnouncementMonth returns the announcement month "crate" for the given month
 // timestamp in the format YYYY-MM.
-func (s *Store) RetrieveAnnouncementMonth(date string) (m *bff.AnnouncementMonth, err error) {
+func (s *Store) RetrieveAnnouncementMonth(ctx context.Context, date string) (m *bff.AnnouncementMonth, err error) {
 	if date == "" {
 		return nil, storeerrors.ErrEntityNotFound
 	}
@@ -640,7 +640,7 @@ func (s *Store) RetrieveAnnouncementMonth(date string) (m *bff.AnnouncementMonth
 		return nil, err
 	}
 
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.GetRequest{
 		Key:       key,
@@ -662,7 +662,7 @@ func (s *Store) RetrieveAnnouncementMonth(date string) (m *bff.AnnouncementMonth
 
 // UpdateAnnouncementMonth creates a new announcement month "crate" if it doesn't
 // already exist or replaces the existing record.
-func (s *Store) UpdateAnnouncementMonth(m *bff.AnnouncementMonth) (err error) {
+func (s *Store) UpdateAnnouncementMonth(ctx context.Context, m *bff.AnnouncementMonth) (err error) {
 	if m.Date == "" {
 		return storeerrors.ErrIncompleteRecord
 	}
@@ -685,7 +685,7 @@ func (s *Store) UpdateAnnouncementMonth(m *bff.AnnouncementMonth) (err error) {
 		return err
 	}
 
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       key,
@@ -702,7 +702,7 @@ func (s *Store) UpdateAnnouncementMonth(m *bff.AnnouncementMonth) (err error) {
 }
 
 // DeleteAnnouncementMonth removes an announcement month "crate" from the store.
-func (s *Store) DeleteAnnouncementMonth(date string) (err error) {
+func (s *Store) DeleteAnnouncementMonth(ctx context.Context, date string) (err error) {
 	// Get the key by creating an intermediate announcement month to ensure that
 	// validation and key creation always happens the same way.
 	var key []byte
@@ -711,7 +711,7 @@ func (s *Store) DeleteAnnouncementMonth(date string) (err error) {
 		return err
 	}
 
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.DeleteRequest{
 		Key:       key,
@@ -731,15 +731,15 @@ func (s *Store) DeleteAnnouncementMonth(date string) (err error) {
 //===========================================================================
 
 // ListOrganizations returns an iterator to retrieve all organizations.
-func (s *Store) ListOrganizations() iterator.OrganizationIterator {
+func (s *Store) ListOrganizations(ctx context.Context) iterator.OrganizationIterator {
 	return &organizationIterator{
 		NewTrtlStreamingIterator(s.client, wire.NamespaceOrganizations),
 	}
 }
 
 // CreateOrganization creates a new organization record in the store, assigning a
-// unique ID if it doesn't eixst and setting the created and modified timestamps.
-func (s *Store) CreateOrganization(o *bff.Organization) (id string, err error) {
+// unique ID if it doesn't exist and setting the created and modified timestamps.
+func (s *Store) CreateOrganization(ctx context.Context, o *bff.Organization) (id string, err error) {
 	// Create the organization ID if not provided
 	if o.Id == "" {
 		o.Id = uuid.New().String()
@@ -755,7 +755,7 @@ func (s *Store) CreateOrganization(o *bff.Organization) (id string, err error) {
 		return "", err
 	}
 
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       o.Key(),
@@ -772,12 +772,12 @@ func (s *Store) CreateOrganization(o *bff.Organization) (id string, err error) {
 }
 
 // RetrieveOrganization retrieves an organization record from the store by UUID.
-func (s *Store) RetrieveOrganization(id uuid.UUID) (o *bff.Organization, err error) {
+func (s *Store) RetrieveOrganization(ctx context.Context, id uuid.UUID) (o *bff.Organization, err error) {
 	if id == uuid.Nil {
 		return nil, storeerrors.ErrEntityNotFound
 	}
 
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.GetRequest{
 		Key:       id[:],
@@ -800,7 +800,7 @@ func (s *Store) RetrieveOrganization(id uuid.UUID) (o *bff.Organization, err err
 
 // UpdateOrganization updates an organization record in the store by replacing the
 // existing record.
-func (s *Store) UpdateOrganization(o *bff.Organization) (err error) {
+func (s *Store) UpdateOrganization(ctx context.Context, o *bff.Organization) (err error) {
 	if o.Id == "" {
 		return storeerrors.ErrEntityNotFound
 	}
@@ -816,7 +816,7 @@ func (s *Store) UpdateOrganization(o *bff.Organization) (err error) {
 		return err
 	}
 
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       o.Key(),
@@ -833,12 +833,12 @@ func (s *Store) UpdateOrganization(o *bff.Organization) (err error) {
 }
 
 // DeleteOrganization deletes an organization record from the store by UUID.
-func (s *Store) DeleteOrganization(id uuid.UUID) (err error) {
+func (s *Store) DeleteOrganization(ctx context.Context, id uuid.UUID) (err error) {
 	if id == uuid.Nil {
 		return storeerrors.ErrEntityNotFound
 	}
 
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := withContext(ctx)
 	defer cancel()
 	request := &pb.DeleteRequest{
 		Key:       id[:],

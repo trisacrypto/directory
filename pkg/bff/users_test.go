@@ -124,7 +124,7 @@ func (s *bffTestSuite) TestReturningUserLogin() {
 			Id: metadata.VASPs.MainNet,
 		},
 	}
-	_, err = s.DB().CreateOrganization(org)
+	_, err = s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization")
 
 	// User is not authorized to access the organization without being a collaborator
@@ -133,7 +133,7 @@ func (s *bffTestSuite) TestReturningUserLogin() {
 
 	// Make the user a TSP
 	newOrg := &models.Organization{}
-	_, err = s.DB().CreateOrganization(newOrg)
+	_, err = s.DB().CreateOrganization(context.Background(), newOrg)
 	require.NoError(err, "could not create organization")
 	metadata.OrgID = org.Id
 	metadata.Organizations = []string{newOrg.Id}
@@ -152,7 +152,7 @@ func (s *bffTestSuite) TestReturningUserLogin() {
 		LastLogin: now,
 	}
 	require.NoError(org.AddCollaborator(collab), "could not add collaborator to organization")
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization")
 
 	// Valid login - appdata should be updated to include the added VASP
 	require.NoError(s.client.Login(context.TODO(), nil))
@@ -226,7 +226,7 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 			Id: "87d92fd1-53cf-47d8-85b1-048e8a38ced9",
 		},
 	}
-	_, err = s.DB().CreateOrganization(org)
+	_, err = s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization")
 
 	// Return an error if the user is not a collaborator in the organization
@@ -250,7 +250,7 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 		ExpiresAt: time.Now().Add(-time.Hour).Format(time.RFC3339Nano),
 	}
 	require.NoError(org.AddCollaborator(collab), "could not add collaborator to organization")
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization")
 
 	// User should not be able to access the organization if the invitation has expired
 	err = s.client.Login(context.TODO(), params)
@@ -258,7 +258,7 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 
 	// Configure a valid invitation
 	collab.ExpiresAt = time.Now().Add(time.Hour).Format(time.RFC3339Nano)
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization")
 
 	// Valid login - appdata should be updated with the organization
 	require.NoError(s.client.Login(context.TODO(), params))
@@ -287,7 +287,7 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 		Testnet: org.Mainnet,
 		Mainnet: org.Testnet,
 	}
-	_, err = s.DB().CreateOrganization(newOrg)
+	_, err = s.DB().CreateOrganization(context.Background(), newOrg)
 	require.NoError(err, "could not create organization")
 
 	// Add the collaborators to the new organization
@@ -295,7 +295,7 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 	collab.LastLogin = ""
 	require.NoError(newOrg.AddCollaborator(collab), "could not add collaborator to organization")
 	require.NoError(newOrg.AddCollaborator(leader), "could not add collaborator to organization")
-	require.NoError(s.DB().UpdateOrganization(newOrg), "could not update organization")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), newOrg), "could not update organization")
 
 	// Valid login - collab abandons the old organization and joins the new one
 	params.OrgID = newOrg.Id
@@ -366,10 +366,10 @@ func (s *bffTestSuite) TestUserInviteLogin() {
 			Id: "87d92fd1-53cf-47d8-85b1-048e8a38ced9",
 		},
 	}
-	_, err = s.DB().CreateOrganization(org)
+	_, err = s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization")
 	require.NoError(org.AddCollaborator(collab), "could not add collaborator to organization")
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization")
 	userMeta.Organizations = []string{org.Id}
 	appdata, err = userMeta.Dump()
 	require.NoError(err, "could not dump app metadata")
@@ -479,7 +479,7 @@ func (s *bffTestSuite) TestUserOrganization() {
 		Name:   "Alice VASP",
 		Domain: "alice.io",
 	}
-	_, err = s.DB().CreateOrganization(org)
+	_, err = s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization in the database")
 	expected := &api.OrganizationReply{
 		ID:        org.Id,
