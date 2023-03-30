@@ -103,7 +103,7 @@ func (i *trtlBatchIterator) Next() bool {
 
 	var reply *trtlpb.IterReply
 	var err error
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := WithContext(context.Background())
 	defer cancel()
 
 	if reply, err = i.client.Iter(ctx, request); err != nil {
@@ -200,7 +200,7 @@ func NewTrtlStreamingIterator(client trtlpb.TrtlClient, namespace string) *trtlS
 func (i *trtlStreamingIterator) Next() bool {
 	if i.cursor == nil {
 		var ctx context.Context
-		ctx, i.cancel = withContext(context.Background())
+		ctx, i.cancel = WithContext(context.Background())
 		request := &trtlpb.CursorRequest{
 			Namespace: i.namespace,
 		}
@@ -260,7 +260,7 @@ func (i *trtlStreamingIterator) Seek(key []byte) bool {
 	}
 
 	var ctx context.Context
-	ctx, i.cancel = withContext(context.Background())
+	ctx, i.cancel = WithContext(context.Background())
 	request := &trtlpb.CursorRequest{
 		Namespace: i.namespace,
 		SeekKey:   key,

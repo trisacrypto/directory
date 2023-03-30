@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"encoding/csv"
 	"io"
 	"net/url"
@@ -8,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/trisacrypto/directory/pkg/store/trtl"
 	"github.com/trisacrypto/trisa/pkg/iso3166"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -100,11 +102,15 @@ func Load(db Store, path string) (err error) {
 		vasp.CommonName = website.Hostname()
 
 		var id string
-		if id, err = db.CreateVASP(vasp); err != nil {
+		ctx, cancel := trtl.WithContext(context.Background())
+		defer cancel()
+		if id, err = db.CreateVASP(ctx, vasp); err != nil {
 			return err
 		}
 
-		if _, err = db.RetrieveVASP(id); err != nil {
+		ctx, cancel = trtl.WithContext(ctx)
+		defer cancel()
+		if _, err = db.RetrieveVASP(ctx, id); err != nil {
 			return err
 		}
 	}

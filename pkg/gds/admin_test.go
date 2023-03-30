@@ -2,6 +2,7 @@ package gds_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -118,7 +119,7 @@ func (s *gdsTestSuite) APIError(expectedCode int, expectedMessage string, rep *h
 	require.Equal(expectedMessage, data.Error, "error message mismatch")
 }
 
-// Test that the middleware returns the corect error when making unauthenticated
+// Test that the middleware returns the correct error when making unauthenticated
 // requests to protected endpoints.
 func (s *gdsTestSuite) TestMiddleware() {
 	endpoints := []struct {
@@ -151,14 +152,14 @@ func (s *gdsTestSuite) TestMiddleware() {
 		{"updateReviewNote", http.MethodPut, "/v2/vasps/42/notes/1", true, true},
 		{"deleteReviewNote", http.MethodDelete, "/v2/vasps/42/notes/1", true, true},
 	}
-	serv := httptest.NewServer(s.svc.GetAdmin().GetRouter())
-	defer serv.Close()
+	server := httptest.NewServer(s.svc.GetAdmin().GetRouter())
+	defer server.Close()
 
 	// Endpoints should return unavailable when in maintenance mode/unhealthy
 	s.svc.GetAdmin().SetHealth(false)
 	for _, endpoint := range endpoints {
 		s.T().Run(endpoint.name, func(t *testing.T) {
-			r, err := http.NewRequest(endpoint.method, serv.URL+endpoint.path, nil)
+			r, err := http.NewRequest(endpoint.method, server.URL+endpoint.path, nil)
 			require.NoError(t, err)
 			res, err := http.DefaultClient.Do(r)
 			require.NoError(t, err)
@@ -174,13 +175,13 @@ func (s *gdsTestSuite) TestMiddleware() {
 		case endpoint.authorize && endpoint.csrf:
 			s.T().Run(endpoint.name, func(t *testing.T) {
 				// Request is not authenticated
-				r, err := http.NewRequest(endpoint.method, serv.URL+endpoint.path, nil)
+				r, err := http.NewRequest(endpoint.method, server.URL+endpoint.path, nil)
 				require.NoError(t, err)
 				res, err := http.DefaultClient.Do(r)
 				require.NoError(t, err)
 				require.Equal(t, http.StatusUnauthorized, res.StatusCode)
 				// Request is authenticated but CSRF token is missing
-				r, err = http.NewRequest(endpoint.method, serv.URL+endpoint.path, nil)
+				r, err = http.NewRequest(endpoint.method, server.URL+endpoint.path, nil)
 				require.NoError(t, err)
 				creds := map[string]interface{}{
 					"sub":     "102374163855881761273",
@@ -204,7 +205,7 @@ func (s *gdsTestSuite) TestMiddleware() {
 				status = http.StatusForbidden
 			}
 			s.T().Run(endpoint.name, func(t *testing.T) {
-				r, err := http.NewRequest(endpoint.method, serv.URL+endpoint.path, nil)
+				r, err := http.NewRequest(endpoint.method, server.URL+endpoint.path, nil)
 				require.NoError(t, err)
 				res, err := http.DefaultClient.Do(r)
 				require.NoError(t, err)
@@ -756,7 +757,7 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 	require.True(ok, "identity_certificate.serial_number not found in VASP json")
 	require.Equal(expectedSerial, actualSerial)
 
-	// Verify that the signing cerificate serial numbers were converted to capital hex encoded strings
+	// Verify that the signing certificate serial numbers were converted to capital hex encoded strings
 	actualCerts, ok := actual.VASP["signing_certificates"].([]interface{})
 	require.True(ok, "signing_certificates not found in VASP json")
 	require.Len(actualCerts, len(hotel.SigningCertificates))
@@ -822,12 +823,12 @@ func (s *gdsTestSuite) TestUpdateVASP() {
 	rep = s.doRequest(a.UpdateVASP, c, w, nil)
 	s.APIError(http.StatusBadRequest, "no updates made to VASP record", rep)
 
-	// TODO: Test bad business category (not parseable) returns 400 error
+	// TODO: Test bad business category (not parsable) returns 400 error
 	// TODO: Test updating website, business category, vasp categories, and established on
 	// TODO: Test invalid IVMS 101 returns 400 error
 	// TODO: Test update VASP entity
 	// TODO: Test update TRIXO form
-	// TODO: Test compute common name from endpoint retuns an error if endpoint is "foo"
+	// TODO: Test compute common name from endpoint returns an error if endpoint is "foo"
 	// TODO: Test endpoint-only change with no change to common name is successful
 	// TODO: Test an update to common name for reviewed VASP returns a 400 error
 	// TODO: Test no certificate requests updated returns an error
@@ -888,14 +889,14 @@ func (s *gdsTestSuite) TestDeleteVASP() {
 		c, w = s.makeRequest(request)
 		rep = s.doRequest(a.DeleteVASP, c, w, nil)
 		require.Equal(http.StatusOK, rep.StatusCode)
-		_, err := s.svc.GetStore().RetrieveVASP(golf.Id)
+		_, err := s.svc.GetStore().RetrieveVASP(context.Background(), golf.Id)
 		require.Error(err)
 
 		// Recreate the VASP
 		// Note: This modifies the reference fixtures so LoadReferenceFixtures() must
 		// be deferred in order to restore them before the next test.
 		golf.Id = ""
-		id, err = s.svc.GetStore().CreateVASP(golf)
+		id, err = s.svc.GetStore().CreateVASP(context.Background(), golf)
 		require.NoError(err)
 	}
 
@@ -906,9 +907,9 @@ func (s *gdsTestSuite) TestDeleteVASP() {
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.DeleteVASP, c, w, nil)
 	require.Equal(http.StatusOK, rep.StatusCode)
-	_, err = s.svc.GetStore().RetrieveVASP(juliet.Id)
+	_, err = s.svc.GetStore().RetrieveVASP(context.Background(), juliet.Id)
 	require.Error(err)
-	_, err = s.svc.GetStore().RetrieveCertReq(xray.Id)
+	_, err = s.svc.GetStore().RetrieveCertReq(context.Background(), xray.Id)
 	require.Error(err)
 }
 
@@ -1091,7 +1092,7 @@ func (s *gdsTestSuite) TestReplaceContact() {
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.ReplaceContact, c, w, nil)
 	require.Equal(http.StatusOK, rep.StatusCode)
-	vasp, err := s.svc.GetStore().RetrieveVASP(charlieID)
+	vasp, err := s.svc.GetStore().RetrieveVASP(context.Background(), charlieID)
 	require.NoError(err, "could not retrieve VASP record")
 	require.Equal(contact.Name, vasp.Contacts.Administrative.Name)
 	require.Equal(contact.Email, vasp.Contacts.Administrative.Email)
@@ -1112,7 +1113,7 @@ func (s *gdsTestSuite) TestReplaceContact() {
 	adminSent := time.Now()
 	rep = s.doRequest(a.ReplaceContact, c, w, nil)
 	require.Equal(http.StatusOK, rep.StatusCode)
-	vasp, err = s.svc.GetStore().RetrieveVASP(charlieID)
+	vasp, err = s.svc.GetStore().RetrieveVASP(context.Background(), charlieID)
 	require.NoError(err, "could not retrieve VASP record")
 	require.Equal(contact.Name, vasp.Contacts.Administrative.Name)
 	require.Equal(contact.Email, vasp.Contacts.Administrative.Email)
@@ -1140,7 +1141,7 @@ func (s *gdsTestSuite) TestReplaceContact() {
 	technicalSent := time.Now()
 	rep = s.doRequest(a.ReplaceContact, c, w, nil)
 	require.Equal(http.StatusOK, rep.StatusCode)
-	vasp, err = s.svc.GetStore().RetrieveVASP(charlieID)
+	vasp, err = s.svc.GetStore().RetrieveVASP(context.Background(), charlieID)
 	require.NoError(err, "could not retrieve VASP record")
 	require.NotNil(vasp.Contacts.Technical)
 	require.Equal(contact.Name, vasp.Contacts.Technical.Name)
@@ -1216,7 +1217,7 @@ func (s *gdsTestSuite) TestDeleteContact() {
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.DeleteContact, c, w, nil)
 	require.Equal(http.StatusOK, rep.StatusCode)
-	vasp, err := s.svc.GetStore().RetrieveVASP(charlieID)
+	vasp, err := s.svc.GetStore().RetrieveVASP(context.Background(), charlieID)
 	require.NoError(err, "could not retrieve VASP record")
 	require.Nil(vasp.Contacts.Administrative)
 	require.NotNil(vasp.Contacts.Billing)
@@ -1227,7 +1228,7 @@ func (s *gdsTestSuite) TestDeleteContact() {
 	c, w = s.makeRequest(request)
 	rep = s.doRequest(a.DeleteContact, c, w, nil)
 	require.Equal(http.StatusOK, rep.StatusCode)
-	vasp, err = s.svc.GetStore().RetrieveVASP(charlieID)
+	vasp, err = s.svc.GetStore().RetrieveVASP(context.Background(), charlieID)
 	require.NoError(err, "could not retrieve VASP record")
 	require.Nil(vasp.Contacts.Billing)
 
@@ -1300,7 +1301,7 @@ func (s *gdsTestSuite) TestCreateReviewNote() {
 	require.Empty(actual.Editor)
 	require.Equal("foo", actual.Text)
 	// Record on the database should be updated
-	v, err := s.svc.GetStore().RetrieveVASP(charlie.Id)
+	v, err := s.svc.GetStore().RetrieveVASP(context.Background(), charlie.Id)
 	require.NoError(err)
 	notes, err := models.GetReviewNotes(v)
 	require.NoError(err)
@@ -1427,7 +1428,7 @@ func (s *gdsTestSuite) TestUpdateReviewNote() {
 	require.Equal(request.claims.Email, actual.Editor)
 	require.Equal("bar", actual.Text)
 	// Record on the database should be updated
-	v, err := s.svc.GetStore().RetrieveVASP(charlie.Id)
+	v, err := s.svc.GetStore().RetrieveVASP(context.Background(), charlie.Id)
 	require.NoError(err)
 	notes, err := models.GetReviewNotes(v)
 	require.NoError(err)
@@ -1485,7 +1486,7 @@ func (s *gdsTestSuite) TestDeleteReviewNote() {
 	require.Equal(http.StatusOK, rep.StatusCode)
 
 	// Record on the database should be deleted
-	v, err := s.svc.GetStore().RetrieveVASP(charlie.Id)
+	v, err := s.svc.GetStore().RetrieveVASP(context.Background(), charlie.Id)
 	require.NoError(err)
 	notes, err := models.GetReviewNotes(v)
 	require.NoError(err)
@@ -1663,7 +1664,7 @@ func (s *gdsTestSuite) TestReviewAccept() {
 	require.Contains(actual.Message, "has been approved")
 
 	// VASP state should be changed to REVIEWED
-	v, err := s.svc.GetStore().RetrieveVASP(julietVASP.Id)
+	v, err := s.svc.GetStore().RetrieveVASP(context.Background(), julietVASP.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_REVIEWED, v.VerificationStatus)
 
@@ -1679,7 +1680,7 @@ func (s *gdsTestSuite) TestReviewAccept() {
 	require.Equal(request.claims.Email, log[3].Source)
 
 	// Certificate request should be changed to READY_TO_SUBMIT
-	cert, err := s.svc.GetStore().RetrieveCertReq(xray.Id)
+	cert, err := s.svc.GetStore().RetrieveCertReq(context.Background(), xray.Id)
 	require.NoError(err)
 	require.Equal(models.CertificateRequestState_READY_TO_SUBMIT, cert.Status)
 
@@ -1709,9 +1710,9 @@ func (s *gdsTestSuite) TestReviewReject() {
 
 	// Clear email logs to make testing easier
 	require.NoError(fixtures.ClearContactEmailLogs(charlie), "could not clear contact email logs")
-	require.NoError(s.svc.GetStore().UpdateVASP(charlie))
+	require.NoError(s.svc.GetStore().UpdateVASP(context.Background(), charlie))
 	require.NoError(fixtures.ClearContactEmailLogs(julietVASP), "could not clear contact email logs")
-	require.NoError(s.svc.GetStore().UpdateVASP(julietVASP))
+	require.NoError(s.svc.GetStore().UpdateVASP(context.Background(), julietVASP))
 
 	// Test when VASP does not have admin verification token
 	request := &httpRequest{
@@ -1778,7 +1779,7 @@ func (s *gdsTestSuite) TestReviewReject() {
 	require.Contains(actual.Message, "has been rejected")
 
 	// VASP state should be changed to REJECTED
-	v, err := s.svc.GetStore().RetrieveVASP(julietVASP.Id)
+	v, err := s.svc.GetStore().RetrieveVASP(context.Background(), julietVASP.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_REJECTED, v.VerificationStatus)
 
@@ -1799,7 +1800,7 @@ func (s *gdsTestSuite) TestReviewReject() {
 	require.Len(ids, 0)
 
 	// Certificate request should be deleted
-	_, err = s.svc.GetStore().RetrieveCertReq(xray.Id)
+	_, err = s.svc.GetStore().RetrieveCertReq(context.Background(), xray.Id)
 	require.Error(err)
 
 	emailLog, err := models.GetEmailLog(v.Contacts.Administrative)
@@ -1844,9 +1845,9 @@ func (s *gdsTestSuite) TestResend() {
 
 	// Clear email logs to make testing easier
 	require.NoError(fixtures.ClearContactEmailLogs(vaspErrored), "could not clear vasp email logs")
-	require.NoError(s.svc.GetStore().UpdateVASP(vaspErrored), "could not update vasp")
+	require.NoError(s.svc.GetStore().UpdateVASP(context.Background(), vaspErrored), "could not update vasp")
 	require.NoError(fixtures.ClearContactEmailLogs(vaspRejected), "could not clear vasp email logs")
-	require.NoError(s.svc.GetStore().UpdateVASP(vaspRejected), "could not update vasp")
+	require.NoError(s.svc.GetStore().UpdateVASP(context.Background(), vaspRejected), "could not update vasp")
 
 	// Supplying an invalid VASP ID
 	request := &httpRequest{
@@ -1916,9 +1917,9 @@ func (s *gdsTestSuite) TestResend() {
 	require.Contains(actual.Message, "rejection emails resent")
 
 	// Verify that all emails were sent
-	errored, err := s.svc.GetStore().RetrieveVASP(vaspErrored.Id)
+	errored, err := s.svc.GetStore().RetrieveVASP(context.Background(), vaspErrored.Id)
 	require.NoError(err)
-	rejected, err := s.svc.GetStore().RetrieveVASP(vaspRejected.Id)
+	rejected, err := s.svc.GetStore().RetrieveVASP(context.Background(), vaspRejected.Id)
 	require.NoError(err)
 
 	messages := []*emails.EmailMeta{
@@ -2046,19 +2047,19 @@ func (s *gdsTestSuite) TestListCountries() {
 	require.NoError(err, "could not get charliebank fixture")
 	charlie.Entity.CountryOfRegistration = "US"
 	charlie.VerificationStatus = pb.VerificationState_VERIFIED
-	require.NoError(s.svc.GetStore().UpdateVASP(charlie), "could not update charliebank")
+	require.NoError(s.svc.GetStore().UpdateVASP(context.Background(), charlie), "could not update charliebank")
 
 	delta, err := s.fixtures.GetVASP("delta")
 	require.NoError(err, "could not get delta fixture")
 	delta.Entity.CountryOfRegistration = "US"
 	delta.VerificationStatus = pb.VerificationState_VERIFIED
-	require.NoError(s.svc.GetStore().UpdateVASP(delta), "could not update delta")
+	require.NoError(s.svc.GetStore().UpdateVASP(context.Background(), delta), "could not update delta")
 
 	hotel, err := s.fixtures.GetVASP("hotel")
 	require.NoError(err, "could not get hotel fixture")
 	hotel.Entity.CountryOfRegistration = "SG"
 	hotel.VerificationStatus = pb.VerificationState_VERIFIED
-	require.NoError(s.svc.GetStore().UpdateVASP(hotel), "could not update hotel")
+	require.NoError(s.svc.GetStore().UpdateVASP(context.Background(), hotel), "could not update hotel")
 
 	// Make the request
 	request := &httpRequest{
@@ -2086,7 +2087,7 @@ func (s *gdsTestSuite) TestListCountries() {
 
 	// Alter the VASPs so we can test unverified VASP filtering
 	hotel.VerificationStatus = pb.VerificationState_REJECTED
-	require.NoError(s.svc.GetStore().UpdateVASP(hotel), "could not update hotel")
+	require.NoError(s.svc.GetStore().UpdateVASP(context.Background(), hotel), "could not update hotel")
 
 	// Make the request
 	c, w = s.makeRequest(request)

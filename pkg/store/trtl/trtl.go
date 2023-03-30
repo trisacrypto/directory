@@ -71,7 +71,7 @@ type Store struct {
 	categories index.MultiIndex  // lookup vasps based on specified categories
 }
 
-func withContext(ctx context.Context) (context.Context, context.CancelFunc) {
+func WithContext(ctx context.Context) (context.Context, context.CancelFunc) {
 	// TODO: Timeout should be configurable.
 	return context.WithTimeout(ctx, time.Second*30)
 }
@@ -210,7 +210,7 @@ func (s *Store) CreateVASP(ctx context.Context, v *gds.VASP) (id string, err err
 		return "", err
 	}
 
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       key,
@@ -235,7 +235,7 @@ func (s *Store) CreateVASP(ctx context.Context, v *gds.VASP) (id string, err err
 func (s *Store) RetrieveVASP(ctx context.Context, id string) (v *gds.VASP, err error) {
 	key := []byte(id)
 
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.GetRequest{
 		Key:       key,
@@ -305,7 +305,7 @@ func (s *Store) UpdateVASP(ctx context.Context, v *gds.VASP) (err error) {
 	// Update the VASP record
 	// This must be inside the lock so that there is no race condition between the index
 	// and the stored index inside of the database.
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       key,
@@ -352,7 +352,7 @@ func (s *Store) DeleteVASP(ctx context.Context, id string) error {
 		return err
 	}
 
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.DeleteRequest{
 		Key:       key,
@@ -399,7 +399,7 @@ func (s *Store) CreateCert(ctx context.Context, c *models.Certificate) (id strin
 		return "", err
 	}
 
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       key,
@@ -422,7 +422,7 @@ func (s *Store) RetrieveCert(ctx context.Context, id string) (c *models.Certific
 		return nil, storeerrors.ErrEntityNotFound
 	}
 
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.GetRequest{
 		Key:       []byte(id),
@@ -457,7 +457,7 @@ func (s *Store) UpdateCert(ctx context.Context, c *models.Certificate) (err erro
 		return err
 	}
 
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       key,
@@ -475,7 +475,7 @@ func (s *Store) UpdateCert(ctx context.Context, c *models.Certificate) (err erro
 
 // DeleteCert removes a certificate from the store.
 func (s *Store) DeleteCert(ctx context.Context, id string) (err error) {
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.DeleteRequest{
 		Key:       []byte(id),
@@ -524,7 +524,7 @@ func (s *Store) CreateCertReq(ctx context.Context, r *models.CertificateRequest)
 		return "", err
 	}
 
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       key,
@@ -547,7 +547,7 @@ func (s *Store) RetrieveCertReq(ctx context.Context, id string) (r *models.Certi
 		return nil, storeerrors.ErrEntityNotFound
 	}
 
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.GetRequest{
 		Key:       []byte(id),
@@ -588,7 +588,7 @@ func (s *Store) UpdateCertReq(ctx context.Context, r *models.CertificateRequest)
 		return err
 	}
 
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       key,
@@ -606,7 +606,7 @@ func (s *Store) UpdateCertReq(ctx context.Context, r *models.CertificateRequest)
 
 // DeleteCertReq removes a certificate request from the store.
 func (s *Store) DeleteCertReq(ctx context.Context, id string) (err error) {
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.DeleteRequest{
 		Key:       []byte(id),
@@ -640,7 +640,7 @@ func (s *Store) RetrieveAnnouncementMonth(ctx context.Context, date string) (m *
 		return nil, err
 	}
 
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.GetRequest{
 		Key:       key,
@@ -685,7 +685,7 @@ func (s *Store) UpdateAnnouncementMonth(ctx context.Context, m *bff.Announcement
 		return err
 	}
 
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       key,
@@ -711,7 +711,7 @@ func (s *Store) DeleteAnnouncementMonth(ctx context.Context, date string) (err e
 		return err
 	}
 
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.DeleteRequest{
 		Key:       key,
@@ -755,7 +755,7 @@ func (s *Store) CreateOrganization(ctx context.Context, o *bff.Organization) (id
 		return "", err
 	}
 
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       o.Key(),
@@ -777,7 +777,7 @@ func (s *Store) RetrieveOrganization(ctx context.Context, id uuid.UUID) (o *bff.
 		return nil, storeerrors.ErrEntityNotFound
 	}
 
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.GetRequest{
 		Key:       id[:],
@@ -816,7 +816,7 @@ func (s *Store) UpdateOrganization(ctx context.Context, o *bff.Organization) (er
 		return err
 	}
 
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
 		Key:       o.Key(),
@@ -838,7 +838,7 @@ func (s *Store) DeleteOrganization(ctx context.Context, id uuid.UUID) (err error
 		return storeerrors.ErrEntityNotFound
 	}
 
-	ctx, cancel := withContext(ctx)
+	ctx, cancel := WithContext(ctx)
 	defer cancel()
 	request := &pb.DeleteRequest{
 		Key:       id[:],
