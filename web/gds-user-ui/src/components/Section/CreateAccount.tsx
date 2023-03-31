@@ -1,7 +1,6 @@
 import React from 'react';
-import { Box, Button, Heading, Text, useColorModeValue } from '@chakra-ui/react';
-
-import { GoogleIcon } from 'components/Icon';
+import { Box, Button, Heading, Text, useColorModeValue, VStack, HStack } from '@chakra-ui/react';
+import { GoogleIcon, GithubIcon, MicrosoftIcon } from 'components/Icon';
 import { Trans } from '@lingui/react';
 import AuthLayout from 'layouts/AuthLayout';
 import SignupForm from 'components/Form/SignupForm';
@@ -15,7 +14,11 @@ interface CreateAccountProps {
 }
 
 // TO-DO : need some improvements
-const CreateAccount: React.FC<CreateAccountProps> = (props) => {
+const CreateAccount: React.FC<CreateAccountProps> = ({
+  handleSocialAuth,
+  handleSignUpWithEmail,
+  isLoading
+}) => {
   return (
     <AuthLayout>
       <Heading
@@ -33,32 +36,89 @@ const CreateAccount: React.FC<CreateAccountProps> = (props) => {
         </Trans>
       </Text>
 
-      <Box>
+      <VStack>
         <Button
-          bg={'gray.100'}
+          data-testid="signin-with-google"
+          bg={'white'}
+          border="1px solid"
           w="100%"
-          onClick={(event: any) => props.handleSocialAuth(event, 'google')}
           size="lg"
           borderRadius="none"
+          onClick={(event: any) => handleSocialAuth(event, 'google')}
           color={'gray.600'}
           _hover={{
             background: useColorModeValue('gray.200', 'black'),
             color: useColorModeValue('gray.600', 'white')
+          }}
+          _focus={{
+            borderColor: 'transparent'
           }}>
-          <GoogleIcon h={24} />
-          <Text as={'span'} ml={3} fontSize="md">
-            <Trans id="Continue with Google">Continue with Google</Trans>
-          </Text>
+          <HStack spacing={5}>
+            <Box pos={'absolute'} left={5}>
+              <GoogleIcon h={24} />
+            </Box>
+            <Text as={'span'} fontSize="md">
+              <Trans id="Continue with Google">Continue with Google</Trans>
+            </Text>
+          </HStack>
         </Button>
-      </Box>
+        <Button
+          data-testid="signin-with-github"
+          bg={'white'}
+          border="1px solid"
+          w="100%"
+          size="lg"
+          borderRadius="none"
+          onClick={(event: any) => handleSocialAuth(event, 'github')}
+          color={'gray.600'}
+          _hover={{
+            background: useColorModeValue('gray.200', 'black'),
+            color: useColorModeValue('gray.600', 'white')
+          }}
+          _focus={{
+            borderColor: 'transparent'
+          }}>
+          <HStack spacing={5}>
+            <Box pos={'absolute'} left={5}>
+              <GithubIcon h={24} />
+            </Box>
+            <Text as={'span'} fontSize="md">
+              <Trans id="Continue with Github">Continue with Github</Trans>
+            </Text>
+          </HStack>
+        </Button>
+        <Button
+          data-testid="signin-with-microsoft"
+          bg={'white'}
+          border="1px solid"
+          w="100%"
+          pl={'32px'}
+          size="lg"
+          borderRadius="none"
+          onClick={(event: any) => handleSocialAuth(event, 'microsoft')}
+          color={'gray.600'}
+          _hover={{
+            background: useColorModeValue('gray.200', 'black'),
+            color: useColorModeValue('gray.600', 'white')
+          }}
+          _focus={{
+            borderColor: 'transparent'
+          }}>
+          <HStack spacing={5} justifyContent={'space-between'}>
+            <Box pos={'absolute'} left={5}>
+              <MicrosoftIcon h={24} />
+            </Box>
+            <Text as={'span'} fontSize="md">
+              <Trans id="Continue with Microsoft">Continue with Microsoft</Trans>
+            </Text>
+          </HStack>
+        </Button>
+      </VStack>
       <Text textAlign="center">or</Text>
       <Box
         color={useColorModeValue('gray.600', 'white')}
         bg={useColorModeValue('white', 'transparent')}>
-        <SignupForm
-          handleSignUpWithEmail={props.handleSignUpWithEmail}
-          isLoading={props.isLoading}
-        />
+        <SignupForm handleSignUpWithEmail={handleSignUpWithEmail} isLoading={isLoading} />
       </Box>
     </AuthLayout>
   );
