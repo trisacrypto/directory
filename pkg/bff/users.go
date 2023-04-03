@@ -1,6 +1,7 @@
 package bff
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
+	"github.com/trisacrypto/directory/pkg/utils"
 )
 
 const (
@@ -31,7 +33,7 @@ const (
 // By default, this endpoint attempts to log the user into their last used
 // organization, using the orgID in the user app metadata. The endpoint also accepts an
 // orgID parameter as part of the request which determines the organization the user
-// should be assigned to. This parameter is used to faciliate organization switching
+// should be assigned to. This parameter is used to facilitate organization switching
 // from the frontend as well as completing the invite workflow for new collaborators
 // joining an organization. If the orgID is not provided as part of the request or does
 // not exist in the user's app metadata, a new organization is automatically created for
@@ -131,7 +133,9 @@ func (s *Server) Login(c *gin.Context) {
 		org = &models.Organization{
 			CreatedBy: userName,
 		}
-		if _, err = s.db.CreateOrganization(org); err != nil {
+		ctx, cancel := utils.WithContext(context.Background())
+		defer cancel()
+		if _, err = s.db.CreateOrganization(ctx, org); err != nil {
 			log.Error().Err(err).Str("user_id", *user.ID).Msg("could not create organization")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 			return
@@ -195,6 +199,9 @@ func (s *Server) Login(c *gin.Context) {
 		collaborator.JoinedAt = collaborator.LastLogin
 	}
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	if claims.HasPermission(auth.SwitchOrganizations) {
 		// If the user can be in multiple organizations, add the selected organization
 		// to the user's list.
@@ -226,12 +233,12 @@ func (s *Server) Login(c *gin.Context) {
 
 			// If the previous organization has no collaborators, delete it
 			if len(prevOrg.Collaborators) == 0 {
-				if err = s.db.DeleteOrganization(prevOrg.UUID()); err != nil {
+				if err = s.db.DeleteOrganization(ctx, prevOrg.UUID()); err != nil {
 					log.Error().Err(err).Str("org_id", prevOrg.Id).Msg("could not delete organization")
 					c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 					return
 				}
-			} else if err = s.db.UpdateOrganization(prevOrg); err != nil {
+			} else if err = s.db.UpdateOrganization(ctx, prevOrg); err != nil {
 				log.Error().Err(err).Str("org_id", prevOrg.Id).Msg("could not update organization")
 				c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 				return
@@ -249,7 +256,7 @@ func (s *Server) Login(c *gin.Context) {
 	}
 
 	// Update the organization record in the database
-	if err = s.db.UpdateOrganization(org); err != nil {
+	if err = s.db.UpdateOrganization(ctx, org); err != nil {
 		log.Error().Err(err).Str("org_id", org.Id).Msg("could not update organization")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 		return

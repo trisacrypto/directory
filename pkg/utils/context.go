@@ -9,5 +9,5 @@ import (
 const deadline time.Duration = time.Second * 30
 
 func WithContext(ctx context.Context) (context.Context, context.CancelFunc) {
-	return context.WithTimeout(ctx, deadline)
+	return context.WithTimeout(context.Background(), deadline)
 }

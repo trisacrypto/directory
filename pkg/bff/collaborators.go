@@ -1,6 +1,7 @@
 package bff
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/url"
@@ -13,6 +14,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
+	"github.com/trisacrypto/directory/pkg/utils"
 )
 
 const orgIDParam = "orgid"
@@ -123,8 +125,11 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 		return
 	}
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Save the updated organization
-	if err = s.db.UpdateOrganization(org); err != nil {
+	if err = s.db.UpdateOrganization(ctx, org); err != nil {
 		log.Error().Err(err).Msg("could not save organization with new collaborator")
 		c.JSON(http.StatusInternalServerError, "could not add collaborator")
 		return
@@ -171,9 +176,12 @@ func (s *Server) ListCollaborators(c *gin.Context) {
 		})
 	}
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Collaborators exist on the organization record so we must persist the updated
 	// organization record to the database
-	if err = s.db.UpdateOrganization(org); err != nil {
+	if err = s.db.UpdateOrganization(ctx, org); err != nil {
 		log.Error().Err(err).Msg("could not save organization with updated collaborators")
 	}
 
@@ -259,8 +267,11 @@ func (s *Server) UpdateCollaboratorRoles(c *gin.Context) {
 		collaborator.CreatedAt = collaborator.ModifiedAt
 	}
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Save the updated organization
-	if err = s.db.UpdateOrganization(org); err != nil {
+	if err = s.db.UpdateOrganization(ctx, org); err != nil {
 		log.Error().Err(err).Msg("could not save organization with new collaborator")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not replace collaborator"))
 		return
@@ -339,8 +350,11 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 	// Delete the collaborator from the organization record
 	delete(org.Collaborators, collabID)
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Save the updated organization
-	if err = s.db.UpdateOrganization(org); err != nil {
+	if err = s.db.UpdateOrganization(ctx, org); err != nil {
 		log.Error().Err(err).Msg("could not save organization without collaborator")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not delete collaborator"))
 		return

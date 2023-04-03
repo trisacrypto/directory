@@ -13,6 +13,7 @@ import (
 	api "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/store"
+	"github.com/trisacrypto/directory/pkg/utils"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/trisacrypto/trisa/pkg/trisa/mtls"
 	"github.com/trisacrypto/trisa/pkg/trust"
@@ -98,7 +99,7 @@ func (s *Members) Serve() (err error) {
 
 	// This service must not run if we're in maintenance mode
 	if s.svc.conf.Maintenance {
-		return errors.New("cannot serve Members server in maintenace mode")
+		return errors.New("cannot serve Members server in maintenance mode")
 	}
 
 	// Listen for TCP requests on the specified address and port
@@ -172,7 +173,9 @@ func (s *Members) List(ctx context.Context, in *api.ListRequest) (out *api.ListR
 	}
 
 	// Create the VASPs iterator to begin collecting validated VASPs data
-	iter := s.db.ListVASPs()
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+	iter := s.db.ListVASPs(ctx)
 	defer iter.Release()
 
 	// If necessary, seek to the next key specified by the cursor.
@@ -255,10 +258,13 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 	// Create response
 	out = &api.SummaryReply{}
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	if in.MemberId != "" {
 		// Fetch the requested VASP if provided
 		var vasp *pb.VASP
-		if vasp, err = s.db.RetrieveVASP(in.MemberId); err != nil {
+		if vasp, err = s.db.RetrieveVASP(ctx, in.MemberId); err != nil {
 			log.Warn().Err(err).Str("vasp_id", in.MemberId).Msg("VASP not found")
 			return nil, status.Error(codes.NotFound, "requested VASP not found")
 		}
@@ -268,7 +274,7 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 	}
 
 	// Create the VASPs iterator
-	iter := s.db.ListVASPs()
+	iter := s.db.ListVASPs(ctx)
 	defer iter.Release()
 
 	// Iterate over VASPs
@@ -316,7 +322,9 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 func (s *Members) Details(ctx context.Context, in *api.DetailsRequest) (out *api.MemberDetails, err error) {
 	// Fetch the requested VASP if provided
 	var vasp *pb.VASP
-	if vasp, err = s.db.RetrieveVASP(in.MemberId); err != nil {
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+	if vasp, err = s.db.RetrieveVASP(ctx, in.MemberId); err != nil {
 		log.Warn().Err(err).Str("vasp_id", in.MemberId).Msg("VASP not found")
 		return nil, status.Error(codes.NotFound, "requested VASP not found")
 	}

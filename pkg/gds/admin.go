@@ -172,7 +172,7 @@ func (s *Admin) setupRoutes() (err error) {
 		// Add searchable tags to the sentry context.
 		tags,
 
-		// Tracing helps us with our peformance metrics and should be as early in the
+		// Tracing helps us with our performance metrics and should be as early in the
 		// chain as possible. It is after recovery to ensure trace panics recover.
 		tracing,
 
@@ -283,7 +283,7 @@ func (s *Admin) ProtectAuthenticate(c *gin.Context) {
 
 // Authenticate expects a Google OAuth JWT token that is verified by the server. Once
 // verified, the JWT claims are authenticated against the server. Provided valid claims,
-// the server will issue access and referesh tokens that the client should submit in the
+// the server will issue access and refresh tokens that the client should submit in the
 // Authorization header for all future requests. This method also resets the CSRF double
 // cookies to ensure that max-age matches the duration of the refresh tokens.
 func (s *Admin) Authenticate(c *gin.Context) {
@@ -487,8 +487,11 @@ func (s *Admin) Summary(c *gin.Context) {
 		CertReqs: make(map[string]int),
 	}
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Query the list of VASPs from the data store to perform aggregation counts.
-	iter := s.db.ListVASPs()
+	iter := s.db.ListVASPs(ctx)
 	for iter.Next() {
 		// Fetch VASP from the database
 		var vasp *pb.VASP
@@ -530,7 +533,7 @@ func (s *Admin) Summary(c *gin.Context) {
 	iter.Release()
 
 	// Loop over certificate requests next
-	iter2 := s.db.ListCertReqs()
+	iter2 := s.db.ListCertReqs(ctx)
 	for iter2.Next() {
 		// Fetch CertificateRequest from the database
 		var certreq *models.CertificateRequest
@@ -570,7 +573,9 @@ func (s *Admin) Autocomplete(c *gin.Context) {
 	// than iterating over the VASPs; if the UI requires more complex information
 	// storage then the VASP iteration is better (or a better index). If it doesn't,
 	// then this should be refactored to simply fetch the index and return it.
-	iter := s.db.ListVASPs()
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+	iter := s.db.ListVASPs(ctx)
 	defer iter.Release()
 	for iter.Next() {
 		// Fetch VASP from the database
@@ -693,7 +698,7 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 			Registrations: make(map[string]int),
 		}
 
-		// Need to intialize the map entries so that all verification states show up in
+		// Need to initialize the map entries so that all verification states show up in
 		// the JSON output, even if the count is 0
 		var s int32
 		for s = 0; s <= int32(pb.VerificationState_ERRORED); s++ {
@@ -703,8 +708,11 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 		vaspCounts = append(vaspCounts, make(map[string]bool))
 	}
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Iterate over the VASPs and count registrations
-	iter := s.db.ListVASPs()
+	iter := s.db.ListVASPs(ctx)
 	defer iter.Release()
 	for iter.Next() {
 		// Fetch VASP from the database
@@ -765,7 +773,10 @@ func (s *Admin) ListCountries(c *gin.Context) {
 	// Count registrations by country
 	countries := make(map[string]int)
 
-	iter := s.db.ListVASPs()
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
+	iter := s.db.ListVASPs(ctx)
 	defer iter.Release()
 	for iter.Next() {
 		// Fetch VASP from the database
@@ -876,8 +887,11 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 		PageSize: in.PageSize,
 	}
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Query the list of VASPs from the data store
-	iter := s.db.ListVASPs()
+	iter := s.db.ListVASPs(ctx)
 	defer iter.Release()
 	for out.Count = 0; iter.Next(); out.Count++ {
 		if out.Count >= minIndex && out.Count < maxIndex {
@@ -953,8 +967,11 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 	vaspID = c.Param("vaspID")
 	logctx := log.With().Str("id", vaspID).Logger()
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Attempt to fetch the VASP from the database
-	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = s.db.RetrieveVASP(ctx, vaspID); err != nil {
 		logctx.Warn().Err(err).Msg("could not retrieve vasp")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
 		return
@@ -1097,8 +1114,11 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 	// Create a log context for downstream logging
 	logctx := log.With().Str("id", vaspID).Logger()
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Attempt to fetch the VASP from the database
-	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = s.db.RetrieveVASP(ctx, vaspID); err != nil {
 		logctx.Debug().Err(err).Msg("could not retrieve vasp")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
 		return
@@ -1198,7 +1218,7 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 
 	// Since updates have occurred, save the changes
 	// TODO: transactions would be super nice here so we could rollback any certificate request changes
-	if err = s.db.UpdateVASP(vasp); err != nil {
+	if err = s.db.UpdateVASP(ctx, vasp); err != nil {
 		logctx.Error().Err(err).Msg("could not save VASP after update")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP"))
 		return
@@ -1342,11 +1362,14 @@ func (s *Admin) updateVASPEndpoint(vasp *pb.VASP, commonName, endpoint, source s
 		return false, http.StatusInternalServerError, errors.New("could not update certificate request with common name")
 	}
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Loop through all of the certificate requests and check if they can be updated
 	ncertreqs := 0
 	for _, certreqID := range certreqs {
 		var certreq *models.CertificateRequest
-		if certreq, err = s.db.RetrieveCertReq(certreqID); err != nil {
+		if certreq, err = s.db.RetrieveCertReq(ctx, certreqID); err != nil {
 			log.Error().Err(err).Str("certreq_id", certreqID).Msg("could not fetch certificate request for VASP")
 			return false, http.StatusInternalServerError, errors.New("could not update certificate request with common name")
 		}
@@ -1365,7 +1388,7 @@ func (s *Admin) updateVASPEndpoint(vasp *pb.VASP, commonName, endpoint, source s
 		}
 
 		// Store the certificate request back to disk
-		if err = s.db.UpdateCertReq(certreq); err != nil {
+		if err = s.db.UpdateCertReq(ctx, certreq); err != nil {
 			log.Error().Err(err).Str("certreq_id", certreqID).Msg("could not update certificate request for VASP")
 			continue
 		}
@@ -1397,8 +1420,11 @@ func (s *Admin) DeleteVASP(c *gin.Context) {
 
 	vaspID = c.Param("vaspID")
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Retrieve the VASP from the database
-	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = s.db.RetrieveVASP(ctx, vaspID); err != nil {
 		log.Warn().Err(err).Msg("could not retrieve VASP from database")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
 		return
@@ -1420,7 +1446,7 @@ func (s *Admin) DeleteVASP(c *gin.Context) {
 
 	// Delete the certificate requests
 	for _, id := range certReqIDs {
-		if err = s.db.DeleteCertReq(id); err != nil {
+		if err = s.db.DeleteCertReq(ctx, id); err != nil {
 			log.Error().Err(err).Str("certreq_id", id).Msg("could not delete certificate request")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not delete associated certificate request"))
 			return
@@ -1428,7 +1454,7 @@ func (s *Admin) DeleteVASP(c *gin.Context) {
 	}
 
 	// Delete the VASP object to finalize the VASP deletion
-	if err = s.db.DeleteVASP(vaspID); err != nil {
+	if err = s.db.DeleteVASP(ctx, vaspID); err != nil {
 		log.Error().Err(err).Msg("could not delete VASP from database")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not delete VASP record by ID"))
 		return
@@ -1444,9 +1470,12 @@ func (s *Admin) ListCertificates(c *gin.Context) {
 	// Get vaspID from the URL
 	vaspID := c.Param("vaspID")
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Retrieve the VASP from the database
 	var vasp *pb.VASP
-	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = s.db.RetrieveVASP(ctx, vaspID); err != nil {
 		log.Warn().Err(err).Str("vasp_id", vaspID).Msg("could not retrieve VASP from database")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
 		return
@@ -1468,7 +1497,7 @@ func (s *Admin) ListCertificates(c *gin.Context) {
 	for _, id := range ids {
 		// Retrieve the Certificate from the database
 		var cert *models.Certificate
-		if cert, err = s.db.RetrieveCert(id); err != nil {
+		if cert, err = s.db.RetrieveCert(ctx, id); err != nil {
 			log.Error().Err(err).Str("cert_id", id).Msg("could not retrieve certificate from database")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve certificate by ID"))
 			return
@@ -1518,7 +1547,7 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 	// Sanity check: validate VASP ID
 	if in.VASP != "" && in.VASP != vaspID {
 		log.Warn().Str("id", in.VASP).Str("vasp_id", vaspID).Msg("mismatched request ID and URL")
-		c.JSON(http.StatusBadRequest, admin.ErrorResponse("the request ID does not mactch the URL endpoint"))
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("the request ID does not match the URL endpoint"))
 		return
 	}
 
@@ -1543,8 +1572,11 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 		return
 	}
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Retrieve the VASP from the database
-	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = s.db.RetrieveVASP(ctx, vaspID); err != nil {
 		log.Warn().Err(err).Msg("could not retrieve VASP from database")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
 		return
@@ -1615,7 +1647,7 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 	}
 
 	// Commit the contact changes to the database
-	if err = s.db.UpdateVASP(vasp); err != nil {
+	if err = s.db.UpdateVASP(ctx, vasp); err != nil {
 		log.Error().Err(err).Msg("could not update VASP in database")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record by ID"))
 		return
@@ -1635,8 +1667,11 @@ func (s *Admin) DeleteContact(c *gin.Context) {
 	vaspID := c.Param("vaspID")
 	kind := c.Param("kind")
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Retrieve the VASP from the database
-	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = s.db.RetrieveVASP(ctx, vaspID); err != nil {
 		log.Warn().Err(err).Msg("could not retrieve VASP from database")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
 		return
@@ -1664,7 +1699,7 @@ func (s *Admin) DeleteContact(c *gin.Context) {
 	}
 
 	// Commit the contact changes to the database
-	if err = s.db.UpdateVASP(vasp); err != nil {
+	if err = s.db.UpdateVASP(ctx, vasp); err != nil {
 		log.Error().Err(err).Msg("could not update VASP in database")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record by ID"))
 		return
@@ -1715,7 +1750,7 @@ func (s *Admin) CreateReviewNote(c *gin.Context) {
 		noteID = uuid.New().String()
 	} else {
 		noteID = in.NoteID
-		// Only allow reasonably-lengthed note IDs (generated IDs are also 36 characters)
+		// Only allow reasonable length note IDs (generated IDs are also 36 characters)
 		if len(noteID) > 36 {
 			log.Warn().Err(err).Msg("invalid note ID")
 			c.JSON(http.StatusBadRequest, admin.ErrorResponse("note ID cannot be longer than 36 characters"))
@@ -1730,8 +1765,11 @@ func (s *Admin) CreateReviewNote(c *gin.Context) {
 		}
 	}
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Lookup the VASP record associated with the request
-	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = s.db.RetrieveVASP(ctx, vaspID); err != nil {
 		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
 		return
@@ -1749,7 +1787,7 @@ func (s *Admin) CreateReviewNote(c *gin.Context) {
 	}
 
 	// Persist the VASP record to the database
-	if err = s.db.UpdateVASP(vasp); err != nil {
+	if err = s.db.UpdateVASP(ctx, vasp); err != nil {
 		log.Error().Err(err).Msg("error updating VASP record")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record"))
 		return
@@ -1778,8 +1816,11 @@ func (s *Admin) ListReviewNotes(c *gin.Context) {
 	// Get vaspID from the URL
 	vaspID = c.Param("vaspID")
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Lookup the VASP record associated with the request
-	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = s.db.RetrieveVASP(ctx, vaspID); err != nil {
 		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
 		return
@@ -1810,7 +1851,7 @@ func (s *Admin) ListReviewNotes(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
-// UpdateReivewNote updates the text of a review note given vaspIP and noteID params
+// UpdateReviewNote updates the text of a review note given vaspIP and noteID params
 // and an UpdateReviewNoteRequest.
 func (s *Admin) UpdateReviewNote(c *gin.Context) {
 	var (
@@ -1856,8 +1897,11 @@ func (s *Admin) UpdateReviewNote(c *gin.Context) {
 		return
 	}
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Lookup the VASP record associated with the request
-	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = s.db.RetrieveVASP(ctx, vaspID); err != nil {
 		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
 		return
@@ -1875,7 +1919,7 @@ func (s *Admin) UpdateReviewNote(c *gin.Context) {
 	}
 
 	// Persist the VASP record to the database
-	if err = s.db.UpdateVASP(vasp); err != nil {
+	if err = s.db.UpdateVASP(ctx, vasp); err != nil {
 		log.Error().Err(err).Msg("error updating VASP record")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record"))
 		return
@@ -1904,8 +1948,11 @@ func (s *Admin) DeleteReviewNote(c *gin.Context) {
 	vaspID = c.Param("vaspID")
 	noteID = c.Param("noteID")
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Lookup the VASP record associated with the request
-	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = s.db.RetrieveVASP(ctx, vaspID); err != nil {
 		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
 		return
@@ -1923,7 +1970,7 @@ func (s *Admin) DeleteReviewNote(c *gin.Context) {
 	}
 
 	// Persist the VASP record to the database
-	if err = s.db.UpdateVASP(vasp); err != nil {
+	if err = s.db.UpdateVASP(ctx, vasp); err != nil {
 		log.Error().Err(err).Msg("error updating VASP record")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record"))
 		return
@@ -1945,8 +1992,11 @@ func (s *Admin) ReviewToken(c *gin.Context) {
 	// Get vaspID from the URL
 	vaspID = c.Param("vaspID")
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Lookup the VASP record associated with the request
-	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = s.db.RetrieveVASP(ctx, vaspID); err != nil {
 		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
 		return
@@ -2022,8 +2072,11 @@ func (s *Admin) Review(c *gin.Context) {
 		return
 	}
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Lookup the VASP record associated with the request
-	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = s.db.RetrieveVASP(ctx, vaspID); err != nil {
 		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
 		return
@@ -2067,7 +2120,7 @@ func (s *Admin) Review(c *gin.Context) {
 	}
 
 	// Persist the VASP record to the database
-	if err = s.db.UpdateVASP(vasp); err != nil {
+	if err = s.db.UpdateVASP(ctx, vasp); err != nil {
 		log.Error().Err(err).Msg("error updating VASP record")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update VASP record"))
 		return
@@ -2081,6 +2134,9 @@ func (s *Admin) Review(c *gin.Context) {
 
 // Accept the VASP registration and begin the certificate issuance process.
 func (s *Admin) acceptRegistration(vasp *pb.VASP, claims *tokens.Claims) (msg string, err error) {
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Change the VASP verification status
 	if err = models.SetAdminVerificationToken(vasp, ""); err != nil {
 		return "", err
@@ -2089,7 +2145,7 @@ func (s *Admin) acceptRegistration(vasp *pb.VASP, claims *tokens.Claims) (msg st
 	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_REVIEWED, "registration request received", claims.Email); err != nil {
 		return "", err
 	}
-	if err = s.db.UpdateVASP(vasp); err != nil {
+	if err = s.db.UpdateVASP(ctx, vasp); err != nil {
 		return "", err
 	}
 
@@ -2107,7 +2163,7 @@ func (s *Admin) acceptRegistration(vasp *pb.VASP, claims *tokens.Claims) (msg st
 
 	for _, careqID := range careqs {
 		var careq *models.CertificateRequest
-		if careq, err = s.db.RetrieveCertReq(careqID); err != nil {
+		if careq, err = s.db.RetrieveCertReq(ctx, careqID); err != nil {
 			log.Error().Err(err).Str("vasp", vasp.Id).Str("certreq", careqID).Msg("could not retrieve certificate request for VASP")
 			continue
 		}
@@ -2122,7 +2178,7 @@ func (s *Admin) acceptRegistration(vasp *pb.VASP, claims *tokens.Claims) (msg st
 			if err = models.UpdateCertificateRequestStatus(careq, models.CertificateRequestState_READY_TO_SUBMIT, "registration request received", claims.Email); err != nil {
 				return "", err
 			}
-			if err = s.db.UpdateCertReq(careq); err != nil {
+			if err = s.db.UpdateCertReq(ctx, careq); err != nil {
 				return "", err
 			}
 			ncertreqs++
@@ -2148,6 +2204,9 @@ func (s *Admin) acceptRegistration(vasp *pb.VASP, claims *tokens.Claims) (msg st
 
 // Reject the VASP registration and notify the contacts of the result.
 func (s *Admin) rejectRegistration(vasp *pb.VASP, reason string, claims *tokens.Claims) (msg string, err error) {
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Change the VASP verification status
 	if err = models.SetAdminVerificationToken(vasp, ""); err != nil {
 		return "", err
@@ -2155,7 +2214,7 @@ func (s *Admin) rejectRegistration(vasp *pb.VASP, reason string, claims *tokens.
 	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_REJECTED, "registration rejected", claims.Email); err != nil {
 		return "", err
 	}
-	if err = s.db.UpdateVASP(vasp); err != nil {
+	if err = s.db.UpdateVASP(ctx, vasp); err != nil {
 		return "", err
 	}
 
@@ -2171,7 +2230,7 @@ func (s *Admin) rejectRegistration(vasp *pb.VASP, reason string, claims *tokens.
 
 	for _, careqID := range careqs {
 		var careq *models.CertificateRequest
-		if careq, err = s.db.RetrieveCertReq(careqID); err != nil {
+		if careq, err = s.db.RetrieveCertReq(ctx, careqID); err != nil {
 			log.Error().Err(err).Str("vasp", vasp.Id).Str("certreq", careqID).Msg("could not retrieve certificate request for VASP")
 			continue
 		}
@@ -2183,7 +2242,7 @@ func (s *Admin) rejectRegistration(vasp *pb.VASP, reason string, claims *tokens.
 		}
 
 		// Delete the certificate request
-		if err = s.db.DeleteCertReq(careq.Id); err != nil {
+		if err = s.db.DeleteCertReq(ctx, careq.Id); err != nil {
 			log.Error().Err(err).Str("id", careq.Id).Msg("could not delete certificate request")
 			continue
 		}
@@ -2191,7 +2250,7 @@ func (s *Admin) rejectRegistration(vasp *pb.VASP, reason string, claims *tokens.
 		// Delete the VASP reference to the certificate request
 		if err = models.DeleteCertReqID(vasp, careq.Id); err != nil {
 			log.Error().Err(err).Str("vasp", vasp.Id).Str("certreq", careq.Id).Msg("could not delete certificate request ID from VASP")
-		} else if err = s.db.UpdateVASP(vasp); err != nil {
+		} else if err = s.db.UpdateVASP(ctx, vasp); err != nil {
 			log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update VASP with deleted certificate request ID")
 		}
 		ncertreqs++
@@ -2248,8 +2307,11 @@ func (s *Admin) Resend(c *gin.Context) {
 		return
 	}
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Lookup the VASP record associated with the resend request
-	if vasp, err = s.db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = s.db.RetrieveVASP(ctx, vaspID); err != nil {
 		log.Warn().Err(err).Str("id", vaspID).Msg("could not retrieve vasp")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
 		return
@@ -2310,7 +2372,7 @@ func (s *Admin) Resend(c *gin.Context) {
 		return
 	}
 
-	if err = s.db.UpdateVASP(vasp); err != nil {
+	if err = s.db.UpdateVASP(ctx, vasp); err != nil {
 		log.Error().Str("id", vasp.Id).Msg("error updating email logs on VASP")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(fmt.Errorf("could not update VASP record: %s", err)))
 		return

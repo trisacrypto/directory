@@ -27,6 +27,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/store"
+	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/whisper"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -312,8 +313,11 @@ func notify(c *cli.Context) (err error) {
 	vaspID := c.String("vasp")
 	fmt.Printf("looking up vasp with id %s\n", vaspID)
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Step 1: Fetch the VASP record
-	if vasp, err = db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = db.RetrieveVASP(ctx, vaspID); err != nil {
 		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
 	}
 
@@ -357,8 +361,11 @@ func reissueCerts(c *cli.Context) (err error) {
 	vaspID := c.String("vasp")
 	fmt.Printf("looking up vasp with id %s\n", vaspID)
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Step 1: Fetch the VASP record
-	if vasp, err = db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = db.RetrieveVASP(ctx, vaspID); err != nil {
 		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
 	}
 
@@ -399,9 +406,6 @@ func reissueCerts(c *cli.Context) (err error) {
 	secretType := "password"
 	pkcs12password = secrets.CreateToken(16)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
 	if err = sm.With(certreq.Id).CreateSecret(ctx, secretType); err != nil {
 		return cli.Exit(fmt.Errorf("could not create password secret: %s", err), 1)
 	}
@@ -427,7 +431,7 @@ func reissueCerts(c *cli.Context) (err error) {
 	fmt.Printf("successfully sent %d Whisper password notifications for PKCS12 password %q\n", nsent, pkcs12password)
 
 	// Save certificate request to database
-	if err = db.UpdateCertReq(certreq); err != nil {
+	if err = db.UpdateCertReq(ctx, certreq); err != nil {
 		return cli.Exit(fmt.Errorf("could not save certreq: %s", err), 1)
 	}
 
@@ -436,7 +440,7 @@ func reissueCerts(c *cli.Context) (err error) {
 		return cli.Exit(fmt.Errorf("could not append certreq to VASP: %s", err), 1)
 	}
 
-	if err = db.UpdateVASP(vasp); err != nil {
+	if err = db.UpdateVASP(ctx, vasp); err != nil {
 		return cli.Exit(fmt.Errorf("could not save vasp: %s", err), 1)
 	}
 
@@ -531,8 +535,11 @@ func revokeCerts(c *cli.Context) (err error) {
 	vaspID := c.String("vasp")
 	fmt.Printf("lookup vasp with id %s\n", vaspID)
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	var vasp *pb.VASP
-	if vasp, err = db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = db.RetrieveVASP(ctx, vaspID); err != nil {
 		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
 	}
 
@@ -552,7 +559,7 @@ func revokeCerts(c *cli.Context) (err error) {
 
 	for _, crid := range certreqs {
 		var certreq *models.CertificateRequest
-		if certreq, err = db.RetrieveCertReq(crid); err != nil {
+		if certreq, err = db.RetrieveCertReq(ctx, crid); err != nil {
 			fmt.Printf("error retrieving certreq %s: %s\n", crid, err)
 			continue
 		}
@@ -569,7 +576,7 @@ func revokeCerts(c *cli.Context) (err error) {
 				continue
 			}
 
-			if err = db.UpdateCertReq(certreq); err != nil {
+			if err = db.UpdateCertReq(ctx, certreq); err != nil {
 				fmt.Printf("could not save certreq %s: %s\n", crid, err)
 			}
 
@@ -602,7 +609,7 @@ func revokeCerts(c *cli.Context) (err error) {
 		return cli.Exit(fmt.Errorf("could not update VASP status: %s", err), 1)
 	}
 
-	if err = db.UpdateVASP(vasp); err != nil {
+	if err = db.UpdateVASP(ctx, vasp); err != nil {
 		return cli.Exit(fmt.Errorf("could not save VASP: %s", err), 1)
 	}
 
@@ -624,8 +631,11 @@ func rereview(c *cli.Context) (err error) {
 	vaspID := c.String("vasp")
 	fmt.Printf("lookup vasp with id %s\n", vaspID)
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	var vasp *pb.VASP
-	if vasp, err = db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = db.RetrieveVASP(ctx, vaspID); err != nil {
 		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
 	}
 
@@ -658,7 +668,7 @@ func rereview(c *cli.Context) (err error) {
 		vasp.VerifiedOn = time.Now().Format(time.RFC3339Nano)
 	}
 
-	if err = db.UpdateVASP(vasp); err != nil {
+	if err = db.UpdateVASP(ctx, vasp); err != nil {
 		return cli.Exit(fmt.Errorf("could not save VASP: %s", err), 1)
 	}
 
@@ -670,8 +680,11 @@ func destroy(c *cli.Context) (err error) {
 	vaspID := c.String("vasp")
 	fmt.Printf("lookup vasp with id %s\n", vaspID)
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	var vasp *pb.VASP
-	if vasp, err = db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = db.RetrieveVASP(ctx, vaspID); err != nil {
 		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
 	}
 
@@ -686,7 +699,7 @@ func destroy(c *cli.Context) (err error) {
 		}
 	}
 
-	if err = db.DeleteVASP(vaspID); err != nil {
+	if err = db.DeleteVASP(ctx, vaspID); err != nil {
 		return cli.Exit(fmt.Errorf("could not delete record: %s", err), 1)
 	}
 	return nil
@@ -696,8 +709,11 @@ func vaspStatus(c *cli.Context) (err error) {
 	vaspID := c.String("vasp")
 	fmt.Printf("lookup vasp with id %s\n", vaspID)
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	var vasp *pb.VASP
-	if vasp, err = db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = db.RetrieveVASP(ctx, vaspID); err != nil {
 		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
 	}
 
@@ -710,7 +726,7 @@ func vaspStatus(c *cli.Context) (err error) {
 	}
 
 	for i, certreq := range certreqs {
-		ca, err := db.RetrieveCertReq(certreq)
+		ca, err := db.RetrieveCertReq(ctx, certreq)
 		if err != nil {
 			return cli.Exit(err, 1)
 		}
@@ -784,8 +800,11 @@ func addDNSNames(c *cli.Context) (err error) {
 	vaspID := c.String("vasp")
 	fmt.Printf("lookup vasp with id %s\n", vaspID)
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	var vasp *pb.VASP
-	if vasp, err = db.RetrieveVASP(vaspID); err != nil {
+	if vasp, err = db.RetrieveVASP(ctx, vaspID); err != nil {
 		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
 	}
 
@@ -795,7 +814,7 @@ func addDNSNames(c *cli.Context) (err error) {
 	}
 
 	for _, certreq := range certreqs {
-		ca, err := db.RetrieveCertReq(certreq)
+		ca, err := db.RetrieveCertReq(ctx, certreq)
 		if err != nil {
 			return cli.Exit(err, 1)
 		}
@@ -811,7 +830,7 @@ func addDNSNames(c *cli.Context) (err error) {
 
 			ca.DnsNames = append(ca.DnsNames, dnsNames...)
 
-			if err = db.UpdateCertReq(ca); err != nil {
+			if err = db.UpdateCertReq(ctx, ca); err != nil {
 				return cli.Exit(err, 1)
 			}
 		}

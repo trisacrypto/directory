@@ -17,6 +17,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/store"
+	"github.com/trisacrypto/directory/pkg/utils"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc"
@@ -179,15 +180,19 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 	}
 
 	// Set verification status to SUBMITTED.
-	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_SUBMITTED, "register request recevied", email); err != nil {
+	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_SUBMITTED, "register request received", email); err != nil {
 		log.Warn().Err(err).Msg("could not update VASP verification status")
 		return nil, status.Error(codes.Aborted, "could not add new entry to VASP audit log")
+	}
+
+	if _, ok := ctx.Deadline(); !ok {
+		ctx, _ = utils.WithContext(ctx)
 	}
 
 	// TODO: create legal entity hash to detect a repeat registration without ID
 	// TODO: add signature to leveldb indices
 	// TODO: check already exists and uniqueness constraints
-	if vasp.Id, err = s.db.CreateVASP(vasp); err != nil {
+	if vasp.Id, err = s.db.CreateVASP(ctx, vasp); err != nil {
 		// Assuming uniqueness is the primary constraint here
 		// TODO: better database error checking or handling
 		log.Warn().Err(err).Msg("could not register VASP in database")
@@ -210,7 +215,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 		}
 	}
 
-	if err = s.db.UpdateVASP(vasp); err != nil {
+	if err = s.db.UpdateVASP(ctx, vasp); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update vasp with contact verification tokens")
 		return nil, status.Error(codes.Aborted, "could not send contact verification emails")
 	}
@@ -225,7 +230,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 		// Log successful contact verification emails sent
 		log.Info().Int("sent", sent).Msg("contact email verifications sent")
 
-		if err = s.db.UpdateVASP(vasp); err != nil {
+		if err = s.db.UpdateVASP(ctx, vasp); err != nil {
 			log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update email logs on vasp")
 			return nil, status.Error(codes.Aborted, "could not update vasp record")
 		}
@@ -256,7 +261,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 	}
 
 	// Create certificate request
-	if err = s.db.UpdateCertReq(certRequest); err != nil {
+	if err = s.db.UpdateCertReq(ctx, certRequest); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not save certificate request")
 		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
 	}
@@ -268,7 +273,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 	}
 
 	// Store VASP with updated certificate requests
-	if err = s.db.UpdateVASP(vasp); err != nil {
+	if err = s.db.UpdateVASP(ctx, vasp); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update vasp with certificate request ID")
 		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
 	}
@@ -287,17 +292,21 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 // Lookup a VASP entity by name or ID to get full details including the TRISA certification
 // if it exists and the entity has been verified.
 func (s *GDS) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.LookupReply, err error) {
+	if _, ok := ctx.Deadline(); !ok {
+		ctx, _ = utils.WithContext(ctx)
+	}
+
 	var vasp *pb.VASP
 	switch {
 	case in.Id != "":
 		// TODO: add registered directory to lookup
-		if vasp, err = s.db.RetrieveVASP(in.Id); err != nil {
+		if vasp, err = s.db.RetrieveVASP(ctx, in.Id); err != nil {
 			log.Debug().Err(err).Str("id", in.Id).Str("registered_directory", in.RegisteredDirectory).Msg("could not find VASP by ID")
 			return nil, status.Error(codes.NotFound, "could not find VASP by ID")
 		}
 	case in.CommonName != "":
 		var vasps []*pb.VASP
-		if vasps, err = s.db.SearchVASPs(map[string]interface{}{"name": in.CommonName}); err != nil {
+		if vasps, err = s.db.SearchVASPs(ctx, map[string]interface{}{"name": in.CommonName}); err != nil {
 			log.Warn().Err(err).Str("common_name", in.CommonName).Msg("could not search for common name")
 			return nil, status.Error(codes.NotFound, "could not find VASP by common name")
 		}
@@ -351,6 +360,10 @@ func (s *GDS) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.Looku
 // Search for VASP entity records by name or by country in order to perform more detailed
 // Lookup requests. The search process is purposefully simplistic at the moment.
 func (s *GDS) Search(ctx context.Context, in *api.SearchRequest) (out *api.SearchReply, err error) {
+	if _, ok := ctx.Deadline(); !ok {
+		ctx, _ = utils.WithContext(ctx)
+	}
+
 	// Create search query to send to database
 	query := make(map[string]interface{})
 	query["name"] = in.Name
@@ -366,7 +379,7 @@ func (s *GDS) Search(ctx context.Context, in *api.SearchRequest) (out *api.Searc
 	query["category"] = categories
 
 	var vasps []*pb.VASP
-	if vasps, err = s.db.SearchVASPs(query); err != nil {
+	if vasps, err = s.db.SearchVASPs(ctx, query); err != nil {
 		log.Error().Err(err).Msg("vasp search failed")
 		return nil, status.Error(codes.Aborted, err.Error())
 	}
@@ -402,17 +415,21 @@ func (s *GDS) Search(ctx context.Context, in *api.SearchRequest) (out *api.Searc
 // Verification returns the status of a VASP including its verification and service
 // status if the directory service is performing health check monitoring.
 func (s *GDS) Verification(ctx context.Context, in *api.VerificationRequest) (out *api.VerificationReply, err error) {
+	if _, ok := ctx.Deadline(); !ok {
+		ctx, _ = utils.WithContext(ctx)
+	}
+
 	var vasp *pb.VASP
 	switch {
 	case in.Id != "":
 		// TODO: add registered directory to retrieve
-		if vasp, err = s.db.RetrieveVASP(in.Id); err != nil {
+		if vasp, err = s.db.RetrieveVASP(ctx, in.Id); err != nil {
 			log.Debug().Err(err).Str("id", in.Id).Str("registered_directory", in.RegisteredDirectory).Msg("could not find VASP by ID")
 			return nil, status.Error(codes.NotFound, "could not find VASP by ID")
 		}
 	case in.CommonName != "":
 		var vasps []*pb.VASP
-		if vasps, err = s.db.SearchVASPs(map[string]interface{}{"name": in.CommonName}); err != nil {
+		if vasps, err = s.db.SearchVASPs(ctx, map[string]interface{}{"name": in.CommonName}); err != nil {
 			log.Warn().Err(err).Str("common_name", in.CommonName).Msg("could not search for common name")
 			return nil, status.Error(codes.NotFound, "could not find VASP by common name")
 		}
@@ -454,9 +471,13 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 		return nil, status.Error(codes.InvalidArgument, "could not verify contact: verification token missing from request")
 	}
 
+	if _, ok := ctx.Deadline(); !ok {
+		ctx, _ = utils.WithContext(ctx)
+	}
+
 	// Retrieve VASP associated with contact from the database.
 	var vasp *pb.VASP
-	if vasp, err = s.db.RetrieveVASP(in.Id); err != nil {
+	if vasp, err = s.db.RetrieveVASP(ctx, in.Id); err != nil {
 		log.Warn().Err(err).Str("id", in.Id).Msg("could not retrieve vasp")
 		return nil, status.Error(codes.NotFound, "could not find associated VASP record by ID")
 	}
@@ -510,7 +531,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 	// registration review email and do nothing.
 	if prevVerified > 0 && vasp.VerificationStatus > pb.VerificationState_SUBMITTED {
 		// Save the updated contact
-		if err = s.db.UpdateVASP(vasp); err != nil {
+		if err = s.db.UpdateVASP(ctx, vasp); err != nil {
 			log.Error().Err(err).Msg("could not update VASP record after contact verification")
 			return nil, status.Error(codes.Internal, "could not update contact after verification")
 		}
@@ -535,7 +556,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 		log.Error().Err(err).Msg("could not create admin verification token")
 		return nil, status.Error(codes.FailedPrecondition, "there was a problem submitting your registration review request, please contact the admins")
 	}
-	if err = s.db.UpdateVASP(vasp); err != nil {
+	if err = s.db.UpdateVASP(ctx, vasp); err != nil {
 		log.Error().Err(err).Msg("could not save admin verification token")
 		return nil, status.Error(codes.FailedPrecondition, "there was a problem submitting your registration review request, please contact the admins")
 	}
@@ -560,7 +581,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 	}
 
 	// Save the VASP and newly created certificate request
-	if err = s.db.UpdateVASP(vasp); err != nil {
+	if err = s.db.UpdateVASP(ctx, vasp); err != nil {
 		log.Error().Err(err).Msg("could not update vasp status to pending review")
 		return nil, status.Error(codes.Internal, "there was a problem submitting your registration review request, please contact the admins")
 	}

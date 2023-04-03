@@ -22,6 +22,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/sectigo/mock"
 	"github.com/trisacrypto/directory/pkg/store"
+	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/whisper"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/trisacrypto/trisa/pkg/trust"
@@ -167,7 +168,10 @@ func (c *CertificateManager) HandleCertificateRequests() {
 		err       error
 	)
 
-	careqs := c.db.ListCertReqs()
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
+	careqs := c.db.ListCertReqs(ctx)
 	defer careqs.Release()
 	log.Debug().Msg("cert-manager checking certificate request pipelines")
 
@@ -190,7 +194,7 @@ func (c *CertificateManager) HandleCertificateRequests() {
 					vasp *pb.VASP
 					err  error
 				)
-				if vasp, err = c.db.RetrieveVASP(req.Vasp); err != nil {
+				if vasp, err = c.db.RetrieveVASP(ctx, req.Vasp); err != nil {
 					logctx.Error().Str("vasp_id", req.Vasp).Msg("could not retrieve vasp for certificate request submission")
 					return
 				}
@@ -202,7 +206,7 @@ func (c *CertificateManager) HandleCertificateRequests() {
 						logctx.Error().Err(err).Msg("could not update certificate request status")
 						return
 					}
-					if err = c.db.UpdateCertReq(req); err != nil {
+					if err = c.db.UpdateCertReq(ctx, req); err != nil {
 						logctx.Error().Err(err).Msg("could not save updated certificate request")
 						return
 					}
@@ -245,11 +249,14 @@ func (c *CertificateManager) HandleCertificateRequests() {
 }
 
 func (c *CertificateManager) submitCertificateRequest(r *models.CertificateRequest, vasp *pb.VASP) (err error) {
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Step 0: mark the VASP status as issuing certificates
 	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_ISSUING_CERTIFICATE, "issuing certificate", "automated"); err != nil {
 		return err
 	}
-	if err = c.db.UpdateVASP(vasp); err != nil {
+	if err = c.db.UpdateVASP(ctx, vasp); err != nil {
 		return fmt.Errorf("could not update VASP status: %s", err)
 	}
 
@@ -324,7 +331,7 @@ func (c *CertificateManager) submitCertificateRequest(r *models.CertificateReque
 	if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_PROCESSING, "certificate submitted", "automated"); err != nil {
 		return fmt.Errorf("could not update certificate request status: %s", err)
 	}
-	if err = c.db.UpdateCertReq(r); err != nil {
+	if err = c.db.UpdateCertReq(ctx, r); err != nil {
 		return fmt.Errorf("could not update certificate with batch details: %s", err)
 	}
 
@@ -368,12 +375,15 @@ func (c *CertificateManager) checkCertificateRequest(r *models.CertificateReques
 		Int("success", proc.Success).
 		Msg("batch processing status")
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Step 3: check active - if there is still an active batch then delay
 	if proc.Active > 0 {
 		if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_PROCESSING, "awaiting batch processing", "automated"); err != nil {
 			return fmt.Errorf("could not update certificate request status: %s", err)
 		}
-		if err = c.db.UpdateCertReq(r); err != nil {
+		if err = c.db.UpdateCertReq(ctx, r); err != nil {
 			return fmt.Errorf("could not save updated cert request: %s", err)
 		}
 		return nil
@@ -410,7 +420,7 @@ func (c *CertificateManager) checkCertificateRequest(r *models.CertificateReques
 				logctx.Warn().Msg("certificate request errored")
 			}
 
-			if err = c.db.UpdateCertReq(r); err != nil {
+			if err = c.db.UpdateCertReq(ctx, r); err != nil {
 				return fmt.Errorf("could not save updated cert request: %s", err)
 			}
 			return nil
@@ -427,7 +437,7 @@ func (c *CertificateManager) checkCertificateRequest(r *models.CertificateReques
 		if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_PROCESSING, "unhandled sectigo state", "automated"); err != nil {
 			return fmt.Errorf("could not update certificate request status: %s", err)
 		}
-		if err = c.db.UpdateCertReq(r); err != nil {
+		if err = c.db.UpdateCertReq(ctx, r); err != nil {
 			return fmt.Errorf("could not save updated cert request: %s", err)
 		}
 		return nil
@@ -437,13 +447,13 @@ func (c *CertificateManager) checkCertificateRequest(r *models.CertificateReques
 	if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_DOWNLOADING, "certificate ready for download", "automated"); err != nil {
 		return fmt.Errorf("could not update certificate request status: %s", err)
 	}
-	if err = c.db.UpdateCertReq(r); err != nil {
+	if err = c.db.UpdateCertReq(ctx, r); err != nil {
 		return fmt.Errorf("could not save updated cert request: %s", err)
 	}
 
 	// Fetch the VASP from the certificate request
 	var vasp *pb.VASP
-	if vasp, err = c.db.RetrieveVASP(r.Vasp); err != nil {
+	if vasp, err = c.db.RetrieveVASP(ctx, r.Vasp); err != nil {
 		return fmt.Errorf("could not retrieve vasp: %s", err)
 	}
 
@@ -453,7 +463,7 @@ func (c *CertificateManager) checkCertificateRequest(r *models.CertificateReques
 		if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_CR_REJECTED, "rejecting certificate request", "automated"); err != nil {
 			return fmt.Errorf("could not update certificate request status: %s", err)
 		}
-		if err = c.db.UpdateCertReq(r); err != nil {
+		if err = c.db.UpdateCertReq(ctx, r); err != nil {
 			return fmt.Errorf("could not save updated cert request: %s", err)
 		}
 		return nil
@@ -516,12 +526,15 @@ func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateReq
 		return
 	}
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Mark as downloaded.
 	if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_DOWNLOADED, "certificate downloaded", "automated"); err != nil {
 		log.Error().Err(err).Msg("could not update certificate request status")
 		return
 	}
-	if err = c.db.UpdateCertReq(r); err != nil {
+	if err = c.db.UpdateCertReq(ctx, r); err != nil {
 		log.Error().Err(err).Msg("could not save updated cert request")
 		return
 	}
@@ -552,7 +565,7 @@ func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateReq
 	}
 
 	// Update the certificate record
-	if err = c.db.UpdateCert(cert); err != nil {
+	if err = c.db.UpdateCert(ctx, cert); err != nil {
 		log.Error().Err(err).Msg("could not update certificate record")
 		return
 	}
@@ -569,7 +582,7 @@ func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateReq
 		log.Error().Err(err).Msg("could not update VASP verification status")
 		return
 	}
-	if err = c.db.UpdateVASP(vasp); err != nil {
+	if err = c.db.UpdateVASP(ctx, vasp); err != nil {
 		log.Error().Err(err).Msg("could not update VASP status as verified")
 		return
 	}
@@ -581,7 +594,7 @@ func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateReq
 		return
 	}
 
-	if err = c.db.UpdateVASP(vasp); err != nil {
+	if err = c.db.UpdateVASP(ctx, vasp); err != nil {
 		log.Error().Err(err).Msg("could not update VASP email logs")
 		return
 	}
@@ -592,7 +605,7 @@ func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateReq
 		return
 	}
 	r.Status = models.CertificateRequestState_COMPLETED
-	if err = c.db.UpdateCertReq(r); err != nil {
+	if err = c.db.UpdateCertReq(ctx, r); err != nil {
 		log.Error().Err(err).Msg("could not save updated cert request")
 		return
 	}
@@ -712,8 +725,11 @@ func (c *CertificateManager) HandleCertificateReissuance() {
 		expirationDate time.Time
 	)
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Iterate through the VASPs in the database.
-	vasps := c.db.ListVASPs()
+	vasps := c.db.ListVASPs(ctx)
 	defer vasps.Release()
 vaspsLoop:
 	for vasps.Next() {
@@ -758,12 +774,12 @@ vaspsLoop:
 		// If a certificate has expired, update the certificate record.
 		case daysBeforeExpiration <= 0:
 			var cert *models.Certificate
-			if cert, err = c.db.RetrieveCert(models.GetCertID(identityCert)); err != nil {
+			if cert, err = c.db.RetrieveCert(ctx, models.GetCertID(identityCert)); err != nil {
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not retrieve expired certificate record")
 				continue vaspsLoop
 			}
 			cert.Status = models.CertificateState_EXPIRED
-			if err = c.db.UpdateCert(cert); err != nil {
+			if err = c.db.UpdateCert(ctx, cert); err != nil {
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not update expired certificate record status")
 			}
 
@@ -825,7 +841,7 @@ vaspsLoop:
 
 		if !bytes.Equal(sig, updated) {
 			// We need to update the vasp record in the database so that the email logs are preserved.
-			if err = c.db.UpdateVASP(vasp); err != nil {
+			if err = c.db.UpdateVASP(ctx, vasp); err != nil {
 				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error updating the VASP record in the database")
 				continue vaspsLoop
 			}
@@ -850,9 +866,12 @@ func (c *CertificateManager) reissuanceInProgress(vasp *pb.VASP) (_ bool, err er
 		return false, nil
 	}
 
+	ctx, cancel := utils.WithContext(context.Background())
+	defer cancel()
+
 	// Get the certificate request from the database.
 	var certReq *models.CertificateRequest
-	if certReq, err = c.db.RetrieveCertReq(certReqID); err != nil {
+	if certReq, err = c.db.RetrieveCertReq(ctx, certReqID); err != nil {
 		return false, err
 	}
 
@@ -887,7 +906,7 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) (err err
 	pkcs12password := secrets.CreateToken(16)
 	whisperPasswordTemplate := "Below is the PKCS12 password which you must use to decrypt your new certificates:\n\n%s\n"
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := utils.WithContext(context.Background())
 	defer cancel()
 
 	// Create a new secret using the secret manager.
@@ -909,7 +928,7 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) (err err
 	}
 
 	// Update the certificate request in the datastore.
-	if err = c.db.UpdateCertReq(certreq); err != nil {
+	if err = c.db.UpdateCertReq(ctx, certreq); err != nil {
 		return fmt.Errorf("error updating certificate request for vasp %s", vasp.Id)
 	}
 
@@ -919,7 +938,7 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) (err err
 	}
 
 	// Update the VASP information in the datastore.
-	if err = c.db.UpdateVASP(vasp); err != nil {
+	if err = c.db.UpdateVASP(ctx, vasp); err != nil {
 		return fmt.Errorf("error updating vasp %s in the certman store", vasp.Id)
 	}
 	return nil
