@@ -173,8 +173,9 @@ func (s *Members) List(ctx context.Context, in *api.ListRequest) (out *api.ListR
 	}
 
 	// Create the VASPs iterator to begin collecting validated VASPs data
-	ctx, cancel := utils.WithContext(context.Background())
-	defer cancel()
+	if _, ok := ctx.Deadline(); !ok {
+		ctx, _ = utils.WithContext(context.Background())
+	}
 	iter := s.db.ListVASPs(ctx)
 	defer iter.Release()
 
@@ -258,8 +259,9 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 	// Create response
 	out = &api.SummaryReply{}
 
-	ctx, cancel := utils.WithContext(context.Background())
-	defer cancel()
+	if _, ok := ctx.Deadline(); !ok {
+		ctx, _ = utils.WithContext(context.Background())
+	}
 
 	if in.MemberId != "" {
 		// Fetch the requested VASP if provided
@@ -322,8 +324,9 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 func (s *Members) Details(ctx context.Context, in *api.DetailsRequest) (out *api.MemberDetails, err error) {
 	// Fetch the requested VASP if provided
 	var vasp *pb.VASP
-	ctx, cancel := utils.WithContext(context.Background())
-	defer cancel()
+	if _, ok := ctx.Deadline(); !ok {
+		ctx, _ = utils.WithContext(context.Background())
+	}
 	if vasp, err = s.db.RetrieveVASP(ctx, in.MemberId); err != nil {
 		log.Warn().Err(err).Str("vasp_id", in.MemberId).Msg("VASP not found")
 		return nil, status.Error(codes.NotFound, "requested VASP not found")
