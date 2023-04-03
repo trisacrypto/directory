@@ -27,7 +27,8 @@ const Login: React.FC<LoginProps> = ({ handleSignWithSocial, handleSignWithEmail
       <Button
         data-testid="signin-with-google"
         bg={'white'}
-        border="1px solid"
+        border="1px gray solid"
+        pl={-2}
         w="100%"
         size="lg"
         borderRadius="none"
@@ -52,8 +53,9 @@ const Login: React.FC<LoginProps> = ({ handleSignWithSocial, handleSignWithEmail
       <Button
         data-testid="signin-with-github"
         bg={'white'}
-        border="1px solid"
+        border="1px gray solid"
         w="100%"
+        pl={-2}
         size="lg"
         borderRadius="none"
         onClick={(event: any) => handleSignWithSocial(event, 'github')}
@@ -70,17 +72,17 @@ const Login: React.FC<LoginProps> = ({ handleSignWithSocial, handleSignWithEmail
             <GithubIcon h={24} />
           </Box>
           <Text as={'span'} fontSize="md">
-            <Trans id="Continue with Github">Continue with Github</Trans>
+            <Trans id="Continue with GitHub">Continue with GitHub</Trans>
           </Text>
         </HStack>
       </Button>
       <Button
         data-testid="signin-with-microsoft"
         bg={'white'}
-        border="1px solid"
+        border="1px gray solid"
         w="100%"
-        pl={'32px'}
         size="lg"
+        pl="4"
         borderRadius="none"
         onClick={(event: any) => handleSignWithSocial(event, 'microsoft')}
         color={'gray.600'}
@@ -95,9 +97,9 @@ const Login: React.FC<LoginProps> = ({ handleSignWithSocial, handleSignWithEmail
           <Box pos={'absolute'} left={5}>
             <MicrosoftIcon h={24} />
           </Box>
-          <Text as={'span'} fontSize="md">
+          <Box as={'span'} fontSize="md">
             <Trans id="Continue with Microsoft">Continue with Microsoft</Trans>
-          </Text>
+          </Box>
         </HStack>
       </Button>
     </VStack>

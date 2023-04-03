@@ -83,7 +83,7 @@ const CreateAccount: React.FC<CreateAccountProps> = ({
               <GithubIcon h={24} />
             </Box>
             <Text as={'span'} fontSize="md">
-              <Trans id="Continue with Github">Continue with Github</Trans>
+              <Trans id="Continue with GitHub">Continue with GitHub</Trans>
             </Text>
           </HStack>
         </Button>
