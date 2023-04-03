@@ -184,6 +184,22 @@ message EmailLogEntry {
     string recipient = 4;
 }
 
+//
+message Contact {
+    // Unique email address for this contact
+    string email = 1;
+
+    // List of VASPs that the contact is included in
+    repeated string vasps = 2;
+
+    // Token for email verification
+    bool verified = 3;
+    string token = 4;
+
+    // RFC3339 Timestamp for when the contact was verified
+    string verified_on = 5;
+}
+
 // Implements a protocol buffer struct for state managed pagination. This struct will be
 // marshaled into a url-safe base64 encoded string and sent to the user as the
 // next_page_token. The server should decode this struct to determine where to continue
