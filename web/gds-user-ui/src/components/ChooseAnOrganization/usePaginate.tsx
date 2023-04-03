@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useOrganizationListQuery } from 'modules/dashboard/organization/useOrganizationListQuery';
+
 export const usePaginate = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [wasLastPage, setWasLastPage] = useState<boolean>(false);
