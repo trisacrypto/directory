@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/trisacrypto/directory/pkg/store/trtl"
+	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/trisa/pkg/iso3166"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -102,13 +102,13 @@ func Load(db Store, path string) (err error) {
 		vasp.CommonName = website.Hostname()
 
 		var id string
-		ctx, cancel := trtl.WithContext(context.Background())
+		ctx, cancel := utils.WithContext(context.Background())
 		defer cancel()
 		if id, err = db.CreateVASP(ctx, vasp); err != nil {
 			return err
 		}
 
-		ctx, cancel = trtl.WithContext(ctx)
+		ctx, cancel = utils.WithContext(ctx)
 		defer cancel()
 		if _, err = db.RetrieveVASP(ctx, id); err != nil {
 			return err

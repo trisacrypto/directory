@@ -330,14 +330,14 @@ func (s *bffTestSuite) TestPatchOrganization() {
 		Name:   "Alice VASP",
 		Domain: "alicevasp.io",
 	}
-	_, err = s.DB().CreateOrganization(alice)
+	_, err = s.DB().CreateOrganization(context.Background(), alice)
 	require.NoError(err, "could not create organization")
 
 	bob := &models.Organization{
 		Name:   "Bob VASP",
 		Domain: "bobvasp.io",
 	}
-	_, err = s.DB().CreateOrganization(bob)
+	_, err = s.DB().CreateOrganization(context.Background(), bob)
 	require.NoError(err, "could not create organization")
 
 	// Should return an error if the user is not a collaborator
@@ -350,7 +350,7 @@ func (s *bffTestSuite) TestPatchOrganization() {
 		LastLogin: time.Now().Format(time.RFC3339),
 	}
 	require.NoError(bob.AddCollaborator(collab), "could not add collaborator to organization")
-	require.NoError(s.DB().UpdateOrganization(bob), "could not update organization")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), bob), "could not update organization")
 
 	// Invalid domains are rejected
 	params = &api.OrganizationParams{
@@ -390,7 +390,7 @@ func (s *bffTestSuite) TestPatchOrganization() {
 	require.Equal(expected, rep, "expected returned organization to match")
 
 	// Organization should be updated in the database
-	updated, err := s.DB().RetrieveOrganization(bob.UUID())
+	updated, err := s.DB().RetrieveOrganization(context.Background(), bob.UUID())
 	require.NoError(err, "could not retrieve organization")
 	require.Equal(params.Name, updated.Name, "expected organization name to match")
 	require.Equal(bob.Domain, updated.Domain, "expected organization domain to be unchanged")
@@ -445,7 +445,7 @@ func (s *bffTestSuite) TestDeleteOrganization() {
 		Name:   "Alice VASP",
 		Domain: "alicevasp.io",
 	}
-	_, err = s.DB().CreateOrganization(org)
+	_, err = s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization")
 	err = s.client.DeleteOrganization(context.TODO(), org.Id)
 	s.requireError(err, http.StatusForbidden, "user is not authorized to access this organization", "expected error when user is not a collaborator on the organization")
@@ -455,11 +455,11 @@ func (s *bffTestSuite) TestDeleteOrganization() {
 		Email: claims.Email,
 	}
 	require.NoError(org.AddCollaborator(collab), "could not add collaborator to organization")
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization")
 
 	// Should be able to delete the organization
 	require.NoError(s.client.DeleteOrganization(context.TODO(), org.Id), "error response from DeleteOrganization")
-	_, err = s.DB().RetrieveOrganization(org.UUID())
+	_, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.EqualError(err, "entity not found", "expected error when organization does not exist")
 	metadata := &auth.AppMetadata{}
 	require.NoError(metadata.Load(s.auth.GetUserAppMetadata()), "could not load app metadata")
@@ -473,10 +473,10 @@ func (s *bffTestSuite) TestDeleteOrganization() {
 		Name:   "Bob VASP",
 		Domain: "bobvasp.io",
 	}
-	_, err = s.DB().CreateOrganization(org)
+	_, err = s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization")
 	require.NoError(org.AddCollaborator(collab), "could not add collaborator to organization")
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization")
 
 	// Organization info should be deleted for non-TSP users
 	metadata = &auth.AppMetadata{
@@ -490,7 +490,7 @@ func (s *bffTestSuite) TestDeleteOrganization() {
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
 	require.NoError(s.client.DeleteOrganization(context.TODO(), org.Id), "error response from DeleteOrganization")
-	_, err = s.DB().RetrieveOrganization(org.UUID())
+	_, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.EqualError(err, "entity not found", "expected error when organization does not exist")
 	metadata = &auth.AppMetadata{}
 	require.NoError(metadata.Load(s.auth.GetUserAppMetadata()), "could not load app metadata")
@@ -502,10 +502,10 @@ func (s *bffTestSuite) TestDeleteOrganization() {
 		Name:   "Bob VASP",
 		Domain: "bobvasp.io",
 	}
-	_, err = s.DB().CreateOrganization(org)
+	_, err = s.DB().CreateOrganization(context.Background(), org)
 	require.NoError(err, "could not create organization")
 	require.NoError(org.AddCollaborator(collab), "could not add collaborator to organization")
-	require.NoError(s.DB().UpdateOrganization(org), "could not update organization")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization")
 	metadata = &auth.AppMetadata{
 		OrgID: "e0b3f9d0-3f39-4e8a-9b8d-2a6b3d4701d7",
 		VASPs: auth.VASPs{
@@ -517,7 +517,7 @@ func (s *bffTestSuite) TestDeleteOrganization() {
 	require.NoError(err, "could not dump app metadata")
 	s.auth.SetUserAppMetadata(appdata)
 	require.NoError(s.client.DeleteOrganization(context.TODO(), org.Id), "error response from DeleteOrganization")
-	_, err = s.DB().RetrieveOrganization(org.UUID())
+	_, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.EqualError(err, "entity not found", "expected error when organization does not exist")
 	resultMeta := &auth.AppMetadata{}
 	require.NoError(resultMeta.Load(s.auth.GetUserAppMetadata()), "could not load app metadata")
@@ -534,10 +534,10 @@ func (s *bffTestSuite) TestDeleteOrganization() {
 			Id: "1bcacaf5-4b43-4e14-b70c-a47107d3a56c",
 		},
 	}
-	_, err = s.DB().CreateOrganization(charlie)
+	_, err = s.DB().CreateOrganization(context.Background(), charlie)
 	require.NoError(err, "could not create organization")
 	require.NoError(charlie.AddCollaborator(collab), "could not add collaborator to organization")
-	require.NoError(s.DB().UpdateOrganization(charlie), "could not update organization")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), charlie), "could not update organization")
 
 	delta := &models.Organization{
 		Name:   "Delta VASP",
@@ -549,10 +549,10 @@ func (s *bffTestSuite) TestDeleteOrganization() {
 			Id: "abc12345-4b43-4e14-b70c-a47107d3a56c",
 		},
 	}
-	_, err = s.DB().CreateOrganization(delta)
+	_, err = s.DB().CreateOrganization(context.Background(), delta)
 	require.NoError(err, "could not create organization")
 	require.NoError(delta.AddCollaborator(collab), "could not add collaborator to organization")
-	require.NoError(s.DB().UpdateOrganization(delta), "could not update organization")
+	require.NoError(s.DB().UpdateOrganization(context.Background(), delta), "could not update organization")
 
 	// Create a TSP user on multiple organizations
 	metadata = &auth.AppMetadata{
@@ -578,7 +578,7 @@ func (s *bffTestSuite) TestDeleteOrganization() {
 		Organizations: []string{delta.Id},
 	}
 	require.NoError(s.client.DeleteOrganization(context.TODO(), charlie.Id), "error response from DeleteOrganization")
-	_, err = s.DB().RetrieveOrganization(charlie.UUID())
+	_, err = s.DB().RetrieveOrganization(context.Background(), charlie.UUID())
 	require.EqualError(err, "entity not found", "expected error when organization does not exist")
 	metadata = &auth.AppMetadata{}
 	require.NoError(metadata.Load(s.auth.GetUserAppMetadata()), "could not load app metadata")
