@@ -184,7 +184,7 @@ message EmailLogEntry {
     string recipient = 4;
 }
 
-//
+// Contact contains a unique email address and information about a TRISA member. 
 message Contact {
     // Unique email address for this contact
     string email = 1;
