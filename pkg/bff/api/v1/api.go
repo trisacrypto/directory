@@ -96,8 +96,9 @@ type OrganizationReply struct {
 
 // ListOrganizationsParams contains query parameters for listing organizations.
 type ListOrganizationsParams struct {
-	Page     int `url:"page,omitempty" form:"page" default:"1"`
-	PageSize int `url:"page_size,omitempty" form:"page_size" default:"8"`
+	Name     string `url:"name,omitempty" form:"name"`
+	Page     int    `url:"page,omitempty" form:"page" default:"1"`
+	PageSize int    `url:"page_size,omitempty" form:"page_size" default:"8"`
 }
 
 // ListOrganizationsReply contains a page of organizations.
