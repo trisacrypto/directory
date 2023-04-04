@@ -610,6 +610,10 @@ paths:
     get:
       description: Return the list of organizations that the user is assigned to.
       parameters:
+      - description: Organization name filter
+        in: query
+        name: name
+        type: string
       - default: 1
         description: Page number
         in: query
