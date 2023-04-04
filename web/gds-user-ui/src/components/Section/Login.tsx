@@ -1,6 +1,6 @@
-import { Box, Button, Heading, Text, useColorModeValue } from '@chakra-ui/react';
+import { Box, Button, Heading, VStack, HStack, Text, useColorModeValue } from '@chakra-ui/react';
 
-import { GoogleIcon } from 'components/Icon';
+import { GoogleIcon, GithubIcon, MicrosoftIcon } from 'components/Icon';
 
 import { Trans } from '@lingui/react';
 import ChakraRouterLink from 'components/ChakraRouterLink';
@@ -23,10 +23,12 @@ const Login: React.FC<LoginProps> = ({ handleSignWithSocial, handleSignWithEmail
       size="md">
       <Trans id="Log into your TRISA account">Log into your TRISA account</Trans>
     </Heading>
-    <Box>
+    <VStack>
       <Button
         data-testid="signin-with-google"
-        bg={'gray.100'}
+        bg={'white'}
+        border="1px gray solid"
+        pl={-2}
         w="100%"
         size="lg"
         borderRadius="none"
@@ -39,12 +41,68 @@ const Login: React.FC<LoginProps> = ({ handleSignWithSocial, handleSignWithEmail
         _focus={{
           borderColor: 'transparent'
         }}>
-        <GoogleIcon h={24} />
-        <Text as={'span'} ml={3} fontSize="md">
-          <Trans id="Continue with Google">Continue with Google</Trans>
-        </Text>
+        <HStack spacing={5}>
+          <Box pos={'absolute'} left={5}>
+            <GoogleIcon h={24} />
+          </Box>
+          <Text as={'span'} fontSize="md">
+            <Trans id="Continue with Google">Continue with Google</Trans>
+          </Text>
+        </HStack>
       </Button>
-    </Box>
+      <Button
+        data-testid="signin-with-github"
+        bg={'white'}
+        border="1px gray solid"
+        w="100%"
+        pl={-2}
+        size="lg"
+        borderRadius="none"
+        onClick={(event: any) => handleSignWithSocial(event, 'github')}
+        color={'gray.600'}
+        _hover={{
+          background: useColorModeValue('gray.200', 'black'),
+          color: useColorModeValue('gray.600', 'white')
+        }}
+        _focus={{
+          borderColor: 'transparent'
+        }}>
+        <HStack spacing={5}>
+          <Box pos={'absolute'} left={5}>
+            <GithubIcon h={24} />
+          </Box>
+          <Text as={'span'} fontSize="md">
+            <Trans id="Continue with GitHub">Continue with GitHub</Trans>
+          </Text>
+        </HStack>
+      </Button>
+      <Button
+        data-testid="signin-with-microsoft"
+        bg={'white'}
+        border="1px gray solid"
+        w="100%"
+        size="lg"
+        pl="4"
+        borderRadius="none"
+        onClick={(event: any) => handleSignWithSocial(event, 'microsoft')}
+        color={'gray.600'}
+        _hover={{
+          background: useColorModeValue('gray.200', 'black'),
+          color: useColorModeValue('gray.600', 'white')
+        }}
+        _focus={{
+          borderColor: 'transparent'
+        }}>
+        <HStack spacing={5} justifyContent={'space-between'}>
+          <Box pos={'absolute'} left={5}>
+            <MicrosoftIcon h={24} />
+          </Box>
+          <Box as={'span'} fontSize="md">
+            <Trans id="Continue with Microsoft">Continue with Microsoft</Trans>
+          </Box>
+        </HStack>
+      </Button>
+    </VStack>
     <Text align="center">or</Text>
 
     <Box bg={useColorModeValue('white', 'transparent')}>

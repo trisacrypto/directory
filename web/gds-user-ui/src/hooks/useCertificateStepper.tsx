@@ -89,6 +89,10 @@ const useCertificateStepper = () => {
       console.log('[ERROR 1]');
       dispatch(setStepStatus({ status: LSTATUS.COMPLETE, step: currentStep }));
     }
+
+    if (!state?.isFormCompleted) {
+      dispatch(setStepStatus({ status: LSTATUS.ERROR, step: currentStep }));
+    }
     // if we got an error that means require element are not completed
     if (state?.errors) {
       console.log('[ERROR 2]', state.errors);
@@ -141,6 +145,7 @@ const useCertificateStepper = () => {
       saveFormValue(formValues, setRegistrationState);
     }
   };
+
   const previousStep = (state?: TState) => {
     // if form value is set then save it to the dedicated step
     if (state?.formValues) {

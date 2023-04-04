@@ -15,7 +15,6 @@ function StepButtons({
   currentStep,
   isCurrentStepLastStep,
   handleResetForm,
-  handleNextStep,
   isDefaultValue
 }: StepButtonsProps) {
   const isFirstStep = currentStep === 1;
@@ -24,7 +23,7 @@ function StepButtons({
       <Button onClick={handlePreviousStep} isDisabled={isFirstStep}>
         {isCurrentStepLastStep ? t`Previous` : t`Save & Previous`}
       </Button>
-      <Button onClick={handleNextStep} variant="secondary">
+      <Button type="submit" variant="secondary">
         {isCurrentStepLastStep ? t`Next` : t`Save & Next`}
       </Button>
       <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>

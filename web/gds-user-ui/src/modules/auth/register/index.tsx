@@ -17,6 +17,12 @@ const StartPage: React.FC = () => {
     if (type === 'google') {
       auth0SignWithSocial('google-oauth2');
     }
+    if (type === 'github') {
+      auth0SignWithSocial('github');
+    }
+    if (type === 'microsoft') {
+      auth0SignWithSocial('windowslive');
+    }
   };
   const handleSignUpWithEmail = async (data: any) => {
     setIsloading(true);

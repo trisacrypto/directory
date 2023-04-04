@@ -9,10 +9,13 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/rand"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/pem"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"strings"
 	"time"
@@ -98,6 +101,11 @@ func main() {
 					Aliases: []string{"y"},
 					Usage:   "skip the confirmation prompt and immediately send notifications",
 					Value:   false,
+				},
+				&cli.StringSliceFlag{
+					Name:    "dns-names",
+					Aliases: []string{"sans", "d"},
+					Usage:   "specify additional DNS names to add to the request",
 				},
 			},
 		},
@@ -194,6 +202,28 @@ func main() {
 			},
 		},
 		{
+			Name:      "dnsnames",
+			Usage:     "add subject alternative names to the certificate request",
+			ArgsUsage: "dnsName [dnsName ...]",
+			Action:    addDNSNames,
+			Before:    connectDB,
+			After:     closeDB,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "vasp",
+					Aliases:  []string{"vasp-id", "v"},
+					Usage:    "the VASP ID to update certificate request records for",
+					Required: true,
+				},
+				&cli.BoolFlag{
+					Name:    "yes",
+					Aliases: []string{"y"},
+					Usage:   "skip the confirmation prompt and immediately send notifications",
+					Value:   false,
+				},
+			},
+		},
+		{
 			Name:   "status",
 			Usage:  "inspect a VASP status and certificate requests",
 			Action: vaspStatus,
@@ -205,6 +235,33 @@ func main() {
 					Aliases:  []string{"vasp-id", "v"},
 					Usage:    "the VASP ID to get the status of",
 					Required: true,
+				},
+			},
+		},
+		{
+			Name:   "acme",
+			Usage:  "verify a domain name via acme-dns challenge",
+			Action: verifyDomain,
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "token",
+					Aliases: []string{"t"},
+					Usage:   "if true, generate a challenge token for DNS verification",
+				},
+				&cli.StringFlag{
+					Name:    "domain",
+					Aliases: []string{"d"},
+					Usage:   "the domain to query the txt record for",
+				},
+				&cli.StringFlag{
+					Name:    "challenge",
+					Aliases: []string{"c"},
+					Usage:   "the challenge token to verify",
+				},
+				&cli.BoolFlag{
+					Name:    "debug",
+					Aliases: []string{"D"},
+					Usage:   "print the TXT records retrieved from DNS query",
 				},
 			},
 		},
@@ -318,7 +375,12 @@ func reissueCerts(c *cli.Context) (err error) {
 		return cli.Exit(fmt.Errorf("could not create certificate request: %s", err), 1)
 	}
 
-	// Step 2b: mark the certificate request as ready to submit for CertMan
+	// Step 2b: add any additional dns names from the command line
+	if dnsNames := c.StringSlice("dns-names"); len(dnsNames) > 0 {
+		certreq.DnsNames = append(certreq.DnsNames, dnsNames...)
+	}
+
+	// Step 2c: mark the certificate request as ready to submit for CertMan
 	if err = models.UpdateCertificateRequestStatus(
 		certreq,
 		models.CertificateRequestState_READY_TO_SUBMIT,
@@ -653,8 +715,106 @@ func vaspStatus(c *cli.Context) (err error) {
 			return cli.Exit(err, 1)
 		}
 
-		fmt.Printf("Certificate Request %d:\n  Common Name: %s\n . Status: %s\n\n", i+1, ca.CommonName, ca.Status)
+		fmt.Printf("Certificate Request %d:\n  Common Name: %s\n  Status: %s\n  SANs: %s\n\n", i+1, ca.CommonName, ca.Status, strings.Join(ca.DnsNames, ", "))
 
+	}
+	return nil
+}
+
+func verifyDomain(c *cli.Context) (err error) {
+	if token := c.Bool("token"); token {
+		// Generate a challenge token, print and return
+		// TODO: also generate whisper link to send to user
+		nonce := make([]byte, 32)
+		if _, err = rand.Read(nonce); err != nil {
+			return cli.Exit(err, 1)
+		}
+		fmt.Printf("Challenge Token: TRISA-DOMAIN-VERIFICATION=%s\n", base64.RawURLEncoding.EncodeToString(nonce))
+		return nil
+	}
+
+	var (
+		domain    string
+		challenge string
+		debug     bool
+	)
+
+	debug = c.Bool("debug")
+
+	if domain = c.String("domain"); domain == "" {
+		return cli.Exit("domain required for challenge", 1)
+	}
+
+	if challenge = c.String("challenge"); challenge == "" {
+		return cli.Exit("challenge required for domain verification", 1)
+	}
+
+	var answers []string
+	if answers, err = net.LookupTXT(domain); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	challenge = strings.TrimSpace(challenge)
+	for _, answer := range answers {
+		if debug {
+			fmt.Println(answer)
+		}
+
+		if strings.TrimSpace(answer) == challenge {
+			fmt.Println("domain verified!")
+			return nil
+		}
+	}
+
+	return cli.Exit(fmt.Errorf("%d TXT records returned did not match challenge", len(answers)), 1)
+}
+
+func addDNSNames(c *cli.Context) (err error) {
+	if c.NArg() == 0 {
+		return cli.Exit("specify at least one dns name to add", 1)
+	}
+
+	var dnsNames []string
+	for i := 0; i < c.NArg(); i++ {
+		if name := c.Args().Get(i); name != "" {
+			dnsNames = append(dnsNames, name)
+		}
+	}
+
+	vaspID := c.String("vasp")
+	fmt.Printf("lookup vasp with id %s\n", vaspID)
+
+	var vasp *pb.VASP
+	if vasp, err = db.RetrieveVASP(vaspID); err != nil {
+		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
+	}
+
+	certreqs, err := models.GetCertReqIDs(vasp)
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	for _, certreq := range certreqs {
+		ca, err := db.RetrieveCertReq(certreq)
+		if err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		if ca.Status <= models.CertificateRequestState_READY_TO_SUBMIT {
+			// Check with the user if we should continue with the certificate revocation
+			fmt.Printf("updating certificate requests for %s\n", vasp.CommonName)
+			if !c.Bool("yes") {
+				if !askForConfirmation(fmt.Sprintf("add %d dns names to %q?", len(dnsNames), ca.BatchName)) {
+					return cli.Exit(fmt.Errorf("canceled by user"), 1)
+				}
+			}
+
+			ca.DnsNames = append(ca.DnsNames, dnsNames...)
+
+			if err = db.UpdateCertReq(ca); err != nil {
+				return cli.Exit(err, 1)
+			}
+		}
 	}
 	return nil
 }
