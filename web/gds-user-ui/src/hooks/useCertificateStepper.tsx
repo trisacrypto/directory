@@ -86,12 +86,16 @@ const useCertificateStepper = () => {
 
     // only for status update
     if (state?.isFormCompleted || !state?.errors) {
-      console.log('[ERROR]');
+      console.log('[ERROR 1]');
       dispatch(setStepStatus({ status: LSTATUS.COMPLETE, step: currentStep }));
     }
     // if we got an error that means require element are not completed
     if (state?.errors) {
-      console.log('[ERROR]', state.errors);
+      console.log('[ERROR 2]', state.errors);
+      dispatch(setStepStatus({ status: LSTATUS.ERROR, step: currentStep }));
+    }
+    if (!state?.isFormCompleted) {
+      console.log('[ERROR ]');
       dispatch(setStepStatus({ status: LSTATUS.ERROR, step: currentStep }));
     }
     // if we reach the last step (here review step) , we need to set the submit step
@@ -116,15 +120,15 @@ const useCertificateStepper = () => {
         });
       }
     } else {
-      console.log('[ERROR]');
+      console.log('[ERROR 4]');
       const found = findStepKey(steps, currentStep + 1);
 
       if (found.length === 0) {
-        console.log('[ERROR]');
+        console.log('[ERROR 5 ]');
         dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
         dispatch(addStep({ key: currentStep + 1, status: LSTATUS.PROGRESS }));
       } else {
-        console.log('[ERROR]');
+        console.log('[ERROR 6]');
         if (found[0].status === LSTATUS.INCOMPLETE) {
           dispatch(setStepStatus({ step: currentStep + 1, status: LSTATUS.PROGRESS }));
         }

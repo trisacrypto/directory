@@ -131,6 +131,7 @@ const Certificate: React.FC = () => {
           }
         });
       }
+      console.log('getCurrentFormValue', getCurrentFormValue());
       nextStep({
         isFormCompleted: isFormCompleted(),
         formValues: getCurrentFormValue(),
