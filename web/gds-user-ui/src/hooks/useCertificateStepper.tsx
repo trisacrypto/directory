@@ -16,7 +16,9 @@ import {
   setTestnetSubmitted,
   setMainnetSubmitted,
   setCertificateValue
+  // setStepMissingFields
 } from 'application/store/stepper.slice';
+// import { getFieldNames } from 'utils/getFieldNames';
 import { setRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
 import { findStepKey } from 'utils/utils';
 import { LSTATUS } from 'components/TestnetProgress/CertificateStepLabel';
@@ -39,8 +41,7 @@ interface TState {
   isDirty?: boolean;
 }
 
-// 'TODO:' this hook should be improve
-
+// 'TODO:' this hook should be improved to be more generic
 const useCertificateStepper = () => {
   const dispatch = useDispatch();
   const currentStep: number = useSelector(getCurrentStep);
@@ -48,8 +49,6 @@ const useCertificateStepper = () => {
   const lastStep: number = useSelector(getLastStep);
   const toast = useToast();
   const trisaImplementationToastIdRef = useRef('trisa-implementation-form-error-message');
-
-  // get store state after dispatch action
 
   const currentState = () => {
     // log store state
@@ -98,10 +97,7 @@ const useCertificateStepper = () => {
       console.log('[ERROR 2]', state.errors);
       dispatch(setStepStatus({ status: LSTATUS.ERROR, step: currentStep }));
     }
-    if (!state?.isFormCompleted) {
-      console.log('[ERROR ]');
-      dispatch(setStepStatus({ status: LSTATUS.ERROR, step: currentStep }));
-    }
+
     // if we reach the last step (here review step) , we need to set the submit step
     if (currentStep === lastStep) {
       const isTrisaImplementationFormEmpty = !fieldNamesPerSteps.trisaImplementation

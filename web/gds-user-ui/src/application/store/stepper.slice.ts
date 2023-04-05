@@ -44,6 +44,13 @@ const stepperSlice: any = createSlice({
         }
       });
     },
+    setStepMissingFields: (state: any, { payload }: any) => {
+      state.steps.map((step: any) => {
+        if (step.key === payload.step && state.currentStep) {
+          step.missingFields = payload.errors;
+        }
+      });
+    },
     setHasReachSubmitStep: (state: any, { payload }: any) => {
       state.hasReachSubmitStep = payload.hasReachSubmitStep;
     },
@@ -138,5 +145,6 @@ export const {
   setMainnetSubmitted,
   setCertificateValue,
   getCertificateData,
-  setVaspName
+  setVaspName,
+  setStepMissingFields
 } = stepperSlice.actions;

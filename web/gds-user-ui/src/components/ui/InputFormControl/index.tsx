@@ -30,6 +30,7 @@ export interface _FormControlProps extends Omit<FormControlProps, 'label'> {
   onValueChange?: any;
   handleFn?: () => void;
   isHidden?: boolean;
+  isRequiredField?: boolean;
 }
 
 const InputFormControl = React.forwardRef<any, _FormControlProps>(
@@ -50,6 +51,7 @@ const InputFormControl = React.forwardRef<any, _FormControlProps>(
       isDisabled,
       isRequired,
       placeholder,
+      isRequiredField,
       ...rest
     },
     ref
@@ -65,7 +67,10 @@ const InputFormControl = React.forwardRef<any, _FormControlProps>(
 
     return (
       <CkFormControl isInvalid={isInvalid}>
-        <FormLabel htmlFor={controlId}>{label}</FormLabel>
+        <FormLabel htmlFor={controlId}>
+          {label}
+          {isRequiredField && <span style={{ color: 'red' }}>*</span>}
+        </FormLabel>
         <InputGroup>
           <Input
             name={name}
