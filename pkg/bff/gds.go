@@ -316,7 +316,7 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		form.State.Started = time.Now().Format(time.RFC3339)
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Update the organizations form
@@ -422,7 +422,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	// Make the GDS request
 	var rep *gds.RegisterReply
 	log.Debug().Str("network", network).Msg("issuing GDS register request")
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	switch network {
@@ -532,10 +532,6 @@ func (s *Server) GetCertificates(ctx context.Context, testnetID, mainnetID strin
 			// The VASP is not registered for this network, so do not error and return
 			// nil
 			return nil, nil
-		}
-
-		if _, ok := ctx.Deadline(); !ok {
-			ctx, _ = utils.WithContext(ctx)
 		}
 
 		// Retrieve the VASP record from the database
@@ -712,7 +708,7 @@ func (s *Server) GetVASPs(ctx context.Context, testnetID, mainnetID string) (tes
 		}
 
 		if _, ok := ctx.Deadline(); !ok {
-			ctx, _ = utils.WithContext(ctx)
+			ctx, _ = utils.WithDeadline(ctx)
 		}
 
 		if vaspID == "" {

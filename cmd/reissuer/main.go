@@ -313,7 +313,7 @@ func notify(c *cli.Context) (err error) {
 	vaspID := c.String("vasp")
 	fmt.Printf("looking up vasp with id %s\n", vaspID)
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Step 1: Fetch the VASP record
@@ -361,7 +361,7 @@ func reissueCerts(c *cli.Context) (err error) {
 	vaspID := c.String("vasp")
 	fmt.Printf("looking up vasp with id %s\n", vaspID)
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Step 1: Fetch the VASP record
@@ -535,7 +535,7 @@ func revokeCerts(c *cli.Context) (err error) {
 	vaspID := c.String("vasp")
 	fmt.Printf("lookup vasp with id %s\n", vaspID)
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	var vasp *pb.VASP
@@ -631,7 +631,7 @@ func rereview(c *cli.Context) (err error) {
 	vaspID := c.String("vasp")
 	fmt.Printf("lookup vasp with id %s\n", vaspID)
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	var vasp *pb.VASP
@@ -680,7 +680,7 @@ func destroy(c *cli.Context) (err error) {
 	vaspID := c.String("vasp")
 	fmt.Printf("lookup vasp with id %s\n", vaspID)
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	var vasp *pb.VASP
@@ -709,7 +709,7 @@ func vaspStatus(c *cli.Context) (err error) {
 	vaspID := c.String("vasp")
 	fmt.Printf("lookup vasp with id %s\n", vaspID)
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	var vasp *pb.VASP
@@ -800,7 +800,7 @@ func addDNSNames(c *cli.Context) (err error) {
 	vaspID := c.String("vasp")
 	fmt.Printf("lookup vasp with id %s\n", vaspID)
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	var vasp *pb.VASP

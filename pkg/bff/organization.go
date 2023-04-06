@@ -114,7 +114,7 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	if _, err = s.db.CreateOrganization(ctx, org); err != nil {
@@ -283,7 +283,7 @@ func (s *Server) DeleteOrganization(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Delete the organization from the database
@@ -421,7 +421,7 @@ func (s *Server) PatchOrganization(c *gin.Context) {
 		org.Name = params.Name
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Save the updated organization
@@ -514,7 +514,7 @@ func (s *Server) OrganizationFromID(id string) (org *models.Organization, err er
 		return nil, err
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Fetch the record from the database

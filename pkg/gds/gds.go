@@ -186,7 +186,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 	}
 
 	if _, ok := ctx.Deadline(); !ok {
-		ctx, _ = utils.WithContext(ctx)
+		ctx, _ = utils.WithDeadline(ctx)
 	}
 
 	// TODO: create legal entity hash to detect a repeat registration without ID
@@ -293,7 +293,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 // if it exists and the entity has been verified.
 func (s *GDS) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.LookupReply, err error) {
 	if _, ok := ctx.Deadline(); !ok {
-		ctx, _ = utils.WithContext(ctx)
+		ctx, _ = utils.WithDeadline(ctx)
 	}
 
 	var vasp *pb.VASP
@@ -361,7 +361,7 @@ func (s *GDS) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.Looku
 // Lookup requests. The search process is purposefully simplistic at the moment.
 func (s *GDS) Search(ctx context.Context, in *api.SearchRequest) (out *api.SearchReply, err error) {
 	if _, ok := ctx.Deadline(); !ok {
-		ctx, _ = utils.WithContext(ctx)
+		ctx, _ = utils.WithDeadline(ctx)
 	}
 
 	// Create search query to send to database
@@ -416,7 +416,7 @@ func (s *GDS) Search(ctx context.Context, in *api.SearchRequest) (out *api.Searc
 // status if the directory service is performing health check monitoring.
 func (s *GDS) Verification(ctx context.Context, in *api.VerificationRequest) (out *api.VerificationReply, err error) {
 	if _, ok := ctx.Deadline(); !ok {
-		ctx, _ = utils.WithContext(ctx)
+		ctx, _ = utils.WithDeadline(ctx)
 	}
 
 	var vasp *pb.VASP
@@ -472,7 +472,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 	}
 
 	if _, ok := ctx.Deadline(); !ok {
-		ctx, _ = utils.WithContext(ctx)
+		ctx, _ = utils.WithDeadline(ctx)
 	}
 
 	// Retrieve VASP associated with contact from the database.

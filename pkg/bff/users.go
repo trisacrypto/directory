@@ -133,7 +133,7 @@ func (s *Server) Login(c *gin.Context) {
 		org = &models.Organization{
 			CreatedBy: userName,
 		}
-		ctx, cancel := utils.WithContext(context.Background())
+		ctx, cancel := utils.WithDeadline(context.Background())
 		defer cancel()
 		if _, err = s.db.CreateOrganization(ctx, org); err != nil {
 			log.Error().Err(err).Str("user_id", *user.ID).Msg("could not create organization")
@@ -199,7 +199,7 @@ func (s *Server) Login(c *gin.Context) {
 		collaborator.JoinedAt = collaborator.LastLogin
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	if claims.HasPermission(auth.SwitchOrganizations) {

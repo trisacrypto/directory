@@ -125,7 +125,7 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Save the updated organization
@@ -176,7 +176,7 @@ func (s *Server) ListCollaborators(c *gin.Context) {
 		})
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Collaborators exist on the organization record so we must persist the updated
@@ -267,7 +267,7 @@ func (s *Server) UpdateCollaboratorRoles(c *gin.Context) {
 		collaborator.CreatedAt = collaborator.ModifiedAt
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Save the updated organization
@@ -350,7 +350,7 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 	// Delete the collaborator from the organization record
 	delete(org.Collaborators, collabID)
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Save the updated organization

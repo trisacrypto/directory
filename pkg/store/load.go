@@ -102,13 +102,13 @@ func Load(db Store, path string) (err error) {
 		vasp.CommonName = website.Hostname()
 
 		var id string
-		ctx, cancel := utils.WithContext(context.Background())
+		ctx, cancel := utils.WithDeadline(context.Background())
 		defer cancel()
 		if id, err = db.CreateVASP(ctx, vasp); err != nil {
 			return err
 		}
 
-		ctx, cancel = utils.WithContext(ctx)
+		ctx, cancel = utils.WithDeadline(ctx)
 		defer cancel()
 		if _, err = db.RetrieveVASP(ctx, id); err != nil {
 			return err

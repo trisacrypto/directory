@@ -350,7 +350,7 @@ func closeGDSDatabases(c *cli.Context) (err error) {
 //===========================================================================
 
 func listOrgs(c *cli.Context) (err error) {
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Create organizations report
@@ -412,7 +412,7 @@ func missingOrgs(c *cli.Context) (err error) {
 	testnet := make(map[string]struct{})
 	mainnet := make(map[string]struct{})
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	orgs := db.ListOrganizations(ctx)
@@ -503,7 +503,7 @@ func createOrgs(c *cli.Context) (err error) {
 		testname    string
 	)
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	if vaspID := c.String("mainnet-id"); vaspID != "" {
@@ -693,7 +693,7 @@ func updateOrgs(c *cli.Context) (err error) {
 		save = true
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	if save {
@@ -754,7 +754,7 @@ func rmsubOrgs(c *cli.Context) (err error) {
 		}
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	if save {
@@ -836,7 +836,7 @@ func deleteOrgs(c *cli.Context) (err error) {
 		}
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Last step: delete the organization from the database
@@ -850,7 +850,7 @@ func cleanupOrgs(c *cli.Context) (err error) {
 	orgsDeleted := 0
 	force := c.Bool("force")
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	iter := db.ListOrganizations(ctx)
@@ -933,7 +933,7 @@ func addCollab(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	if err = db.UpdateOrganization(ctx, org); err != nil {
@@ -1020,7 +1020,7 @@ func deleteCollab(c *cli.Context) (err error) {
 		return cli.Exit("canceled at request of user", 0)
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Remove collaborator from the organization (won't error if not exists)
@@ -1132,7 +1132,7 @@ func GetOrg(id string) (_ *models.Organization, err error) {
 		return nil, err
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	var org *models.Organization

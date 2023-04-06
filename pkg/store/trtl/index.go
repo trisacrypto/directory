@@ -29,7 +29,7 @@ func (s *Store) Reindex() (err error) {
 	countries := index.NewCountryIndex()
 	categories := index.NewCategoryIndex()
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	cursor, err := s.client.Cursor(ctx, &pb.CursorRequest{Namespace: wire.NamespaceVASPs})
@@ -208,7 +208,7 @@ func (s *Store) sync() (err error) {
 }
 
 func (s *Store) syncnames() (err error) {
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Critical section (optimizing for safety rather than speed)
@@ -257,7 +257,7 @@ func (s *Store) syncnames() (err error) {
 }
 
 func (s *Store) syncwebsites() (err error) {
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Critical section (optimizing for safety rather than speed)
@@ -306,7 +306,7 @@ func (s *Store) syncwebsites() (err error) {
 }
 
 func (s *Store) synccountries() (err error) {
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Critical section (optimizing for safety rather than speed)
@@ -355,7 +355,7 @@ func (s *Store) synccountries() (err error) {
 }
 
 func (s *Store) synccategories() (err error) {
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Critical section (optimizing for safety rather than speed)
@@ -426,7 +426,7 @@ func (s *Store) GetCategoriesIndex() index.MultiIndex {
 // DeleteIndices for testing
 // TODO: remove this function in favor of SC-3653
 func (s *Store) DeleteIndices() (err error) {
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	keys := [][]byte{keyNameIndex, keyWebsiteIndex, keyCategoryIndex, keyCountryIndex}

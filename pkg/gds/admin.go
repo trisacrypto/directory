@@ -487,7 +487,7 @@ func (s *Admin) Summary(c *gin.Context) {
 		CertReqs: make(map[string]int),
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Query the list of VASPs from the data store to perform aggregation counts.
@@ -573,7 +573,7 @@ func (s *Admin) Autocomplete(c *gin.Context) {
 	// than iterating over the VASPs; if the UI requires more complex information
 	// storage then the VASP iteration is better (or a better index). If it doesn't,
 	// then this should be refactored to simply fetch the index and return it.
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 	iter := s.db.ListVASPs(ctx)
 	defer iter.Release()
@@ -708,7 +708,7 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 		vaspCounts = append(vaspCounts, make(map[string]bool))
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Iterate over the VASPs and count registrations
@@ -773,7 +773,7 @@ func (s *Admin) ListCountries(c *gin.Context) {
 	// Count registrations by country
 	countries := make(map[string]int)
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	iter := s.db.ListVASPs(ctx)
@@ -887,7 +887,7 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 		PageSize: in.PageSize,
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Query the list of VASPs from the data store
@@ -967,7 +967,7 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 	vaspID = c.Param("vaspID")
 	logctx := log.With().Str("id", vaspID).Logger()
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Attempt to fetch the VASP from the database
@@ -1114,7 +1114,7 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 	// Create a log context for downstream logging
 	logctx := log.With().Str("id", vaspID).Logger()
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Attempt to fetch the VASP from the database
@@ -1362,7 +1362,7 @@ func (s *Admin) updateVASPEndpoint(vasp *pb.VASP, commonName, endpoint, source s
 		return false, http.StatusInternalServerError, errors.New("could not update certificate request with common name")
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Loop through all of the certificate requests and check if they can be updated
@@ -1420,7 +1420,7 @@ func (s *Admin) DeleteVASP(c *gin.Context) {
 
 	vaspID = c.Param("vaspID")
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Retrieve the VASP from the database
@@ -1470,7 +1470,7 @@ func (s *Admin) ListCertificates(c *gin.Context) {
 	// Get vaspID from the URL
 	vaspID := c.Param("vaspID")
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Retrieve the VASP from the database
@@ -1572,7 +1572,7 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Retrieve the VASP from the database
@@ -1667,7 +1667,7 @@ func (s *Admin) DeleteContact(c *gin.Context) {
 	vaspID := c.Param("vaspID")
 	kind := c.Param("kind")
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Retrieve the VASP from the database
@@ -1765,7 +1765,7 @@ func (s *Admin) CreateReviewNote(c *gin.Context) {
 		}
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Lookup the VASP record associated with the request
@@ -1816,7 +1816,7 @@ func (s *Admin) ListReviewNotes(c *gin.Context) {
 	// Get vaspID from the URL
 	vaspID = c.Param("vaspID")
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Lookup the VASP record associated with the request
@@ -1897,7 +1897,7 @@ func (s *Admin) UpdateReviewNote(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Lookup the VASP record associated with the request
@@ -1948,7 +1948,7 @@ func (s *Admin) DeleteReviewNote(c *gin.Context) {
 	vaspID = c.Param("vaspID")
 	noteID = c.Param("noteID")
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Lookup the VASP record associated with the request
@@ -1992,7 +1992,7 @@ func (s *Admin) ReviewToken(c *gin.Context) {
 	// Get vaspID from the URL
 	vaspID = c.Param("vaspID")
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Lookup the VASP record associated with the request
@@ -2072,7 +2072,7 @@ func (s *Admin) Review(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Lookup the VASP record associated with the request
@@ -2134,7 +2134,7 @@ func (s *Admin) Review(c *gin.Context) {
 
 // Accept the VASP registration and begin the certificate issuance process.
 func (s *Admin) acceptRegistration(vasp *pb.VASP, claims *tokens.Claims) (msg string, err error) {
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Change the VASP verification status
@@ -2204,7 +2204,7 @@ func (s *Admin) acceptRegistration(vasp *pb.VASP, claims *tokens.Claims) (msg st
 
 // Reject the VASP registration and notify the contacts of the result.
 func (s *Admin) rejectRegistration(vasp *pb.VASP, reason string, claims *tokens.Claims) (msg string, err error) {
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Change the VASP verification status
@@ -2307,7 +2307,7 @@ func (s *Admin) Resend(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Lookup the VASP record associated with the resend request

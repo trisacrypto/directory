@@ -168,7 +168,7 @@ func (c *CertificateManager) HandleCertificateRequests() {
 		err       error
 	)
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	careqs := c.db.ListCertReqs(ctx)
@@ -249,7 +249,7 @@ func (c *CertificateManager) HandleCertificateRequests() {
 }
 
 func (c *CertificateManager) submitCertificateRequest(r *models.CertificateRequest, vasp *pb.VASP) (err error) {
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Step 0: mark the VASP status as issuing certificates
@@ -375,7 +375,7 @@ func (c *CertificateManager) checkCertificateRequest(r *models.CertificateReques
 		Int("success", proc.Success).
 		Msg("batch processing status")
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Step 3: check active - if there is still an active batch then delay
@@ -526,7 +526,7 @@ func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateReq
 		return
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Mark as downloaded.
@@ -725,7 +725,7 @@ func (c *CertificateManager) HandleCertificateReissuance() {
 		expirationDate time.Time
 	)
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Iterate through the VASPs in the database.
@@ -866,7 +866,7 @@ func (c *CertificateManager) reissuanceInProgress(vasp *pb.VASP) (_ bool, err er
 		return false, nil
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Get the certificate request from the database.
@@ -906,7 +906,7 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) (err err
 	pkcs12password := secrets.CreateToken(16)
 	whisperPasswordTemplate := "Below is the PKCS12 password which you must use to decrypt your new certificates:\n\n%s\n"
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// Create a new secret using the secret manager.

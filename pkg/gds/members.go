@@ -174,7 +174,7 @@ func (s *Members) List(ctx context.Context, in *api.ListRequest) (out *api.ListR
 
 	// Create the VASPs iterator to begin collecting validated VASPs data
 	if _, ok := ctx.Deadline(); !ok {
-		ctx, _ = utils.WithContext(context.Background())
+		ctx, _ = utils.WithDeadline(context.Background())
 	}
 	iter := s.db.ListVASPs(ctx)
 	defer iter.Release()
@@ -260,7 +260,7 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 	out = &api.SummaryReply{}
 
 	if _, ok := ctx.Deadline(); !ok {
-		ctx, _ = utils.WithContext(context.Background())
+		ctx, _ = utils.WithDeadline(context.Background())
 	}
 
 	if in.MemberId != "" {
@@ -325,7 +325,7 @@ func (s *Members) Details(ctx context.Context, in *api.DetailsRequest) (out *api
 	// Fetch the requested VASP if provided
 	var vasp *pb.VASP
 	if _, ok := ctx.Deadline(); !ok {
-		ctx, _ = utils.WithContext(context.Background())
+		ctx, _ = utils.WithDeadline(context.Background())
 	}
 	if vasp, err = s.db.RetrieveVASP(ctx, in.MemberId); err != nil {
 		log.Warn().Err(err).Str("vasp_id", in.MemberId).Msg("VASP not found")

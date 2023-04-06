@@ -128,7 +128,7 @@ func (s *Server) RecentAnnouncements(maxResults int, notBefore, start time.Time)
 	month := time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, 1, 0).Add(-1 * time.Second)
 
 	for !month.Before(notBefore) {
-		ctx, cancel := utils.WithContext(context.Background())
+		ctx, cancel := utils.WithDeadline(context.Background())
 		defer cancel()
 
 		var crate *models.AnnouncementMonth
@@ -199,7 +199,7 @@ func (s *Server) PostAnnouncement(in *models.Announcement) (_ string, err error)
 		return "", fmt.Errorf("could not identify month from post date: %s", err)
 	}
 
-	ctx, cancel := utils.WithContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Get or Create the announcement month "crate"
