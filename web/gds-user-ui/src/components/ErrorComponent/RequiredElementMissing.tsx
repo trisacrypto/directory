@@ -1,4 +1,4 @@
-import { Alert, AlertTitle, AlertDescription, Stack } from '@chakra-ui/react';
+import { Alert, AlertIcon } from '@chakra-ui/react';
 interface RequiredElementMissingProps {
   elementKey?: number;
 }
@@ -8,12 +8,8 @@ const RequiredElementMissing = ({ elementKey }: RequiredElementMissingProps) => 
 
   return (
     <Alert status="error" borderRadius="lg" my={4}>
-      <Stack>
-        <AlertTitle>Required element(s) missing </AlertTitle>
-        <AlertDescription>
-          Please make sure you have filled out all required fields marked with an asterisk (*).
-        </AlertDescription>
-      </Stack>
+      <AlertIcon />
+      Please make sure you have filled out all required fields marked with an asterisk (*).
     </Alert>
   );
 };

@@ -4,6 +4,14 @@ import Store from 'application/store';
 import { getCurrentStep } from 'application/store/selectors/stepper';
 import { useDispatch, useSelector } from 'react-redux';
 import {
+  isBasicDetailsCompleted,
+  isLegalPersonCompleted,
+  isContactsCompleted,
+  isTrixoQuestionnaireCompleted,
+  isTrisaImplementationCompleted,
+  fieldNamesPerSteps
+} from 'modules/dashboard/certificate/lib';
+import {
   addStep,
   setCurrentStep,
   setStepStatus,
@@ -23,7 +31,6 @@ import { setRegistrationDefaultValue } from 'modules/dashboard/registration/util
 import { findStepKey } from 'utils/utils';
 import { LSTATUS } from 'components/TestnetProgress/CertificateStepLabel';
 import { hasStepError } from '../utils/utils';
-import { fieldNamesPerSteps } from 'modules/dashboard/certificate/lib';
 import _ from 'lodash';
 import { useToast } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
@@ -61,6 +68,23 @@ const useCertificateStepper = () => {
     return formatState;
   };
 
+  const isStepCompleted = async (step: number, data: any) => {
+    switch (step) {
+      case 1:
+        return await isBasicDetailsCompleted(data);
+      case 2:
+        return await isLegalPersonCompleted(data);
+      case 3:
+        return await isContactsCompleted(data);
+      case 4:
+        return await isTrisaImplementationCompleted(data);
+      case 5:
+        return await isTrixoQuestionnaireCompleted(data);
+      default:
+        return false;
+    }
+  };
+
   // save form data to trtl if field is dirty
 
   const saveFormValue = (formValue: any, setState?: any) => {
@@ -80,21 +104,14 @@ const useCertificateStepper = () => {
     }
   };
 
-  const nextStep = (state?: TState) => {
+  const nextStep = async (state?: TState) => {
     const { values: formValues, setRegistrationState, isDirty } = state || {};
-
+    const isCompleted = await isStepCompleted(currentStep, formValues);
     // only for status update
-    if (state?.isFormCompleted || !state?.errors) {
-      console.log('[ERROR 1]');
+    if (isCompleted) {
+      // console.log('nextStep', state?.isFormCompleted, state?.errors);
       dispatch(setStepStatus({ status: LSTATUS.COMPLETE, step: currentStep }));
-    }
-
-    if (!state?.isFormCompleted) {
-      dispatch(setStepStatus({ status: LSTATUS.ERROR, step: currentStep }));
-    }
-    // if we got an error that means require element are not completed
-    if (state?.errors) {
-      console.log('[ERROR 2]', state.errors);
+    } else {
       dispatch(setStepStatus({ status: LSTATUS.ERROR, step: currentStep }));
     }
 
@@ -120,15 +137,12 @@ const useCertificateStepper = () => {
         });
       }
     } else {
-      console.log('[ERROR 4]');
       const found = findStepKey(steps, currentStep + 1);
 
       if (found.length === 0) {
-        console.log('[ERROR 5 ]');
         dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
         dispatch(addStep({ key: currentStep + 1, status: LSTATUS.PROGRESS }));
       } else {
-        console.log('[ERROR 6]');
         if (found[0].status === LSTATUS.INCOMPLETE) {
           dispatch(setStepStatus({ step: currentStep + 1, status: LSTATUS.PROGRESS }));
         }
@@ -138,7 +152,8 @@ const useCertificateStepper = () => {
     // save the form value if fields changed
     if (isDirty) {
       dispatch(setCertificateValue({ value: { ...formValues } }));
-      saveFormValue(formValues, setRegistrationState);
+      console.log('saveFormValue', currentState());
+      saveFormValue(currentState(), setRegistrationState);
     }
   };
 
