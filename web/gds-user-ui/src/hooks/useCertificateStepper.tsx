@@ -4,6 +4,14 @@ import Store from 'application/store';
 import { getCurrentStep } from 'application/store/selectors/stepper';
 import { useDispatch, useSelector } from 'react-redux';
 import {
+  isBasicDetailsCompleted,
+  isLegalPersonCompleted,
+  isContactsCompleted,
+  isTrixoQuestionnaireCompleted,
+  isTrisaImplementationCompleted,
+  fieldNamesPerSteps
+} from 'modules/dashboard/certificate/lib';
+import {
   addStep,
   setCurrentStep,
   setStepStatus,
@@ -16,12 +24,13 @@ import {
   setTestnetSubmitted,
   setMainnetSubmitted,
   setCertificateValue
+  // setStepMissingFields
 } from 'application/store/stepper.slice';
+// import { getFieldNames } from 'utils/getFieldNames';
 import { setRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
 import { findStepKey } from 'utils/utils';
 import { LSTATUS } from 'components/TestnetProgress/CertificateStepLabel';
 import { hasStepError } from '../utils/utils';
-import { fieldNamesPerSteps } from 'modules/dashboard/certificate/lib';
 import _ from 'lodash';
 import { useToast } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
@@ -39,8 +48,7 @@ interface TState {
   isDirty?: boolean;
 }
 
-// 'TODO:' this hook should be improve
-
+// 'TODO:' this hook should be improved to be more generic
 const useCertificateStepper = () => {
   const dispatch = useDispatch();
   const currentStep: number = useSelector(getCurrentStep);
@@ -48,8 +56,6 @@ const useCertificateStepper = () => {
   const lastStep: number = useSelector(getLastStep);
   const toast = useToast();
   const trisaImplementationToastIdRef = useRef('trisa-implementation-form-error-message');
-
-  // get store state after dispatch action
 
   const currentState = () => {
     // log store state
@@ -60,6 +66,23 @@ const useCertificateStepper = () => {
       ready_to_submit: updatedState.hasReachSubmitStep
     };
     return formatState;
+  };
+
+  const isStepCompleted = async (step: number, data: any) => {
+    switch (step) {
+      case 1:
+        return await isBasicDetailsCompleted(data);
+      case 2:
+        return await isLegalPersonCompleted(data);
+      case 3:
+        return await isContactsCompleted(data);
+      case 4:
+        return await isTrisaImplementationCompleted(data);
+      case 5:
+        return await isTrixoQuestionnaireCompleted(data);
+      default:
+        return false;
+    }
   };
 
   // save form data to trtl if field is dirty
@@ -81,21 +104,17 @@ const useCertificateStepper = () => {
     }
   };
 
-  const nextStep = (state?: TState) => {
+  const nextStep = async (state?: TState) => {
     const { values: formValues, setRegistrationState, isDirty } = state || {};
-
+    const isCompleted = await isStepCompleted(currentStep, formValues);
     // only for status update
-    if (state?.isFormCompleted || !state?.errors) {
+    if (isCompleted) {
+      // console.log('nextStep', state?.isFormCompleted, state?.errors);
       dispatch(setStepStatus({ status: LSTATUS.COMPLETE, step: currentStep }));
+    } else {
+      dispatch(setStepStatus({ status: LSTATUS.ERROR, step: currentStep }));
     }
 
-    if (!state?.isFormCompleted) {
-      dispatch(setStepStatus({ status: LSTATUS.ERROR, step: currentStep }));
-    }
-    // if we got an error that means require element are not completed
-    if (state?.errors) {
-      dispatch(setStepStatus({ status: LSTATUS.ERROR, step: currentStep }));
-    }
     // if we reach the last step (here review step) , we need to set the submit step
     if (currentStep === lastStep) {
       const isTrisaImplementationFormEmpty = !fieldNamesPerSteps.trisaImplementation
@@ -133,7 +152,8 @@ const useCertificateStepper = () => {
     // save the form value if fields changed
     if (isDirty) {
       dispatch(setCertificateValue({ value: { ...formValues } }));
-      saveFormValue(formValues, setRegistrationState);
+      console.log('saveFormValue', currentState());
+      saveFormValue(currentState(), setRegistrationState);
     }
   };
 

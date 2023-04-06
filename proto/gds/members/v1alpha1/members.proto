@@ -54,7 +54,7 @@ message VASPMember {
     // Address to connect to the remote VASP on to perform a TRISA request
     string endpoint = 4;
 
-    // Extra details used to faciliate searches and matching
+    // Extra details used to facilitate searches and matching
     string name = 5;
     string website = 6;
     string country = 7;

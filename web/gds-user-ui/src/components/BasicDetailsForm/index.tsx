@@ -31,6 +31,7 @@ const BasicDetailsForm: React.FC = () => {
           formHelperText={errors.organization_name?.message as string}
           isInvalid={!!errors.organization_name}
           inputProps={{ placeholder: 'VASP HOLDING LLC' }}
+          isRequiredField
           {...register('organization_name')}
         />
 
@@ -43,6 +44,7 @@ const BasicDetailsForm: React.FC = () => {
           formHelperText={errors.website?.message as string}
           isInvalid={!!errors.website}
           inputProps={{ placeholder: 'https://example.com' }}
+          isRequiredField
           {...register('website')}
         />
 
@@ -59,6 +61,7 @@ const BasicDetailsForm: React.FC = () => {
             min: '1800-01-01',
             max: formatDate()
           }}
+          isRequiredField
           {...register('established_on')}
         />
 

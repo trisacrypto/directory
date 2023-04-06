@@ -488,6 +488,12 @@ const docTemplate = `{
                 "summary": "List organizations [read:organizations]",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Organization name filter",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "default": 1,
                         "description": "Page number",

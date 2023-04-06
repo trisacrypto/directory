@@ -90,6 +90,10 @@ const Certificate: React.FC = () => {
     return fieldsNames.every((n: any) => !!getFieldValue(n));
   }
 
+  // function getFieldNamePerStep() {
+  //   return fieldNamesPerStepsEntries()[current - 1][1];
+  // }
+
   function getCurrentFormValue() {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.reduce((acc, n) => ({ ...acc, [n]: getFieldValue(n) }), {});
@@ -131,12 +135,14 @@ const Certificate: React.FC = () => {
           }
         });
       }
+
       nextStep({
         isFormCompleted: isFormCompleted(),
         formValues: getCurrentFormValue(),
         values: methods.getValues(),
         registrationValues: registrationData,
         isDirty: methods.formState.isDirty,
+        errors: methods.formState.errors,
         setRegistrationState: setRegistrationData
       });
     }
