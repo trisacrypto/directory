@@ -40,7 +40,15 @@ const stepperSlice: any = createSlice({
     setStepStatus: (state: any, { payload }: any) => {
       state.steps.map((step: any) => {
         if (step.key === payload.step && state.currentStep) {
+          console.log('payload.status', payload.status);
           step.status = payload.status;
+        }
+      });
+    },
+    setStepMissingFields: (state: any, { payload }: any) => {
+      state.steps.map((step: any) => {
+        if (step.key === payload.step && state.currentStep) {
+          step.missingFields = payload.errors;
         }
       });
     },
@@ -138,5 +146,6 @@ export const {
   setMainnetSubmitted,
   setCertificateValue,
   getCertificateData,
-  setVaspName
+  setVaspName,
+  setStepMissingFields
 } = stepperSlice.actions;

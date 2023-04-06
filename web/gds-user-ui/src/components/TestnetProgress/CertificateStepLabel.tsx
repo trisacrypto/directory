@@ -72,7 +72,7 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
 
   const isStepCompleted = (step: number) => {
     const stepStatus = steps[step - 1]?.status;
-    return stepStatus === 'complete' || stepStatus === 'progress';
+    return stepStatus === 'complete' || stepStatus === 'progress' || stepStatus === 'error';
   };
 
   // this function need some clean up
