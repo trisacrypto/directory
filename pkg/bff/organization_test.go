@@ -290,6 +290,50 @@ func (s *bffTestSuite) TestListOrganizations() {
 	reply, err = s.client.ListOrganizations(context.TODO(), req)
 	require.NoError(err, "list organizations call failed")
 	require.Equal(expected, reply, "wrong results for page out of bounds")
+
+	// Test name filter that matches no organizations
+	req.Name = "nomatches"
+	req.Page = 1
+	req.PageSize = 10
+	expected.Count = 0
+	expected.Page = 1
+	expected.PageSize = 10
+	expected.Organizations = []*api.OrganizationReply{}
+	reply, err = s.client.ListOrganizations(context.TODO(), req)
+	require.NoError(err, "list organizations call failed")
+	require.Equal(expected, reply, "wrong results for page 1 with no match filter")
+
+	// Test name filter that matches some organizations
+	req.Name = "bob"
+	req.Page = 1
+	req.PageSize = 10
+	expected.Count = 1
+	expected.Page = 1
+	expected.PageSize = 10
+	expected.Organizations = orgReplies[1:2]
+	reply, err = s.client.ListOrganizations(context.TODO(), req)
+	require.NoError(err, "list organizations call failed")
+	require.Equal(expected, reply, "wrong results for page 1 with some match filter")
+
+	// Test name filter that matches all organizations
+	req.Name = "Vasp"
+	req.Page = 1
+	req.PageSize = 2
+	expected.Count = 3
+	expected.Page = 1
+	expected.PageSize = 2
+	expected.Organizations = orgReplies[0:2]
+	reply, err = s.client.ListOrganizations(context.TODO(), req)
+	require.NoError(err, "list organizations call failed")
+	require.Equal(expected, reply, "wrong results for page 1 with all match filter")
+
+	req.Page = 2
+	expected.Page = 2
+	expected.PageSize = 2
+	expected.Organizations = orgReplies[2:3]
+	reply, err = s.client.ListOrganizations(context.TODO(), req)
+	require.NoError(err, "list organizations call failed")
+	require.Equal(expected, reply, "wrong results for page 2 with all match filter")
 }
 
 func (s *bffTestSuite) TestPatchOrganization() {
