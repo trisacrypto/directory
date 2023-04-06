@@ -1,6 +1,7 @@
 package mockdb
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -105,7 +106,7 @@ func (m *MockDB) Close() error {
 	return m.OnClose()
 }
 
-func (m *MockDB) CreateVASP(v *pb.VASP) (string, error) {
+func (m *MockDB) CreateVASP(_ context.Context, v *pb.VASP) (string, error) {
 	state.CreateVASPInvoked = true
 	if v.Id == "" {
 		return "", errors.New("VASP must contain an ID")
@@ -118,7 +119,7 @@ func (m *MockDB) CreateVASP(v *pb.VASP) (string, error) {
 	return v.Id, nil
 }
 
-func (m *MockDB) RetrieveVASP(id string) (*pb.VASP, error) {
+func (m *MockDB) RetrieveVASP(_ context.Context, id string) (*pb.VASP, error) {
 	state.RetrieveVASPInvoked = true
 	if id == "" {
 		return nil, errors.New("missing VASP ID")
@@ -131,112 +132,112 @@ func (m *MockDB) RetrieveVASP(id string) (*pb.VASP, error) {
 	return &v, nil
 }
 
-func (m *MockDB) UpdateVASP(v *pb.VASP) error {
+func (m *MockDB) UpdateVASP(_ context.Context, v *pb.VASP) error {
 	state.UpdateVASPInvoked = true
 	return m.OnUpdateVASP(v)
 }
 
-func (m *MockDB) DeleteVASP(id string) error {
+func (m *MockDB) DeleteVASP(_ context.Context, id string) error {
 	state.DeleteVASPInvoked = true
 	return m.OnDeleteVASP(id)
 }
 
-func (m *MockDB) ListVASPs() iterator.DirectoryIterator {
+func (m *MockDB) ListVASPs(_ context.Context) iterator.DirectoryIterator {
 	state.ListVASPsInvoked = true
 	return m.OnListVASPs()
 }
 
-func (m *MockDB) SearchVASPs(query map[string]interface{}) ([]*pb.VASP, error) {
+func (m *MockDB) SearchVASPs(_ context.Context, query map[string]interface{}) ([]*pb.VASP, error) {
 	state.SearchVASPsInvoked = true
 	return m.OnSearchVASPs(query)
 }
 
-func (m *MockDB) ListCertReqs() iterator.CertificateRequestIterator {
+func (m *MockDB) ListCertReqs(_ context.Context) iterator.CertificateRequestIterator {
 	state.ListCertReqsInvoked = true
 	return m.OnListCertReqs()
 }
 
-func (m *MockDB) CreateCertReq(r *models.CertificateRequest) (string, error) {
+func (m *MockDB) CreateCertReq(_ context.Context, r *models.CertificateRequest) (string, error) {
 	state.CreateCertReqInvoked = true
 	return m.OnCreateCertReq(r)
 }
 
-func (m *MockDB) RetrieveCertReq(id string) (*models.CertificateRequest, error) {
+func (m *MockDB) RetrieveCertReq(_ context.Context, id string) (*models.CertificateRequest, error) {
 	state.RetrieveCertReqInvoked = true
 	return m.OnRetrieveCertReq(id)
 }
 
-func (m *MockDB) UpdateCertReq(r *models.CertificateRequest) error {
+func (m *MockDB) UpdateCertReq(_ context.Context, r *models.CertificateRequest) error {
 	state.UpdateCertReqInvoked = true
 	return m.OnUpdateCertReq(r)
 }
 
-func (m *MockDB) DeleteCertReq(id string) error {
+func (m *MockDB) DeleteCertReq(_ context.Context, id string) error {
 	state.DeleteCertReqInvoked = true
 	return m.OnDeleteCertReq(id)
 }
 
-func (m *MockDB) ListCerts() iterator.CertificateIterator {
+func (m *MockDB) ListCerts(_ context.Context) iterator.CertificateIterator {
 	state.ListCertInvoked = true
 	return m.OnListCerts()
 }
 
-func (m *MockDB) CreateCert(c *models.Certificate) (string, error) {
+func (m *MockDB) CreateCert(_ context.Context, c *models.Certificate) (string, error) {
 	state.CreateCertInvoked = true
 	return m.OnCreateCert(c)
 }
 
-func (m *MockDB) RetrieveCert(id string) (*models.Certificate, error) {
+func (m *MockDB) RetrieveCert(_ context.Context, id string) (*models.Certificate, error) {
 	state.RetrieveCertInvoked = true
 	return m.OnRetrieveCert(id)
 }
 
-func (m *MockDB) UpdateCert(c *models.Certificate) error {
+func (m *MockDB) UpdateCert(_ context.Context, c *models.Certificate) error {
 	state.UpdateCertInvoked = true
 	return m.OnUpdateCert(c)
 }
 
-func (m *MockDB) DeleteCert(id string) error {
+func (m *MockDB) DeleteCert(_ context.Context, id string) error {
 	state.DeleteCertInvoked = true
 	return m.OnDeleteCert(id)
 }
 
-func (m *MockDB) RetrieveAnnouncementMonth(date string) (*bff.AnnouncementMonth, error) {
+func (m *MockDB) RetrieveAnnouncementMonth(_ context.Context, date string) (*bff.AnnouncementMonth, error) {
 	state.RetrieveAnnouncementMonthInvoked = true
 	return m.OnRetrieveAnnouncementMonth(date)
 }
 
-func (m *MockDB) UpdateAnnouncementMonth(o *bff.AnnouncementMonth) error {
+func (m *MockDB) UpdateAnnouncementMonth(_ context.Context, o *bff.AnnouncementMonth) error {
 	state.UpdateAnnouncementMonthInvoked = true
 	return m.OnUpdateAnnouncementMonth(o)
 }
 
-func (m *MockDB) DeleteAnnouncementMonth(date string) error {
+func (m *MockDB) DeleteAnnouncementMonth(_ context.Context, date string) error {
 	state.DeleteAnnouncementMonthInvoked = true
 	return m.OnDeleteAnnouncementMonth(date)
 }
 
-func (m *MockDB) ListOrganizations() iterator.OrganizationIterator {
+func (m *MockDB) ListOrganizations(_ context.Context) iterator.OrganizationIterator {
 	state.ListOrganizationsInvoked = true
 	return m.OnListOrganizations()
 }
 
-func (m *MockDB) CreateOrganization(o *bff.Organization) (string, error) {
+func (m *MockDB) CreateOrganization(_ context.Context, o *bff.Organization) (string, error) {
 	state.CreateOrganizationInvoked = true
 	return m.OnCreateOrganization(o)
 }
 
-func (m *MockDB) RetrieveOrganization(id uuid.UUID) (*bff.Organization, error) {
+func (m *MockDB) RetrieveOrganization(_ context.Context, id uuid.UUID) (*bff.Organization, error) {
 	state.RetrieveOrganizationInvoked = true
 	return m.OnRetrieveOrganization(id)
 }
 
-func (m *MockDB) UpdateOrganization(o *bff.Organization) error {
+func (m *MockDB) UpdateOrganization(_ context.Context, o *bff.Organization) error {
 	state.UpdateOrganizationInvoked = true
 	return m.OnUpdateOrganization(o)
 }
 
-func (m *MockDB) DeleteOrganization(id uuid.UUID) error {
+func (m *MockDB) DeleteOrganization(_ context.Context, id uuid.UUID) error {
 	state.DeleteOrganizationInvoked = true
 	return m.OnDeleteOrganization(id)
 }

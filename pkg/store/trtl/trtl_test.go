@@ -44,7 +44,7 @@ func (s *trtlStoreTestSuite) SetupSuite() {
 	require := s.Require()
 
 	// Discard logging from the application to focus on test logs
-	// NOTE: ConsoleLog MUST be false otherwise this will be overriden
+	// NOTE: ConsoleLog MUST be false otherwise this will be overwritten
 	logger.Discard()
 
 	var err error
@@ -140,26 +140,26 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	require.NoError(err)
 
 	// Initially there should be no VASPs
-	iter := db.ListVASPs()
+	iter := db.ListVASPs(context.Background())
 	require.False(iter.Next())
 	iter.Release()
 
 	// Should get a not found error trying to retrieve a VASP that doesn't exist
-	_, err = db.RetrieveVASP("12345")
+	_, err = db.RetrieveVASP(context.Background(), "12345")
 	require.EqualError(err, storeerrors.ErrEntityNotFound.Error())
 
 	// Attempt to Create the VASP
-	id, err := db.CreateVASP(alice)
+	id, err := db.CreateVASP(context.Background(), alice)
 	require.NoError(err)
 	require.NotEmpty(id)
 
 	// Should not be able to create a duplicate VASP
-	id2, err := db.CreateVASP(alice)
+	id2, err := db.CreateVASP(context.Background(), alice)
 	require.EqualError(err, storeerrors.ErrDuplicateEntity.Error())
 	require.Empty(id2)
 
 	// Attempt to Retrieve the VASP
-	alicer, err := db.RetrieveVASP(id)
+	alicer, err := db.RetrieveVASP(context.Background(), id)
 	require.NoError(err)
 	require.Equal(id, alicer.Id)
 	require.Equal(alicer.FirstListed, alicer.LastUpdated)
@@ -174,10 +174,10 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	alicer.Entity.Name.NameIdentifiers[0].LegalPersonName = "AliceLiteCoin, LLC"
 	alicer.VerificationStatus = pb.VerificationState_VERIFIED
 	alicer.VerifiedOn = "2021-06-30T10:40:40Z"
-	err = db.UpdateVASP(alicer)
+	err = db.UpdateVASP(context.Background(), alicer)
 	require.NoError(err)
 
-	alicer, err = db.RetrieveVASP(id)
+	alicer, err = db.RetrieveVASP(context.Background(), id)
 	require.NoError(err)
 	require.Equal(id, alicer.Id)
 	require.NotEmpty(alicer.LastUpdated)
@@ -187,9 +187,9 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	require.Equal(alicer.VerificationStatus, pb.VerificationState_VERIFIED)
 
 	// Delete the VASP
-	err = db.DeleteVASP(id)
+	err = db.DeleteVASP(context.Background(), id)
 	require.NoError(err)
-	alicer, err = db.RetrieveVASP(id)
+	alicer, err = db.RetrieveVASP(context.Background(), id)
 	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
 	require.Empty(alicer)
 
@@ -198,13 +198,13 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	require.NoError(err)
 
 	// Test listing all of the VASPs
-	reqs, err := db.ListVASPs().All()
+	reqs, err := db.ListVASPs(context.Background()).All()
 	require.NoError(err)
 	require.Len(reqs, 10)
 
 	// Test seeking to a specific VASP
 	key := reqs[5].Id
-	iter = db.ListVASPs()
+	iter = db.ListVASPs(context.Background())
 	require.True(iter.SeekId(key))
 	v, err := iter.VASP()
 	require.NoError(err)
@@ -235,7 +235,7 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 
 	// Test iterating over all the VASPs
 	var niters int
-	iter = db.ListVASPs()
+	iter = db.ListVASPs(context.Background())
 	for iter.Next() {
 		require.NotEmpty(iter.VASP())
 		niters++
@@ -249,7 +249,7 @@ func (s *trtlStoreTestSuite) TestDirectoryStore() {
 	require.NoError(err)
 
 	// Test listing all of the VASPs
-	reqs, err = db.ListVASPs().All()
+	reqs, err = db.ListVASPs(context.Background()).All()
 	require.NoError(err)
 	require.Len(reqs, 110)
 
@@ -285,20 +285,20 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 	require.NoError(err)
 
 	// Initially there should be no Certs
-	iter := db.ListCerts()
+	iter := db.ListCerts(context.Background())
 	require.False(iter.Next())
 	iter.Release()
 
 	// Should get a not found error trying to retrieve a Cert that doesn't exist
-	_, err = db.RetrieveCert("12345")
+	_, err = db.RetrieveCert(context.Background(), "12345")
 	require.EqualError(err, storeerrors.ErrEntityNotFound.Error())
 
 	// Attempt to Create the Cert
-	id, err := db.CreateCert(cert)
+	id, err := db.CreateCert(context.Background(), cert)
 	s.NoError(err)
 
 	// Attempt to Retrieve the Cert
-	crr, err := db.RetrieveCert(id)
+	crr, err := db.RetrieveCert(context.Background(), id)
 	s.NoError(err)
 	s.NotNil(crr)
 	s.Equal(id, crr.Id)
@@ -315,7 +315,7 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 		Status:  models.CertificateState_ISSUED,
 		Details: cert.Details,
 	}
-	_, err = db.CreateCert(icrr)
+	_, err = db.CreateCert(context.Background(), icrr)
 	s.ErrorIs(err, storeerrors.ErrIDAlreadySet)
 
 	// Sleep for a second to roll over the clock for the modified time stamp
@@ -323,22 +323,22 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 
 	// Update the Cert
 	crr.Status = models.CertificateState_REVOKED
-	err = db.UpdateCert(crr)
+	err = db.UpdateCert(context.Background(), crr)
 	s.NoError(err)
 
-	crr, err = db.RetrieveCert(id)
+	crr, err = db.RetrieveCert(context.Background(), id)
 	s.NoError(err)
 	s.Equal(id, crr.Id)
 	s.Equal(models.CertificateState_REVOKED, crr.Status)
 
 	// Attempt to update a certificate request with no Id on it
 	cert.Id = ""
-	s.ErrorIs(db.UpdateCert(cert), storeerrors.ErrIncompleteRecord)
+	s.ErrorIs(db.UpdateCert(context.Background(), cert), storeerrors.ErrIncompleteRecord)
 
 	// Delete the Cert
-	err = db.DeleteCert(id)
+	err = db.DeleteCert(context.Background(), id)
 	s.NoError(err)
-	crr, err = db.RetrieveCert(id)
+	crr, err = db.RetrieveCert(context.Background(), id)
 	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
 	s.Empty(crr)
 
@@ -352,17 +352,17 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 				SerialNumber: []byte(uuid.New().String()),
 			},
 		}
-		_, err := db.CreateCert(crr)
+		_, err := db.CreateCert(context.Background(), crr)
 		s.NoError(err)
 	}
 
 	// Test listing all of the certificates
-	certs, err := db.ListCerts().All()
+	certs, err := db.ListCerts(context.Background()).All()
 	s.NoError(err)
 	s.Len(certs, 10)
 
 	// Test Prev() and Next() interactions
-	iter = db.ListCerts()
+	iter = db.ListCerts(context.Background())
 	require.False(iter.Prev(), "should move behind the first Cert")
 	require.True(iter.Next(), "should move to the first Cert")
 	first, err := iter.Cert()
@@ -393,12 +393,12 @@ func (s *trtlStoreTestSuite) TestCertificateStore() {
 				SerialNumber: []byte(uuid.New().String()),
 			},
 		}
-		_, err := db.CreateCert(crr)
+		_, err := db.CreateCert(context.Background(), crr)
 		s.NoError(err)
 	}
 
 	// Test listing all of the Cert
-	certs, err = db.ListCerts().All()
+	certs, err = db.ListCerts(context.Background()).All()
 	require.NoError(err)
 	require.Len(certs, 110)
 }
@@ -430,20 +430,20 @@ func (s *trtlStoreTestSuite) TestCertificateRequestStore() {
 	require.NoError(err)
 
 	// Initially there should be no CertReqs
-	iter := db.ListCertReqs()
+	iter := db.ListCertReqs(context.Background())
 	require.False(iter.Next())
 	iter.Release()
 
 	// Should get a not found error trying to retrieve a CertReq that doesn't exist
-	_, err = db.RetrieveCertReq("12345")
+	_, err = db.RetrieveCertReq(context.Background(), "12345")
 	require.EqualError(err, storeerrors.ErrEntityNotFound.Error())
 
 	// Attempt to Create the CertReq
-	id, err := db.CreateCertReq(certreq)
+	id, err := db.CreateCertReq(context.Background(), certreq)
 	s.NoError(err)
 
 	// Attempt to Retrieve the CertReq
-	crr, err := db.RetrieveCertReq(id)
+	crr, err := db.RetrieveCertReq(context.Background(), id)
 	s.NoError(err)
 	s.Equal(id, crr.Id)
 	s.NotEmpty(crr.Created)
@@ -458,7 +458,7 @@ func (s *trtlStoreTestSuite) TestCertificateRequestStore() {
 		CommonName: crr.CommonName,
 		Status:     models.CertificateRequestState_INITIALIZED,
 	}
-	_, err = db.CreateCertReq(icrr)
+	_, err = db.CreateCertReq(context.Background(), icrr)
 	s.ErrorIs(err, storeerrors.ErrIDAlreadySet)
 
 	// Sleep for a second to roll over the clock for the modified time stamp
@@ -466,10 +466,10 @@ func (s *trtlStoreTestSuite) TestCertificateRequestStore() {
 
 	// Update the CertReq
 	crr.Status = models.CertificateRequestState_COMPLETED
-	err = db.UpdateCertReq(crr)
+	err = db.UpdateCertReq(context.Background(), crr)
 	s.NoError(err)
 
-	crr, err = db.RetrieveCertReq(id)
+	crr, err = db.RetrieveCertReq(context.Background(), id)
 	s.NoError(err)
 	s.Equal(id, crr.Id)
 	s.Equal(models.CertificateRequestState_COMPLETED, crr.Status)
@@ -478,12 +478,12 @@ func (s *trtlStoreTestSuite) TestCertificateRequestStore() {
 
 	// Attempt to update a certificate request with no Id on it
 	certreq.Id = ""
-	s.ErrorIs(db.UpdateCertReq(certreq), storeerrors.ErrIncompleteRecord)
+	s.ErrorIs(db.UpdateCertReq(context.Background(), certreq), storeerrors.ErrIncompleteRecord)
 
 	// Delete the CertReq
-	err = db.DeleteCertReq(id)
+	err = db.DeleteCertReq(context.Background(), id)
 	s.NoError(err)
-	crr, err = db.RetrieveCertReq(id)
+	crr, err = db.RetrieveCertReq(context.Background(), id)
 	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
 	s.Empty(crr)
 
@@ -494,17 +494,17 @@ func (s *trtlStoreTestSuite) TestCertificateRequestStore() {
 			CommonName: fmt.Sprintf("trisa%d.example.com", i+1),
 			Status:     models.CertificateRequestState_COMPLETED,
 		}
-		_, err := db.CreateCertReq(crr)
+		_, err := db.CreateCertReq(context.Background(), crr)
 		s.NoError(err)
 	}
 
 	// Test listing all of the certificates
-	reqs, err := db.ListCertReqs().All()
+	reqs, err := db.ListCertReqs(context.Background()).All()
 	s.NoError(err)
 	s.Len(reqs, 10)
 
 	// Test Prev() and Next() interactions
-	iter = db.ListCertReqs()
+	iter = db.ListCertReqs(context.Background())
 	require.False(iter.Prev(), "should move behind the first CertReq")
 	require.True(iter.Next(), "should move to the first CertReq")
 	first, err := iter.CertReq()
@@ -532,12 +532,12 @@ func (s *trtlStoreTestSuite) TestCertificateRequestStore() {
 			CommonName: fmt.Sprintf("trisa%d.example.com", i+1),
 			Status:     models.CertificateRequestState_COMPLETED,
 		}
-		_, err := db.CreateCertReq(crr)
+		_, err := db.CreateCertReq(context.Background(), crr)
 		s.NoError(err)
 	}
 
 	// Test listing all of the CertReqs
-	reqs, err = db.ListCertReqs().All()
+	reqs, err = db.ListCertReqs(context.Background()).All()
 	require.NoError(err)
 	require.Len(reqs, 110)
 }
@@ -567,10 +567,10 @@ func (s *trtlStoreTestSuite) TestAnnouncementStore() {
 	require.NoError(err)
 
 	// Create the announcement month
-	require.NoError(db.UpdateAnnouncementMonth(month))
+	require.NoError(db.UpdateAnnouncementMonth(context.Background(), month))
 
 	// Attempt to Retrieve the announcement month
-	m, err := db.RetrieveAnnouncementMonth(month.Date)
+	m, err := db.RetrieveAnnouncementMonth(context.Background(), month.Date)
 	require.NoError(err)
 	require.Equal(month.Date, m.Date)
 	require.NotEmpty(m.Created)
@@ -578,16 +578,16 @@ func (s *trtlStoreTestSuite) TestAnnouncementStore() {
 	require.Len(m.Announcements, len(month.Announcements))
 
 	// Attempt to Retrieve a non-existent announcement month
-	_, err = db.RetrieveAnnouncementMonth("")
+	_, err = db.RetrieveAnnouncementMonth(context.Background(), "")
 	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
-	_, err = db.RetrieveAnnouncementMonth("2022-01-01")
+	_, err = db.RetrieveAnnouncementMonth(context.Background(), "2022-01-01")
 	require.Error(err)
-	_, err = db.RetrieveAnnouncementMonth("2021-01")
+	_, err = db.RetrieveAnnouncementMonth(context.Background(), "2021-01")
 	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
 
 	// Attempt to save an announcement month without a date on it
 	month.Date = ""
-	err = db.UpdateAnnouncementMonth(month)
+	err = db.UpdateAnnouncementMonth(context.Background(), month)
 	require.ErrorIs(err, storeerrors.ErrIncompleteRecord)
 
 	// Sleep to advance the clock for the modified timestamp
@@ -595,10 +595,10 @@ func (s *trtlStoreTestSuite) TestAnnouncementStore() {
 
 	// Update the announcement month
 	m.Announcements[0].Title = "Happy New Year!"
-	err = db.UpdateAnnouncementMonth(m)
+	err = db.UpdateAnnouncementMonth(context.Background(), m)
 	require.NoError(err)
 
-	m, err = db.RetrieveAnnouncementMonth(m.Date)
+	m, err = db.RetrieveAnnouncementMonth(context.Background(), m.Date)
 	require.NoError(err)
 	require.Equal("Happy New Year!", m.Announcements[0].Title)
 	require.NotEmpty(m.Modified)
@@ -616,22 +616,22 @@ func (s *trtlStoreTestSuite) TestAnnouncementStore() {
 			},
 		},
 	}
-	require.NoError(db.UpdateAnnouncementMonth(month))
+	require.NoError(db.UpdateAnnouncementMonth(context.Background(), month))
 
 	// Test that we can still retrieve both months
-	january, err := db.RetrieveAnnouncementMonth("2022-01")
+	january, err := db.RetrieveAnnouncementMonth(context.Background(), "2022-01")
 	require.NoError(err)
 	require.Equal("Happy New Year!", january.Announcements[0].Title)
 
-	february, err := db.RetrieveAnnouncementMonth("2022-02")
+	february, err := db.RetrieveAnnouncementMonth(context.Background(), "2022-02")
 	require.NoError(err)
 	require.Equal("Happy Groundhog Day", february.Announcements[0].Title)
 
 	// Delete an announcement month
-	require.NoError(db.DeleteAnnouncementMonth("2022-01"))
+	require.NoError(db.DeleteAnnouncementMonth(context.Background(), "2022-01"))
 
 	// Should not be able to retrieve the deleted announcement month
-	_, err = db.RetrieveAnnouncementMonth("2022-01")
+	_, err = db.RetrieveAnnouncementMonth(context.Background(), "2022-01")
 	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
 }
 
@@ -647,7 +647,7 @@ func (s *trtlStoreTestSuite) TestOrganizationStore() {
 
 	// Create a new organization in the database
 	org := &bff.Organization{}
-	id, err := db.CreateOrganization(org)
+	id, err := db.CreateOrganization(context.Background(), org)
 	require.NoError(err)
 
 	// Verify that the created record has an ID and timestamps
@@ -659,14 +659,14 @@ func (s *trtlStoreTestSuite) TestOrganizationStore() {
 	// Retrieve the organization by UUID
 	uu, err := bff.ParseOrgID(org.Id)
 	require.NoError(err)
-	o, err := db.RetrieveOrganization(uu)
+	o, err := db.RetrieveOrganization(context.Background(), uu)
 	require.NoError(err)
 	require.True(proto.Equal(org, o), "retrieved organization does not match created organization")
 
 	// Attempt to retrieve a non-existent organization
-	_, err = db.RetrieveOrganization(uuid.Nil)
+	_, err = db.RetrieveOrganization(context.Background(), uuid.Nil)
 	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
-	_, err = db.RetrieveOrganization(uuid.New())
+	_, err = db.RetrieveOrganization(context.Background(), uuid.New())
 	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
 
 	// Sleep to advance the clock for the modified timestamp
@@ -674,10 +674,10 @@ func (s *trtlStoreTestSuite) TestOrganizationStore() {
 
 	// Update the organization
 	org.Name = "Alice Corp"
-	err = db.UpdateOrganization(org)
+	err = db.UpdateOrganization(context.Background(), org)
 	require.NoError(err)
 
-	o, err = db.RetrieveOrganization(uu)
+	o, err = db.RetrieveOrganization(context.Background(), uu)
 	require.NoError(err)
 	require.Equal("Alice Corp", o.Name)
 	require.NotEmpty(o.Modified)
@@ -685,12 +685,12 @@ func (s *trtlStoreTestSuite) TestOrganizationStore() {
 
 	// Attempt to update an organization with no Id on it
 	org.Id = ""
-	require.ErrorIs(db.UpdateOrganization(org), storeerrors.ErrEntityNotFound)
+	require.ErrorIs(db.UpdateOrganization(context.Background(), org), storeerrors.ErrEntityNotFound)
 
 	// Delete the organization
-	err = db.DeleteOrganization(uu)
+	err = db.DeleteOrganization(context.Background(), uu)
 	require.NoError(err)
-	_, err = db.RetrieveOrganization(uu)
+	_, err = db.RetrieveOrganization(context.Background(), uu)
 	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
 }
 
@@ -717,7 +717,7 @@ func createVASPs(db *store.Store, num, startIndex int) error {
 			BusinessCategory: bcats[i%len(bcats)],
 		}
 
-		if _, err := db.CreateVASP(vasp); err != nil {
+		if _, err := db.CreateVASP(context.Background(), vasp); err != nil {
 			return err
 		}
 	}
@@ -728,7 +728,7 @@ func createVASPs(db *store.Store, num, startIndex int) error {
 
 func deleteVASPs(db *store.Store) error {
 	n := 0
-	iter := db.ListVASPs()
+	iter := db.ListVASPs(context.Background())
 	for iter.Next() {
 		vasp, err := iter.VASP()
 		if err != nil {
@@ -736,7 +736,7 @@ func deleteVASPs(db *store.Store) error {
 			return err
 		}
 
-		if err := db.DeleteVASP(vasp.Id); err != nil {
+		if err := db.DeleteVASP(context.Background(), vasp.Id); err != nil {
 			iter.Release()
 			return err
 		}

@@ -89,7 +89,7 @@ func (s *certTestSuite) TestCertManager() {
 
 	// Ensure that the email logs are cleared before the test
 	require.NoError(fixtures.ClearContactEmailLogs(echoVASP), "could not clear contact email logs")
-	require.NoError(s.db.UpdateVASP(echoVASP), "could not update echo VASP")
+	require.NoError(s.db.UpdateVASP(context.Background(), echoVASP), "could not update echo VASP")
 
 	// Create a secret that the certificate manager can retrieve
 	sm := s.secret.With(quebecCertReq.Id)
@@ -101,7 +101,7 @@ func (s *certTestSuite) TestCertManager() {
 	s.certman.HandleCertificateRequests()
 
 	// VASP state should be changed to ISSUING_CERTIFICATE
-	v, err := s.db.RetrieveVASP(echoVASP.Id)
+	v, err := s.db.RetrieveVASP(context.Background(), echoVASP.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
 	// Audit log should contain one additional entry for ISSUING_CERTIFICATE
@@ -113,7 +113,7 @@ func (s *certTestSuite) TestCertManager() {
 	require.Equal("automated", log[4].Source)
 
 	// Certificate request should be updated
-	certReq, err := s.db.RetrieveCertReq(quebecCertReq.Id)
+	certReq, err := s.db.RetrieveCertReq(context.Background(), quebecCertReq.Id)
 	require.NoError(err)
 	require.Greater(int(certReq.AuthorityId), 0)
 	require.Greater(int(certReq.BatchId), 0)
@@ -140,7 +140,7 @@ func (s *certTestSuite) TestCertManager() {
 	require.NotEmpty(secret)
 
 	// VASP should contain the new certificate
-	v, err = s.db.RetrieveVASP(echoVASP.Id)
+	v, err = s.db.RetrieveVASP(context.Background(), echoVASP.Id)
 	require.NoError(err)
 	idCert := v.IdentityCertificate
 	require.NotNil(idCert)
@@ -176,7 +176,7 @@ func (s *certTestSuite) TestCertManager() {
 	require.Equal("automated", log[5].Source)
 
 	// Certificate record should be created in the database
-	cert, err := s.db.RetrieveCert(certIDs[0])
+	cert, err := s.db.RetrieveCert(context.Background(), certIDs[0])
 	require.NoError(err)
 	require.Equal(certIDs[0], cert.Id)
 	require.Equal(certReq.Id, cert.Request)
@@ -198,7 +198,7 @@ func (s *certTestSuite) TestCertManager() {
 	emails.CheckEmails(s.T(), messages)
 
 	// Certificate request should be updated
-	certReq, err = s.db.RetrieveCertReq(quebecCertReq.Id)
+	certReq, err = s.db.RetrieveCertReq(context.Background(), quebecCertReq.Id)
 	require.NoError(err)
 	require.Equal(models.CertificateRequestState_COMPLETED, certReq.Status)
 	require.Equal(cert.Id, certReq.Certificate)
@@ -231,7 +231,7 @@ func (s *certTestSuite) TestCertManagerThirtyDayReissuanceReminder() {
 	hotelVASP, err := s.fixtures.GetVASP("hotel")
 	require.NoError(err, "could not get hotel VASP")
 	hotelVASP.VerificationStatus = pb.VerificationState_REJECTED
-	require.NoError(s.db.UpdateVASP(hotelVASP))
+	require.NoError(s.db.UpdateVASP(context.Background(), hotelVASP))
 
 	// Call the certman function at 29 days, which will send
 	// the thirty day cert reissuance reminder to echoVASP and
@@ -243,7 +243,7 @@ func (s *certTestSuite) TestCertManagerThirtyDayReissuanceReminder() {
 	// Run the loop again to ensure that emails are not resent to contacts
 	s.certman.HandleCertificateReissuance()
 
-	charlie, err := s.db.RetrieveVASP(charlieVASP.Id)
+	charlie, err := s.db.RetrieveVASP(context.Background(), charlieVASP.Id)
 	require.NoError(err)
 
 	// Ensure that the expected emails have been sent, using
@@ -292,10 +292,10 @@ func (s *certTestSuite) TestCertManagerSevenDayReissuanceReminder() {
 	// Run the loop again to ensure that emails are not resent to contacts
 	s.certman.HandleCertificateReissuance()
 
-	charlie, err := s.db.RetrieveVASP(charlieVASP.Id)
+	charlie, err := s.db.RetrieveVASP(context.Background(), charlieVASP.Id)
 	require.NoError(err)
 
-	hotel, err := s.db.RetrieveVASP(hotelVASP.Id)
+	hotel, err := s.db.RetrieveVASP(context.Background(), hotelVASP.Id)
 	require.NoError(err)
 
 	// Ensure that the expected email has been sent, using
@@ -335,13 +335,13 @@ func (s *certTestSuite) TestCertManagerExpiration() {
 		Id:     certID,
 		Status: models.CertificateState_ISSUED,
 	}
-	err = s.db.UpdateCert(cert)
+	err = s.db.UpdateCert(context.Background(), cert)
 	require.NoError(err)
 
 	// Run the loop again to ensure that emails are not resent to contacts
 	s.certman.HandleCertificateReissuance()
 
-	cert, err = s.db.RetrieveCert(certID)
+	cert, err = s.db.RetrieveCert(context.Background(), certID)
 	require.NoError(err)
 	require.Equal(cert.Status, models.CertificateState_EXPIRED)
 
@@ -365,11 +365,11 @@ func (s *certTestSuite) TestCertManagerReissuance() {
 	deltaVASP, err := s.fixtures.GetVASP("delta")
 	require.NoError(err)
 	deltaVASP.VerificationStatus = pb.VerificationState_REJECTED
-	require.NoError(s.db.UpdateVASP(deltaVASP))
+	require.NoError(s.db.UpdateVASP(context.Background(), deltaVASP))
 	hotelVASP, err := s.fixtures.GetVASP("hotel")
 	require.NoError(err)
 	hotelVASP.VerificationStatus = pb.VerificationState_REJECTED
-	require.NoError(s.db.UpdateVASP(hotelVASP))
+	require.NoError(s.db.UpdateVASP(context.Background(), hotelVASP))
 
 	// Capture the number of certificate requests on the charlie VASP
 	// before reissuance is triggered.
@@ -386,7 +386,7 @@ func (s *certTestSuite) TestCertManagerReissuance() {
 	callTime := time.Now()
 	s.certman.HandleCertificateReissuance()
 
-	v, err := s.db.RetrieveVASP(charlieVASP.Id)
+	v, err := s.db.RetrieveVASP(context.Background(), charlieVASP.Id)
 	require.NoError(err)
 
 	reqIDs, err := models.GetCertReqIDs(v)
@@ -395,7 +395,7 @@ func (s *certTestSuite) TestCertManagerReissuance() {
 
 	// Retrieve the latest certificate request for charlie.
 	certReqId := reqIDs[len(reqIDs)-1]
-	certReq, err := s.db.RetrieveCertReq(certReqId)
+	certReq, err := s.db.RetrieveCertReq(context.Background(), certReqId)
 	require.NoError(err)
 	require.Equal(certReq.Status, models.CertificateRequestState_READY_TO_SUBMIT)
 
@@ -412,7 +412,7 @@ func (s *certTestSuite) TestCertManagerReissuance() {
 
 	// Verify that the reissuance logic does not submit duplicate certificate requests.
 	s.certman.HandleCertificateReissuance()
-	v, err = s.db.RetrieveVASP(charlieVASP.Id)
+	v, err = s.db.RetrieveVASP(context.Background(), charlieVASP.Id)
 	require.NoError(err)
 	reqIDs, err = models.GetCertReqIDs(v)
 	require.NoError(err)
@@ -420,19 +420,19 @@ func (s *certTestSuite) TestCertManagerReissuance() {
 
 	// Call the cert request loop once to submit the certificate request and start it's processing.
 	s.certman.HandleCertificateRequests()
-	v, err = s.db.RetrieveVASP(charlieVASP.Id)
+	v, err = s.db.RetrieveVASP(context.Background(), charlieVASP.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
 
 	// On the second call to the cert request loop the certificate should be downloaded and
 	// attached to the VASP. The VASP should be in the VERIFIED state.
 	s.certman.HandleCertificateRequests()
-	v, err = s.db.RetrieveVASP(charlieVASP.Id)
+	v, err = s.db.RetrieveVASP(context.Background(), charlieVASP.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_VERIFIED, v.VerificationStatus)
 
 	// Ensure that the certificate request is in the COMPLETED state.
-	certReq, err = s.db.RetrieveCertReq(certReqId)
+	certReq, err = s.db.RetrieveCertReq(context.Background(), certReqId)
 	require.NoError(err)
 	require.Equal(certReq.Status, models.CertificateRequestState_COMPLETED)
 
@@ -488,7 +488,7 @@ func (s *certTestSuite) updateVaspIdentityCert(vasp *pb.VASP, daysUntilExpiratio
 	days := time.Hour * 24
 	daysFromNow := time.Now().Add(days * daysUntilExpiration).Format(time.RFC3339Nano)
 	vasp.IdentityCertificate = &pb.Certificate{NotAfter: daysFromNow}
-	s.db.UpdateVASP(vasp)
+	s.db.UpdateVASP(context.Background(), vasp)
 }
 
 func (s *certTestSuite) setupVASP(vasp *pb.VASP) *pb.VASP {
@@ -505,7 +505,7 @@ func (s *certTestSuite) setupVASP(vasp *pb.VASP) *pb.VASP {
 	models.SetContactVerification(vasp.Contacts.Administrative, "", true)
 	vasp.VerificationStatus = pb.VerificationState_VERIFIED
 
-	s.db.CreateVASP(vasp)
+	s.db.CreateVASP(context.Background(), vasp)
 	return vasp
 }
 
@@ -523,9 +523,9 @@ func (s *certTestSuite) TestCertManagerBadState() {
 
 	// Set VASP to pending review
 	echoVASP.VerificationStatus = pb.VerificationState_PENDING_REVIEW
-	require.NoError(s.db.UpdateVASP(echoVASP))
+	require.NoError(s.db.UpdateVASP(context.Background(), echoVASP))
 
-	v, err := s.db.RetrieveVASP(echoVASP.Id)
+	v, err := s.db.RetrieveVASP(context.Background(), echoVASP.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_PENDING_REVIEW, v.VerificationStatus)
 
@@ -533,40 +533,40 @@ func (s *certTestSuite) TestCertManagerBadState() {
 	s.certman.HandleCertificateRequests()
 
 	// Certificate request should be rejected before submission
-	certReq, err := s.db.RetrieveCertReq(quebecCertReq.Id)
+	certReq, err := s.db.RetrieveCertReq(context.Background(), quebecCertReq.Id)
 	require.NoError(err)
 	require.Equal(models.CertificateRequestState_CR_REJECTED, certReq.Status)
 
 	// Set VASP to rejected
 	echoVASP.VerificationStatus = pb.VerificationState_REJECTED
-	require.NoError(s.db.UpdateVASP(echoVASP))
+	require.NoError(s.db.UpdateVASP(context.Background(), echoVASP))
 
 	// Run the cert manager for a loop
 	s.certman.HandleCertificateRequests()
 
 	// Certificate request should be rejected before submission
-	certReq, err = s.db.RetrieveCertReq(quebecCertReq.Id)
+	certReq, err = s.db.RetrieveCertReq(context.Background(), quebecCertReq.Id)
 	require.NoError(err)
 	require.Equal(models.CertificateRequestState_CR_REJECTED, certReq.Status)
 
 	// Set VASP to verified for correct submission
 	echoVASP.VerificationStatus = pb.VerificationState_VERIFIED
-	require.NoError(s.db.UpdateVASP(echoVASP))
+	require.NoError(s.db.UpdateVASP(context.Background(), echoVASP))
 	quebecCertReq.Status = models.CertificateRequestState_READY_TO_SUBMIT
-	require.NoError(s.db.UpdateCertReq(quebecCertReq))
+	require.NoError(s.db.UpdateCertReq(context.Background(), quebecCertReq))
 
 	// Move the certificate to processing
 	s.certman.HandleCertificateRequests()
 
 	// Set VASP to rejected
 	echoVASP.VerificationStatus = pb.VerificationState_REJECTED
-	require.NoError(s.db.UpdateVASP(echoVASP))
+	require.NoError(s.db.UpdateVASP(context.Background(), echoVASP))
 
 	// Run the cert manager for a loop
 	s.certman.HandleCertificateRequests()
 
 	// Certificate request should be rejected before download
-	certReq, err = s.db.RetrieveCertReq(quebecCertReq.Id)
+	certReq, err = s.db.RetrieveCertReq(context.Background(), quebecCertReq.Id)
 	require.NoError(err)
 	require.Equal(models.CertificateRequestState_CR_REJECTED, certReq.Status)
 	require.Empty(certReq.Certificate)
@@ -591,7 +591,7 @@ func (s *certTestSuite) TestCertManagerEndEntityProfile() {
 		"stateOrProvinceName": "California",
 		"countryName":         "US",
 	}
-	require.NoError(s.db.UpdateCertReq(quebecCertReq))
+	require.NoError(s.db.UpdateCertReq(context.Background(), quebecCertReq))
 
 	// Create a secret that the certificate manager can retrieve.
 	sm := s.secret.With(quebecCertReq.Id)
@@ -604,13 +604,13 @@ func (s *certTestSuite) TestCertManagerEndEntityProfile() {
 	s.certman.HandleCertificateRequests()
 
 	// VASP should contain the new certificate
-	v, err := s.db.RetrieveVASP(echoVASP.Id)
+	v, err := s.db.RetrieveVASP(context.Background(), echoVASP.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_VERIFIED, v.VerificationStatus)
 	require.NotNil(v.IdentityCertificate)
 
 	// Certificate request should be updated
-	cert, err := s.db.RetrieveCertReq(quebecCertReq.Id)
+	cert, err := s.db.RetrieveCertReq(context.Background(), quebecCertReq.Id)
 	require.NoError(err)
 	require.Equal(models.CertificateRequestState_COMPLETED, cert.Status)
 }
@@ -628,7 +628,7 @@ func (s *certTestSuite) TestCertManagerCipherTraceEEProfile() {
 	require.NoError(err, "could not get quebec VASP")
 
 	quebecCertReq.Profile = sectigo.ProfileCipherTraceEE
-	require.NoError(s.db.UpdateCertReq(quebecCertReq))
+	require.NoError(s.db.UpdateCertReq(context.Background(), quebecCertReq))
 
 	// Create a secret that the certificate manager can retrieve
 	sm := s.secret.With(quebecCertReq.Id)
@@ -641,13 +641,13 @@ func (s *certTestSuite) TestCertManagerCipherTraceEEProfile() {
 	s.certman.HandleCertificateRequests()
 
 	// VASP should contain the new certificate
-	v, err := s.db.RetrieveVASP(echoVASP.Id)
+	v, err := s.db.RetrieveVASP(context.Background(), echoVASP.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_VERIFIED, v.VerificationStatus)
 	require.NotNil(v.IdentityCertificate)
 
 	// Certificate request should be updated
-	cert, err := s.db.RetrieveCertReq(quebecCertReq.Id)
+	cert, err := s.db.RetrieveCertReq(context.Background(), quebecCertReq.Id)
 	require.NoError(err)
 	require.Equal(models.CertificateRequestState_COMPLETED, cert.Status)
 }
@@ -671,12 +671,12 @@ func (s *certTestSuite) TestSubmitNoBalance() {
 	s.certman.HandleCertificateRequests()
 
 	// VASP should still be in the ISSUING_CERTIFICATE state
-	v, err := s.db.RetrieveVASP(echoVASP.Id)
+	v, err := s.db.RetrieveVASP(context.Background(), echoVASP.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
 
 	// Cert request should still be in the READY_TO_SUBMIT state
-	cert, err := s.db.RetrieveCertReq(quebecCertReq.Id)
+	cert, err := s.db.RetrieveCertReq(context.Background(), quebecCertReq.Id)
 	require.NoError(err)
 	require.Equal(models.CertificateRequestState_READY_TO_SUBMIT, cert.Status)
 
@@ -704,12 +704,12 @@ func (s *certTestSuite) TestSubmitNoPassword() {
 	s.certman.HandleCertificateRequests()
 
 	// VASP should still be in the ISSUING_CERTIFICATE state
-	v, err := s.db.RetrieveVASP(echoVASP.Id)
+	v, err := s.db.RetrieveVASP(context.Background(), echoVASP.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
 
 	// Cert request should still be in the READY_TO_SUBMIT state
-	cert, err := s.db.RetrieveCertReq(quebecCertReq.Id)
+	cert, err := s.db.RetrieveCertReq(context.Background(), quebecCertReq.Id)
 	require.NoError(err)
 	require.Equal(models.CertificateRequestState_READY_TO_SUBMIT, cert.Status)
 
@@ -747,7 +747,7 @@ func (s *certTestSuite) TestSubmitBatchError() {
 		"stateOrProvinceName": "California",
 		"country":             "US",
 	}
-	require.NoError(s.db.UpdateCertReq(quebecCertReq))
+	require.NoError(s.db.UpdateCertReq(context.Background(), quebecCertReq))
 
 	// Ensure that Sectigo returns an error response when the batch is submitted.
 	mock.Handle(sectigo.CreateSingleCertBatchEP, func(c *gin.Context) {
@@ -758,12 +758,12 @@ func (s *certTestSuite) TestSubmitBatchError() {
 	s.certman.HandleCertificateRequests()
 
 	// VASP should still be in the ISSUING_CERTIFICATE state
-	v, err := s.db.RetrieveVASP(echoVASP.Id)
+	v, err := s.db.RetrieveVASP(context.Background(), echoVASP.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
 
 	// Cert request should still be in the READY_TO_SUBMIT state
-	cert, err := s.db.RetrieveCertReq(quebecCertReq.Id)
+	cert, err := s.db.RetrieveCertReq(context.Background(), quebecCertReq.Id)
 	require.NoError(err)
 	require.Equal(models.CertificateRequestState_READY_TO_SUBMIT, cert.Status, "certificate request is not in ready to submit state")
 
@@ -794,7 +794,7 @@ func (s *certTestSuite) TestProcessBatchDetailError() {
 	s.certman.HandleCertificateRequests()
 	require.NoError(err, "certman loop unsuccessful")
 
-	v, err := s.db.RetrieveVASP(foxtrot.Id)
+	v, err := s.db.RetrieveVASP(context.Background(), foxtrot.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
 
@@ -812,7 +812,7 @@ func (s *certTestSuite) TestProcessBatchDetailError() {
 	// Run cert manager for one loop
 	s.certman.HandleCertificateRequests()
 
-	v, err = s.db.RetrieveVASP(foxtrot.Id)
+	v, err = s.db.RetrieveVASP(context.Background(), foxtrot.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
 }
@@ -841,12 +841,12 @@ func (s *certTestSuite) TestProcessActiveBatch() {
 	s.certman.HandleCertificateRequests()
 
 	// VASP should still be in the ISSUING_CERTIFICATE state
-	v, err := s.db.RetrieveVASP(foxtrot.Id)
+	v, err := s.db.RetrieveVASP(context.Background(), foxtrot.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
 
 	// Certificate request state should be changed to PROCESSING
-	cert, err := s.db.RetrieveCertReq(sierra.Id)
+	cert, err := s.db.RetrieveCertReq(context.Background(), sierra.Id)
 	require.NoError(err)
 	require.Equal(models.CertificateRequestState_PROCESSING, cert.Status)
 
@@ -887,12 +887,12 @@ func (s *certTestSuite) TestProcessRejected() {
 	s.certman.HandleCertificateRequests()
 
 	// VASP state should be still be ISSUING_CERTIFICATE
-	v, err := s.db.RetrieveVASP(foxtrot.Id)
+	v, err := s.db.RetrieveVASP(context.Background(), foxtrot.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
 
 	// Certificate request state should be changed to CR_REJECTED
-	cert, err := s.db.RetrieveCertReq(sierra.Id)
+	cert, err := s.db.RetrieveCertReq(context.Background(), sierra.Id)
 	require.NoError(err)
 	require.Equal(models.CertificateRequestState_CR_REJECTED, cert.Status)
 
@@ -933,12 +933,12 @@ func (s *certTestSuite) TestProcessBatchError() {
 	s.certman.HandleCertificateRequests()
 
 	// VASP state should be still be ISSUING_CERTIFICATE
-	v, err := s.db.RetrieveVASP(foxtrot.Id)
+	v, err := s.db.RetrieveVASP(context.Background(), foxtrot.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
 
 	// Certificate request state should be changed to CR_ERRORED
-	cert, err := s.db.RetrieveCertReq(sierra.Id)
+	cert, err := s.db.RetrieveCertReq(context.Background(), sierra.Id)
 	require.NoError(err)
 	require.Equal(models.CertificateRequestState_CR_ERRORED, cert.Status)
 
@@ -973,12 +973,12 @@ func (s *certTestSuite) TestProcessBatchNoSuccess() {
 	s.certman.HandleCertificateRequests()
 
 	// VASP state should be still be ISSUING_CERTIFICATE
-	v, err := s.db.RetrieveVASP(foxtrot.Id)
+	v, err := s.db.RetrieveVASP(context.Background(), foxtrot.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
 
 	// Certificate request state should be changed to PROCESSING
-	cert, err := s.db.RetrieveCertReq(sierra.Id)
+	cert, err := s.db.RetrieveCertReq(context.Background(), sierra.Id)
 	require.NoError(err)
 	require.Equal(models.CertificateRequestState_PROCESSING, cert.Status)
 

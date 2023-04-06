@@ -141,7 +141,7 @@ func (s *gdsTestSuite) TestRegister() {
 	require.Contains(reply.Message, "verification code has been sent")
 	require.NotEmpty(reply.Pkcs12Password)
 	// VASP should be in the database
-	v, err := s.svc.GetStore().RetrieveVASP(reply.Id)
+	v, err := s.svc.GetStore().RetrieveVASP(context.Background(), reply.Id)
 	require.NoError(err)
 	require.Equal(reply.Id, v.Id)
 	require.Equal(pb.VerificationState_SUBMITTED, v.VerificationStatus)
@@ -149,7 +149,7 @@ func (s *gdsTestSuite) TestRegister() {
 	ids, err := models.GetCertReqIDs(v)
 	require.NoError(err)
 	require.Len(ids, 1)
-	certReq, err := s.svc.GetStore().RetrieveCertReq(ids[0])
+	certReq, err := s.svc.GetStore().RetrieveCertReq(context.Background(), ids[0])
 	require.NoError(err)
 	require.Equal(v.Id, certReq.Vasp)
 	require.Equal(v.CommonName, certReq.CommonName)
@@ -513,7 +513,7 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	require.Equal(pb.VerificationState_PENDING_REVIEW, reply.Status)
 	require.Contains(reply.Message, "successfully verified")
 	// VASP on the database should be updated
-	vasp, err := s.svc.GetStore().RetrieveVASP(request.Id)
+	vasp, err := s.svc.GetStore().RetrieveVASP(context.Background(), request.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_PENDING_REVIEW, vasp.VerificationStatus)
 	token, err := models.GetAdminVerificationToken(vasp)
@@ -531,7 +531,7 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	require.Nil(reply.Error)
 	require.Equal(pb.VerificationState_PENDING_REVIEW, reply.Status)
 	// Should only change the fields on the contact
-	vasp, err = s.svc.GetStore().RetrieveVASP(request.Id)
+	vasp, err = s.svc.GetStore().RetrieveVASP(context.Background(), request.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_PENDING_REVIEW, vasp.VerificationStatus)
 	token, verified, err = models.GetContactVerification(vasp.Contacts.Legal)
@@ -591,7 +591,7 @@ func (s *gdsTestSuite) TestVerification() {
 
 	// The reference fixture doesn't contain the updated timestamp, so we retrieve the
 	// real VASP object here for comparison purposes.
-	vasp, err := s.svc.GetStore().RetrieveVASP(charlie.Id)
+	vasp, err := s.svc.GetStore().RetrieveVASP(context.Background(), charlie.Id)
 	require.NoError(err)
 
 	// Supplied VASP ID does not exist
@@ -652,9 +652,9 @@ func (s *gdsTestSuite) TestStatus() {
 	notBefore, err := time.Parse(time.RFC3339, status.NotBefore)
 	require.NoError(err)
 	require.True(notBefore.Sub(expectedNotBefore) < time.Minute)
-	notAfer, err := time.Parse(time.RFC3339, status.NotAfter)
+	notAfter, err := time.Parse(time.RFC3339, status.NotAfter)
 	require.NoError(err)
-	require.True(notAfer.Sub(expectedNotAfter) < time.Minute)
+	require.True(notAfter.Sub(expectedNotAfter) < time.Minute)
 }
 
 // TestStatus tests that the Status RPC returns the correct status response when in

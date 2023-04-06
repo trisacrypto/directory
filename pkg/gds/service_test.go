@@ -59,7 +59,7 @@ func (s *gdsTestSuite) ResetConfig() {
 
 func (s *gdsTestSuite) SetupSuite() {
 	// Discard logging from the application to focus on test logs
-	// NOTE: ConsoleLog MUST be false otherwise this will be overriden
+	// NOTE: ConsoleLog MUST be false otherwise this will be overwritten
 	logger.Discard()
 	gin.SetMode(gin.TestMode)
 
@@ -216,10 +216,10 @@ func (s *gdsTestSuite) SetVerificationStatus(id string, status pb.VerificationSt
 	require := s.Require()
 
 	// Retrieve the VASP from the database
-	vasp, err := s.svc.GetStore().RetrieveVASP(id)
+	vasp, err := s.svc.GetStore().RetrieveVASP(context.Background(), id)
 	require.NoError(err, "VASP not found in database")
 
 	// Set the verification status and write back to the database
 	vasp.VerificationStatus = status
-	require.NoError(s.svc.GetStore().UpdateVASP(vasp), "could not update VASP")
+	require.NoError(s.svc.GetStore().UpdateVASP(context.Background(), vasp), "could not update VASP")
 }

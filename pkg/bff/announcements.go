@@ -1,6 +1,7 @@
 package bff
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -127,8 +128,11 @@ func (s *Server) RecentAnnouncements(maxResults int, notBefore, start time.Time)
 	month := time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, 1, 0).Add(-1 * time.Second)
 
 	for !month.Before(notBefore) {
+		ctx, cancel := utils.WithDeadline(context.Background())
+		defer cancel()
+
 		var crate *models.AnnouncementMonth
-		if crate, err = s.db.RetrieveAnnouncementMonth(month.Format(models.MonthLayout)); err != nil {
+		if crate, err = s.db.RetrieveAnnouncementMonth(ctx, month.Format(models.MonthLayout)); err != nil {
 			if errors.Is(err, storeerrors.ErrEntityNotFound) {
 				// Decrement month and continue; see notes below about month decrement
 				month = month.AddDate(0, -1, -5)
@@ -195,9 +199,12 @@ func (s *Server) PostAnnouncement(in *models.Announcement) (_ string, err error)
 		return "", fmt.Errorf("could not identify month from post date: %s", err)
 	}
 
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	// Get or Create the announcement month "crate"
 	var crate *models.AnnouncementMonth
-	if crate, err = s.db.RetrieveAnnouncementMonth(month); err != nil {
+	if crate, err = s.db.RetrieveAnnouncementMonth(ctx, month); err != nil {
 		switch {
 		case errors.Is(err, storeerrors.ErrEntityNotFound):
 			crate = &models.AnnouncementMonth{
@@ -206,7 +213,7 @@ func (s *Server) PostAnnouncement(in *models.Announcement) (_ string, err error)
 			}
 
 			// Update creates the announcement month if it does not exist in the database
-			if err = s.db.UpdateAnnouncementMonth(crate); err != nil {
+			if err = s.db.UpdateAnnouncementMonth(ctx, crate); err != nil {
 				return "", fmt.Errorf("could not create new announcement month: %s", err)
 			}
 		default:
@@ -218,7 +225,7 @@ func (s *Server) PostAnnouncement(in *models.Announcement) (_ string, err error)
 	crate.Add(in)
 	crate.Modified = time.Now().Format(time.RFC3339Nano)
 
-	if err = s.db.UpdateAnnouncementMonth(crate); err != nil {
+	if err = s.db.UpdateAnnouncementMonth(ctx, crate); err != nil {
 		return "", err
 	}
 	return in.Id, nil

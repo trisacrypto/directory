@@ -11,6 +11,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/trtl"
 	trtlpb "github.com/trisacrypto/directory/pkg/trtl/pb/v1"
+	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
@@ -103,7 +104,7 @@ func (i *trtlBatchIterator) Next() bool {
 
 	var reply *trtlpb.IterReply
 	var err error
-	ctx, cancel := withContext(context.Background())
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	if reply, err = i.client.Iter(ctx, request); err != nil {
@@ -200,7 +201,7 @@ func NewTrtlStreamingIterator(client trtlpb.TrtlClient, namespace string) *trtlS
 func (i *trtlStreamingIterator) Next() bool {
 	if i.cursor == nil {
 		var ctx context.Context
-		ctx, i.cancel = withContext(context.Background())
+		ctx, i.cancel = utils.WithDeadline(context.Background())
 		request := &trtlpb.CursorRequest{
 			Namespace: i.namespace,
 		}
@@ -260,7 +261,7 @@ func (i *trtlStreamingIterator) Seek(key []byte) bool {
 	}
 
 	var ctx context.Context
-	ctx, i.cancel = withContext(context.Background())
+	ctx, i.cancel = utils.WithDeadline(context.Background())
 	request := &trtlpb.CursorRequest{
 		Namespace: i.namespace,
 		SeekKey:   key,

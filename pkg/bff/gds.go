@@ -16,6 +16,7 @@ import (
 	records "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/store"
+	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -315,9 +316,12 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		form.State.Started = time.Now().Format(time.RFC3339)
 	}
 
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	// Update the organizations form
 	org.Registration = form
-	if err = s.db.UpdateOrganization(org); err != nil {
+	if err = s.db.UpdateOrganization(ctx, org); err != nil {
 		log.Error().Err(err).Msg("could not update organization")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not save registration form"))
 		return
@@ -418,7 +422,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	// Make the GDS request
 	var rep *gds.RegisterReply
 	log.Debug().Str("network", network).Msg("issuing GDS register request")
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 25*time.Second)
+	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	switch network {
@@ -493,7 +497,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 		appdata.VASPs.MainNet = rep.Id
 	}
 
-	if err = s.db.UpdateOrganization(org); err != nil {
+	if err = s.db.UpdateOrganization(ctx, org); err != nil {
 		log.Error().Err(err).Str("network", network).Msg("could not update organization with directory record")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete registration submission"))
 		return
@@ -532,7 +536,7 @@ func (s *Server) GetCertificates(ctx context.Context, testnetID, mainnetID strin
 
 		// Retrieve the VASP record from the database
 		var vasp *pb.VASP
-		if vasp, err = db.RetrieveVASP(vaspID); err != nil {
+		if vasp, err = db.RetrieveVASP(ctx, vaspID); err != nil {
 			return nil, fmt.Errorf("could not retrieve VASP %s from database: %s", vaspID, err)
 		}
 
@@ -548,7 +552,7 @@ func (s *Server) GetCertificates(ctx context.Context, testnetID, mainnetID strin
 		for _, id := range ids {
 			// Retrieve the certificate record from the database
 			var cert *models.Certificate
-			if cert, err = db.RetrieveCert(id); err != nil {
+			if cert, err = db.RetrieveCert(ctx, id); err != nil {
 				return nil, fmt.Errorf("could not retrieve certificate %s from database: %s", id, err)
 			}
 			certs = append(certs, cert)
@@ -681,7 +685,7 @@ const (
 	VerifyEmails         = "Your organization's %s registration has been submitted and verification emails have been sent to the contacts specified in the form. Contacts and email addresses must be verified as the first step in the approval process. Please request that contacts verify their email addresses promptly so that the TRISA Validation Team can proceed with the validation process. Please contact TRISA support at " + supportEmail + " if contacts have not received the verification email and link."
 	RegistrationPending  = "Your organization's %s registration has been received and is pending approval. The TRISA Validation Team will notify you about the outcome."
 	RegistrationRejected = "Your organization's %s registration has been rejected by the TRISA Validation Team. This means your organization is not a verified member of the TRISA network and cannot communicate with other members. Please contact TRISA support at " + supportEmail + " for additional details and next steps."
-	RegistrationApproved = "Your organization's %s registration has been approved by the TRISA Validation Team. Take the next steps to integrate, test, and begin sending complicance messages with TRISA-verified counterparties."
+	RegistrationApproved = "Your organization's %s registration has been approved by the TRISA Validation Team. Take the next steps to integrate, test, and begin sending compliance messages with TRISA-verified counterparties."
 	RenewCertificate     = "Your organization's %s X.509 Identity Certificate will expire on %s. Start the renewal process to receive a new X.509 Identity Certificate and remain a trusted member of the TRISA network."
 	CertificateRevoked   = "Your organization's %s X.509 Identity Certificate has been revoked by TRISA. This means your organization is no longer a verified member of the TRISA network and can no longer communicate with other members. Please contact TRISA support at " + supportEmail + " for additional details and next steps."
 )
@@ -708,7 +712,7 @@ func (s *Server) GetVASPs(ctx context.Context, testnetID, mainnetID string) (tes
 			// nil
 			return nil, nil
 		}
-		return db.RetrieveVASP(vaspID)
+		return db.RetrieveVASP(ctx, vaspID)
 	}
 
 	// Perform the parallel requests

@@ -371,7 +371,7 @@ func (lib *Library) GenerateDB(ftype FixtureType) (err error) {
 			case wire.NamespaceVASPs:
 				vasp := item.(*pb.VASP)
 				var id string
-				if id, err = db.CreateVASP(vasp); err != nil {
+				if id, err = db.CreateVASP(context.Background(), vasp); err != nil {
 					return err
 				}
 
@@ -379,11 +379,11 @@ func (lib *Library) GenerateDB(ftype FixtureType) (err error) {
 					return fmt.Errorf("VASP ID mismatch after creation: %s != %s", vasp.Id, id)
 				}
 			case wire.NamespaceCerts:
-				if err = db.UpdateCert(item.(*models.Certificate)); err != nil {
+				if err = db.UpdateCert(context.Background(), item.(*models.Certificate)); err != nil {
 					return err
 				}
 			case wire.NamespaceCertReqs:
-				if err = db.UpdateCertReq(item.(*models.CertificateRequest)); err != nil {
+				if err = db.UpdateCertReq(context.Background(), item.(*models.CertificateRequest)); err != nil {
 					return err
 				}
 			default:

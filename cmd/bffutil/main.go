@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -18,6 +19,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/store"
+	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli/v2"
@@ -61,7 +63,7 @@ func main() {
 		},
 		{
 			Name:   "orgs:missing",
-			Usage:  "list GDS registrations that are missing organizaions",
+			Usage:  "list GDS registrations that are missing organizations",
 			Action: missingOrgs,
 			Before: Before(loadConf, connectDB, connectGDSDatabases),
 			After:  After(closeDB, closeGDSDatabases),
@@ -348,9 +350,12 @@ func closeGDSDatabases(c *cli.Context) (err error) {
 //===========================================================================
 
 func listOrgs(c *cli.Context) (err error) {
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	// Create organizations report
 	orgs := make([]map[string]interface{}, 0)
-	iter := db.ListOrganizations()
+	iter := db.ListOrganizations(ctx)
 	defer iter.Release()
 	for iter.Next() {
 		var org *models.Organization
@@ -407,7 +412,10 @@ func missingOrgs(c *cli.Context) (err error) {
 	testnet := make(map[string]struct{})
 	mainnet := make(map[string]struct{})
 
-	orgs := db.ListOrganizations()
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
+	orgs := db.ListOrganizations(ctx)
 	defer orgs.Release()
 	for orgs.Next() {
 		var org *models.Organization
@@ -434,7 +442,7 @@ func missingOrgs(c *cli.Context) (err error) {
 
 	// Step two: loop through TestNet to see what registrations are missing
 	if !c.Bool("no-testnet") {
-		vasps := testnetDB.ListVASPs()
+		vasps := testnetDB.ListVASPs(ctx)
 		defer vasps.Release()
 		for vasps.Next() {
 			var vasp *pb.VASP
@@ -456,7 +464,7 @@ func missingOrgs(c *cli.Context) (err error) {
 
 	// Step three: loop through MainNet to see what registrations are missing
 	if !c.Bool("no-mainnet") {
-		vasps := mainnetDB.ListVASPs()
+		vasps := mainnetDB.ListVASPs(ctx)
 		defer vasps.Release()
 		for vasps.Next() {
 			var vasp *pb.VASP
@@ -495,8 +503,11 @@ func createOrgs(c *cli.Context) (err error) {
 		testname    string
 	)
 
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	if vaspID := c.String("mainnet-id"); vaspID != "" {
-		if mainnetVASP, err = mainnetDB.RetrieveVASP(vaspID); err != nil {
+		if mainnetVASP, err = mainnetDB.RetrieveVASP(ctx, vaspID); err != nil {
 			return cli.Exit(err, 1)
 		}
 		mainname, _ = mainnetVASP.Name()
@@ -508,7 +519,7 @@ func createOrgs(c *cli.Context) (err error) {
 	}
 
 	if vaspID := c.String("testnet-id"); vaspID != "" {
-		if testnetVASP, err = testnetDB.RetrieveVASP(vaspID); err != nil {
+		if testnetVASP, err = testnetDB.RetrieveVASP(ctx, vaspID); err != nil {
 			return cli.Exit(err, 1)
 		}
 		testname, _ = testnetVASP.Name()
@@ -642,7 +653,7 @@ func createOrgs(c *cli.Context) (err error) {
 	}
 
 	// Create the organization
-	if _, err = db.CreateOrganization(org); err != nil {
+	if _, err = db.CreateOrganization(ctx, org); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -682,8 +693,11 @@ func updateOrgs(c *cli.Context) (err error) {
 		save = true
 	}
 
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	if save {
-		if err = db.UpdateOrganization(org); err != nil {
+		if err = db.UpdateOrganization(ctx, org); err != nil {
 			return cli.Exit(err, 1)
 		}
 	} else {
@@ -740,8 +754,11 @@ func rmsubOrgs(c *cli.Context) (err error) {
 		}
 	}
 
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	if save {
-		if err = db.UpdateOrganization(org); err != nil {
+		if err = db.UpdateOrganization(ctx, org); err != nil {
 			return cli.Exit(err, 1)
 		}
 	}
@@ -819,8 +836,11 @@ func deleteOrgs(c *cli.Context) (err error) {
 		}
 	}
 
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	// Last step: delete the organization from the database
-	if err = db.DeleteOrganization(org.UUID()); err != nil {
+	if err = db.DeleteOrganization(ctx, org.UUID()); err != nil {
 		return cli.Exit(err, 1)
 	}
 	return nil
@@ -830,7 +850,10 @@ func cleanupOrgs(c *cli.Context) (err error) {
 	orgsDeleted := 0
 	force := c.Bool("force")
 
-	iter := db.ListOrganizations()
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
+	iter := db.ListOrganizations(ctx)
 	defer iter.Release()
 	for iter.Next() {
 		var org *models.Organization
@@ -843,7 +866,7 @@ func cleanupOrgs(c *cli.Context) (err error) {
 				continue
 			}
 
-			if err = db.DeleteOrganization(org.UUID()); err != nil {
+			if err = db.DeleteOrganization(ctx, org.UUID()); err != nil {
 				return cli.Exit(fmt.Errorf("could not delete %s: %w", org.ResolveName(), err), 1)
 			}
 			orgsDeleted++
@@ -910,7 +933,10 @@ func addCollab(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
-	if err = db.UpdateOrganization(org); err != nil {
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
+	if err = db.UpdateOrganization(ctx, org); err != nil {
 		return cli.Exit(fmt.Errorf("could not update organization: %w", err), 1)
 	}
 
@@ -931,11 +957,11 @@ func addCollab(c *cli.Context) (err error) {
 
 			if len(curOrg.Collaborators) == 0 {
 				// If there are no more collaborators in the current org, delete it.
-				if err = db.DeleteOrganization(curOrg.UUID()); err != nil {
+				if err = db.DeleteOrganization(ctx, curOrg.UUID()); err != nil {
 					return cli.Exit(fmt.Errorf("could not delete user's current organization: %w", err), 1)
 				}
 			} else {
-				if err = db.UpdateOrganization(curOrg); err != nil {
+				if err = db.UpdateOrganization(ctx, curOrg); err != nil {
 					return cli.Exit(fmt.Errorf("could not update user's current organization: %w", err), 1)
 				}
 			}
@@ -994,9 +1020,12 @@ func deleteCollab(c *cli.Context) (err error) {
 		return cli.Exit("canceled at request of user", 0)
 	}
 
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	// Remove collaborator from the organization (won't error if not exists)
 	org.DeleteCollaborator(*user.Email)
-	if err = db.UpdateOrganization(org); err != nil {
+	if err = db.UpdateOrganization(ctx, org); err != nil {
 		return cli.Exit(fmt.Errorf("could not update organization: %w", err), 1)
 	}
 
@@ -1103,8 +1132,11 @@ func GetOrg(id string) (_ *models.Organization, err error) {
 		return nil, err
 	}
 
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	var org *models.Organization
-	if org, err = db.RetrieveOrganization(orgID); err != nil {
+	if org, err = db.RetrieveOrganization(ctx, orgID); err != nil {
 		return nil, err
 	}
 	return org, nil

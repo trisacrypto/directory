@@ -1,6 +1,7 @@
 package store_test
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 
@@ -50,7 +51,7 @@ func TestLoad(t *testing.T) {
 	require.Len(t, state.Keys, 2)
 
 	// Check that the VASPs were correctly loaded into the store
-	charlieVASP, err := db.RetrieveVASP(state.Keys[0])
+	charlieVASP, err := db.RetrieveVASP(context.Background(), state.Keys[0])
 	require.NoError(t, err)
 	require.NotEmpty(t, charlieVASP.Id)
 	require.Equal(t, "CharlieBank", charlieVASP.Entity.Name.NameIdentifiers[0].LegalPersonName)
@@ -60,7 +61,7 @@ func TestLoad(t *testing.T) {
 	require.Equal(t, "CA", charlieVASP.Entity.GeographicAddresses[0].Country)
 	require.Equal(t, "trisa.charliebank.io", charlieVASP.CommonName)
 
-	deltaVASP, err := db.RetrieveVASP(state.Keys[1])
+	deltaVASP, err := db.RetrieveVASP(context.Background(), state.Keys[1])
 	require.NoError(t, err)
 	require.NotEmpty(t, deltaVASP.Id)
 	require.NotEqual(t, charlieVASP.Id, deltaVASP.Id, "VASP IDs should be unique")

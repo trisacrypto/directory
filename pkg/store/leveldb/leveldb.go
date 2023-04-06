@@ -3,6 +3,7 @@ package leveldb
 import (
 	"archive/tar"
 	"compress/gzip"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -95,7 +96,7 @@ func (s *Store) Close() error {
 
 // CreateVASP into the directory. This method requires the VASP to have a unique
 // name and ignores any ID fields that are set on the VASP, instead assigning new IDs.
-func (s *Store) CreateVASP(v *pb.VASP) (id string, err error) {
+func (s *Store) CreateVASP(ctx context.Context, v *pb.VASP) (id string, err error) {
 	// Create UUID for record
 	if v.Id == "" {
 		v.Id = uuid.New().String()
@@ -148,7 +149,7 @@ func (s *Store) CreateVASP(v *pb.VASP) (id string, err error) {
 }
 
 // RetrieveVASP record by id; returns an error if the record does not exist.
-func (s *Store) RetrieveVASP(id string) (v *pb.VASP, err error) {
+func (s *Store) RetrieveVASP(ctx context.Context, id string) (v *pb.VASP, err error) {
 	var val []byte
 	key := vaspKey(id)
 	if val, err = s.db.Get(key, nil); err != nil {
@@ -168,7 +169,7 @@ func (s *Store) RetrieveVASP(id string) (v *pb.VASP, err error) {
 
 // UpdateVASP by the VASP ID (required). This method simply overwrites the
 // entire VASP record and does not update individual fields.
-func (s *Store) UpdateVASP(v *pb.VASP) (err error) {
+func (s *Store) UpdateVASP(ctx context.Context, v *pb.VASP) (err error) {
 	if v.Id == "" {
 		return storeerrors.ErrIncompleteRecord
 	}
@@ -198,7 +199,7 @@ func (s *Store) UpdateVASP(v *pb.VASP) (err error) {
 
 	// Retrieve the original record to ensure that the indices are updated properly
 	// This must be inside the lock so that the database indices are currently updated.
-	o, err := s.RetrieveVASP(v.Id)
+	o, err := s.RetrieveVASP(ctx, v.Id)
 	if err != nil {
 		return err
 	}
@@ -229,7 +230,7 @@ func (s *Store) UpdateVASP(v *pb.VASP) (err error) {
 }
 
 // DeleteVASP record, removing it completely from the database and indices.
-func (s *Store) DeleteVASP(id string) (err error) {
+func (s *Store) DeleteVASP(ctx context.Context, id string) (err error) {
 	key := vaspKey(id)
 
 	// Critical section (optimizing for safety rather than speed)
@@ -238,7 +239,7 @@ func (s *Store) DeleteVASP(id string) (err error) {
 
 	// Lookup the record in order to remove data from indices, this must be inside the
 	// lock to ensure the indices are correctly updated with what is on disk.
-	record, err := s.RetrieveVASP(id)
+	record, err := s.RetrieveVASP(ctx, id)
 	if err != nil {
 		if err == storeerrors.ErrEntityNotFound {
 			return nil
@@ -259,7 +260,7 @@ func (s *Store) DeleteVASP(id string) (err error) {
 }
 
 // ListVASPs returns all of the VASPs in the database
-func (s *Store) ListVASPs() iterator.DirectoryIterator {
+func (s *Store) ListVASPs(ctx context.Context) iterator.DirectoryIterator {
 	return &vaspIterator{
 		iterWrapper{
 			iter: s.db.NewIterator(util.BytesPrefix(preVASPs), nil),
@@ -274,7 +275,7 @@ func (s *Store) ListVASPs() iterator.DirectoryIterator {
 // so long as the prefix > 3 characters. The search also looks up website matches by
 // parsing urls to match hostnames rather than scheme or path. Finally the query is
 // filtered by country and category.
-func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err error) {
+func (s *Store) SearchVASPs(ctx context.Context, query map[string]interface{}) (vasps []*pb.VASP, err error) {
 	// A set of records that match the query and need to be fetched
 	records := make(map[string]struct{})
 
@@ -326,7 +327,7 @@ func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err
 		vasps = make([]*pb.VASP, 0, len(records))
 		for id := range records {
 			var vasp *pb.VASP
-			if vasp, err = s.RetrieveVASP(id); err != nil {
+			if vasp, err = s.RetrieveVASP(ctx, id); err != nil {
 				if err == storeerrors.ErrEntityNotFound {
 					continue
 				}
@@ -344,7 +345,7 @@ func (s *Store) SearchVASPs(query map[string]interface{}) (vasps []*pb.VASP, err
 //===========================================================================
 
 // ListCert returns all certificates that are currently in the store.
-func (s *Store) ListCerts() iterator.CertificateIterator {
+func (s *Store) ListCerts(ctx context.Context) iterator.CertificateIterator {
 	return &certIterator{
 		iterWrapper{
 			iter: s.db.NewIterator(util.BytesPrefix(preCerts), nil),
@@ -353,7 +354,7 @@ func (s *Store) ListCerts() iterator.CertificateIterator {
 }
 
 // CreateCertReq and assign a new ID and return the version.
-func (s *Store) CreateCert(c *models.Certificate) (id string, err error) {
+func (s *Store) CreateCert(ctx context.Context, c *models.Certificate) (id string, err error) {
 	if c.Id != "" {
 		return "", storeerrors.ErrIDAlreadySet
 	}
@@ -376,7 +377,7 @@ func (s *Store) CreateCert(c *models.Certificate) (id string, err error) {
 }
 
 // RetrieveCert returns a certificate by certificate ID.
-func (s *Store) RetrieveCert(id string) (c *models.Certificate, err error) {
+func (s *Store) RetrieveCert(ctx context.Context, id string) (c *models.Certificate, err error) {
 	if id == "" {
 		return nil, storeerrors.ErrEntityNotFound
 	}
@@ -399,7 +400,7 @@ func (s *Store) RetrieveCert(id string) (c *models.Certificate, err error) {
 
 // UpdateCert can create or update a certificate. The certificate should be as complete
 // as possible, including an ID generated by the caller.
-func (s *Store) UpdateCert(c *models.Certificate) (err error) {
+func (s *Store) UpdateCert(ctx context.Context, c *models.Certificate) (err error) {
 	if c.Id == "" {
 		return storeerrors.ErrIncompleteRecord
 	}
@@ -418,7 +419,7 @@ func (s *Store) UpdateCert(c *models.Certificate) (err error) {
 }
 
 // DeleteCertReq removes a certificate request from the store.
-func (s *Store) DeleteCert(id string) (err error) {
+func (s *Store) DeleteCert(ctx context.Context, id string) (err error) {
 	// LevelDB will not return an error if the entity does not exist
 	key := certKey(id)
 	if err = s.db.Delete(key, nil); err != nil {
@@ -432,7 +433,7 @@ func (s *Store) DeleteCert(id string) (err error) {
 //===========================================================================
 
 // ListCertReqs returns all certificate requests that are currently in the store.
-func (s *Store) ListCertReqs() iterator.CertificateRequestIterator {
+func (s *Store) ListCertReqs(ctx context.Context) iterator.CertificateRequestIterator {
 	return &certReqIterator{
 		iterWrapper{
 			iter: s.db.NewIterator(util.BytesPrefix(preCertReqs), nil),
@@ -441,7 +442,7 @@ func (s *Store) ListCertReqs() iterator.CertificateRequestIterator {
 }
 
 // CreateCertReq and assign a new ID and return the version.
-func (s *Store) CreateCertReq(r *models.CertificateRequest) (id string, err error) {
+func (s *Store) CreateCertReq(ctx context.Context, r *models.CertificateRequest) (id string, err error) {
 	if r.Id != "" {
 		return "", storeerrors.ErrIDAlreadySet
 	}
@@ -470,7 +471,7 @@ func (s *Store) CreateCertReq(r *models.CertificateRequest) (id string, err erro
 }
 
 // RetrieveCertReq returns a certificate request by certificate request ID.
-func (s *Store) RetrieveCertReq(id string) (r *models.CertificateRequest, err error) {
+func (s *Store) RetrieveCertReq(ctx context.Context, id string) (r *models.CertificateRequest, err error) {
 	if id == "" {
 		return nil, storeerrors.ErrEntityNotFound
 	}
@@ -493,7 +494,7 @@ func (s *Store) RetrieveCertReq(id string) (r *models.CertificateRequest, err er
 
 // UpdateCertReq can create or update a certificate request. The request should be as
 // complete as possible, including an ID generated by the caller.
-func (s *Store) UpdateCertReq(r *models.CertificateRequest) (err error) {
+func (s *Store) UpdateCertReq(ctx context.Context, r *models.CertificateRequest) (err error) {
 	if r.Id == "" {
 		return storeerrors.ErrIncompleteRecord
 	}
@@ -518,7 +519,7 @@ func (s *Store) UpdateCertReq(r *models.CertificateRequest) (err error) {
 }
 
 // DeleteCertReq removes a certificate request from the store.
-func (s *Store) DeleteCertReq(id string) (err error) {
+func (s *Store) DeleteCertReq(ctx context.Context, id string) (err error) {
 	// LevelDB will not return an error if the entity does not exist
 	key := careqKey(id)
 	if err = s.db.Delete(key, nil); err != nil {
@@ -533,7 +534,7 @@ func (s *Store) DeleteCertReq(id string) (err error) {
 
 // RetrieveAnnouncementMonth returns the announcement month "crate" for the given month
 // timestamp in the format YYYY-MM.
-func (s *Store) RetrieveAnnouncementMonth(date string) (m *bff.AnnouncementMonth, err error) {
+func (s *Store) RetrieveAnnouncementMonth(ctx context.Context, date string) (m *bff.AnnouncementMonth, err error) {
 	if date == "" {
 		return nil, storeerrors.ErrEntityNotFound
 	}
@@ -562,7 +563,7 @@ func (s *Store) RetrieveAnnouncementMonth(date string) (m *bff.AnnouncementMonth
 
 // UpdateAnnouncementMonth creates a new announcement month "crate" if it doesn't
 // already exist or replaces the existing record.
-func (s *Store) UpdateAnnouncementMonth(m *bff.AnnouncementMonth) (err error) {
+func (s *Store) UpdateAnnouncementMonth(ctx context.Context, m *bff.AnnouncementMonth) (err error) {
 	if m.Date == "" {
 		return storeerrors.ErrIncompleteRecord
 	}
@@ -590,7 +591,7 @@ func (s *Store) UpdateAnnouncementMonth(m *bff.AnnouncementMonth) (err error) {
 }
 
 // DeleteAnnouncementMonth removes an announcement month "crate" from the store.
-func (s *Store) DeleteAnnouncementMonth(date string) (err error) {
+func (s *Store) DeleteAnnouncementMonth(ctx context.Context, date string) (err error) {
 	// Get the key by creating an intermediate announcement month to ensure that
 	// validation and key creation always happens the same way.
 	m := &bff.AnnouncementMonth{Date: date}
@@ -611,7 +612,7 @@ func (s *Store) DeleteAnnouncementMonth(date string) (err error) {
 //===========================================================================
 
 // ListOrganizations returns an iterator to retrieve all organizations.
-func (s *Store) ListOrganizations() iterator.OrganizationIterator {
+func (s *Store) ListOrganizations(ctx context.Context) iterator.OrganizationIterator {
 	return &organizationIterator{
 		iterWrapper{
 			iter: s.db.NewIterator(util.BytesPrefix(preOrganizations), nil),
@@ -621,7 +622,7 @@ func (s *Store) ListOrganizations() iterator.OrganizationIterator {
 
 // CreateOrganization creates a new organization record in the store, assigning a
 // unique ID if it doesn't exist and setting the created and modified timestamps.
-func (s *Store) CreateOrganization(o *bff.Organization) (id string, err error) {
+func (s *Store) CreateOrganization(ctx context.Context, o *bff.Organization) (id string, err error) {
 	// Create the organization ID if not provided
 	// TODO: check for uniqueness of the ID
 	if o.Id == "" {
@@ -646,7 +647,7 @@ func (s *Store) CreateOrganization(o *bff.Organization) (id string, err error) {
 }
 
 // RetrieveOrganization retrieves an organization record from the store by UUID.
-func (s *Store) RetrieveOrganization(id uuid.UUID) (o *bff.Organization, err error) {
+func (s *Store) RetrieveOrganization(ctx context.Context, id uuid.UUID) (o *bff.Organization, err error) {
 	if id == uuid.Nil {
 		return nil, storeerrors.ErrEntityNotFound
 	}
@@ -670,7 +671,7 @@ func (s *Store) RetrieveOrganization(id uuid.UUID) (o *bff.Organization, err err
 
 // UpdateOrganization updates an organization record in the store by replacing the
 // existing record.
-func (s *Store) UpdateOrganization(o *bff.Organization) (err error) {
+func (s *Store) UpdateOrganization(ctx context.Context, o *bff.Organization) (err error) {
 	if o.Id == "" {
 		return storeerrors.ErrIncompleteRecord
 	}
@@ -694,7 +695,7 @@ func (s *Store) UpdateOrganization(o *bff.Organization) (err error) {
 }
 
 // DeleteOrganization deletes an organization record from the store by UUID.
-func (s *Store) DeleteOrganization(id uuid.UUID) (err error) {
+func (s *Store) DeleteOrganization(ctx context.Context, id uuid.UUID) (err error) {
 	if id == uuid.Nil {
 		return storeerrors.ErrEntityNotFound
 	}
@@ -1169,7 +1170,7 @@ func (s *Store) synccountries() (err error) {
 	defer s.Unlock()
 
 	if s.countries == nil {
-		// Create the countries index an dload from the database
+		// Create the countries index and load from the database
 		s.countries = index.NewCountryIndex()
 
 		// fetch the countries from the database
@@ -1182,7 +1183,7 @@ func (s *Store) synccountries() (err error) {
 		}
 
 		if err = s.countries.Load(val); err != nil {
-			log.Error().Err(err).Msg("could not unmarshall country index")
+			log.Error().Err(err).Msg("could not unmarshal country index")
 			return storeerrors.ErrCorruptedIndex
 		}
 	}
@@ -1226,7 +1227,7 @@ func (s *Store) synccategories() (err error) {
 		}
 
 		if err = s.categories.Load(val); err != nil {
-			log.Error().Err(err).Msg("could not unmarshall categories index")
+			log.Error().Err(err).Msg("could not unmarshal categories index")
 			return storeerrors.ErrCorruptedIndex
 		}
 	}

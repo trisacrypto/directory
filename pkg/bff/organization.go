@@ -1,6 +1,7 @@
 package bff
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
+	"github.com/trisacrypto/directory/pkg/utils"
 )
 
 // CreateOrganization creates a new organization in the database. This endpoint returns
@@ -113,7 +115,10 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 		return
 	}
 
-	if _, err = s.db.CreateOrganization(org); err != nil {
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
+	if _, err = s.db.CreateOrganization(ctx, org); err != nil {
 		log.Error().Err(err).Msg("could not create organization in database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not create organization"))
 		return
@@ -286,8 +291,11 @@ func (s *Server) DeleteOrganization(c *gin.Context) {
 		return
 	}
 
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	// Delete the organization from the database
-	if err = s.db.DeleteOrganization(org.UUID()); err != nil {
+	if err = s.db.DeleteOrganization(ctx, org.UUID()); err != nil {
 		log.Error().Err(err).Str("org_id", orgID).Msg("could not delete organization from database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not delete organization from database"))
 		return
@@ -421,8 +429,11 @@ func (s *Server) PatchOrganization(c *gin.Context) {
 		org.Name = params.Name
 	}
 
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	// Save the updated organization
-	if err = s.db.UpdateOrganization(org); err != nil {
+	if err = s.db.UpdateOrganization(ctx, org); err != nil {
 		log.Error().Err(err).Str("org_id", id).Msg("could not update organization in database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
@@ -511,8 +522,11 @@ func (s *Server) OrganizationFromID(id string) (org *models.Organization, err er
 		return nil, err
 	}
 
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	// Fetch the record from the database
-	if org, err = s.db.RetrieveOrganization(uuid); err != nil {
+	if org, err = s.db.RetrieveOrganization(ctx, uuid); err != nil {
 		return nil, err
 	}
 
