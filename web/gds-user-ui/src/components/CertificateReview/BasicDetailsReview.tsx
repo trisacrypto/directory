@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { t } from '@lingui/macro';
 import BasicDetailsReviewDataTable from './BasicDetailsReviewDataTable';
@@ -12,27 +12,27 @@ const BasicDetailsReview = () => {
   const currentStateValue = useSelector(getCurrentState);
   const [isValid, setIsValid] = React.useState(false);
 
-  const basicDetail = {
-    organization_name: currentStateValue.data.organization_name,
-    website: currentStateValue.data.website,
-    established_on: currentStateValue.data.established_on,
-    vasp_categories: currentStateValue.data.vasp_categories,
-    business_category: currentStateValue.data.business_category
-  };
+  const basicDetail = useMemo(() => {
+    return {
+      organization_name: currentStateValue.data.organization_name,
+      website: currentStateValue.data.website,
+      established_on: currentStateValue.data.established_on,
+      vasp_categories: currentStateValue.data.vasp_categories,
+      business_category: currentStateValue.data.business_category
+    };
+  }, [currentStateValue.data]);
 
   useEffect(() => {
     const validate = async () => {
       try {
-        const r = await basicDetailsValidationSchema.validate(basicDetail, { abortEarly: false });
+        await basicDetailsValidationSchema.validate(basicDetail, { abortEarly: false });
         setIsValid(true);
-        console.log('r', r);
       } catch (error) {
-        console.log('error', error);
         setIsValid(false);
       }
     };
     validate();
-  }, [currentStateValue?.data]);
+  }, [basicDetail]);
 
   return (
     <CertificateReviewLayout>

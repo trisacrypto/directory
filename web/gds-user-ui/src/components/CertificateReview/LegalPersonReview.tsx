@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 
 // NOTE: need some clean up.
@@ -14,18 +14,18 @@ const LegalPersonReview = () => {
   const currentStateValue = useSelector(getCurrentState);
   const [isValid, setIsValid] = useState(false);
 
-  const legalPerson = {
-    ...currentStateValue.data.entity
-  };
+  const legalPerson = useMemo(() => {
+    return {
+      ...currentStateValue.data.entity
+    };
+  }, [currentStateValue.data.entity]);
 
   useEffect(() => {
     const validate = async () => {
       try {
-        const r = await legalPersonValidationSchemam.validate(legalPerson, { abortEarly: false });
+        await legalPersonValidationSchemam.validate(legalPerson, { abortEarly: false });
         setIsValid(true);
-        console.log('r', r);
       } catch (error) {
-        console.log('error', error);
         setIsValid(false);
       }
     };

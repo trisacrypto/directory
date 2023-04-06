@@ -4,7 +4,7 @@ interface RequiredElementMissingProps {
 }
 
 const RequiredElementMissing = ({ elementKey }: RequiredElementMissingProps) => {
-  console.log('elementKey', elementKey);
+  console.log('k', elementKey);
 
   return (
     <Alert status="error" borderRadius="lg" my={4}>

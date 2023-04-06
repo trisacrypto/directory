@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import TrisaImplementationReviewDataTable from './TrisaImplementationReviewDataTable';
 import CertificateReviewHeader from './CertificateReviewHeader';
@@ -12,23 +12,22 @@ const TrisaImplementationReview = () => {
   const currentStateValue = useSelector(getCurrentState);
   const { data: trisaData } = currentStateValue;
 
-  console.log('trisaData', trisaData);
-
   const [isValid, setIsValid] = useState(false);
-  const trisa = {
-    mainnet: trisaData.mainnet,
-    testnet: trisaData.testnet
-  };
+  const trisa = useMemo(() => {
+    return {
+      mainnet: trisaData.mainnet,
+      testnet: trisaData.testnet
+    };
+  }, [trisaData.mainnet, trisaData.testnet]);
+
   useEffect(() => {
     const validate = async () => {
       try {
-        const r = await trisaImplementationValidationSchema.validate(trisa, {
+        await trisaImplementationValidationSchema.validate(trisa, {
           abortEarly: false
         });
         setIsValid(true);
-        console.log('r', r);
       } catch (error) {
-        console.log('error', error);
         setIsValid(false);
       }
     };
