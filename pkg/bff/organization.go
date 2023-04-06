@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
@@ -149,6 +150,7 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 // @Description Return the list of organizations that the user is assigned to.
 // @Tags organizations
 // @Produce json
+// @Param name query string false "Organization name filter"
 // @Param page query int false "Page number" default(1)
 // @Param page_size query int false "Page size" default(8)
 // @Success 200 {object} api.ListOrganizationsReply
@@ -222,11 +224,17 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 			continue
 		}
 
+		// Filter by name if specified using basic substring matching
+		name := org.ResolveName()
+		if params.Name != "" && !strings.Contains(strings.ToLower(name), strings.ToLower(params.Name)) {
+			continue
+		}
+
 		if out.Count >= minIndex && out.Count < maxIndex {
 			// Within the page range so add the organization to the response
 			out.Organizations = append(out.Organizations, &api.OrganizationReply{
 				ID:        org.Id,
-				Name:      org.ResolveName(),
+				Name:      name,
 				Domain:    org.Domain,
 				CreatedAt: org.Created,
 				LastLogin: collaborator.LastLogin,
