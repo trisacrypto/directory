@@ -707,10 +707,6 @@ func (s *Server) GetVASPs(ctx context.Context, testnetID, mainnetID string) (tes
 			return nil, fmt.Errorf("unknown network: %s", network)
 		}
 
-		if _, ok := ctx.Deadline(); !ok {
-			ctx, _ = utils.WithDeadline(ctx)
-		}
-
 		if vaspID == "" {
 			// The VASP is not registered for this network, so do not error and return
 			// nil

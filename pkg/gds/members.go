@@ -13,7 +13,6 @@ import (
 	api "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/store"
-	"github.com/trisacrypto/directory/pkg/utils"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/trisacrypto/trisa/pkg/trisa/mtls"
 	"github.com/trisacrypto/trisa/pkg/trust"
@@ -173,9 +172,6 @@ func (s *Members) List(ctx context.Context, in *api.ListRequest) (out *api.ListR
 	}
 
 	// Create the VASPs iterator to begin collecting validated VASPs data
-	if _, ok := ctx.Deadline(); !ok {
-		ctx, _ = utils.WithDeadline(context.Background())
-	}
 	iter := s.db.ListVASPs(ctx)
 	defer iter.Release()
 
@@ -259,10 +255,6 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 	// Create response
 	out = &api.SummaryReply{}
 
-	if _, ok := ctx.Deadline(); !ok {
-		ctx, _ = utils.WithDeadline(context.Background())
-	}
-
 	if in.MemberId != "" {
 		// Fetch the requested VASP if provided
 		var vasp *pb.VASP
@@ -324,9 +316,6 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 func (s *Members) Details(ctx context.Context, in *api.DetailsRequest) (out *api.MemberDetails, err error) {
 	// Fetch the requested VASP if provided
 	var vasp *pb.VASP
-	if _, ok := ctx.Deadline(); !ok {
-		ctx, _ = utils.WithDeadline(context.Background())
-	}
 	if vasp, err = s.db.RetrieveVASP(ctx, in.MemberId); err != nil {
 		log.Warn().Err(err).Str("vasp_id", in.MemberId).Msg("VASP not found")
 		return nil, status.Error(codes.NotFound, "requested VASP not found")

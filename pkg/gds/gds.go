@@ -185,10 +185,6 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 		return nil, status.Error(codes.Aborted, "could not add new entry to VASP audit log")
 	}
 
-	if _, ok := ctx.Deadline(); !ok {
-		ctx, _ = utils.WithDeadline(ctx)
-	}
-
 	// TODO: create legal entity hash to detect a repeat registration without ID
 	// TODO: add signature to leveldb indices
 	// TODO: check already exists and uniqueness constraints
@@ -292,10 +288,6 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 // Lookup a VASP entity by name or ID to get full details including the TRISA certification
 // if it exists and the entity has been verified.
 func (s *GDS) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.LookupReply, err error) {
-	if _, ok := ctx.Deadline(); !ok {
-		ctx, _ = utils.WithDeadline(ctx)
-	}
-
 	var vasp *pb.VASP
 	switch {
 	case in.Id != "":
@@ -415,10 +407,6 @@ func (s *GDS) Search(ctx context.Context, in *api.SearchRequest) (out *api.Searc
 // Verification returns the status of a VASP including its verification and service
 // status if the directory service is performing health check monitoring.
 func (s *GDS) Verification(ctx context.Context, in *api.VerificationRequest) (out *api.VerificationReply, err error) {
-	if _, ok := ctx.Deadline(); !ok {
-		ctx, _ = utils.WithDeadline(ctx)
-	}
-
 	var vasp *pb.VASP
 	switch {
 	case in.Id != "":
