@@ -51,6 +51,11 @@ type MockState struct {
 	RetrieveOrganizationInvoked      bool
 	UpdateOrganizationInvoked        bool
 	DeleteOrganizationInvoked        bool
+	ListContactsInvoked              bool
+	CreateContactInvoked             bool
+	RetrieveContactInvoked           bool
+	UpdateContactInvoked             bool
+	DeleteContactInvoked             bool
 	ReindexInvoked                   bool
 	BackupInvoked                    bool
 }
@@ -93,6 +98,11 @@ type MockDB struct {
 	OnRetrieveOrganization      func(id uuid.UUID) (*bff.Organization, error)
 	OnUpdateOrganization        func(o *bff.Organization) error
 	OnDeleteOrganization        func(id uuid.UUID) error
+	OnListContacts              func() []*models.Contact
+	OnCreateContact             func(c *models.Contact) (string, error)
+	OnRetrieveContact           func(email string) (*models.Contact, error)
+	OnUpdateContact             func(c *models.Contact) error
+	OnDeleteContact             func(email string) error
 	OnReindex                   func() error
 	OnBackup                    func(string) error
 }
@@ -240,6 +250,31 @@ func (m *MockDB) UpdateOrganization(_ context.Context, o *bff.Organization) erro
 func (m *MockDB) DeleteOrganization(_ context.Context, id uuid.UUID) error {
 	state.DeleteOrganizationInvoked = true
 	return m.OnDeleteOrganization(id)
+}
+
+func (m *MockDB) ListContacts(_ context.Context) []*models.Contact {
+	state.ListContactsInvoked = true
+	return m.OnListContacts()
+}
+
+func (m *MockDB) CreateContact(_ context.Context, c *models.Contact) (string, error) {
+	state.CreateContactInvoked = true
+	return m.OnCreateContact(c)
+}
+
+func (m *MockDB) RetrieveContact(_ context.Context, email string) (*models.Contact, error) {
+	state.RetrieveCertInvoked = true
+	return m.OnRetrieveContact(email)
+}
+
+func (m *MockDB) UpdateContact(_ context.Context, c *models.Contact) error {
+	state.UpdateCertInvoked = true
+	return m.OnUpdateContact(c)
+}
+
+func (m *MockDB) DeleteContact(_ context.Context, email string) error {
+	state.DeleteContactInvoked = true
+	return m.OnDeleteContact(email)
 }
 
 func (m *MockDB) Reindex() error {
