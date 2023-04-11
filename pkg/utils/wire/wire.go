@@ -37,15 +37,16 @@ const (
 	NamespaceSequence      = "sequence"
 	NamespaceAnnouncements = "announcements"
 	NamespaceOrganizations = "organizations"
+	NamespaceContacts      = "contacts"
 )
 
 // Namespaces defines all possible namespaces that GDS manages
 // TODO: do we need to add the BFF namespaces here as well?
-var Namespaces = [3]string{NamespaceVASPs, NamespaceCertReqs, NamespaceReplicas}
+var Namespaces = [4]string{NamespaceVASPs, NamespaceCertReqs, NamespaceReplicas, NamespaceContacts}
 
 // UnmarshalProto expects protocol buffer data and unmarshals it to the correct type
 // based on the namespace. This is a utility function for dealing with the various
-// namespaces and types that GDS manages and is not a substitute for direct unmarshaling.
+// namespaces and types that GDS manages and is not a substitute for direct unmarshalling.
 func UnmarshalProto(namespace string, data []byte) (_ proto.Message, err error) {
 	switch namespace {
 	case NamespaceVASPs:
@@ -72,6 +73,12 @@ func UnmarshalProto(namespace string, data []byte) (_ proto.Message, err error) 
 			return nil, fmt.Errorf("could not unmarshal %s to %T: %s", namespace, peer, err)
 		}
 		return peer, nil
+	case NamespaceContacts:
+		contact := &models.Contact{}
+		if err = proto.Unmarshal(data, contact); err != nil {
+			return nil, fmt.Errorf("could not unmarshal %s to %T: %s", namespace, contact, err)
+		}
+		return contact, nil
 	default:
 		return nil, fmt.Errorf("unknown namespaces %q", namespace)
 	}

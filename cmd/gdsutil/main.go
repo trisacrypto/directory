@@ -427,7 +427,7 @@ func ldbGet(c *cli.Context) (err error) {
 
 		prefix := strings.Split(keys, "::")[0]
 		switch prefix {
-		case wire.NamespaceVASPs, wire.NamespaceCertReqs, wire.NamespaceReplicas:
+		case wire.NamespaceVASPs, wire.NamespaceCertReqs, wire.NamespaceReplicas, wire.NamespaceContacts:
 			if pbValue, err = wire.UnmarshalProto(prefix, data); err != nil {
 				return cli.Exit(err, 1)
 			}
