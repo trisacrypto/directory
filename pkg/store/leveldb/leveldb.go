@@ -708,6 +708,7 @@ func (s *Store) DeleteOrganization(ctx context.Context, id uuid.UUID) (err error
 	return nil
 }
 
+// TODO: Complete the leveldb ContactStore implementation
 //===========================================================================
 // ContactStore Implementation
 //===========================================================================
