@@ -694,6 +694,39 @@ func (s *trtlStoreTestSuite) TestOrganizationStore() {
 	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
 }
 
+func (s *trtlStoreTestSuite) TestContactStore() {
+	require := s.Require()
+
+	// Inject bufconn connection into the store
+	require.NoError(s.grpc.Connect(context.Background()))
+	defer s.grpc.Close()
+
+	db, err := store.NewMock(s.grpc.Conn)
+	require.NoError(err)
+
+	email, err := db.CreateContact(context.Background(), nil)
+	require.Empty(email)
+	require.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	contact := &models.Contact{
+		Email: "",
+	}
+	email, err = db.CreateContact(context.Background(), contact)
+	require.Empty(email)
+	require.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	contact = &models.Contact{
+		Email:      "testemail",
+		Vasps:      []string{"foo", "bar"},
+		Verified:   false,
+		Token:      "testtoken",
+		VerifiedOn: "",
+	}
+	email, err = db.CreateContact(context.Background(), contact)
+	require.Equal(email, "testemail")
+	require.NoError(err)
+}
+
 func createVASPs(db *store.Store, num, startIndex int) error {
 	countries := []string{"TV", "KY", "CC", "LT", "EH", "SC", "NU"}
 	bcats := []pb.BusinessCategory{pb.BusinessCategoryBusiness, pb.BusinessCategoryNonCommercial, pb.BusinessCategoryPrivate}
