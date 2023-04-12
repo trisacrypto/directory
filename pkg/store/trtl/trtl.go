@@ -856,8 +856,32 @@ func (s *Store) ListContacts(ctx context.Context) []*models.Contact {
 	return nil
 }
 
-func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (string, error) {
-	return "", nil
+func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (_ string, err error) {
+	if c == nil || c.Email == "" {
+		return "", storeerrors.ErrIncompleteRecord
+	}
+
+	var data []byte
+	if data, err = proto.Marshal(c); err != nil {
+		return "", err
+	}
+
+	ctx, cancel := utils.WithDeadline(ctx)
+	defer cancel()
+
+	request := &pb.PutRequest{
+		Key:       []byte(c.Email),
+		Value:     data,
+		Namespace: wire.NamespaceContacts,
+	}
+	if reply, err := s.client.Put(ctx, request); err != nil || !reply.Success {
+		if err == nil {
+			err = storeerrors.ErrProtocol
+		}
+		return "", err
+	}
+
+	return c.Email, nil
 }
 
 func (s *Store) RetrieveContact(ctx context.Context, email string) (*models.Contact, error) {
