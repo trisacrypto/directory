@@ -2,6 +2,7 @@ package trtl
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"time"
 
@@ -856,11 +857,14 @@ func (s *Store) ListContacts(ctx context.Context) []*models.Contact {
 	return nil
 }
 
+// CreateContact creates a new Contact record in the store, using the contact's
+// email as a unique ID.
 func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (_ string, err error) {
 	if c == nil || c.Email == "" {
 		return "", storeerrors.ErrIncompleteRecord
 	}
 
+	// Marshal the Contact
 	var data []byte
 	if data, err = proto.Marshal(c); err != nil {
 		return "", err
@@ -869,8 +873,14 @@ func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (_ string,
 	ctx, cancel := utils.WithDeadline(ctx)
 	defer cancel()
 
+	// Normalize the email and convert to bytes
+	trimmed := strings.TrimSpace(c.Email)
+	normalized := strings.ToLower(trimmed)
+	key := []byte(normalized)
+
+	// Create and store the PutRequest
 	request := &pb.PutRequest{
-		Key:       []byte(c.Email),
+		Key:       key,
 		Value:     data,
 		Namespace: wire.NamespaceContacts,
 	}
