@@ -846,3 +846,28 @@ func (s *Store) DeleteOrganization(ctx context.Context, id uuid.UUID) (err error
 	}
 	return nil
 }
+
+// TODO: Complete the trtl ContactStore implementation
+//===========================================================================
+// ContactStore Implementation
+//===========================================================================
+
+func (s *Store) ListContacts(ctx context.Context) []*models.Contact {
+	return nil
+}
+
+func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (string, error) {
+	return "", nil
+}
+
+func (s *Store) RetrieveContact(ctx context.Context, email string) (*models.Contact, error) {
+	return nil, nil
+}
+
+func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) error {
+	return nil
+}
+
+func (s *Store) DeleteContact(ctx context.Context, email string) error {
+	return nil
+}
