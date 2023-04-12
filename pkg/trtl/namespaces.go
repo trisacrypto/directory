@@ -3,7 +3,6 @@ package trtl
 import "github.com/trisacrypto/directory/pkg/utils/wire"
 
 // TODO: need functionality to actually extract namespaces from db
-// ???
 const (
 	NamespacePeers         = wire.NamespaceReplicas
 	NamespaceIndex         = wire.NamespaceIndices
@@ -13,6 +12,7 @@ const (
 	NamespaceVASPs         = wire.NamespaceVASPs
 	NamespaceCertReqs      = wire.NamespaceCertReqs
 	NamespaceCerts         = wire.NamespaceCerts
+	NamespaceContacts      = wire.NamespaceContacts
 	NamespaceAnnouncements = wire.NamespaceAnnouncements
 	NamespaceOrganizations = wire.NamespaceOrganizations
 )

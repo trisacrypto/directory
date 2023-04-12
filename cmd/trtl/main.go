@@ -830,11 +830,11 @@ func gossipMigrate(c *cli.Context) (err error) {
 // Utility Functions
 //===========================================================================
 
-// ???
-var namespaces = [5]string{
+var namespaces = [6]string{
 	wire.NamespaceVASPs,
 	wire.NamespaceCerts,
 	wire.NamespaceCertReqs,
+	wire.NamespaceContacts,
 	wire.NamespaceAnnouncements,
 	wire.NamespaceOrganizations,
 }
