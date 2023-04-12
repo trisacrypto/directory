@@ -89,6 +89,7 @@ type Store interface {
 	CertificateRequestStore
 	AnnouncementStore
 	OrganizationStore
+	ContactStore
 }
 
 // leveldb.Store and trtl.Store must implement the Store interface.
@@ -137,6 +138,15 @@ type OrganizationStore interface {
 	RetrieveOrganization(ctx context.Context, id uuid.UUID) (*bff.Organization, error)
 	UpdateOrganization(ctx context.Context, o *bff.Organization) error
 	DeleteOrganization(ctx context.Context, id uuid.UUID) error
+}
+
+// ContactStore describes how services interact with the Contact records.
+type ContactStore interface {
+	ListContacts(ctx context.Context) []*models.Contact
+	CreateContact(ctx context.Context, c *models.Contact) (string, error)
+	RetrieveContact(ctx context.Context, email string) (*models.Contact, error)
+	UpdateContact(ctx context.Context, c *models.Contact) error
+	DeleteContact(ctx context.Context, email string) error
 }
 
 // Indexer allows external methods to access the index function of the store if it has
