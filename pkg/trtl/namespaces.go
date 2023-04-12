@@ -12,6 +12,7 @@ const (
 	NamespaceVASPs         = wire.NamespaceVASPs
 	NamespaceCertReqs      = wire.NamespaceCertReqs
 	NamespaceCerts         = wire.NamespaceCerts
+	NamespaceContacts      = wire.NamespaceContacts
 	NamespaceAnnouncements = wire.NamespaceAnnouncements
 	NamespaceOrganizations = wire.NamespaceOrganizations
 )
