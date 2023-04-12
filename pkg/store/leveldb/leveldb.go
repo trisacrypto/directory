@@ -62,6 +62,7 @@ var (
 	preCerts         = []byte("certs::")
 	preCertReqs      = []byte("certreqs::")
 	preOrganizations = []byte("organizations::")
+	preContacts      = []byte("contacts::")
 )
 
 // Store implements store.Store for some basic LevelDB operations and simple protocol
@@ -717,8 +718,28 @@ func (s *Store) ListContacts(ctx context.Context) []*models.Contact {
 	return nil
 }
 
-func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (string, error) {
-	return "", nil
+// CreateContact creates a new Contact record in the store, using the contact's
+// email as a unique ID.
+func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (_ string, err error) {
+	if c == nil || c.Email == "" {
+		return "", storeerrors.ErrIncompleteRecord
+	}
+
+	// Marshal the Contact
+	var data []byte
+	if data, err = proto.Marshal(c); err != nil {
+		return "", err
+	}
+
+	// Normalize the email and convert to prefixed bytes
+	trimmed := strings.TrimSpace(c.Email)
+	normalized := strings.ToLower(trimmed)
+	key := contactKey(normalized)
+
+	if err = s.db.Put(key, data, nil); err != nil {
+		return "", err
+	}
+	return c.Email, nil
 }
 
 func (s *Store) RetrieveContact(ctx context.Context, email string) (*models.Contact, error) {
@@ -767,6 +788,10 @@ func orgKey(orgKey []byte) (key []byte) {
 	key = append(key, preOrganizations...)
 	key = append(key, orgKey...)
 	return key
+}
+
+func contactKey(id string) []byte {
+	return makeKey(preContacts, id)
 }
 
 //===========================================================================

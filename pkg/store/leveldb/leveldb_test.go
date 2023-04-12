@@ -27,7 +27,7 @@ type leveldbTestSuite struct {
 
 func (s *leveldbTestSuite) SetupSuite() {
 	// Discard logging from the application to focus on test logs
-	// NOTE: ConsoleLog MUST be false otherwise this will be overriden
+	// NOTE: ConsoleLog MUST be false otherwise this will be overridden
 	logger.Discard()
 
 	// Open the database in a temp directory
@@ -459,4 +459,31 @@ func (s *leveldbTestSuite) TestOrganizationStore() {
 	s.NoError(err)
 	_, err = s.db.RetrieveOrganization(context.Background(), uu)
 	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+}
+
+func (s *leveldbTestSuite) TestContactStore() {
+	// Make sure a nil contact on CreateContact throws an error
+	email, err := s.db.CreateContact(context.Background(), nil)
+	s.Empty(email)
+	s.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	// Make sure a nil email on CreateContact throws an error
+	contact := &models.Contact{
+		Email: "",
+	}
+	email, err = s.db.CreateContact(context.Background(), contact)
+	s.Empty(email)
+	s.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	// Happy path for CreateContact
+	contact = &models.Contact{
+		Email:      "testemail",
+		Vasps:      []string{"foo", "bar"},
+		Verified:   false,
+		Token:      "testtoken",
+		VerifiedOn: "",
+	}
+	email, err = s.db.CreateContact(context.Background(), contact)
+	s.Equal(email, "testemail")
+	s.NoError(err)
 }
