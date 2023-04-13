@@ -487,6 +487,10 @@ func (s *leveldbTestSuite) TestContactStore() {
 	s.Equal(email, "testemail")
 	s.NoError(err)
 
+	email, err = s.db.CreateContact(context.Background(), contact)
+	s.Empty(email)
+	s.Equal(err, storeerrors.ErrDuplicateEntity)
+
 	var c *models.Contact
 	c, err = s.db.RetrieveContact(context.Background(), "")
 	s.Nil(c)
@@ -501,4 +505,30 @@ func (s *leveldbTestSuite) TestContactStore() {
 	s.Equal(c.Verified, contact.Verified)
 	s.Equal(c.Token, contact.Token)
 	s.NoError(err)
+
+	err = s.db.UpdateContact(context.Background(), nil)
+	s.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	contact = &models.Contact{
+		Email: "",
+	}
+	err = s.db.UpdateContact(context.Background(), contact)
+	s.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	contact = &models.Contact{
+		Email:      "testemail",
+		Vasps:      []string{"bar", "foo"},
+		Verified:   true,
+		Token:      "newtoken",
+		VerifiedOn: "",
+	}
+	err = s.db.UpdateContact(context.Background(), contact)
+	s.NoError(err)
+
+	c, err = s.db.RetrieveContact(context.Background(), "testemail")
+	s.NoError(err)
+	s.Equal(c.Vasps, contact.Vasps)
+	s.Equal(c.Verified, contact.Verified)
+	s.Equal(c.Token, contact.Token)
+
 }

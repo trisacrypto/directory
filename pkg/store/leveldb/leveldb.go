@@ -731,12 +731,18 @@ func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (_ string,
 		return "", err
 	}
 
-	if err = s.db.Put(emailToKey(c.Email), data, nil); err != nil {
+	key := emailToKey(c.Email)
+	if _, err = s.db.Get(key, nil); err == nil {
+		return "", storeerrors.ErrDuplicateEntity
+	}
+
+	if err = s.db.Put(key, data, nil); err != nil {
 		return "", err
 	}
 	return c.Email, nil
 }
 
+// RetrieveContact returns a contact request by contact email.
 func (s *Store) RetrieveContact(ctx context.Context, email string) (c *models.Contact, err error) {
 	if email == "" {
 		return nil, storeerrors.ErrIncompleteRecord
@@ -758,7 +764,22 @@ func (s *Store) RetrieveContact(ctx context.Context, email string) (c *models.Co
 	return c, nil
 }
 
-func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) error {
+// UpdateContact can create or update a contact request. The request should be as
+// complete as possible, including an email provided by the caller.
+func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) (err error) {
+	if c == nil || c.Email == "" {
+		return storeerrors.ErrIncompleteRecord
+	}
+
+	var data []byte
+	key := emailToKey(c.Email)
+	if data, err = proto.Marshal(c); err != nil {
+		return err
+	}
+
+	if err = s.db.Put(key, data, nil); err != nil {
+		return err
+	}
 	return nil
 }
 
