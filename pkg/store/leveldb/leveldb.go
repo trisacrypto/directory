@@ -731,19 +731,31 @@ func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (_ string,
 		return "", err
 	}
 
-	// Normalize the email and convert to prefixed bytes
-	trimmed := strings.TrimSpace(c.Email)
-	normalized := strings.ToLower(trimmed)
-	key := contactKey(normalized)
-
-	if err = s.db.Put(key, data, nil); err != nil {
+	if err = s.db.Put(emailToKey(c.Email), data, nil); err != nil {
 		return "", err
 	}
 	return c.Email, nil
 }
 
-func (s *Store) RetrieveContact(ctx context.Context, email string) (*models.Contact, error) {
-	return nil, nil
+func (s *Store) RetrieveContact(ctx context.Context, email string) (c *models.Contact, err error) {
+	if email == "" {
+		return nil, storeerrors.ErrIncompleteRecord
+	}
+
+	var data []byte
+	if data, err = s.db.Get(emailToKey(email), nil); err != nil {
+		if err == leveldb.ErrNotFound {
+			return nil, storeerrors.ErrEntityNotFound
+		}
+		return nil, err
+	}
+
+	c = new(models.Contact)
+	if err = proto.Unmarshal(data, c); err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
 func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) error {
@@ -752,6 +764,13 @@ func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) error {
 
 func (s *Store) DeleteContact(ctx context.Context, email string) error {
 	return nil
+}
+
+// Normalize the email and convert to prefixed bytes
+func emailToKey(email string) []byte {
+	trimmed := strings.TrimSpace(email)
+	normalized := strings.ToLower(trimmed)
+	return contactKey(normalized)
 }
 
 //===========================================================================

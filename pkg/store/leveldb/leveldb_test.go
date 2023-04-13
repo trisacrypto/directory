@@ -486,4 +486,19 @@ func (s *leveldbTestSuite) TestContactStore() {
 	email, err = s.db.CreateContact(context.Background(), contact)
 	s.Equal(email, "testemail")
 	s.NoError(err)
+
+	var c *models.Contact
+	c, err = s.db.RetrieveContact(context.Background(), "")
+	s.Nil(c)
+	s.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	c, err = s.db.RetrieveContact(context.Background(), "wrongemail")
+	s.Nil(c)
+	s.Equal(err, storeerrors.ErrEntityNotFound)
+
+	c, err = s.db.RetrieveContact(context.Background(), "testemail")
+	s.Equal(c.Vasps, contact.Vasps)
+	s.Equal(c.Verified, contact.Verified)
+	s.Equal(c.Token, contact.Token)
+	s.NoError(err)
 }
