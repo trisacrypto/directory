@@ -726,6 +726,10 @@ func (s *trtlStoreTestSuite) TestContactStore() {
 	require.Equal(email, "testemail")
 	require.NoError(err)
 
+	email, err = db.CreateContact(context.Background(), contact)
+	require.Empty(email)
+	require.Equal(err, storeerrors.ErrDuplicateEntity)
+
 	var c *models.Contact
 	c, err = db.RetrieveContact(context.Background(), "")
 	require.Nil(c)
@@ -741,6 +745,30 @@ func (s *trtlStoreTestSuite) TestContactStore() {
 	require.Equal(c.Token, contact.Token)
 	require.NoError(err)
 
+	err = db.UpdateContact(context.Background(), nil)
+	require.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	contact = &models.Contact{
+		Email: "",
+	}
+	err = db.UpdateContact(context.Background(), contact)
+	require.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	contact = &models.Contact{
+		Email:      "testemail",
+		Vasps:      []string{"bar", "foo"},
+		Verified:   true,
+		Token:      "newtoken",
+		VerifiedOn: "",
+	}
+	err = db.UpdateContact(context.Background(), contact)
+	require.NoError(err)
+
+	c, err = db.RetrieveContact(context.Background(), "testemail")
+	require.Equal(c.Vasps, contact.Vasps)
+	require.Equal(c.Verified, contact.Verified)
+	require.Equal(c.Token, contact.Token)
+	require.NoError(err)
 }
 
 func createVASPs(db *store.Store, num, startIndex int) error {

@@ -873,14 +873,14 @@ func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (_ string,
 	ctx, cancel := utils.WithDeadline(ctx)
 	defer cancel()
 
-	// Normalize the email and convert to bytes
-	trimmed := strings.TrimSpace(c.Email)
-	normalized := strings.ToLower(trimmed)
-	key := []byte(normalized)
+	// Check to ensure email is unique
+	if _, err = s.RetrieveContact(ctx, c.Email); err == nil {
+		return "", storeerrors.ErrDuplicateEntity
+	}
 
 	// Create and store the PutRequest
 	request := &pb.PutRequest{
-		Key:       key,
+		Key:       emailToKey(c.Email),
 		Value:     data,
 		Namespace: wire.NamespaceContacts,
 	}
@@ -903,7 +903,7 @@ func (s *Store) RetrieveContact(ctx context.Context, email string) (c *models.Co
 	ctx, cancel := utils.WithDeadline(ctx)
 	defer cancel()
 	request := &pb.GetRequest{
-		Key:       []byte(email),
+		Key:       emailToKey(email),
 		Namespace: wire.NamespaceContacts,
 	}
 	var reply *pb.GetReply
@@ -922,10 +922,41 @@ func (s *Store) RetrieveContact(ctx context.Context, email string) (c *models.Co
 	return c, nil
 }
 
-func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) error {
+// UpdateContact can create or update a contact request. The request should be as
+// complete as possible, including an email provided by the caller.
+func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) (err error) {
+	if c == nil || c.Email == "" {
+		return storeerrors.ErrIncompleteRecord
+	}
+
+	var data []byte
+	if data, err = proto.Marshal(c); err != nil {
+		return err
+	}
+
+	ctx, cancel := utils.WithDeadline(ctx)
+	defer cancel()
+	request := &pb.PutRequest{
+		Key:       emailToKey(c.Email),
+		Value:     data,
+		Namespace: wire.NamespaceContacts,
+	}
+	if reply, err := s.client.Put(ctx, request); err != nil || !reply.Success {
+		if err == nil {
+			err = storeerrors.ErrProtocol
+		}
+		return err
+	}
 	return nil
 }
 
 func (s *Store) DeleteContact(ctx context.Context, email string) error {
 	return nil
+}
+
+// Normalize the email and convert to bytes
+func emailToKey(email string) []byte {
+	trimmed := strings.TrimSpace(email)
+	normalized := strings.ToLower(trimmed)
+	return []byte(normalized)
 }
