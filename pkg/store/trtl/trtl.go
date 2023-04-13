@@ -894,8 +894,32 @@ func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (_ string,
 	return c.Email, nil
 }
 
-func (s *Store) RetrieveContact(ctx context.Context, email string) (*models.Contact, error) {
-	return nil, nil
+// RetrieveContact returns a contact request by contact email.
+func (s *Store) RetrieveContact(ctx context.Context, email string) (c *models.Contact, err error) {
+	if email == "" {
+		return nil, storeerrors.ErrEntityNotFound
+	}
+
+	ctx, cancel := utils.WithDeadline(ctx)
+	defer cancel()
+	request := &pb.GetRequest{
+		Key:       []byte(email),
+		Namespace: wire.NamespaceContacts,
+	}
+	var reply *pb.GetReply
+	if reply, err = s.client.Get(ctx, request); err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, storeerrors.ErrEntityNotFound
+		}
+		return nil, err
+	}
+
+	c = new(models.Contact)
+	if err = proto.Unmarshal(reply.Value, c); err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
 func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) error {
