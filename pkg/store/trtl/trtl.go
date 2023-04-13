@@ -950,7 +950,25 @@ func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) (err error
 	return nil
 }
 
+// DeleteContact deletes a contact record from the store by email.
 func (s *Store) DeleteContact(ctx context.Context, email string) error {
+	if email == "" {
+		return storeerrors.ErrEntityNotFound
+	}
+
+	ctx, cancel := utils.WithDeadline(ctx)
+	defer cancel()
+
+	request := &pb.DeleteRequest{
+		Key:       emailToKey(email),
+		Namespace: wire.NamespaceContacts,
+	}
+	if reply, err := s.client.Delete(ctx, request); err != nil || !reply.Success {
+		if err == nil {
+			err = storeerrors.ErrProtocol
+		}
+		return err
+	}
 	return nil
 }
 

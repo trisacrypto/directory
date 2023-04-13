@@ -769,6 +769,19 @@ func (s *trtlStoreTestSuite) TestContactStore() {
 	require.Equal(c.Verified, contact.Verified)
 	require.Equal(c.Token, contact.Token)
 	require.NoError(err)
+
+	err = db.DeleteContact(context.Background(), "")
+	require.Equal(err, storeerrors.ErrEntityNotFound)
+
+	err = db.DeleteContact(context.Background(), "wrongemail")
+	require.EqualError(err, "rpc error: code = NotFound desc = not found")
+
+	err = db.DeleteContact(context.Background(), "testemail")
+	require.NoError(err)
+
+	c, err = db.RetrieveContact(context.Background(), "testemail")
+	require.Nil(c)
+	require.Equal(err, storeerrors.ErrEntityNotFound)
 }
 
 func createVASPs(db *store.Store, num, startIndex int) error {
