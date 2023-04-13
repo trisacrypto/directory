@@ -531,4 +531,13 @@ func (s *leveldbTestSuite) TestContactStore() {
 	s.Equal(c.Verified, contact.Verified)
 	s.Equal(c.Token, contact.Token)
 
+	err = s.db.DeleteContact(context.Background(), "")
+	s.Equal(err, storeerrors.ErrEntityNotFound)
+
+	err = s.db.DeleteContact(context.Background(), "testemail")
+	s.NoError(err)
+
+	c, err = s.db.RetrieveContact(context.Background(), "testemail")
+	s.Nil(c)
+	s.Equal(err, storeerrors.ErrEntityNotFound)
 }

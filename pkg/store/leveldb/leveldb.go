@@ -783,7 +783,16 @@ func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) (err error
 	return nil
 }
 
-func (s *Store) DeleteContact(ctx context.Context, email string) error {
+// DeleteContact deletes an contact record from the store by email.
+func (s *Store) DeleteContact(ctx context.Context, email string) (err error) {
+	if email == "" {
+		return storeerrors.ErrEntityNotFound
+	}
+
+	key := emailToKey(email)
+	if err = s.db.Delete(key, nil); err != nil {
+		return err
+	}
 	return nil
 }
 
