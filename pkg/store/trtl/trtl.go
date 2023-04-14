@@ -2,7 +2,6 @@ package trtl
 
 import (
 	"context"
-	"strings"
 	"sync"
 	"time"
 
@@ -864,6 +863,12 @@ func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (_ string,
 		return "", storeerrors.ErrIncompleteRecord
 	}
 
+	// Update management timestamps and record metadata
+	c.Created = time.Now().Format(time.RFC3339)
+	if c.Modified == "" {
+		c.Modified = c.Created
+	}
+
 	// Marshal the Contact
 	var data []byte
 	if data, err = proto.Marshal(c); err != nil {
@@ -873,14 +878,10 @@ func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (_ string,
 	ctx, cancel := utils.WithDeadline(ctx)
 	defer cancel()
 
-	// Check to ensure email is unique
-	if _, err = s.RetrieveContact(ctx, c.Email); err == nil {
-		return "", storeerrors.ErrDuplicateEntity
-	}
-
+	// TODO: determine the best way to ensure uniqueness of the key
 	// Create and store the PutRequest
 	request := &pb.PutRequest{
-		Key:       emailToKey(c.Email),
+		Key:       models.ContactKey(c.Email),
 		Value:     data,
 		Namespace: wire.NamespaceContacts,
 	}
@@ -903,7 +904,7 @@ func (s *Store) RetrieveContact(ctx context.Context, email string) (c *models.Co
 	ctx, cancel := utils.WithDeadline(ctx)
 	defer cancel()
 	request := &pb.GetRequest{
-		Key:       emailToKey(email),
+		Key:       models.ContactKey(email),
 		Namespace: wire.NamespaceContacts,
 	}
 	var reply *pb.GetReply
@@ -930,6 +931,7 @@ func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) (err error
 	}
 
 	var data []byte
+	c.Modified = time.Now().Format(time.RFC3339)
 	if data, err = proto.Marshal(c); err != nil {
 		return err
 	}
@@ -937,7 +939,7 @@ func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) (err error
 	ctx, cancel := utils.WithDeadline(ctx)
 	defer cancel()
 	request := &pb.PutRequest{
-		Key:       emailToKey(c.Email),
+		Key:       models.ContactKey(c.Email),
 		Value:     data,
 		Namespace: wire.NamespaceContacts,
 	}
@@ -960,7 +962,7 @@ func (s *Store) DeleteContact(ctx context.Context, email string) error {
 	defer cancel()
 
 	request := &pb.DeleteRequest{
-		Key:       emailToKey(email),
+		Key:       models.ContactKey(email),
 		Namespace: wire.NamespaceContacts,
 	}
 	if reply, err := s.client.Delete(ctx, request); err != nil || !reply.Success {
@@ -970,11 +972,4 @@ func (s *Store) DeleteContact(ctx context.Context, email string) error {
 		return err
 	}
 	return nil
-}
-
-// Normalize the email and convert to bytes
-func emailToKey(email string) []byte {
-	trimmed := strings.TrimSpace(email)
-	normalized := strings.ToLower(trimmed)
-	return []byte(normalized)
 }
