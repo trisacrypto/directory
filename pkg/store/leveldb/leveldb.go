@@ -725,17 +725,17 @@ func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (_ string,
 		return "", storeerrors.ErrIncompleteRecord
 	}
 
+	// Update management timestamps and record metadata
+	c.Created = time.Now().Format(time.RFC3339)
+	c.Modified = c.Created
+
 	// Marshal the Contact
 	var data []byte
 	if data, err = proto.Marshal(c); err != nil {
 		return "", err
 	}
 
-	key := emailToKey(c.Email)
-	if _, err = s.db.Get(key, nil); err == nil {
-		return "", storeerrors.ErrDuplicateEntity
-	}
-
+	key := contactKey(models.NormalizeEmail(c.Email))
 	if err = s.db.Put(key, data, nil); err != nil {
 		return "", err
 	}
@@ -749,7 +749,8 @@ func (s *Store) RetrieveContact(ctx context.Context, email string) (c *models.Co
 	}
 
 	var data []byte
-	if data, err = s.db.Get(emailToKey(email), nil); err != nil {
+	key := contactKey(models.NormalizeEmail(email))
+	if data, err = s.db.Get(key, nil); err != nil {
 		if err == leveldb.ErrNotFound {
 			return nil, storeerrors.ErrEntityNotFound
 		}
@@ -772,11 +773,12 @@ func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) (err error
 	}
 
 	var data []byte
-	key := emailToKey(c.Email)
+	c.Modified = time.Now().Format(time.RFC3339)
 	if data, err = proto.Marshal(c); err != nil {
 		return err
 	}
 
+	key := contactKey(models.NormalizeEmail(c.Email))
 	if err = s.db.Put(key, data, nil); err != nil {
 		return err
 	}
@@ -789,18 +791,11 @@ func (s *Store) DeleteContact(ctx context.Context, email string) (err error) {
 		return storeerrors.ErrEntityNotFound
 	}
 
-	key := emailToKey(email)
+	key := contactKey(models.NormalizeEmail(email))
 	if err = s.db.Delete(key, nil); err != nil {
 		return err
 	}
 	return nil
-}
-
-// Normalize the email and convert to prefixed bytes
-func emailToKey(email string) []byte {
-	trimmed := strings.TrimSpace(email)
-	normalized := strings.ToLower(trimmed)
-	return contactKey(normalized)
 }
 
 //===========================================================================

@@ -865,9 +865,7 @@ func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (_ string,
 
 	// Update management timestamps and record metadata
 	c.Created = time.Now().Format(time.RFC3339)
-	if c.Modified == "" {
-		c.Modified = c.Created
-	}
+	c.Modified = c.Created
 
 	// Marshal the Contact
 	var data []byte
@@ -880,8 +878,9 @@ func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (_ string,
 
 	// TODO: determine the best way to ensure uniqueness of the key
 	// Create and store the PutRequest
+	key := []byte(models.NormalizeEmail(c.Email))
 	request := &pb.PutRequest{
-		Key:       models.ContactKey(c.Email),
+		Key:       key,
 		Value:     data,
 		Namespace: wire.NamespaceContacts,
 	}
@@ -903,8 +902,10 @@ func (s *Store) RetrieveContact(ctx context.Context, email string) (c *models.Co
 
 	ctx, cancel := utils.WithDeadline(ctx)
 	defer cancel()
+
+	key := []byte(models.NormalizeEmail(email))
 	request := &pb.GetRequest{
-		Key:       models.ContactKey(email),
+		Key:       key,
 		Namespace: wire.NamespaceContacts,
 	}
 	var reply *pb.GetReply
@@ -938,8 +939,10 @@ func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) (err error
 
 	ctx, cancel := utils.WithDeadline(ctx)
 	defer cancel()
+
+	key := []byte(models.NormalizeEmail(c.Email))
 	request := &pb.PutRequest{
-		Key:       models.ContactKey(c.Email),
+		Key:       key,
 		Value:     data,
 		Namespace: wire.NamespaceContacts,
 	}
@@ -961,8 +964,9 @@ func (s *Store) DeleteContact(ctx context.Context, email string) error {
 	ctx, cancel := utils.WithDeadline(ctx)
 	defer cancel()
 
+	key := []byte(models.NormalizeEmail(email))
 	request := &pb.DeleteRequest{
-		Key:       models.ContactKey(email),
+		Key:       key,
 		Namespace: wire.NamespaceContacts,
 	}
 	if reply, err := s.client.Delete(ctx, request); err != nil || !reply.Success {
