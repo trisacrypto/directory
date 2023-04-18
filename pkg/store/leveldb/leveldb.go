@@ -735,8 +735,7 @@ func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (_ string,
 		return "", err
 	}
 
-	key := contactKey(models.NormalizeEmail(c.Email))
-	if err = s.db.Put(key, data, nil); err != nil {
+	if err = s.db.Put(contactKey(c.Email), data, nil); err != nil {
 		return "", err
 	}
 	return c.Email, nil
@@ -749,8 +748,7 @@ func (s *Store) RetrieveContact(ctx context.Context, email string) (c *models.Co
 	}
 
 	var data []byte
-	key := contactKey(models.NormalizeEmail(email))
-	if data, err = s.db.Get(key, nil); err != nil {
+	if data, err = s.db.Get(contactKey(email), nil); err != nil {
 		if err == leveldb.ErrNotFound {
 			return nil, storeerrors.ErrEntityNotFound
 		}
@@ -778,8 +776,7 @@ func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) (err error
 		return err
 	}
 
-	key := contactKey(models.NormalizeEmail(c.Email))
-	if err = s.db.Put(key, data, nil); err != nil {
+	if err = s.db.Put(contactKey(c.Email), data, nil); err != nil {
 		return err
 	}
 	return nil
@@ -791,8 +788,7 @@ func (s *Store) DeleteContact(ctx context.Context, email string) (err error) {
 		return storeerrors.ErrEntityNotFound
 	}
 
-	key := contactKey(models.NormalizeEmail(email))
-	if err = s.db.Delete(key, nil); err != nil {
+	if err = s.db.Delete(contactKey(email), nil); err != nil {
 		return err
 	}
 	return nil
@@ -834,8 +830,9 @@ func orgKey(orgKey []byte) (key []byte) {
 	return key
 }
 
-func contactKey(id string) []byte {
-	return makeKey(preContacts, id)
+func contactKey(email string) []byte {
+	email = models.NormalizeEmail(email)
+	return makeKey(preContacts, email)
 }
 
 //===========================================================================
