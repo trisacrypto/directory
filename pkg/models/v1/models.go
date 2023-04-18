@@ -222,6 +222,13 @@ func GetVASPEmailLog(vasp *pb.VASP) (emails []*EmailLogEntry, err error) {
 	return emails, nil
 }
 
+// Normalize the email and convert to bytes
+func ContactKey(email string) []byte {
+	trimmed := strings.TrimSpace(email)
+	normalized := strings.ToLower(trimmed)
+	return []byte(normalized)
+}
+
 // Counts emails within the given EmailLogEntry slice for the given reason within the given time frame.
 func CountSentEmails(emailLog []*EmailLogEntry, reason string, timeWindowDays int) (sent int, err error) {
 	if reason == "" {
