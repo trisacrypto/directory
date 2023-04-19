@@ -731,21 +731,23 @@ func (s *trtlStoreTestSuite) TestContactStore() {
 	require.NoError(err)
 
 	// Make sure retrieve errors with an empty email
-	var c *models.Contact
-	c, err = db.RetrieveContact(context.Background(), "")
-	require.Nil(c)
+	var con *models.Contact
+	con, err = db.RetrieveContact(context.Background(), "")
+	require.Nil(con)
 	require.Equal(err, storeerrors.ErrEntityNotFound)
 
 	// Make sure retrieve throws the proper error when a contact is not found
-	c, err = db.RetrieveContact(context.Background(), "wrongemail")
-	require.Nil(c)
+	con, err = db.RetrieveContact(context.Background(), "wrongemail")
+	require.Nil(con)
 	require.Equal(err, storeerrors.ErrEntityNotFound)
 
 	// Retrieve the created contact
-	c, err = db.RetrieveContact(context.Background(), "testemail")
-	require.Equal(c.Vasps, contact.Vasps)
-	require.Equal(c.Verified, contact.Verified)
-	require.Equal(c.Token, contact.Token)
+	con, err = db.RetrieveContact(context.Background(), "testemail")
+	require.Equal(con.Vasps, contact.Vasps)
+	require.Equal(con.Verified, contact.Verified)
+	require.Equal(con.Token, contact.Token)
+	require.NotEmpty(con.Created)
+	require.NotEmpty(con.Modified)
 	require.NoError(err)
 
 	// Make sure update errors with a nil contact
@@ -759,23 +761,30 @@ func (s *trtlStoreTestSuite) TestContactStore() {
 	err = db.UpdateContact(context.Background(), contact)
 	require.Equal(err, storeerrors.ErrIncompleteRecord)
 
-	// Properly update the valid
+	// Sleep to allow time for the modified field to change
+	time.Sleep(time.Second)
+
+	// Properly update the contact
 	contact = &models.Contact{
 		Email:      "testemail",
 		Vasps:      []string{"bar", "foo"},
 		Verified:   true,
 		Token:      "newtoken",
 		VerifiedOn: "",
+		Created:    con.Created,
 	}
 	err = db.UpdateContact(context.Background(), contact)
 	require.NoError(err)
 
 	// Retrieve the updated contact
-	c, err = db.RetrieveContact(context.Background(), "testemail")
-	require.Equal(c.Vasps, contact.Vasps)
-	require.Equal(c.Verified, contact.Verified)
-	require.Equal(c.Token, contact.Token)
+	var updatedCon *models.Contact
+	updatedCon, err = db.RetrieveContact(context.Background(), "testemail")
+	require.Equal(updatedCon.Vasps, contact.Vasps)
+	require.Equal(updatedCon.Verified, contact.Verified)
+	require.Equal(updatedCon.Token, contact.Token)
 	require.NoError(err)
+	require.Equal(con.Created, updatedCon.Created)
+	require.NotEqual(con.Modified, updatedCon.Modified)
 
 	// Make sure delete errors with an empty email
 	err = db.DeleteContact(context.Background(), "")
@@ -790,8 +799,8 @@ func (s *trtlStoreTestSuite) TestContactStore() {
 	require.NoError(err)
 
 	// Make sure the contact was deleted
-	c, err = db.RetrieveContact(context.Background(), "testemail")
-	require.Nil(c)
+	con, err = db.RetrieveContact(context.Background(), "testemail")
+	require.Nil(con)
 	require.Equal(err, storeerrors.ErrEntityNotFound)
 }
 

@@ -223,10 +223,10 @@ func GetVASPEmailLog(vasp *pb.VASP) (emails []*EmailLogEntry, err error) {
 }
 
 // Normalize the email and convert to bytes
-func ContactKey(email string) []byte {
+func NormalizeEmail(email string) string {
 	trimmed := strings.TrimSpace(email)
 	normalized := strings.ToLower(trimmed)
-	return []byte(normalized)
+	return normalized
 }
 
 // Counts emails within the given EmailLogEntry slice for the given reason within the given time frame.
