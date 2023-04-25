@@ -117,7 +117,7 @@ func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP) (sent int, err error) {
 }
 
 // SendVerifyContact sends a verification email to a contact.
-func (m *EmailManager) SendVerifyContact(vasp *pb.VASP, contact *pb.Contact) (err error) {
+func (m *EmailManager) SendVerifyContact(vasp *pb.VASP, contact *models.Contact) (err error) {
 	ctx := VerifyContactData{
 		Name:        contact.Name,
 		VID:         vasp.Id,
@@ -236,7 +236,7 @@ func (m *EmailManager) SendRejectRegistration(vasp *pb.VASP, reason string) (sen
 	// Track how many emails and errors occurred during delivery.
 	iter := models.NewContactIterator(vasp.Contacts, true, true)
 	for iter.Next() {
-		var contact *pb.Contact
+		var contact *models.Contact
 		var kind string
 		contact, kind = iter.Value()
 		ctx.Name = contact.Name
@@ -299,7 +299,7 @@ func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent
 	// Note: new contact iterator provides the contact email prioritization order.
 	iter := models.NewContactIterator(vasp.Contacts, true, true)
 	for iter.Next() {
-		var contact *pb.Contact
+		var contact *models.Contact
 		var kind string
 		contact, kind = iter.Value()
 		ctx.Name = contact.Name
@@ -478,31 +478,23 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 //  1. Send to the Technical contact if verified, else
 //  2. Send to the Administrative contact if verified, else
 //  3. Send to all other verified contacts
-func getContactsToNotify(contacts *pb.Contacts) (contactsToNotify []*pb.Contact, err error) {
-	if verified, err := models.ContactIsVerified(contacts.Technical); err != nil {
-		return nil, err
-	} else if verified {
-		return []*pb.Contact{contacts.Technical}, nil
+func getContactsToNotify(contacts *pb.Contacts) (contactsToNotify []*models.Contact, err error) {
+	contactList := models.ContactOrder(contacts)
+	for _, contactType := range contactList[:2] {
+		if verified, err := models.ContactIsVerified(contactType.Contact); err != nil {
+			return nil, err
+		} else if verified {
+			return []*models.Contact{contactType.Contact}, nil
+		}
 	}
 
-	if verified, err := models.ContactIsVerified(contacts.Administrative); err != nil {
-		return nil, err
-	} else if verified {
-		return []*pb.Contact{contacts.Administrative}, nil
+	for _, contactType := range contactList[2:] {
+		if verified, err := models.ContactIsVerified(contactType.Contact); err != nil {
+			return nil, err
+		} else if verified {
+			contactsToNotify = append(contactsToNotify, contactType.Contact)
+		}
 	}
-
-	if verified, err := models.ContactIsVerified(contacts.Legal); err != nil {
-		return nil, err
-	} else if verified {
-		contactsToNotify = append(contactsToNotify, contacts.Legal)
-	}
-
-	if verified, err := models.ContactIsVerified(contacts.Billing); err != nil {
-		return nil, err
-	} else if verified {
-		contactsToNotify = append(contactsToNotify, contacts.Billing)
-	}
-
 	return contactsToNotify, nil
 }
 

@@ -1039,16 +1039,6 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 		}
 	}
 
-	// Remove extra data from the VASP
-	// Must be done after verified contacts is computed
-	// WARNING: This is safe because nothing is saved back to the database!
-	vasp.Extra = nil
-	iter := models.NewContactIterator(vasp.Contacts, false, false)
-	for iter.Next() {
-		contact, _ := iter.Value()
-		contact.Extra = nil
-	}
-
 	// Rewire the VASP from protocol buffers to specific JSON serialization context
 	if out.VASP, err = wire.Rewire(vasp); err != nil {
 		log.Warn().Err(err).Msg("could rewire vasp json")
@@ -1526,7 +1516,7 @@ func (s *Admin) ListCertificates(c *gin.Context) {
 func (s *Admin) ReplaceContact(c *gin.Context) {
 	var (
 		in           *admin.ReplaceContactRequest
-		contact      *pb.Contact
+		contact      *models.Contact
 		vasp         *pb.VASP
 		emailUpdated bool
 		err          error
@@ -1583,7 +1573,7 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 	}
 
 	// Remarshal the JSON contact data
-	update := &pb.Contact{}
+	update := &models.Contact{}
 	if err = wire.Unwire(in.Contact, update); err != nil {
 		log.Warn().Err(err).Msg("could not unmarshal contact data")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
@@ -1600,7 +1590,7 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 		contact = update
 		emailUpdated = true
 
-		if contact.IsZero() {
+		if contact == nil {
 			log.Warn().Msg("cannot create empty contact on update")
 			c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact data: missing required fields"))
 			return
@@ -1609,14 +1599,12 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 	} else {
 		// Otherwise replace the existing contact info
 		contact.Name = update.Name
-		contact.Phone = update.Phone
-		contact.Person = update.Person
 		if contact.Email != update.Email {
 			contact.Email = update.Email
 			emailUpdated = true
 		}
 
-		if contact.IsZero() {
+		if contact == nil {
 			log.Warn().Msg("invalid contact record after update")
 			c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact data: missing required fields"))
 			return

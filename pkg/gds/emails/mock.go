@@ -11,11 +11,10 @@ import (
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	emailutils "github.com/trisacrypto/directory/pkg/utils/emails"
 	mock "github.com/trisacrypto/directory/pkg/utils/emails/mock"
-	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
 type EmailMeta struct {
-	Contact   *pb.Contact
+	Contact   *models.Contact
 	To        string
 	From      string
 	Subject   string

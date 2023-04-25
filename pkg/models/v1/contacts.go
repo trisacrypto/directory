@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -17,14 +19,14 @@ const (
 	VerificationTokenLength = 48
 )
 
-type contactType struct {
-	contact *pb.Contact
-	kind    string
+type ContactType struct {
+	Contact *Contact
+	Kind    string
 	err     error
 }
 
 // Returns True if a Contact is not nil and has an email address.
-func ContactHasEmail(contact *pb.Contact) bool {
+func ContactHasEmail(contact *Contact) bool {
 	return contact != nil && contact.Email != ""
 }
 
@@ -49,31 +51,45 @@ func ContactKindIsValid(kind string) bool {
 }
 
 // Returns the corresponding contact object for the given contact type.
-func ContactFromType(contacts *pb.Contacts, kind string) *pb.Contact {
-	switch kind {
-	case AdministrativeContact:
-		return contacts.Administrative
-	case BillingContact:
-		return contacts.Billing
-	case LegalContact:
-		return contacts.Legal
-	case TechnicalContact:
-		return contacts.Technical
+func ContactFromType(contacts *pb.Contacts, kind string) *Contact {
+	contactMap := map[string]*pb.Contact{
+		TechnicalContact:      contacts.Technical,
+		LegalContact:          contacts.Legal,
+		BillingContact:        contacts.Billing,
+		AdministrativeContact: contacts.Administrative,
 	}
-	return nil
+	contact, ok := contactMap[kind]
+	if !ok {
+		return nil
+	}
+
+	// Unmarshal the extra data field on the Contact
+	extra := &GDSContactExtraData{}
+	if err := contact.Extra.UnmarshalTo(extra); err != nil {
+		return nil
+	}
+
+	//
+	return &Contact{
+		Email:    contact.Email,
+		Vasps:    []string{contact.Name},
+		Verified: extra.Verified,
+		Token:    extra.Token,
+		EmailLog: extra.EmailLog,
+	}
 }
 
 // Adds a contact on the VASP object.
-func AddContact(vasp *pb.VASP, kind string, contact *pb.Contact) error {
+func AddContact(vasp *pb.VASP, kind string, contact *Contact) error {
 	switch kind {
 	case AdministrativeContact:
-		vasp.Contacts.Administrative = contact
+		vasp.Contacts.Administrative = ConvertContact(contact)
 	case BillingContact:
-		vasp.Contacts.Billing = contact
+		vasp.Contacts.Billing = ConvertContact(contact)
 	case LegalContact:
-		vasp.Contacts.Legal = contact
+		vasp.Contacts.Legal = ConvertContact(contact)
 	case TechnicalContact:
-		vasp.Contacts.Technical = contact
+		vasp.Contacts.Technical = ConvertContact(contact)
 	default:
 		return fmt.Errorf("invalid contact type: %s", kind)
 	}
@@ -98,12 +114,62 @@ func DeleteContact(vasp *pb.VASP, kind string) error {
 }
 
 // Returns a standardized order of iterating through contacts.
-func contactOrder(contacts *pb.Contacts) []*contactType {
-	return []*contactType{
+func ContactOrder(contacts *pb.Contacts) []*ContactType {
+	//
+	contactList := []struct {
+		contact *pb.Contact
+		kind    string
+	}{
 		{contact: contacts.Technical, kind: TechnicalContact},
 		{contact: contacts.Administrative, kind: AdministrativeContact},
 		{contact: contacts.Legal, kind: LegalContact},
 		{contact: contacts.Billing, kind: BillingContact},
+	}
+
+	returnList := make([]*ContactType, 4)
+	for _, c := range contactList {
+		//
+		returnList = append(returnList, &ContactType{
+			Contact: ConvertTrisaContact(*c.contact),
+			Kind:    c.kind,
+		})
+	}
+	return returnList
+}
+
+func ConvertTrisaContact(contact pb.Contact) *Contact {
+	// Unmarshal the extra data field on the Contact
+	extra := &GDSContactExtraData{}
+	if err := contact.Extra.UnmarshalTo(extra); err != nil {
+		return nil
+	}
+
+	return &Contact{
+		Email:    contact.Email,
+		Vasps:    []string{contact.Name},
+		Verified: extra.Verified,
+		Token:    extra.Token,
+		EmailLog: extra.EmailLog,
+	}
+}
+
+func ConvertContact(contact *Contact) (newContact *pb.Contact) {
+	// Unmarshal the extra data field on the Contact
+	extra := &GDSContactExtraData{
+		Verified: contact.Verified,
+		Token:    contact.Token,
+		EmailLog: contact.EmailLog,
+	}
+
+	var any *anypb.Any
+	if err := anypb.MarshalFrom(any, extra, proto.MarshalOptions{}); err != nil {
+		return nil
+	}
+
+	return &pb.Contact{
+		Email: contact.Email,
+		Name:  contact.Name,
+		Extra: any,
 	}
 }
 
@@ -111,7 +177,7 @@ type ContactIterator struct {
 	email    bool
 	verified bool
 	index    int
-	contacts []*contactType
+	contacts []*ContactType
 }
 
 // Returns a new ContactIterator which has Next() and Value() methods that can be used
@@ -121,7 +187,7 @@ func NewContactIterator(contacts *pb.Contacts, requireEmail bool, requireVerifie
 		email:    requireEmail,
 		verified: requireVerified,
 		index:    -1,
-		contacts: contactOrder(contacts),
+		contacts: ContactOrder(contacts),
 	}
 }
 
@@ -138,22 +204,22 @@ func (i *ContactIterator) Next() bool {
 
 	// Filter checks - contact must exist
 	current := i.contacts[i.index]
-	if current.contact == nil || current.contact.IsZero() {
+	if current.Contact == nil {
 		return i.Next()
 	}
 
 	// Filter if email required
-	if i.email && !ContactHasEmail(current.contact) {
+	if i.email && !ContactHasEmail(current.Contact) {
 		return i.Next()
 	}
 
 	// Filter if verified is required
 	if i.verified {
-		if verified, err := ContactIsVerified(current.contact); err != nil || !verified {
+		if verified, err := ContactIsVerified(current.Contact); err != nil || !verified {
 			// Even in an error we're skipping the contact, errors have to be
 			// fetched as a multi-error after the iteration is complete.
 			if err != nil {
-				current.err = fmt.Errorf("error retrieving verification status for %s contact: %s", current.kind, err.Error())
+				current.err = fmt.Errorf("error retrieving verification status for %s contact: %s", current.Kind, err.Error())
 			}
 			return i.Next()
 		}
@@ -162,12 +228,12 @@ func (i *ContactIterator) Next() bool {
 	return true
 }
 
-func (i *ContactIterator) Value() (*pb.Contact, string) {
+func (i *ContactIterator) Value() (*Contact, string) {
 	if i.index < len(i.contacts) {
 		// Note that no checking of the contact occurs here to allow
 		// us to allow iteration with different filtering mechanisms.
 		current := i.contacts[i.index]
-		return current.contact, current.kind
+		return current.Contact, current.Kind
 	}
 	return nil, ""
 }

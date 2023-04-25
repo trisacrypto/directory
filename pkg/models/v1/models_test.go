@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/trisacrypto/directory/pkg/models/v1"
 	. "github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
@@ -444,10 +445,9 @@ func TestContactExtra(t *testing.T) {
 	require.Empty(t, token)
 
 	// Test extra is nil
-	contact := &pb.Contact{
+	contact := &models.Contact{
 		Email: "pontoon@boatz.com",
 		Name:  "Sailor Moon",
-		Phone: "555-5555",
 	}
 	token, verified, err = GetContactVerification(contact)
 	require.NoError(t, err, "nil contact extra returns error")
@@ -507,7 +507,7 @@ func TestContactExtra(t *testing.T) {
 
 func TestContactEmailLog(t *testing.T) {
 	// Test that the email log functions are working as expected
-	contact := &pb.Contact{
+	contact := &models.Contact{
 		Name:  "Test Contact",
 		Email: "test@example.com",
 	}
@@ -542,7 +542,7 @@ func TestContactEmailLog(t *testing.T) {
 	require.Equal(t, "review resend", emailLog[1].Subject)
 }
 
-func TestVeriedContacts(t *testing.T) {
+func TestVerifiedContacts(t *testing.T) {
 	vasp := &pb.VASP{
 		Contacts: &pb.Contacts{
 			Administrative: &pb.Contact{
@@ -563,19 +563,19 @@ func TestVeriedContacts(t *testing.T) {
 	contacts := VerifiedContacts(vasp)
 	require.Len(t, contacts, 0)
 
-	err := SetContactVerification(vasp.Contacts.Administrative, "", true)
+	err := SetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Administrative), "", true)
 	require.NoError(t, err)
 
-	err = SetContactVerification(vasp.Contacts.Technical, "12345", false)
+	err = SetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Technical), "12345", false)
 	require.NoError(t, err)
 
 	contacts = VerifiedContacts(vasp)
 	require.Len(t, contacts, 1)
 
-	err = SetContactVerification(vasp.Contacts.Technical, "", true)
+	err = SetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Technical), "", true)
 	require.NoError(t, err)
 
-	err = SetContactVerification(vasp.Contacts.Legal, "12345", false)
+	err = SetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Legal), "12345", false)
 	require.NoError(t, err)
 
 	contacts = VerifiedContacts(vasp)
@@ -894,14 +894,14 @@ func TestVASPSignature(t *testing.T) {
 
 	siga2, err := VASPSignature(vaspa)
 	require.NoError(t, err, "could not compute vaspa signature")
-	require.NotEqual(t, siga, siga2, "changing vasp a did not change singature")
+	require.NotEqual(t, siga, siga2, "changing vasp a did not change signature")
 
 	err = AppendAdminEmailLog(vaspa, "manual entry", "this is a test email log")
 	require.NoError(t, err, "could not append admin email log")
 
 	siga3, err := VASPSignature(vaspa)
 	require.NoError(t, err, "could not compute vaspa signature")
-	require.NotEqual(t, siga2, siga3, "changing vasp a did not change singature")
+	require.NotEqual(t, siga2, siga3, "changing vasp a did not change signature")
 }
 
 func TestGetVASPEmailLog(t *testing.T) {

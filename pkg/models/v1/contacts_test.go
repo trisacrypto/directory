@@ -38,7 +38,7 @@ func TestIterContacts(t *testing.T) {
 		models.BillingContact,
 	}
 
-	actualContacts := []*pb.Contact{}
+	actualContacts := []*models.Contact{}
 	actualKinds := []string{}
 
 	// Should iterate over all contacts.
@@ -52,7 +52,7 @@ func TestIterContacts(t *testing.T) {
 	require.Equal(t, expectedContacts, actualContacts)
 	require.Equal(t, expectedKinds, actualKinds)
 
-	actualContacts = []*pb.Contact{}
+	actualContacts = []*models.Contact{}
 	actualKinds = []string{}
 
 	// Should skip contacts without an email address.
@@ -74,7 +74,7 @@ func TestIterContacts(t *testing.T) {
 	require.Equal(t, expectedContacts, actualContacts)
 	require.Equal(t, expectedKinds, actualKinds)
 
-	actualContacts = []*pb.Contact{}
+	actualContacts = []*models.Contact{}
 	actualKinds = []string{}
 
 	// Should skip nil contacts.
@@ -107,7 +107,7 @@ func TestIterVerifiedContacts(t *testing.T) {
 		},
 	}
 
-	actualContacts := []*pb.Contact{}
+	actualContacts := []*models.Contact{}
 	actualKinds := []string{}
 
 	// No contacts are verified.
@@ -121,12 +121,12 @@ func TestIterVerifiedContacts(t *testing.T) {
 	require.Equal(t, []*pb.Contact{}, actualContacts)
 	require.Equal(t, []string{}, actualKinds)
 
-	actualContacts = []*pb.Contact{}
+	actualContacts = []*models.Contact{}
 	actualKinds = []string{}
 
 	// Should only iterate through the verified contacts.
-	require.NoError(t, models.SetContactVerification(contacts.Technical, "", true))
-	require.NoError(t, models.SetContactVerification(contacts.Legal, "", true))
+	require.NoError(t, models.SetContactVerification(models.ConvertTrisaContact(*contacts.Technical), "", true))
+	require.NoError(t, models.SetContactVerification(models.ConvertTrisaContact(*contacts.Legal), "", true))
 	expectedContacts := []*pb.Contact{
 		contacts.Technical,
 		contacts.Legal,
@@ -163,7 +163,7 @@ func TestGetSentEmailCount(t *testing.T) {
 	}
 
 	// Log should initially be empty
-	emailLog, err := models.GetEmailLog(contacts.Administrative)
+	emailLog, err := models.GetEmailLog(models.ConvertTrisaContact(*contacts.Administrative))
 	require.NoError(t, err)
 	require.Len(t, emailLog, 0)
 
@@ -176,15 +176,15 @@ func TestGetSentEmailCount(t *testing.T) {
 	require.EqualError(t, err, "time window must be a positive number of days")
 
 	// Append an entry to an empty log
-	err = models.AppendEmailLog(contacts.Administrative, "verify_contact", "verification")
+	err = models.AppendEmailLog(models.ConvertTrisaContact(*contacts.Administrative), "verify_contact", "verification")
 	require.NoError(t, err)
 
 	// Append an entry to an empty log
-	err = models.AppendEmailLog(contacts.Administrative, "verify_contact", "verification")
+	err = models.AppendEmailLog(models.ConvertTrisaContact(*contacts.Administrative), "verify_contact", "verification")
 	require.NoError(t, err)
 
 	// Get email log for contact
-	emailLog, err = models.GetEmailLog(contacts.Administrative)
+	emailLog, err = models.GetEmailLog(models.ConvertTrisaContact(*contacts.Administrative))
 	require.NoError(t, err)
 	require.Len(t, emailLog, 2)
 	require.Equal(t, "verify_contact", emailLog[0].Reason)
@@ -196,7 +196,7 @@ func TestGetSentEmailCount(t *testing.T) {
 	require.Equal(t, 2, sent)
 
 	// Get the technical contact's email log
-	emailLog, err = models.GetEmailLog(contacts.Technical)
+	emailLog, err = models.GetEmailLog(models.ConvertTrisaContact(*contacts.Technical))
 	require.NoError(t, err)
 
 	// Should return 0 emails when the log is empty
@@ -225,7 +225,7 @@ func TestGetSentEmailCount(t *testing.T) {
 	require.NoError(t, SetEmailLog(contacts.Billing, log))
 
 	// Get the billing contact's email log
-	emailLog, err = models.GetEmailLog(contacts.Billing)
+	emailLog, err = models.GetEmailLog(models.ConvertTrisaContact(*contacts.Billing))
 	require.NoError(t, err)
 
 	// Should only return a count of emails within the time window
@@ -262,7 +262,7 @@ func TestGetSentEmailCount(t *testing.T) {
 	require.NoError(t, SetEmailLog(contacts.Legal, log))
 
 	// Get the legal contact's email log
-	emailLog, err = models.GetEmailLog(contacts.Legal)
+	emailLog, err = models.GetEmailLog(models.ConvertTrisaContact(*contacts.Legal))
 	require.NoError(t, err)
 
 	// Should only return a count of emails that match the reason and are within the time window

@@ -1119,7 +1119,7 @@ func (s *gdsTestSuite) TestReplaceContact() {
 	require.Equal(contact.Email, vasp.Contacts.Administrative.Email)
 	require.Equal(contact.Phone, vasp.Contacts.Administrative.Phone)
 	// Should no longer be verified
-	token, verified, err := models.GetContactVerification(vasp.Contacts.Administrative)
+	token, verified, err := models.GetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Administrative))
 	require.NoError(err, "could not retrieve contact verification")
 	require.NotEmpty(token)
 	require.False(verified)
@@ -1147,7 +1147,7 @@ func (s *gdsTestSuite) TestReplaceContact() {
 	require.Equal(contact.Name, vasp.Contacts.Technical.Name)
 	require.Equal(contact.Email, vasp.Contacts.Technical.Email)
 	// Should not be verified
-	token, verified, err = models.GetContactVerification(vasp.Contacts.Technical)
+	token, verified, err = models.GetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Technical))
 	require.NoError(err, "could not retrieve contact verification")
 	require.NotEmpty(token)
 	require.False(verified)
@@ -1155,7 +1155,7 @@ func (s *gdsTestSuite) TestReplaceContact() {
 	// Should send verification emails to the two contacts
 	messages := []*emails.EmailMeta{
 		{
-			Contact:   vasp.Contacts.Administrative,
+			Contact:   models.ConvertTrisaContact(*vasp.Contacts.Administrative),
 			To:        "clark.kent@charliebank.com",
 			From:      s.svc.GetConf().Email.ServiceEmail,
 			Subject:   emails.VerifyContactRE,
@@ -1163,7 +1163,7 @@ func (s *gdsTestSuite) TestReplaceContact() {
 			Timestamp: adminSent,
 		},
 		{
-			Contact:   vasp.Contacts.Technical,
+			Contact:   models.ConvertTrisaContact(*vasp.Contacts.Technical),
 			To:        "lois.lane@charliebank.com",
 			From:      s.svc.GetConf().Email.ServiceEmail,
 			Subject:   emails.VerifyContactRE,
@@ -1803,14 +1803,14 @@ func (s *gdsTestSuite) TestReviewReject() {
 	_, err = s.svc.GetStore().RetrieveCertReq(context.Background(), xray.Id)
 	require.Error(err)
 
-	emailLog, err := models.GetEmailLog(v.Contacts.Administrative)
+	emailLog, err := models.GetEmailLog(models.ConvertTrisaContact(*v.Contacts.Administrative))
 	require.NoError(err)
 	require.Len(emailLog, 1)
 
 	// Rejection emails should be sent to the verified contacts
 	messages := []*emails.EmailMeta{
 		{
-			Contact:   v.Contacts.Administrative,
+			Contact:   models.ConvertTrisaContact(*v.Contacts.Administrative),
 			To:        v.Contacts.Administrative.Email,
 			From:      s.svc.GetConf().Email.ServiceEmail,
 			Subject:   emails.RejectRegistrationRE,
@@ -1818,7 +1818,7 @@ func (s *gdsTestSuite) TestReviewReject() {
 			Timestamp: sent,
 		},
 		{
-			Contact:   v.Contacts.Legal,
+			Contact:   models.ConvertTrisaContact(*v.Contacts.Legal),
 			To:        v.Contacts.Legal.Email,
 			From:      s.svc.GetConf().Email.ServiceEmail,
 			Subject:   emails.RejectRegistrationRE,
@@ -1924,7 +1924,7 @@ func (s *gdsTestSuite) TestResend() {
 
 	messages := []*emails.EmailMeta{
 		{
-			Contact:   errored.Contacts.Billing,
+			Contact:   models.ConvertTrisaContact(*errored.Contacts.Billing),
 			To:        errored.Contacts.Billing.Email,
 			From:      s.svc.GetConf().Email.ServiceEmail,
 			Subject:   emails.VerifyContactRE,
@@ -1938,7 +1938,7 @@ func (s *gdsTestSuite) TestResend() {
 			Timestamp: secondSend,
 		},
 		{
-			Contact:   rejected.Contacts.Administrative,
+			Contact:   models.ConvertTrisaContact(*rejected.Contacts.Administrative),
 			To:        rejected.Contacts.Administrative.Email,
 			From:      s.svc.GetConf().Email.ServiceEmail,
 			Subject:   emails.RejectRegistrationRE,
@@ -1946,7 +1946,7 @@ func (s *gdsTestSuite) TestResend() {
 			Timestamp: thirdSend,
 		},
 		{
-			Contact:   rejected.Contacts.Legal,
+			Contact:   models.ConvertTrisaContact(*rejected.Contacts.Legal),
 			To:        rejected.Contacts.Legal.Email,
 			From:      s.svc.GetConf().Email.ServiceEmail,
 			Subject:   emails.RejectRegistrationRE,
