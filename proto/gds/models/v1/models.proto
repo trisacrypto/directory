@@ -159,6 +159,7 @@ message ReviewNote {
     string text = 6;
 }
 
+// GDSContactExtraData contains all GDS-specific extra data for a Contact record.
 message GDSContactExtraData {
     // Token for email verification
     bool verified = 1;
