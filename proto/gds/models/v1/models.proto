@@ -159,16 +159,6 @@ message ReviewNote {
     string text = 6;
 }
 
-// GDSContactExtraData contains all GDS-specific extra data for a Contact record.
-message GDSContactExtraData {
-    // Token for email verification
-    bool verified = 1;
-    string token = 2;
-
-    // Email audit log
-    repeated EmailLogEntry email_log = 3;
-}
-
 // EmailLogEntry contains information about a single email message that was sent.
 message EmailLogEntry {
     // RFC3339 timestamp
@@ -195,13 +185,16 @@ message Contact {
     // Token for email verification
     bool verified = 3;
     string token = 4;
+    
+    //
+    repeated EmailLogEntry email_log = 5;
 
     // RFC3339 Timestamp for when the contact was verified
-    string verified_on = 5;
+    string verified_on = 6;
 
     // Logging information timestamps
-    string created = 6;
-    string modified = 7;
+    string created = 7;
+    string modified = 8;
 }
 
 // Implements a protocol buffer struct for state managed pagination. This struct will be

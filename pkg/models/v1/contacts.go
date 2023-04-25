@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -30,7 +29,7 @@ func ContactHasEmail(contact *pb.Contact) bool {
 }
 
 // Returns True if a Contact is verified.
-func ContactIsVerified(contact *pb.Contact) (verified bool, err error) {
+func ContactIsVerified(contact *Contact) (verified bool, err error) {
 	if _, verified, err = GetContactVerification(contact); err != nil {
 		return false, err
 	}
@@ -184,40 +183,25 @@ func (i *ContactIterator) Error() (err error) {
 }
 
 // GetContactVerification token and verified status from the extra data field on the Contact.
-func GetContactVerification(contact *pb.Contact) (_ string, _ bool, err error) {
+func GetContactVerification(contact *Contact) (_ string, _ bool, err error) {
 	// Return zero-valued defaults with no error if extra is nil.
-	if contact == nil || contact.Extra == nil {
+	if contact == nil {
 		return "", false, nil
 	}
 
 	// Unmarshal the extra data field on the Contact
-	extra := &GDSContactExtraData{}
-	if err = contact.Extra.UnmarshalTo(extra); err != nil {
-		return "", false, err
-	}
-	return extra.GetToken(), extra.GetVerified(), nil
+	return contact.Token, contact.Verified, nil
 }
 
 // SetContactVerification token and verified status on the Contact record.
-func SetContactVerification(contact *pb.Contact, token string, verified bool) (err error) {
-	if contact == nil || contact.IsZero() {
+func SetContactVerification(contact *Contact, token string, verified bool) (err error) {
+	if contact == nil {
 		return errors.New("cannot set verification on nil contact")
 	}
 
-	// Unmarshal previous extra data.
-	extra := &GDSContactExtraData{}
-	if contact.Extra != nil {
-		if err = contact.Extra.UnmarshalTo(extra); err != nil {
-			return fmt.Errorf("could not deserialize previous extra: %s", err)
-		}
-	}
-
 	// Set contact verification.
-	extra.Verified = verified
-	extra.Token = token
-	if contact.Extra, err = anypb.New(extra); err != nil {
-		return err
-	}
+	contact.Verified = verified
+	contact.Token = token
 	return nil
 }
 
@@ -250,35 +234,24 @@ func ContactVerifications(vasp *pb.VASP) (contacts map[string]bool, errs *multie
 }
 
 // GetEmailLog from the extra data on the Contact record.
-func GetEmailLog(contact *pb.Contact) (_ []*EmailLogEntry, err error) {
+func GetEmailLog(contact *Contact) (_ []*EmailLogEntry, err error) {
 	// If the extra data is nil, return nil (no email log).
-	if contact == nil || contact.Extra == nil {
+	if contact == nil {
 		return nil, nil
 	}
-
-	// Unmarshal the extra data field on the VASP.
-	extra := &GDSContactExtraData{}
-	if err = contact.Extra.UnmarshalTo(extra); err != nil {
-		return nil, err
-	}
-	return extra.GetEmailLog(), nil
+	return contact.EmailLog, nil
 }
 
 // Create and add a new entry to the EmailLog on the extra data on the Contact record.
-func AppendEmailLog(contact *pb.Contact, reason, subject string) (err error) {
+func AppendEmailLog(contact *Contact, reason, subject string) (err error) {
 	// Contact must be non-nil.
-	if contact == nil || contact.IsZero() {
+	if contact == nil {
 		return errors.New("cannot append entry to nil contact")
 	}
 
-	// Unmarshal previous extra data.
-	extra := &GDSContactExtraData{}
-	if contact.Extra != nil {
-		if err = contact.Extra.UnmarshalTo(extra); err != nil {
-			return fmt.Errorf("could not deserialize previous extra: %s", err)
-		}
-	} else {
-		extra.EmailLog = make([]*EmailLogEntry, 0, 1)
+	// Create the EmailLog if it is nil.
+	if contact.EmailLog == nil {
+		contact.EmailLog = make([]*EmailLogEntry, 0, 1)
 	}
 
 	// Append entry to the previous log.
@@ -288,11 +261,6 @@ func AppendEmailLog(contact *pb.Contact, reason, subject string) (err error) {
 		Subject:   subject,
 		Recipient: contact.Email,
 	}
-	extra.EmailLog = append(extra.EmailLog, entry)
-
-	// Serialize the extra data back to the VASP.
-	if contact.Extra, err = anypb.New(extra); err != nil {
-		return err
-	}
+	contact.EmailLog = append(contact.EmailLog, entry)
 	return nil
 }
