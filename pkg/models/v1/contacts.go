@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -53,10 +52,10 @@ func ContactKindIsValid(kind string) bool {
 // Returns the corresponding contact object for the given contact type.
 func ContactFromType(contacts *pb.Contacts, kind string) *Contact {
 	contactMap := map[string]*pb.Contact{
-		TechnicalContact:      contacts.Technical,
-		LegalContact:          contacts.Legal,
-		BillingContact:        contacts.Billing,
 		AdministrativeContact: contacts.Administrative,
+		BillingContact:        contacts.Billing,
+		LegalContact:          contacts.Legal,
+		TechnicalContact:      contacts.Technical,
 	}
 	contact, ok := contactMap[kind]
 	if !ok {
@@ -115,29 +114,26 @@ func DeleteContact(vasp *pb.VASP, kind string) error {
 
 // Returns a standardized order of iterating through contacts.
 func ContactOrder(contacts *pb.Contacts) []*ContactType {
-	//
-	contactList := []struct {
-		contact *pb.Contact
-		kind    string
-	}{
-		{contact: contacts.Technical, kind: TechnicalContact},
-		{contact: contacts.Administrative, kind: AdministrativeContact},
-		{contact: contacts.Legal, kind: LegalContact},
-		{contact: contacts.Billing, kind: BillingContact},
+	return []*ContactType{
+		{Contact: ConvertTrisaContact(contacts.Technical), Kind: TechnicalContact},
+		{Contact: ConvertTrisaContact(contacts.Administrative), Kind: AdministrativeContact},
+		{Contact: ConvertTrisaContact(contacts.Legal), Kind: LegalContact},
+		{Contact: ConvertTrisaContact(contacts.Billing), Kind: BillingContact},
 	}
-
-	returnList := make([]*ContactType, 4)
-	for _, c := range contactList {
-		//
-		returnList = append(returnList, &ContactType{
-			Contact: ConvertTrisaContact(*c.contact),
-			Kind:    c.kind,
-		})
-	}
-	return returnList
 }
 
-func ConvertTrisaContact(contact pb.Contact) *Contact {
+func ConvertTrisaContact(contact *pb.Contact) *Contact {
+	if contact == nil {
+		return nil
+	}
+
+	if contact.Extra == nil {
+		return &Contact{
+			Email: contact.Email,
+			Vasps: []string{contact.Name},
+		}
+	}
+
 	// Unmarshal the extra data field on the Contact
 	extra := &GDSContactExtraData{}
 	if err := contact.Extra.UnmarshalTo(extra); err != nil {
@@ -154,22 +150,19 @@ func ConvertTrisaContact(contact pb.Contact) *Contact {
 }
 
 func ConvertContact(contact *Contact) (newContact *pb.Contact) {
-	// Unmarshal the extra data field on the Contact
-	extra := &GDSContactExtraData{
+	extra, err := anypb.New(&GDSContactExtraData{
 		Verified: contact.Verified,
 		Token:    contact.Token,
 		EmailLog: contact.EmailLog,
-	}
-
-	var any *anypb.Any
-	if err := anypb.MarshalFrom(any, extra, proto.MarshalOptions{}); err != nil {
+	})
+	if err != nil {
 		return nil
 	}
 
 	return &pb.Contact{
 		Email: contact.Email,
 		Name:  contact.Name,
-		Extra: any,
+		Extra: extra,
 	}
 }
 
@@ -204,7 +197,7 @@ func (i *ContactIterator) Next() bool {
 
 	// Filter checks - contact must exist
 	current := i.contacts[i.index]
-	if current.Contact == nil {
+	if current == nil || current.Contact == nil {
 		return i.Next()
 	}
 
@@ -243,7 +236,9 @@ func (i *ContactIterator) Value() (*Contact, string) {
 func (i *ContactIterator) Error() (err error) {
 	var errs *multierror.Error
 	for _, contact := range i.contacts {
-		errs = multierror.Append(errs, contact.err)
+		if contact != nil {
+			errs = multierror.Append(errs, contact.err)
+		}
 	}
 	return errs.ErrorOrNil()
 }

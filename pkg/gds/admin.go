@@ -1039,6 +1039,11 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 		}
 	}
 
+	// Remove extra data from the VASP
+	// Must be done after verified contacts is computed
+	// WARNING: This is safe because nothing is saved back to the database!
+	vasp.Extra = nil
+
 	// Rewire the VASP from protocol buffers to specific JSON serialization context
 	if out.VASP, err = wire.Rewire(vasp); err != nil {
 		log.Warn().Err(err).Msg("could rewire vasp json")

@@ -25,7 +25,6 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -399,7 +398,7 @@ func (lib *Library) GenerateDB(ftype FixtureType) (err error) {
 // CompareFixture returns True if the given object matches the object in the fixtures
 // library. This is used in tests to verify the correctness of the reference library,
 // and to verify endpoints that return unmodified objects from the database.
-func (lib *Library) CompareFixture(namespace, key string, obj interface{}, removeExtra, removeSerials bool) (matches bool, err error) {
+func (lib *Library) CompareFixture(namespace, key string, obj interface{}, removeSerials bool) (matches bool, err error) {
 	var (
 		ok bool
 	)
@@ -430,21 +429,6 @@ func (lib *Library) CompareFixture(namespace, key string, obj interface{}, remov
 
 		// Remove time fields for comparison
 		a.LastUpdated, b.LastUpdated = "", ""
-
-		if removeExtra {
-			a.Extra, b.Extra = nil, nil
-			iter := models.NewContactIterator(a.Contacts, false, false)
-			for iter.Next() {
-				contact, _ := iter.Value()
-				contact.Extra = nil
-			}
-
-			iter = models.NewContactIterator(b.Contacts, false, false)
-			for iter.Next() {
-				contact, _ := iter.Value()
-				contact.Extra = nil
-			}
-		}
 
 		if removeSerials {
 			a.IdentityCertificate.SerialNumber, b.IdentityCertificate.SerialNumber = nil, nil
@@ -551,15 +535,8 @@ func ClearContactEmailLogs(vasp *pb.VASP) (err error) {
 	iter := models.NewContactIterator(contacts, false, false)
 	for iter.Next() {
 		contact, _ := iter.Value()
-		extra := &models.GDSContactExtraData{}
-		if contact.Extra != nil {
-			if err = contact.Extra.UnmarshalTo(extra); err != nil {
-				return err
-			}
-			extra.EmailLog = nil
-			if contact.Extra, err = anypb.New(extra); err != nil {
-				return err
-			}
+		if contact.EmailLog != nil {
+			contact.EmailLog = nil
 		}
 	}
 	return nil

@@ -168,7 +168,7 @@ func (s *gdsTestSuite) TestRegister() {
 	// Emails should be sent to the contacts
 	messages := []*emails.EmailMeta{
 		{
-			Contact:   models.ConvertTrisaContact(*v.Contacts.Administrative),
+			Contact:   models.ConvertTrisaContact(v.Contacts.Administrative),
 			To:        v.Contacts.Administrative.Email,
 			From:      s.svc.GetConf().Email.ServiceEmail,
 			Subject:   emails.VerifyContactRE,
@@ -176,7 +176,7 @@ func (s *gdsTestSuite) TestRegister() {
 			Timestamp: sent,
 		},
 		{
-			Contact:   models.ConvertTrisaContact(*v.Contacts.Billing),
+			Contact:   models.ConvertTrisaContact(v.Contacts.Billing),
 			To:        v.Contacts.Billing.Email,
 			From:      s.svc.GetConf().Email.ServiceEmail,
 			Subject:   emails.VerifyContactRE,
@@ -184,7 +184,7 @@ func (s *gdsTestSuite) TestRegister() {
 			Timestamp: sent,
 		},
 		{
-			Contact:   models.ConvertTrisaContact(*v.Contacts.Legal),
+			Contact:   models.ConvertTrisaContact(v.Contacts.Legal),
 			To:        v.Contacts.Legal.Email,
 			From:      s.svc.GetConf().Email.ServiceEmail,
 			Subject:   emails.VerifyContactRE,
@@ -192,7 +192,7 @@ func (s *gdsTestSuite) TestRegister() {
 			Timestamp: sent,
 		},
 		{
-			Contact:   models.ConvertTrisaContact(*v.Contacts.Technical),
+			Contact:   models.ConvertTrisaContact(v.Contacts.Technical),
 			To:        v.Contacts.Technical.Email,
 			From:      s.svc.GetConf().Email.ServiceEmail,
 			Subject:   emails.VerifyContactRE,
@@ -519,7 +519,7 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	token, err := models.GetAdminVerificationToken(vasp)
 	require.NoError(err)
 	require.NotEmpty(token)
-	token, verified, err := models.GetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Administrative))
+	token, verified, err := models.GetContactVerification(models.ConvertTrisaContact(vasp.Contacts.Administrative))
 	require.NoError(err)
 	require.Empty(token)
 	require.True(verified)
@@ -534,7 +534,7 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	vasp, err = s.svc.GetStore().RetrieveVASP(context.Background(), request.Id)
 	require.NoError(err)
 	require.Equal(pb.VerificationState_PENDING_REVIEW, vasp.VerificationStatus)
-	token, verified, err = models.GetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Legal))
+	token, verified, err = models.GetContactVerification(models.ConvertTrisaContact(vasp.Contacts.Legal))
 	require.NoError(err)
 	require.Empty(token)
 	require.True(verified)

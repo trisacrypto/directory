@@ -127,7 +127,7 @@ func countLevelDBFixtures(t *testing.T, lib *fixtures.Library) (counts map[strin
 		counts[key[0]]++
 
 		// Test that the database fixture matches our reference
-		match, err := lib.CompareFixture(key[0], key[1], obj, false, false)
+		match, err := lib.CompareFixture(key[0], key[1], obj, false)
 		require.NoError(t, err, "could not compare leveldb fixture %s::%s to reference", key[0], key[1])
 		require.True(t, match, "leveldb fixture %s::%s does not match reference", key[0], key[1])
 	}
@@ -154,7 +154,7 @@ func countHonuFixtures(t *testing.T, lib *fixtures.Library) (counts map[string]i
 		vasp := &pb.VASP{}
 		require.NoError(t, proto.Unmarshal(iter.Value(), vasp))
 		counts[wire.NamespaceVASPs]++
-		lib.CompareFixture(wire.NamespaceVASPs, string(iter.Key()), vasp, false, false)
+		lib.CompareFixture(wire.NamespaceVASPs, string(iter.Key()), vasp, false)
 	}
 	require.NoError(t, iter.Error())
 	iter.Release()
@@ -165,7 +165,7 @@ func countHonuFixtures(t *testing.T, lib *fixtures.Library) (counts map[string]i
 		cert := &models.Certificate{}
 		require.NoError(t, proto.Unmarshal(iter.Value(), cert))
 		counts[wire.NamespaceCerts]++
-		lib.CompareFixture(wire.NamespaceCerts, string(iter.Key()), cert, false, false)
+		lib.CompareFixture(wire.NamespaceCerts, string(iter.Key()), cert, false)
 	}
 	require.NoError(t, iter.Error())
 	iter.Release()
@@ -176,7 +176,7 @@ func countHonuFixtures(t *testing.T, lib *fixtures.Library) (counts map[string]i
 		certreq := &models.CertificateRequest{}
 		require.NoError(t, proto.Unmarshal(iter.Value(), certreq))
 		counts[wire.NamespaceCertReqs]++
-		lib.CompareFixture(wire.NamespaceCertReqs, string(iter.Key()), certreq, false, false)
+		lib.CompareFixture(wire.NamespaceCertReqs, string(iter.Key()), certreq, false)
 	}
 	require.NoError(t, iter.Error())
 	iter.Release()

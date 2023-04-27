@@ -563,19 +563,19 @@ func TestVerifiedContacts(t *testing.T) {
 	contacts := VerifiedContacts(vasp)
 	require.Len(t, contacts, 0)
 
-	err := SetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Administrative), "", true)
+	err := SetContactVerification(models.ConvertTrisaContact(vasp.Contacts.Administrative), "", true)
 	require.NoError(t, err)
 
-	err = SetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Technical), "12345", false)
+	err = SetContactVerification(models.ConvertTrisaContact(vasp.Contacts.Technical), "12345", false)
 	require.NoError(t, err)
 
 	contacts = VerifiedContacts(vasp)
 	require.Len(t, contacts, 1)
 
-	err = SetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Technical), "", true)
+	err = SetContactVerification(models.ConvertTrisaContact(vasp.Contacts.Technical), "", true)
 	require.NoError(t, err)
 
-	err = SetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Legal), "12345", false)
+	err = SetContactVerification(models.ConvertTrisaContact(vasp.Contacts.Legal), "12345", false)
 	require.NoError(t, err)
 
 	contacts = VerifiedContacts(vasp)

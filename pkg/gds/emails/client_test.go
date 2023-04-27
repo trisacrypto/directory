@@ -77,11 +77,11 @@ func TestClientSendEmails(t *testing.T) {
 
 	err = models.SetAdminVerificationToken(vasp, "12345token1234")
 	require.NoError(t, err)
-	err = models.SetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Technical), "", true)
+	err = models.SetContactVerification(models.ConvertTrisaContact(vasp.Contacts.Technical), "", true)
 	require.NoError(t, err)
-	err = models.SetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Administrative), "", true)
+	err = models.SetContactVerification(models.ConvertTrisaContact(vasp.Contacts.Administrative), "", true)
 	require.NoError(t, err)
-	err = models.SetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Legal), "12345token1234", false)
+	err = models.SetContactVerification(models.ConvertTrisaContact(vasp.Contacts.Legal), "12345token1234", false)
 	require.NoError(t, err)
 
 	sent, err := email.SendVerifyContacts(vasp)
@@ -97,22 +97,22 @@ func TestClientSendEmails(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "12345token1234", token)
 
-	token, verified, err := models.GetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Technical))
+	token, verified, err := models.GetContactVerification(models.ConvertTrisaContact(vasp.Contacts.Technical))
 	require.NoError(t, err)
 	require.True(t, verified)
 	require.Equal(t, "", token)
 
-	token, verified, err = models.GetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Administrative))
+	token, verified, err = models.GetContactVerification(models.ConvertTrisaContact(vasp.Contacts.Administrative))
 	require.NoError(t, err)
 	require.True(t, verified)
 	require.Equal(t, "", token)
 
-	token, verified, err = models.GetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Legal))
+	token, verified, err = models.GetContactVerification(models.ConvertTrisaContact(vasp.Contacts.Legal))
 	require.NoError(t, err)
 	require.False(t, verified)
 	require.Equal(t, "12345token1234", token)
 
-	token, verified, err = models.GetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Billing))
+	token, verified, err = models.GetContactVerification(models.ConvertTrisaContact(vasp.Contacts.Billing))
 	require.NoError(t, err)
 	require.False(t, verified)
 	require.Equal(t, "", token)
@@ -161,7 +161,7 @@ func TestClientSendEmails(t *testing.T) {
 
 	// Technical is verified and first so should get Rejection and DeliverCerts emails
 	// It should also receive the reissuance started email after the reminder.
-	emailLog, err := models.GetEmailLog(models.ConvertTrisaContact(*vasp.Contacts.Technical))
+	emailLog, err := models.GetEmailLog(models.ConvertTrisaContact(vasp.Contacts.Technical))
 	require.NoError(t, err)
 	require.Len(t, emailLog, 4)
 	require.Equal(t, string(admin.ResendRejection), emailLog[0].Reason)
@@ -174,7 +174,7 @@ func TestClientSendEmails(t *testing.T) {
 	require.Equal(t, emails.ReissuanceStartedRE, emailLog[3].Subject)
 
 	// Administrative is verified so should get Rejection and Reissue Reminder emails
-	emailLog, err = models.GetEmailLog(models.ConvertTrisaContact(*vasp.Contacts.Administrative))
+	emailLog, err = models.GetEmailLog(models.ConvertTrisaContact(vasp.Contacts.Administrative))
 	require.NoError(t, err)
 	require.Len(t, emailLog, 2)
 	require.Equal(t, string(admin.ResendRejection), emailLog[0].Reason)
@@ -183,14 +183,14 @@ func TestClientSendEmails(t *testing.T) {
 	require.Equal(t, emails.ReissuanceReminderRE, emailLog[1].Subject)
 
 	// Legal is not verified so should get VerifyContact email
-	emailLog, err = models.GetEmailLog(models.ConvertTrisaContact(*vasp.Contacts.Legal))
+	emailLog, err = models.GetEmailLog(models.ConvertTrisaContact(vasp.Contacts.Legal))
 	require.NoError(t, err)
 	require.Len(t, emailLog, 1)
 	require.Equal(t, string(admin.ResendVerifyContact), emailLog[0].Reason)
 	require.Equal(t, emails.VerifyContactRE, emailLog[0].Subject)
 
 	// Billing doesn't have an associated email so shouldn't get anything
-	emailLog, err = models.GetEmailLog(models.ConvertTrisaContact(*vasp.Contacts.Billing))
+	emailLog, err = models.GetEmailLog(models.ConvertTrisaContact(vasp.Contacts.Billing))
 	require.NoError(t, err)
 	require.Len(t, emailLog, 0)
 }

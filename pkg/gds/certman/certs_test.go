@@ -187,7 +187,7 @@ func (s *certTestSuite) TestCertManager() {
 	// Email should be sent to one of the contacts
 	messages := []*emails.EmailMeta{
 		{
-			Contact:   models.ConvertTrisaContact(*v.Contacts.Legal),
+			Contact:   models.ConvertTrisaContact(v.Contacts.Legal),
 			To:        v.Contacts.Legal.Email,
 			From:      s.conf.Email.ServiceEmail,
 			Subject:   emails.DeliverCertsRE,
@@ -492,17 +492,17 @@ func (s *certTestSuite) updateVaspIdentityCert(vasp *pb.VASP, daysUntilExpiratio
 }
 
 func (s *certTestSuite) setupVASP(vasp *pb.VASP) *pb.VASP {
-	models.AddContact(vasp, "technical", models.ConvertTrisaContact(*&pb.Contact{
+	models.AddContact(vasp, "technical", models.ConvertTrisaContact(&pb.Contact{
 		Name:  "technical",
 		Email: "technical@notmyemail.com",
 	}))
-	models.SetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Technical), "", true)
+	models.SetContactVerification(models.ConvertTrisaContact(vasp.Contacts.Technical), "", true)
 
-	models.AddContact(vasp, "administrative", models.ConvertTrisaContact(*&pb.Contact{
+	models.AddContact(vasp, "administrative", models.ConvertTrisaContact(&pb.Contact{
 		Name:  "administrative",
 		Email: "administrative@notmyemail.com",
 	}))
-	models.SetContactVerification(models.ConvertTrisaContact(*vasp.Contacts.Administrative), "", true)
+	models.SetContactVerification(models.ConvertTrisaContact(vasp.Contacts.Administrative), "", true)
 	vasp.VerificationStatus = pb.VerificationState_VERIFIED
 
 	s.db.CreateVASP(context.Background(), vasp)
