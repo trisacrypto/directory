@@ -18,9 +18,12 @@ import { GrClose } from 'react-icons/gr';
 import { useNavigate } from 'react-router-dom';
 import Loader from 'components/Loader';
 import { usePaginate } from './usePaginate';
+import { useEffect, useState } from 'react';
+import SearchVasp from './SearchVasp';
 function ChooseAnOrganization() {
   const { NextPage, PreviousPage, currentPage, wasLastPage, isFetching, organizations } =
     usePaginate();
+  const [searchOrganizations, setSearchOrganizations] = useState([]);
   const { user } = useSelector(userSelector);
   const navigate = useNavigate();
 
@@ -28,6 +31,12 @@ function ChooseAnOrganization() {
     e.preventDefault();
     navigate(-1);
   };
+
+  useEffect(() => {
+    if (searchOrganizations.length > 0) {
+      // update the organizations list
+    }
+  }, [searchOrganizations]);
 
   const isFirstPage = currentPage === 1;
 
@@ -53,23 +62,21 @@ function ChooseAnOrganization() {
         variant="ghost"
         title="Get back to dashboard"
       />
-
-      <HStack justify={'space-between'} spacing="20px">
-        <Text fontWeight={700}>
-          <Trans>Select a VASP from the Managed VASP List</Trans>
-        </Text>
-
-        <AddNewVaspModal />
-      </HStack>
+      <Text fontWeight={700}>
+        <Trans>Select a VASP from the Managed VASP List</Trans>
+      </Text>
 
       <Stack
-        width={'50%'}
         mx="auto"
         overflowY={'auto'}
         css={css({
           boxShadow: 'inset 0 -2px 0 rgba(0, 0, 0, 0.1)',
           border: '0 none'
         })}>
+        <HStack justify={'space-between'}>
+          <SearchVasp setSearchOrganization={setSearchOrganizations} />
+          <AddNewVaspModal />
+        </HStack>
         <Stack>
           {isFetching && <Loader h="50vh" />}
           <Stack divider={<StackDivider borderColor="#D9D9D9" />} p={2}>

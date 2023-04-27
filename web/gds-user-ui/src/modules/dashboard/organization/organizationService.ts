@@ -20,3 +20,10 @@ export const UpdateOrganisation = async (id: string, data: any) => {
   const response = await axiosInstance.put(`/organizations/${id}`, data);
   return response;
 };
+
+export const getOrganizationByName = async (name: string, page = 1, pageSize = 8) => {
+  const response = await axiosInstance.get(
+    `/organizations?name=${name}&page=${page}&page_size=${pageSize}`
+  );
+  return response;
+};
