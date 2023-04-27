@@ -127,26 +127,29 @@ func ConvertTrisaContact(contact *pb.Contact) *Contact {
 		return nil
 	}
 
+	TrisaContact := &Contact{
+		Email:    contact.Email,
+		Vasps:    []string{contact.Name},
+		Verified: false,
+		Token:    "",
+		EmailLog: []*EmailLogEntry{},
+	}
+
 	if contact.Extra == nil {
-		return &Contact{
-			Email: contact.Email,
-			Vasps: []string{contact.Name},
-		}
+		return TrisaContact
 	}
 
 	// Unmarshal the extra data field on the Contact
 	extra := &GDSContactExtraData{}
 	if err := contact.Extra.UnmarshalTo(extra); err != nil {
-		return nil
+		return TrisaContact
+	} else {
+		TrisaContact.Verified = extra.Verified
+		TrisaContact.Token = extra.Token
+		TrisaContact.EmailLog = extra.EmailLog
 	}
 
-	return &Contact{
-		Email:    contact.Email,
-		Vasps:    []string{contact.Name},
-		Verified: extra.Verified,
-		Token:    extra.Token,
-		EmailLog: extra.EmailLog,
-	}
+	return TrisaContact
 }
 
 func ConvertContact(contact *Contact) (newContact *pb.Contact) {
