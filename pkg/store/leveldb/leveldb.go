@@ -62,6 +62,7 @@ var (
 	preCerts         = []byte("certs::")
 	preCertReqs      = []byte("certreqs::")
 	preOrganizations = []byte("organizations::")
+	preContacts      = []byte("contacts::")
 )
 
 // Store implements store.Store for some basic LevelDB operations and simple protocol
@@ -708,6 +709,91 @@ func (s *Store) DeleteOrganization(ctx context.Context, id uuid.UUID) (err error
 	return nil
 }
 
+// TODO: Complete the leveldb ContactStore implementation
+//===========================================================================
+// ContactStore Implementation
+//===========================================================================
+
+func (s *Store) ListContacts(ctx context.Context) []*models.Contact {
+	return nil
+}
+
+// CreateContact creates a new Contact record in the store, using the contact's
+// email as a unique ID.
+func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (_ string, err error) {
+	if c == nil || c.Email == "" {
+		return "", storeerrors.ErrIncompleteRecord
+	}
+
+	// Update management timestamps and record metadata
+	c.Created = time.Now().Format(time.RFC3339)
+	c.Modified = c.Created
+
+	// Marshal the Contact
+	var data []byte
+	if data, err = proto.Marshal(c); err != nil {
+		return "", err
+	}
+
+	if err = s.db.Put(contactKey(c.Email), data, nil); err != nil {
+		return "", err
+	}
+	return c.Email, nil
+}
+
+// RetrieveContact returns a contact request by contact email.
+func (s *Store) RetrieveContact(ctx context.Context, email string) (c *models.Contact, err error) {
+	if email == "" {
+		return nil, storeerrors.ErrIncompleteRecord
+	}
+
+	var data []byte
+	if data, err = s.db.Get(contactKey(email), nil); err != nil {
+		if err == leveldb.ErrNotFound {
+			return nil, storeerrors.ErrEntityNotFound
+		}
+		return nil, err
+	}
+
+	c = new(models.Contact)
+	if err = proto.Unmarshal(data, c); err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
+
+// UpdateContact can create or update a contact request. The request should be as
+// complete as possible, including an email provided by the caller.
+func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) (err error) {
+	if c == nil || c.Email == "" {
+		return storeerrors.ErrIncompleteRecord
+	}
+
+	var data []byte
+	c.Modified = time.Now().Format(time.RFC3339)
+	if data, err = proto.Marshal(c); err != nil {
+		return err
+	}
+
+	if err = s.db.Put(contactKey(c.Email), data, nil); err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteContact deletes an contact record from the store by email.
+func (s *Store) DeleteContact(ctx context.Context, email string) (err error) {
+	if email == "" {
+		return storeerrors.ErrEntityNotFound
+	}
+
+	if err = s.db.Delete(contactKey(email), nil); err != nil {
+		return err
+	}
+	return nil
+}
+
 //===========================================================================
 // Key Handlers
 //===========================================================================
@@ -742,6 +828,11 @@ func orgKey(orgKey []byte) (key []byte) {
 	key = append(key, preOrganizations...)
 	key = append(key, orgKey...)
 	return key
+}
+
+func contactKey(email string) []byte {
+	email = models.NormalizeEmail(email)
+	return makeKey(preContacts, email)
 }
 
 //===========================================================================

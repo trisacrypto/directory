@@ -124,7 +124,7 @@ func (r *Service) SelectPeer() (peer *peers.Peer) {
 	// If we have at least 1 peer in the database, randomly select one. However, the
 	// database probably contains a peer record that describes the current replica,
 	// which we don't want to select - given a database of at least 2 items, trying 10
-	// times to select a peer that is not self balances the amount of unmarshaling work
+	// times to select a peer that is not self balances the amount of unmarshalling work
 	// we do with the likelihood that we will probably get a peer that is not current,
 	// given a large enough number of peers in the database.
 	if len(keys) > 0 {

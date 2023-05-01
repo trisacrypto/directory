@@ -435,7 +435,7 @@ func serve(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
-	// Overide environment configuration from CLI flags
+	// Override environment configuration from CLI flags
 	if addr := c.String("bindaddr"); addr != "" {
 		conf.BindAddr = addr
 	}
@@ -830,10 +830,11 @@ func gossipMigrate(c *cli.Context) (err error) {
 // Utility Functions
 //===========================================================================
 
-var namespaces = [5]string{
+var namespaces = [6]string{
 	wire.NamespaceVASPs,
 	wire.NamespaceCerts,
 	wire.NamespaceCertReqs,
+	wire.NamespaceContacts,
 	wire.NamespaceAnnouncements,
 	wire.NamespaceOrganizations,
 }

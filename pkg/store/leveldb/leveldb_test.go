@@ -27,7 +27,7 @@ type leveldbTestSuite struct {
 
 func (s *leveldbTestSuite) SetupSuite() {
 	// Discard logging from the application to focus on test logs
-	// NOTE: ConsoleLog MUST be false otherwise this will be overriden
+	// NOTE: ConsoleLog MUST be false otherwise this will be overridden
 	logger.Discard()
 
 	// Open the database in a temp directory
@@ -459,4 +459,100 @@ func (s *leveldbTestSuite) TestOrganizationStore() {
 	s.NoError(err)
 	_, err = s.db.RetrieveOrganization(context.Background(), uu)
 	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+}
+
+func (s *leveldbTestSuite) TestContactStore() {
+	// Make sure create errors with a nil contact
+	email, err := s.db.CreateContact(context.Background(), nil)
+	s.Empty(email)
+	s.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	// Make sure create errors with a contact with an empty email
+	contact := &models.Contact{
+		Email: "",
+	}
+	email, err = s.db.CreateContact(context.Background(), contact)
+	s.Empty(email)
+	s.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	// Create a valid contact
+	contact = &models.Contact{
+		Email:      "testemail",
+		Vasps:      []string{"foo", "bar"},
+		Verified:   false,
+		Token:      "testtoken",
+		VerifiedOn: "",
+	}
+	email, err = s.db.CreateContact(context.Background(), contact)
+	s.Equal(email, "testemail")
+	s.NoError(err)
+
+	// Make sure retrieve errors with an empty email
+	var con *models.Contact
+	con, err = s.db.RetrieveContact(context.Background(), "")
+	s.Nil(con)
+	s.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	// Make sure retrieve throws the proper error when a contact is not found
+	con, err = s.db.RetrieveContact(context.Background(), "wrongemail")
+	s.Nil(con)
+	s.Equal(err, storeerrors.ErrEntityNotFound)
+
+	// Retrieve the created contact
+	con, err = s.db.RetrieveContact(context.Background(), "testemail")
+	s.Equal(con.Vasps, contact.Vasps)
+	s.Equal(con.Verified, contact.Verified)
+	s.Equal(con.Token, contact.Token)
+	s.NotEmpty(con.Created)
+	s.NotEmpty(con.Modified)
+	s.NoError(err)
+
+	// Make sure update errors with a nil contact
+	err = s.db.UpdateContact(context.Background(), nil)
+	s.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	// Make sure update errors with a contact with an empty email
+	contact = &models.Contact{
+		Email: "",
+	}
+	err = s.db.UpdateContact(context.Background(), contact)
+	s.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	// Sleep to allow time for the modified field to change
+	time.Sleep(time.Second)
+
+	// Properly update the contact
+	contact = &models.Contact{
+		Email:      "testemail",
+		Vasps:      []string{"bar", "foo"},
+		Verified:   true,
+		Token:      "newtoken",
+		VerifiedOn: "",
+		Created:    con.Created,
+	}
+	err = s.db.UpdateContact(context.Background(), contact)
+	s.NoError(err)
+
+	// Retrieve the updated contact
+	var updatedCon *models.Contact
+	updatedCon, err = s.db.RetrieveContact(context.Background(), "testemail")
+	s.NoError(err)
+	s.Equal(updatedCon.Vasps, contact.Vasps)
+	s.Equal(updatedCon.Verified, contact.Verified)
+	s.Equal(updatedCon.Token, contact.Token)
+	s.Equal(con.Created, updatedCon.Created)
+	s.NotEqual(con.Modified, updatedCon.Modified)
+
+	// Make sure delete errors with an empty email
+	err = s.db.DeleteContact(context.Background(), "")
+	s.Equal(err, storeerrors.ErrEntityNotFound)
+
+	// Delete the created contact
+	err = s.db.DeleteContact(context.Background(), "testemail")
+	s.NoError(err)
+
+	// Make sure the contact was deleted
+	con, err = s.db.RetrieveContact(context.Background(), "testemail")
+	s.Nil(con)
+	s.Equal(err, storeerrors.ErrEntityNotFound)
 }

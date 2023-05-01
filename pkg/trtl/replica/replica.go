@@ -240,7 +240,7 @@ gossip:
 						Msg("failed check sync on initiator: could not fetch object meta")
 
 					// If there is an object error, send a response back to the
-					// initiator's CHECK reqest so that it can be logged there as well.
+					// initiator's CHECK request so that it can be logged there as well.
 					sender.Send(&replica.Sync{
 						Status: replica.Sync_ERROR,
 						Object: &object.Object{

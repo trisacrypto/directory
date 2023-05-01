@@ -396,15 +396,15 @@ func (t *TRISAModel) reader(wg *sync.WaitGroup) {
 		case roulette < 0.1:
 			// Perform a cursor iteration over all items in a random namespace with probability 0.1
 			// NOTE: as the database gets bigger, these reads are going to get longer, to the point
-			// where the simulator will eventually crash becasue the read takes longer than the timeout.
+			// where the simulator will eventually crash because the read takes longer than the timeout.
 			if err := t.Cursor(namespace); err != nil {
 				log.Println(err.Error())
 				nErrors++
 			}
 		case roulette < 0.15:
-			// Perform a batch interation over all items in a random namespace with probability 0.05
+			// Perform a batch iteration over all items in a random namespace with probability 0.05
 			// NOTE: as the database gets bigger, these reads are going to get longer, to the point
-			// where the simulator will eventually crash becasue the read takes longer than the timeout.
+			// where the simulator will eventually crash because the read takes longer than the timeout.
 			if err := t.Iter(namespace); err != nil {
 				log.Println(err.Error())
 				nErrors++
