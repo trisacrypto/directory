@@ -4,32 +4,30 @@ import InputFormControl from 'components/ui/InputFormControl';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { t } from '@lingui/macro';
 import { SearchIcon } from '@chakra-ui/icons';
-import { Dispatch, SetStateAction } from 'react';
-// import { useOrganizationListByName } from 'modules/dashboard/organization/useOrganizationListByName';
-import { getOrganizationByName } from 'modules/dashboard/organization/organizationService';
+import { Dispatch, SetStateAction, useEffect } from 'react';
+
 type SearchVaspProps = {
   setSearchOrganization: Dispatch<SetStateAction<any>>;
 };
 
-const SearchVasp = (props: SearchVaspProps) => {
-  console.log(props);
-
+const SearchVasp = ({ setSearchOrganization }: SearchVaspProps) => {
   // const { getAllOrganizations, organizations } = useOrganizationListByName();
 
   // const [showClose, setShowClose] = useState(false);
   const {
     handleSubmit,
     register,
+    watch,
     formState: { errors }
   } = useForm();
 
   const onSubmit: SubmitHandler<any> = (data) => {
-    console.log('[data]', data);
-    // fetch all organizations
-
-    const d = getOrganizationByName(data.search as string);
-    console.log('[data]', d);
+    setSearchOrganization(data.search);
   };
+
+  useEffect(() => {
+    setSearchOrganization(watch('search'));
+  }, [watch('search')]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>

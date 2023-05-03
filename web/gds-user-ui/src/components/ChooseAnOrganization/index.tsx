@@ -17,13 +17,14 @@ import { useSelector } from 'react-redux';
 import { GrClose } from 'react-icons/gr';
 import { useNavigate } from 'react-router-dom';
 import Loader from 'components/Loader';
-import { usePaginate } from './usePaginate';
-import { useEffect, useState } from 'react';
+import { useOrganizationPagination } from './usePaginate';
+import { useState } from 'react';
 import SearchVasp from './SearchVasp';
 function ChooseAnOrganization() {
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const { NextPage, PreviousPage, currentPage, wasLastPage, isFetching, organizations } =
-    usePaginate();
-  const [searchOrganizations, setSearchOrganizations] = useState([]);
+    useOrganizationPagination(searchQuery);
+
   const { user } = useSelector(userSelector);
   const navigate = useNavigate();
 
@@ -31,12 +32,6 @@ function ChooseAnOrganization() {
     e.preventDefault();
     navigate(-1);
   };
-
-  useEffect(() => {
-    if (searchOrganizations.length > 0) {
-      // update the organizations list
-    }
-  }, [searchOrganizations]);
 
   const isFirstPage = currentPage === 1;
 
@@ -74,7 +69,7 @@ function ChooseAnOrganization() {
           border: '0 none'
         })}>
         <HStack justify={'space-between'}>
-          <SearchVasp setSearchOrganization={setSearchOrganizations} />
+          <SearchVasp setSearchOrganization={setSearchQuery} />
           <AddNewVaspModal />
         </HStack>
         <Stack>
