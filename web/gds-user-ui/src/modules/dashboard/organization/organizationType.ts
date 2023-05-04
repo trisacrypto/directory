@@ -35,6 +35,16 @@ export type OrganizationQuery = {
   errorMessage?: any;
 };
 
+export type OrganizationQueryByName = {
+  getOrganizationByName(name: string): void;
+  reset?(): void;
+  organizations: Organization;
+  hasOrganizationFailed: boolean;
+  wasOrganizationFetched: boolean;
+  isFetching: boolean;
+  errorMessage?: any;
+};
+
 export type OrganizationPagination = {
   page: number;
   pageSize: number;
