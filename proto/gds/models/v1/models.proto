@@ -197,7 +197,7 @@ message Contact {
     bool verified = 4;
     string token = 5;
 
-    //
+    // Email audit log
     repeated EmailLogEntry email_log = 6;
 
     // RFC3339 Timestamp for when the contact was verified
