@@ -7,6 +7,8 @@
 package models
 
 import (
+	"time"
+
 	v1beta1 "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -1033,6 +1035,29 @@ func (x *Contact) GetModified() string {
 		return x.Modified
 	}
 	return ""
+}
+
+// Create and add a new entry to the EmailLog on the extra data on the Contact record.
+func (x *Contact)AppendEmailLog(contact *Contact, reason, subject string) {
+	// Contact must be non-nil.
+	if contact == nil {
+		return
+	}
+
+	// Create the EmailLog if it is nil.
+	if contact.EmailLog == nil {
+		contact.EmailLog = make([]*EmailLogEntry, 0, 1)
+	}
+
+	// Append entry to the previous log.
+	entry := &EmailLogEntry{
+		Timestamp: time.Now().Format(time.RFC3339),
+		Reason:    reason,
+		Subject:   subject,
+		Recipient: contact.Email,
+	}
+	contact.EmailLog = append(contact.EmailLog, entry)
+	return
 }
 
 // Implements a protocol buffer struct for state managed pagination. This struct will be
