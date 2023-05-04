@@ -1038,15 +1038,15 @@ func (x *Contact) GetModified() string {
 }
 
 // Create and add a new entry to the EmailLog on the extra data on the Contact record.
-func (x *Contact)AppendEmailLog(contact *Contact, reason, subject string) {
+func (x *Contact)AppendEmailLog(reason, subject string) {
 	// Contact must be non-nil.
-	if contact == nil {
+	if x == nil {
 		return
 	}
 
 	// Create the EmailLog if it is nil.
-	if contact.EmailLog == nil {
-		contact.EmailLog = make([]*EmailLogEntry, 0, 1)
+	if x.EmailLog == nil {
+		x.EmailLog = make([]*EmailLogEntry, 0, 1)
 	}
 
 	// Append entry to the previous log.
@@ -1054,9 +1054,9 @@ func (x *Contact)AppendEmailLog(contact *Contact, reason, subject string) {
 		Timestamp: time.Now().Format(time.RFC3339),
 		Reason:    reason,
 		Subject:   subject,
-		Recipient: contact.Email,
+		Recipient: x.Email,
 	}
-	contact.EmailLog = append(contact.EmailLog, entry)
+	x.EmailLog = append(x.EmailLog, entry)
 	return
 }
 
