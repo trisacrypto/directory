@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { getAllOrganisations } from './organizationService';
+import { getOrganizationByName } from './organizationService';
 import type { OrganizationQuery, OrganizationResponse } from './organizationType';
-import { FETCH_ORGANIZATION } from 'constants/query-keys';
-export function useOrganizationListQuery({ name = '', page = 1, pageSize = 8 }): OrganizationQuery {
+import { FETCH_ORGANIZATION_BY_NAME } from 'constants/query-keys';
+export function useOrganizationListByName(name = '', page = 1, pageSize = 8): OrganizationQuery {
   const query = useQuery(
-    [FETCH_ORGANIZATION, page],
-    () => getAllOrganisations(name, page, pageSize),
+    [FETCH_ORGANIZATION_BY_NAME, name],
+    () => getOrganizationByName(name, page, pageSize),
     {
       refetchOnWindowFocus: false,
       refetchOnMount: true,

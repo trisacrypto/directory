@@ -29,6 +29,7 @@ export interface _FormControlProps extends Omit<FormControlProps, 'label'> {
   inputRef?: React.RefObject<HTMLInputElement>;
   onValueChange?: any;
   handleFn?: () => void;
+  [key: string]: any;
   isHidden?: boolean;
   isRequiredField?: boolean;
 }
