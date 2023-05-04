@@ -174,7 +174,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 
 	// Retrieve email address from one of the supplied contacts.
 	var email string
-	if email = getContactEmail(vasp); email == "" {
+	if email = GetContactEmail(vasp); email == "" {
 		log.Error().Err(errors.New("no contact email address found")).Msg("incorrect access on validated VASP")
 		return nil, status.Error(codes.InvalidArgument, "no email address in supplied VASP contacts")
 	}
@@ -470,7 +470,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 
 	// Retrieve email address from one of the supplied contacts.
 	var email string
-	if email = getContactEmail(vasp); email == "" {
+	if email = GetContactEmail(vasp); email == "" {
 		log.Error().Err(errors.New("no contact email address found")).Msg("incorrect access on validated VASP")
 		return nil, status.Error(codes.InvalidArgument, "no email address in supplied VASP contacts")
 	}
@@ -479,6 +479,11 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 	if contact, err = s.db.RetrieveContact(ctx, email); err != nil {
 		log.Warn().Err(err).Str("email", email).Msg("could not retrieve contact")
 		return nil, status.Error(codes.NotFound, "could not find associated contact record by email")
+	}
+
+	if contact.Verified {
+		log.Warn().Err(err).Str("email", email).Msg("contact already verified")
+		return nil, status.Error(codes.AlreadyExists, "contact record associated with vasp email is already verified")
 	}
 
 	// Search through the contacts to determine the contacts verified by the supplied token.
@@ -615,7 +620,7 @@ func (s *GDS) Status(ctx context.Context, in *api.HealthCheck) (out *api.Service
 //===========================================================================
 
 // Get a valid email address from the contacts on a VASP.
-func getContactEmail(vasp *pb.VASP) string {
+func GetContactEmail(vasp *pb.VASP) string {
 	iter := models.NewContactIterator(vasp.Contacts, true, false)
 	for iter.Next() {
 		contact, _ := iter.Value()
