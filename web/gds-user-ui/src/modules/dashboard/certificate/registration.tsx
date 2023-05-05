@@ -98,6 +98,7 @@ const Certificate: React.FC = () => {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.reduce((acc, n) => ({ ...acc, [n]: getFieldValue(n) }), {});
   }
+
   const currentState = () => {
     // log store state
     const updatedState = Store.getState().stepper;
@@ -108,6 +109,7 @@ const Certificate: React.FC = () => {
     };
     return formatState;
   };
+
   function hasErroredField() {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.some((n: any) => methods.getFieldState(n).error);

@@ -2,8 +2,10 @@ import axiosInstance from 'utils/axios';
 export const getAllOrganisations = async (name: string, page: number, pageSize: number) => {
   const urlParams =
     name && name.length > 0
-      ? `?name=${name}&page=${page}&page_size=${pageSize}`
+      ? `?name=${encodeURIComponent(name)}&page=${page}&page_size=${pageSize}`
       : `?page=${page}&page_size=${pageSize}`;
+  // format the url params
+
   const response = await axiosInstance.get(`/organizations${urlParams}`);
   return response;
 };
