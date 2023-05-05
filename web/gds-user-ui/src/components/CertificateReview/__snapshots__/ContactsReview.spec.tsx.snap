@@ -296,7 +296,7 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
             />
           </svg>
         </span>
-        Please make sure you have filled out all required fields marked with an asterisk (*).
+        Please make sure you have filled out all required fields.
       </div>
       <div
         class="chakra-stack emotion-8"
