@@ -24,7 +24,7 @@ function StepButtons({
       <Button onClick={handlePreviousStep} isDisabled={isFirstStep}>
         {isCurrentStepLastStep ? t`Previous` : t`Save & Previous`}
       </Button>
-      {currentStep < 4 ? (
+      {currentStep < 5 ? (
         <Button onClick={handleNextStep} variant="secondary">
           {t`Save & Next`}
         </Button>

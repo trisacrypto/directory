@@ -118,6 +118,7 @@ const Certificate: React.FC = () => {
   // if fields if filled
 
   async function handleNextStepClick() {
+    console.log('[] currentStep', currentStep);
     if (hasErroredField()) {
       // i think we should not use alert here , but we need to find a way to display the error message
       // eslint-disable-next-line no-alert
