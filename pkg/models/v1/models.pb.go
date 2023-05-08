@@ -7,8 +7,6 @@
 package models
 
 import (
-	"time"
-
 	v1beta1 "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
