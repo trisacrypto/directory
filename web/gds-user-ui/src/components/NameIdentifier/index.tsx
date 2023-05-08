@@ -58,15 +58,16 @@ const NameIdentifier: React.ForwardRefExoticComponent<
 
   // set default value for the first legal name
   useEffect(() => {
-    console.log('fields', fields);
+    console.log('[] 1 name', name);
     if (type === 'legal' && fields.length === 1) {
       setValue(`${name}[0].legal_person_name`, getOrganizationNameValue);
     }
-  }, [getOrganizationNameValue, setValue, type, fields.length, name]);
+  }, [getOrganizationNameValue, setValue, type, fields.length, name, fields]);
 
   // set the first selected value for the first legal name
 
   useEffect(() => {
+    console.log('[] 2 name', name);
     if (type === 'legal' && fields.length === 1) {
       setValue(`${name}[0].legal_person_name_identifier_type`, nameIdentiferTypeOptions[0].value);
     }
