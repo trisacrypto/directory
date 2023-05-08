@@ -1037,29 +1037,6 @@ func (x *Contact) GetModified() string {
 	return ""
 }
 
-// Create and add a new entry to the EmailLog on the extra data on the Contact record.
-func (x *Contact)AppendEmailLog(reason, subject string) {
-	// Contact must be non-nil.
-	if x == nil {
-		return
-	}
-
-	// Create the EmailLog if it is nil.
-	if x.EmailLog == nil {
-		x.EmailLog = make([]*EmailLogEntry, 0, 1)
-	}
-
-	// Append entry to the previous log.
-	entry := &EmailLogEntry{
-		Timestamp: time.Now().Format(time.RFC3339),
-		Reason:    reason,
-		Subject:   subject,
-		Recipient: x.Email,
-	}
-	x.EmailLog = append(x.EmailLog, entry)
-	return
-}
-
 // Implements a protocol buffer struct for state managed pagination. This struct will be
 // marshaled into a url-safe base64 encoded string and sent to the user as the
 // next_page_token. The server should decode this struct to determine where to continue
