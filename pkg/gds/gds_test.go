@@ -502,10 +502,10 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	require.NoError(err)
 	require.NotEmpty(token)
 
-	// Attempt to verify an already verified contact - should fail
+	// Attempt to verify an already verified contact
 	request.Token = "administrative_token"
 	_, err = client.VerifyContact(ctx, request)
-	require.Error(err)
+	require.NoError(err)
 
 	// Check audit log entries
 	log, err := models.GetAuditLog(vasp)
