@@ -242,7 +242,6 @@ func (x *Contact) AppendEmailLog(reason, subject string) {
 		Recipient: x.Email,
 	}
 	x.EmailLog = append(x.EmailLog, entry)
-	return
 }
 
 // Normalize the email and convert to bytes
