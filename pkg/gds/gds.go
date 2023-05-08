@@ -172,15 +172,15 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 		vasp.Contacts.Legal = nil
 	}
 
-	// Retrieve email address from one of the supplied contacts.
-	var email string
-	if email = GetContactEmail(vasp); email == "" {
+	// Retrieve contactEmail address from one of the supplied contacts.
+	var contactEmail, contactName string
+	if contactEmail, contactName = GetContactInfo(vasp); contactEmail == "" {
 		log.Error().Err(errors.New("no contact email address found")).Msg("incorrect access on validated VASP")
 		return nil, status.Error(codes.InvalidArgument, "no email address in supplied VASP contacts")
 	}
 
 	// Set verification status to SUBMITTED.
-	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_SUBMITTED, "register request received", email); err != nil {
+	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_SUBMITTED, "register request received", contactEmail); err != nil {
 		log.Warn().Err(err).Msg("could not update VASP verification status")
 		return nil, status.Error(codes.Aborted, "could not add new entry to VASP audit log")
 	}
@@ -197,24 +197,23 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 
 	// Create the contact that maps to the vasp.
 	contact := &models.Contact{
-		Email: email,
-		Name:  vasp.Entity.Person().GetLegalPerson().Name.String(),
+		Email: contactEmail,
+		Name:  contactName,
 		Vasps: []string{vasp.CommonName},
+		Token: secrets.CreateToken(48),
 	}
-	s.db.CreateContact(ctx, contact)
 
 	// Log successful registration
-	name, _ := vasp.Name()
-	log.Info().Str("name", name).Str("id", vasp.Id).Msg("registered VASP")
+	vaspName, _ := vasp.Name()
+	log.Info().Str("name", vaspName).Str("id", vasp.Id).Msg("registered VASP")
 
-	// Begin verification process by sending emails to all contacts in the VASP record.
+	if _, err = s.db.CreateContact(ctx, contact); err != nil {
+		log.Warn().Err(err).Msg("could not register contact in database")
+		return nil, status.Error(codes.Canceled, "could not complete registration, couldn't create contact")
+	}
+
+	// Begin verification process by sending email to the contact created from the VASP record.
 	// TODO: add to processing queue to return sooner/parallelize work
-	// Create the verification tokens and save the VASP back to the database
-	contact.Token = secrets.CreateToken(48)
-	contact.Verified = false
-	s.db.UpdateContact(ctx, contact)
-
-	// Send contacts with updated tokens
 	var sent int
 	if err = s.svc.email.SendVerifyModelContact(vasp, contact); err != nil {
 		// If there is an error sending contact verification emails, alert admins who
@@ -238,7 +237,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
 	}
 
-	if err = models.UpdateCertificateRequestStatus(certRequest, models.CertificateRequestState_INITIALIZED, "created certificate request", email); err != nil {
+	if err = models.UpdateCertificateRequestStatus(certRequest, models.CertificateRequestState_INITIALIZED, "created certificate request", contactEmail); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update certificate request status")
 		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
 	}
@@ -468,77 +467,75 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 		return nil, status.Error(codes.NotFound, "could not find associated VASP record by ID")
 	}
 
-	// Retrieve email address from one of the supplied contacts.
-	var email string
-	if email = GetContactEmail(vasp); email == "" {
+	// Retrieve contactEmail address from one of the supplied contacts.
+	var contactEmail string
+	if contactEmail, _ = GetContactInfo(vasp); contactEmail == "" {
 		log.Error().Err(errors.New("no contact email address found")).Msg("incorrect access on validated VASP")
 		return nil, status.Error(codes.InvalidArgument, "no email address in supplied VASP contacts")
 	}
 
 	var contact *models.Contact
-	if contact, err = s.db.RetrieveContact(ctx, email); err != nil {
-		log.Warn().Err(err).Str("email", email).Msg("could not retrieve contact")
-		return nil, status.Error(codes.NotFound, "could not find associated contact record by email")
+	if contact, err = s.db.RetrieveContact(ctx, contactEmail); err != nil {
+		//
 	}
 
-	if contact.Verified {
-		log.Warn().Err(err).Str("email", email).Msg("contact already verified")
-		return nil, status.Error(codes.AlreadyExists, "contact record associated with vasp email is already verified")
-	}
+	iter := models.NewContactIterator(vasp.Contacts, false, false)
+	for iter.Next() {
+		vaspContact, _ := iter.Value()
 
-	// Search through the contacts to determine the contacts verified by the supplied token.
-	prevVerified := 0
-	found := false
-	contactEmail := ""
-
-	// Get the verification status
-	token := contact.Token
-	verified := contact.Verified
-
-	// Perform token check and if token matches, mark contact as verified
-	if token == in.Token {
-		found = true
-		contact.Verified = true
-		contactEmail = contact.Email
-
-		// Record the contact as verified in the audit log
-		if err := models.UpdateVerificationStatus(vasp, vasp.VerificationStatus, "contact verified", contactEmail); err != nil {
-			log.Warn().Err(err).Msg("could not append contact verification to VASP audit log")
-			return nil, status.Error(codes.Aborted, "could not add new entry to VASP audit log")
-		}
-	} else if verified {
-		// Determine the total number of contacts previously verified, not including
-		// the current contact that was just verified. This will help prevent
-		// sending multiple emails to the TRISA Admins for review.
-		prevVerified++
-	}
-
-	// Check if we haven't managed to verify the contact
-	if !found {
-		log.Warn().Bool("found", found).Str("contact", email).Msg("could not find contact with token")
-		return nil, status.Error(codes.NotFound, "could not find contact with the specified token")
-	}
-
-	// update the contact record
-	if err = s.db.UpdateContact(ctx, contact); err != nil {
-		log.Error().Err(err).Str("contact", contact.Email).Msg("could not update email logs on contact")
-		return nil, status.Error(codes.Aborted, "could not update contact record")
-	}
-
-	// Ensures that we only send the verification email to the admins once.
-	// If we have previously verified contacts, assume that we've already sent the
-	// registration review email and do nothing.
-	if prevVerified > 0 && vasp.VerificationStatus > pb.VerificationState_SUBMITTED {
-		// Save the updated contact
-		if err = s.db.UpdateVASP(ctx, vasp); err != nil {
-			log.Error().Err(err).Msg("could not update VASP record after contact verification")
-			return nil, status.Error(codes.Internal, "could not update contact after verification")
+		// Get the verification status
+		var token string
+		verified := contact.Verified
+		token, _, err = models.GetContactVerification(vaspContact)
+		if err != nil {
+			log.Error().Err(err).Msg("could not retrieve verification from contact extra data field")
+			return nil, status.Error(codes.Aborted, "could not verify contact")
 		}
 
-		return &api.VerifyContactReply{
-			Status:  vasp.VerificationStatus,
-			Message: "email successfully verified",
-		}, nil
+		// Search through the contacts to determine the contacts verified by the supplied token.
+		found := false
+		prevVerified := 0
+
+		// Perform token check and if token matches, mark contact as verified
+		if token == in.Token {
+			found = true
+			contact.Verified = true
+
+			// Record the contact as verified in the audit log
+			if err := models.UpdateVerificationStatus(vasp, vasp.VerificationStatus, "contact verified", contact.Email); err != nil {
+				log.Warn().Err(err).Msg("could not append contact verification to VASP audit log")
+				return nil, status.Error(codes.Aborted, "could not add new entry to VASP audit log")
+			}
+		} else if verified {
+			prevVerified++
+		}
+		// Check if we haven't managed to verify the contact
+		if !found {
+			log.Warn().Bool("found", found).Str("contact", contactEmail).Msg("could not find contact with token")
+			return nil, status.Error(codes.NotFound, "could not find contact with the specified token")
+		}
+
+		// update the contact record
+		if err = s.db.UpdateContact(ctx, contact); err != nil {
+			log.Error().Err(err).Str("contact", contact.Email).Msg("could not update email logs on contact")
+			return nil, status.Error(codes.Aborted, "could not update contact record")
+		}
+
+		// Ensures that we only send the verification email to the admins once.
+		// If we have previously verified contacts, assume that we've already sent the
+		// registration review email and do nothing.
+		if prevVerified > 0 && vasp.VerificationStatus > pb.VerificationState_SUBMITTED {
+			// Save the updated contact
+			if err = s.db.UpdateVASP(ctx, vasp); err != nil {
+				log.Error().Err(err).Msg("could not update VASP record after contact verification")
+				return nil, status.Error(codes.Internal, "could not update contact after verification")
+			}
+
+			return &api.VerifyContactReply{
+				Status:  vasp.VerificationStatus,
+				Message: "email successfully verified",
+			}, nil
+		}
 	}
 
 	// Since we have one successful email verification at this point, begin the
@@ -619,14 +616,14 @@ func (s *GDS) Status(ctx context.Context, in *api.HealthCheck) (out *api.Service
 // Helper Functions
 //===========================================================================
 
-// Get a valid email address from the contacts on a VASP.
-func GetContactEmail(vasp *pb.VASP) string {
+// Get a valid email address and name from the contacts on a VASP.
+func GetContactInfo(vasp *pb.VASP) (string, string) {
 	iter := models.NewContactIterator(vasp.Contacts, true, false)
 	for iter.Next() {
 		contact, _ := iter.Value()
-		return contact.Email
+		return contact.Email, contact.Name
 	}
-	return ""
+	return "", ""
 }
 
 // Validate a gRPC endpoint string.

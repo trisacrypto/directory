@@ -474,8 +474,9 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	_, err = client.VerifyContact(ctx, request)
 	require.Error(err)
 
+	email, _ := gds.GetContactInfo(charlie)
 	s.svc.GetStore().CreateContact(ctx, &models.Contact{
-		Email: gds.GetContactEmail(charlie),
+		Email: email,
 		Token: "administrative_token",
 	})
 
