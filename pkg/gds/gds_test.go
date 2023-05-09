@@ -169,6 +169,30 @@ func (s *gdsTestSuite) TestRegister() {
 	messages := []*emails.EmailMeta{
 		{
 			Contact:   v.Contacts.Administrative,
+			To:        v.Contacts.Administrative.Email,
+			From:      s.svc.GetConf().Email.ServiceEmail,
+			Subject:   emails.VerifyContactRE,
+			Reason:    "verify_contact",
+			Timestamp: sent,
+		},
+		{
+			Contact:   v.Contacts.Billing,
+			To:        v.Contacts.Billing.Email,
+			From:      s.svc.GetConf().Email.ServiceEmail,
+			Subject:   emails.VerifyContactRE,
+			Reason:    "verify_contact",
+			Timestamp: sent,
+		},
+		{
+			Contact:   v.Contacts.Legal,
+			To:        v.Contacts.Legal.Email,
+			From:      s.svc.GetConf().Email.ServiceEmail,
+			Subject:   emails.VerifyContactRE,
+			Reason:    "verify_contact",
+			Timestamp: sent,
+		},
+		{
+			Contact:   v.Contacts.Technical,
 			To:        v.Contacts.Technical.Email,
 			From:      s.svc.GetConf().Email.ServiceEmail,
 			Subject:   emails.VerifyContactRE,
@@ -474,17 +498,20 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	_, err = client.VerifyContact(ctx, request)
 	require.Error(err)
 
-	email, _ := gds.GetContactInfo(charlie)
-	s.svc.GetStore().CreateContact(ctx, &models.Contact{
-		Email: email,
-		Token: "administrative_token",
-	})
-
 	// Incorrect token - no verified contacts
 	request.Id = charlie.Id
 	request.Token = "invalid"
 	_, err = client.VerifyContact(ctx, request)
 	require.Error(err)
+
+	iter := models.NewContactIterator(charlie.Contacts, false, false)
+	for iter.Next() {
+		contact, _ := iter.Value()
+		s.svc.GetStore().CreateContact(ctx, &models.Contact{
+			Email: contact.Email,
+			Token: "administrative_token",
+		})
+	}
 
 	// Successful verification
 	request.Token = "administrative_token"

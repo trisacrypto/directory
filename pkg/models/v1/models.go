@@ -223,15 +223,15 @@ func GetVASPEmailLog(vasp *pb.VASP) (emails []*EmailLogEntry, err error) {
 }
 
 // Create and add a new entry to the EmailLog on the extra data on the Contact record.
-func (x *Contact) AppendEmailLog(reason, subject string) {
+func (c *Contact) AppendEmailLog(reason, subject string) {
 	// Contact must be non-nil.
-	if x == nil {
+	if c == nil {
 		return
 	}
 
 	// Create the EmailLog if it is nil.
-	if x.EmailLog == nil {
-		x.EmailLog = make([]*EmailLogEntry, 0, 1)
+	if c.EmailLog == nil {
+		c.EmailLog = make([]*EmailLogEntry, 0, 1)
 	}
 
 	// Append entry to the previous log.
@@ -239,9 +239,9 @@ func (x *Contact) AppendEmailLog(reason, subject string) {
 		Timestamp: time.Now().Format(time.RFC3339),
 		Reason:    reason,
 		Subject:   subject,
-		Recipient: x.Email,
+		Recipient: c.Email,
 	}
-	x.EmailLog = append(x.EmailLog, entry)
+	c.EmailLog = append(c.EmailLog, entry)
 }
 
 // Normalize the email and convert to bytes
