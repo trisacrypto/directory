@@ -245,7 +245,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 				// Update the model contact record to update the email log
 				if err = s.db.UpdateContact(ctx, contact); err != nil {
 					log.Error().Err(err).Str("contact", contact.Email).Msg("could not update email logs on contact")
-					return nil, status.Error(codes.Aborted, "could not update contact record")
+					return nil, status.Error(codes.Aborted, "could not send contact verification emails")
 				}
 				models.AppendEmailLog(vaspContact, string(admin.ResendVerifyContact), "verify_contact")
 			}
