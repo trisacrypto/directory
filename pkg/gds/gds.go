@@ -256,7 +256,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 				return nil, status.Error(codes.Aborted, "could not send contact verification emails")
 			}
 			if err = s.db.UpdateVASP(ctx, vasp); err != nil {
-				log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update vasp with certificate request ID")
+				log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update contact verification on vasp")
 				return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
 			}
 		}
