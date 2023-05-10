@@ -558,7 +558,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 		// update the contact record
 		if err = s.db.UpdateContact(ctx, contact); err != nil {
 			log.Error().Err(err).Str("contact", contact.Email).Msg("could not update email logs on contact")
-			return nil, status.Error(codes.Aborted, "could not update contact record")
+			return nil, status.Error(codes.Aborted, "could not verify contact")
 		}
 	}
 
