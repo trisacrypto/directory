@@ -252,7 +252,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 				// Update the model contact record to update the email log
 				if err = s.db.UpdateContact(ctx, contact); err != nil {
 					log.Error().Err(err).Str("contact", contact.Email).Msg("could not update email logs on contact")
-					return nil, status.Error(codes.Aborted, "could not update contact record")
+					return nil, status.Error(codes.Aborted, "could not send contact verification emails")
 				}
 				models.AppendEmailLog(vaspContact, string(admin.ResendVerifyContact), "verify_contact")
 			}
@@ -263,7 +263,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 				return nil, status.Error(codes.Aborted, "could not send contact verification emails")
 			}
 			if err = s.db.UpdateVASP(ctx, vasp); err != nil {
-				log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update vasp with certificate request ID")
+				log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update contact verification on vasp")
 				return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
 			}
 		}
@@ -536,7 +536,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 			prevVerified++
 			if err = models.SetContactVerification(vaspContact, token, true); err != nil {
 				log.Error().Err(err).Str("contact", kind).Str("vasp", vasp.Id).Msg("could not set contact verification token")
-				return nil, status.Error(codes.Aborted, "could not send contact verification emails")
+				return nil, status.Error(codes.Aborted, "could not verify contact")
 			}
 			continue
 		}
@@ -555,7 +555,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 			// Verify the vasp contact
 			if err = models.SetContactVerification(vaspContact, token, true); err != nil {
 				log.Error().Err(err).Str("contact", kind).Str("vasp", vasp.Id).Msg("could not set contact verification token")
-				return nil, status.Error(codes.Aborted, "could not send contact verification emails")
+				return nil, status.Error(codes.Aborted, "could not verify contact")
 			}
 
 			// Record the contact as verified in the audit log
