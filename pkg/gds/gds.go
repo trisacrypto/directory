@@ -529,7 +529,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 			prevVerified++
 			if err = models.SetContactVerification(vaspContact, token, true); err != nil {
 				log.Error().Err(err).Str("contact", kind).Str("vasp", vasp.Id).Msg("could not set contact verification token")
-				return nil, status.Error(codes.Aborted, "could not send contact verification emails")
+				return nil, status.Error(codes.Aborted, "could not verify contact")
 			}
 			continue
 		}
