@@ -226,7 +226,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 			}
 			if _, err = s.db.CreateContact(ctx, contact); err != nil {
 				log.Error().Err(err).Str("contact", vaspContact.Email).Str("vasp", vasp.Id).Msg("could not create contact")
-				return nil, status.Error(codes.Aborted, "could not create contact")
+				return nil, status.Error(codes.Aborted, "could not send verify contacts emails")
 			}
 		}
 
