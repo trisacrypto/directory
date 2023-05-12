@@ -351,14 +351,14 @@ func main() {
 		},
 		{
 			Name:     "contact:migrate",
-			Usage:    "",
+			Usage:    "migrate all contacts on vasps into the model contacts namespace",
 			Category: "contact",
 			Action:   migrateContacts,
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
 					Name:    "dryrun",
 					Aliases: []string{"d"},
-					Usage:   "",
+					Usage:   "print migration results without modifying the database, used for testing",
 					Value:   true,
 				},
 			},
