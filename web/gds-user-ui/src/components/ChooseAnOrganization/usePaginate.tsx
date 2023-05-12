@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useOrganizationListQuery } from 'modules/dashboard/organization/useOrganizationListQuery';
 
-export const usePaginate = () => {
+export const useOrganizationPagination = (searchQuery?: string) => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [wasLastPage, setWasLastPage] = useState<boolean>(false);
-  const { organizations, getAllOrganizations, isFetching } = useOrganizationListQuery(currentPage);
+  const { organizations, getAllOrganizations, isFetching } = useOrganizationListQuery({
+    page: currentPage,
+    name: searchQuery
+  });
   const { count, page_size, page } = organizations || {};
 
   const NextPage = () => {
@@ -16,10 +19,16 @@ export const usePaginate = () => {
   };
 
   useEffect(() => {
+    if (searchQuery || searchQuery === '') {
+      getAllOrganizations();
+    }
+  }, [searchQuery, getAllOrganizations]);
+
+  useEffect(() => {
     if (currentPage !== 1) {
       getAllOrganizations();
     }
-  }, [currentPage, getAllOrganizations]);
+  }, [currentPage, getAllOrganizations, searchQuery]);
 
   useEffect(() => {
     if (page && page_size && count && page * page_size >= count) {

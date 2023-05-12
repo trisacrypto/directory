@@ -856,18 +856,124 @@ func (s *Store) ListContacts(ctx context.Context) []*models.Contact {
 	return nil
 }
 
-func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (string, error) {
-	return "", nil
+// CreateContact creates a new Contact record in the store, using the contact's
+// email as a unique ID.
+func (s *Store) CreateContact(ctx context.Context, c *models.Contact) (_ string, err error) {
+	if c == nil || c.Email == "" {
+		return "", storeerrors.ErrIncompleteRecord
+	}
+
+	// Update management timestamps and record metadata
+	c.Created = time.Now().Format(time.RFC3339)
+	c.Modified = c.Created
+
+	// Marshal the Contact
+	var data []byte
+	if data, err = proto.Marshal(c); err != nil {
+		return "", err
+	}
+
+	ctx, cancel := utils.WithDeadline(ctx)
+	defer cancel()
+
+	// TODO: determine the best way to ensure uniqueness of the key
+	// Create and store the PutRequest
+	key := []byte(models.NormalizeEmail(c.Email))
+	request := &pb.PutRequest{
+		Key:       key,
+		Value:     data,
+		Namespace: wire.NamespaceContacts,
+	}
+	if reply, err := s.client.Put(ctx, request); err != nil || !reply.Success {
+		if err == nil {
+			err = storeerrors.ErrProtocol
+		}
+		return "", err
+	}
+
+	return c.Email, nil
 }
 
-func (s *Store) RetrieveContact(ctx context.Context, email string) (*models.Contact, error) {
-	return nil, nil
+// RetrieveContact returns a contact request by contact email.
+func (s *Store) RetrieveContact(ctx context.Context, email string) (c *models.Contact, err error) {
+	if email == "" {
+		return nil, storeerrors.ErrEntityNotFound
+	}
+
+	ctx, cancel := utils.WithDeadline(ctx)
+	defer cancel()
+
+	key := []byte(models.NormalizeEmail(email))
+	request := &pb.GetRequest{
+		Key:       key,
+		Namespace: wire.NamespaceContacts,
+	}
+	var reply *pb.GetReply
+	if reply, err = s.client.Get(ctx, request); err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, storeerrors.ErrEntityNotFound
+		}
+		return nil, err
+	}
+
+	c = new(models.Contact)
+	if err = proto.Unmarshal(reply.Value, c); err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
-func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) error {
+// UpdateContact can create or update a contact request. The request should be as
+// complete as possible, including an email provided by the caller.
+func (s *Store) UpdateContact(ctx context.Context, c *models.Contact) (err error) {
+	if c == nil || c.Email == "" {
+		return storeerrors.ErrIncompleteRecord
+	}
+
+	var data []byte
+	c.Modified = time.Now().Format(time.RFC3339)
+	if data, err = proto.Marshal(c); err != nil {
+		return err
+	}
+
+	ctx, cancel := utils.WithDeadline(ctx)
+	defer cancel()
+
+	key := []byte(models.NormalizeEmail(c.Email))
+	request := &pb.PutRequest{
+		Key:       key,
+		Value:     data,
+		Namespace: wire.NamespaceContacts,
+	}
+	if reply, err := s.client.Put(ctx, request); err != nil || !reply.Success {
+		if err == nil {
+			err = storeerrors.ErrProtocol
+		}
+		return err
+	}
 	return nil
 }
 
+// DeleteContact deletes a contact record from the store by email.
 func (s *Store) DeleteContact(ctx context.Context, email string) error {
+	if email == "" {
+		return storeerrors.ErrEntityNotFound
+	}
+
+	ctx, cancel := utils.WithDeadline(ctx)
+	defer cancel()
+
+	key := []byte(models.NormalizeEmail(email))
+	request := &pb.DeleteRequest{
+		Key:       key,
+		Namespace: wire.NamespaceContacts,
+	}
+	if reply, err := s.client.Delete(ctx, request); err != nil || !reply.Success {
+		if err == nil {
+			err = storeerrors.ErrProtocol
+		}
+		return err
+	}
 	return nil
 }

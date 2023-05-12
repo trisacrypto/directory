@@ -71,7 +71,11 @@ function AddNewVaspModal() {
 
   return (
     <>
-      <Button data-testid="add-new-vasp" onClick={onOpen} disabled={!canCreateOrganization()}>
+      <Button
+        data-testid="add-new-vasp"
+        onClick={onOpen}
+        disabled={!canCreateOrganization()}
+        mt={10}>
         + Add New VASP
       </Button>
       <Stack zIndex="9999" position="absolute">

@@ -694,6 +694,116 @@ func (s *trtlStoreTestSuite) TestOrganizationStore() {
 	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
 }
 
+func (s *trtlStoreTestSuite) TestContactStore() {
+	require := s.Require()
+
+	// Inject bufconn connection into the store
+	require.NoError(s.grpc.Connect(context.Background()))
+	defer s.grpc.Close()
+
+	// Connect a mock store
+	db, err := store.NewMock(s.grpc.Conn)
+	require.NoError(err)
+
+	// Make sure create errors with a nil contact
+	email, err := db.CreateContact(context.Background(), nil)
+	require.Empty(email)
+	require.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	// Make sure create errors with a contact with an empty email
+	contact := &models.Contact{
+		Email: "",
+	}
+	email, err = db.CreateContact(context.Background(), contact)
+	require.Empty(email)
+	require.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	// Create a valid contact
+	contact = &models.Contact{
+		Email:      "testemail",
+		Vasps:      []string{"foo", "bar"},
+		Verified:   false,
+		Token:      "testtoken",
+		VerifiedOn: "",
+	}
+	email, err = db.CreateContact(context.Background(), contact)
+	require.Equal(email, "testemail")
+	require.NoError(err)
+
+	// Make sure retrieve errors with an empty email
+	var con *models.Contact
+	con, err = db.RetrieveContact(context.Background(), "")
+	require.Nil(con)
+	require.Equal(err, storeerrors.ErrEntityNotFound)
+
+	// Make sure retrieve throws the proper error when a contact is not found
+	con, err = db.RetrieveContact(context.Background(), "wrongemail")
+	require.Nil(con)
+	require.Equal(err, storeerrors.ErrEntityNotFound)
+
+	// Retrieve the created contact
+	con, err = db.RetrieveContact(context.Background(), "testemail")
+	require.Equal(con.Vasps, contact.Vasps)
+	require.Equal(con.Verified, contact.Verified)
+	require.Equal(con.Token, contact.Token)
+	require.NotEmpty(con.Created)
+	require.NotEmpty(con.Modified)
+	require.NoError(err)
+
+	// Make sure update errors with a nil contact
+	err = db.UpdateContact(context.Background(), nil)
+	require.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	// Make sure update errors with a contact with an empty email
+	contact = &models.Contact{
+		Email: "",
+	}
+	err = db.UpdateContact(context.Background(), contact)
+	require.Equal(err, storeerrors.ErrIncompleteRecord)
+
+	// Sleep to allow time for the modified field to change
+	time.Sleep(time.Second)
+
+	// Properly update the contact
+	contact = &models.Contact{
+		Email:      "testemail",
+		Vasps:      []string{"bar", "foo"},
+		Verified:   true,
+		Token:      "newtoken",
+		VerifiedOn: "",
+		Created:    con.Created,
+	}
+	err = db.UpdateContact(context.Background(), contact)
+	require.NoError(err)
+
+	// Retrieve the updated contact
+	var updatedCon *models.Contact
+	updatedCon, err = db.RetrieveContact(context.Background(), "testemail")
+	require.Equal(updatedCon.Vasps, contact.Vasps)
+	require.Equal(updatedCon.Verified, contact.Verified)
+	require.Equal(updatedCon.Token, contact.Token)
+	require.NoError(err)
+	require.Equal(con.Created, updatedCon.Created)
+	require.NotEqual(con.Modified, updatedCon.Modified)
+
+	// Make sure delete errors with an empty email
+	err = db.DeleteContact(context.Background(), "")
+	require.Equal(err, storeerrors.ErrEntityNotFound)
+
+	// Make sure delete throws an error when the contact to delete isn't found
+	err = db.DeleteContact(context.Background(), "wrongemail")
+	require.EqualError(err, "rpc error: code = NotFound desc = not found")
+
+	// Delete the created contact
+	err = db.DeleteContact(context.Background(), "testemail")
+	require.NoError(err)
+
+	// Make sure the contact was deleted
+	con, err = db.RetrieveContact(context.Background(), "testemail")
+	require.Nil(con)
+	require.Equal(err, storeerrors.ErrEntityNotFound)
+}
+
 func createVASPs(db *store.Store, num, startIndex int) error {
 	countries := []string{"TV", "KY", "CC", "LT", "EH", "SC", "NU"}
 	bcats := []pb.BusinessCategory{pb.BusinessCategoryBusiness, pb.BusinessCategoryNonCommercial, pb.BusinessCategoryPrivate}

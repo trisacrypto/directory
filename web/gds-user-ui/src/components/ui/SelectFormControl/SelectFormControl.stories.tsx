@@ -13,6 +13,7 @@ interface _FormControlProps extends Props {
   controlId: string;
   label?: string;
   name?: string;
+  defaultValue?: string;
   placeholder?: string;
   options?: OptionsOrGroups<unknown, GroupBase<unknown>>;
 }

@@ -98,6 +98,7 @@ const Certificate: React.FC = () => {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.reduce((acc, n) => ({ ...acc, [n]: getFieldValue(n) }), {});
   }
+
   const currentState = () => {
     // log store state
     const updatedState = Store.getState().stepper;
@@ -108,6 +109,7 @@ const Certificate: React.FC = () => {
     };
     return formatState;
   };
+
   function hasErroredField() {
     const fieldsNames = fieldNamesPerStepsEntries()[current - 1][1];
     return fieldsNames.some((n: any) => methods.getFieldState(n).error);
@@ -116,6 +118,7 @@ const Certificate: React.FC = () => {
   // if fields if filled
 
   async function handleNextStepClick() {
+    console.log('[] currentStep', currentStep);
     if (hasErroredField()) {
       // i think we should not use alert here , but we need to find a way to display the error message
       // eslint-disable-next-line no-alert

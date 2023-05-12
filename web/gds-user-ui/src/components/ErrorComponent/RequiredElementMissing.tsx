@@ -1,4 +1,5 @@
 import { Alert, AlertIcon } from '@chakra-ui/react';
+import { Trans } from '@lingui/macro';
 interface RequiredElementMissingProps {
   elementKey?: number;
 }
@@ -9,7 +10,7 @@ const RequiredElementMissing = ({ elementKey }: RequiredElementMissingProps) => 
   return (
     <Alert status="error" borderRadius="lg" my={4}>
       <AlertIcon />
-      Please make sure you have filled out all required fields marked with an asterisk (*).
+      <Trans>Please make sure you have filled out all required fields.</Trans>
     </Alert>
   );
 };

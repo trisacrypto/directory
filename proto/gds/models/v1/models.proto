@@ -188,16 +188,24 @@ message EmailLogEntry {
 message Contact {
     // Unique email address for this contact
     string email = 1;
+    string name = 2; // used to address the email
 
     // List of VASPs that the contact is included in
-    repeated string vasps = 2;
+    repeated string vasps = 3;
 
     // Token for email verification
-    bool verified = 3;
-    string token = 4;
+    bool verified = 4;
+    string token = 5;
+
+    // Email audit log
+    repeated EmailLogEntry email_log = 6;
 
     // RFC3339 Timestamp for when the contact was verified
-    string verified_on = 5;
+    string verified_on = 7;
+
+    // Logging information timestamps
+    string created = 8;
+    string modified = 9;
 }
 
 // Implements a protocol buffer struct for state managed pagination. This struct will be
