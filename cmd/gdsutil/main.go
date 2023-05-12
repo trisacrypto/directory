@@ -349,8 +349,21 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:     "contact:migrate",
+			Usage:    "",
+			Category: "contact",
+			Action:   migrateContacts,
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "dryrun",
+					Aliases: []string{"d"},
+					Usage:   "",
+					Value:   true,
+				},
+			},
+		},
 	}
-
 	app.Run(os.Args)
 }
 
@@ -1241,6 +1254,63 @@ func generateTokenKey(c *cli.Context) (err error) {
 	}
 
 	fmt.Printf("RSA key id: %s -- saved with PEM encoding to %s\n", keyid, out)
+	return nil
+}
+
+func migrateContacts(c *cli.Context) (err error) {
+	modelContacts := make(map[string]*models.Contact)
+	var vaspContacts []*pb.Contact
+	iter := ldb.NewIterator(util.BytesPrefix([]byte(wire.NamespaceVASPs)), nil)
+	for iter.Next() {
+		vasp := new(pb.VASP)
+		if err = proto.Unmarshal(iter.Value(), vasp); err != nil {
+			iter.Release()
+			return cli.Exit(err, 1)
+		}
+		iter := models.NewContactIterator(vasp.Contacts, true, false)
+		for iter.Next() {
+			vaspContact, _ := iter.Value()
+			vaspContacts = append(vaspContacts, vaspContact)
+			modelContact, AlreadyExists := modelContacts[vaspContact.Email]
+			if !AlreadyExists {
+				vaspContactExtra := &models.GDSContactExtraData{}
+				if vaspContact.Extra != nil {
+					if err = vaspContact.Extra.UnmarshalTo(vaspContactExtra); err != nil {
+						return fmt.Errorf("could not deserialize previous extra: %s", err)
+					}
+				}
+
+				modelContact = &models.Contact{
+					Email:    vaspContact.Email,
+					Name:     vaspContact.Name,
+					Vasps:    []string{vasp.CommonName},
+					Verified: vaspContactExtra.Verified,
+					Token:    vaspContactExtra.Token,
+					EmailLog: vaspContactExtra.EmailLog,
+					Created:  time.Now().Format(time.RFC3339),
+					Modified: time.Now().Format(time.RFC3339),
+				}
+			} else {
+				modelContact.Vasps = append(modelContact.Vasps, vasp.CommonName)
+				// append email log
+			}
+		}
+	}
+	for _, contact := range modelContacts {
+		if c.Bool("dryrun") {
+			// print model contacts and vasp contacts
+		} else {
+			var data []byte
+			key := []byte(wire.NamespaceContacts + "::" + contact.Email)
+			if data, err = proto.Marshal(contact); err != nil {
+				return cli.Exit(err, 1)
+			}
+
+			if err = ldb.Put(key, data, nil); err != nil {
+				return cli.Exit(err, 1)
+			}
+		}
+	}
 	return nil
 }
 
