@@ -1258,8 +1258,11 @@ func generateTokenKey(c *cli.Context) (err error) {
 }
 
 func migrateContacts(c *cli.Context) (err error) {
+	// Create a list of vasp contacts and model contacts
 	modelContacts := make(map[string]*models.Contact)
 	var vaspContacts []*pb.Contact
+
+	// iterate through all vasps in the database
 	iter := ldb.NewIterator(util.BytesPrefix([]byte(wire.NamespaceVASPs)), nil)
 	for iter.Next() {
 		vasp := new(pb.VASP)
@@ -1268,11 +1271,14 @@ func migrateContacts(c *cli.Context) (err error) {
 			return cli.Exit(err, 1)
 		}
 		iter := models.NewContactIterator(vasp.Contacts, true, false)
+
+		// Iterate through all contacts on the vasp
 		for iter.Next() {
 			vaspContact, _ := iter.Value()
 			vaspContacts = append(vaspContacts, vaspContact)
 			modelContact, AlreadyExists := modelContacts[vaspContact.Email]
 
+			// Extract the extra fields from the vasp contact
 			vaspContactExtra := &models.GDSContactExtraData{}
 			if vaspContact.Extra != nil {
 				if err = vaspContact.Extra.UnmarshalTo(vaspContactExtra); err != nil {
@@ -1280,6 +1286,8 @@ func migrateContacts(c *cli.Context) (err error) {
 				}
 			}
 
+			// If the model contact doesn't already exist create it,
+			// if it does update the email log and vasp list
 			if !AlreadyExists {
 				modelContact = &models.Contact{
 					Email:    vaspContact.Email,
@@ -1297,6 +1305,9 @@ func migrateContacts(c *cli.Context) (err error) {
 			}
 		}
 	}
+
+	// if the dryrun flag is set, print all vasp contacts and the
+	// newly created model contacts and return
 	if c.Bool("dryrun") {
 		fmt.Println("existing vasp contacts:")
 		for _, contact := range vaspContacts {
@@ -1306,16 +1317,18 @@ func migrateContacts(c *cli.Context) (err error) {
 		for _, contact := range modelContacts {
 			fmt.Print(contact)
 		}
-	} else {
-		for _, contact := range modelContacts {
-			var data []byte
-			key := []byte(wire.NamespaceContacts + "::" + contact.Email)
-			if data, err = proto.Marshal(contact); err != nil {
-				return cli.Exit(err, 1)
-			}
-			if err = ldb.Put(key, data, nil); err != nil {
-				return cli.Exit(err, 1)
-			}
+		return nil
+	}
+
+	// Put all new model contacts into the leveldb database
+	for _, contact := range modelContacts {
+		var data []byte
+		key := []byte(wire.NamespaceContacts + "::" + contact.Email)
+		if data, err = proto.Marshal(contact); err != nil {
+			return cli.Exit(err, 1)
+		}
+		if err = ldb.Put(key, data, nil); err != nil {
+			return cli.Exit(err, 1)
 		}
 	}
 	return nil
