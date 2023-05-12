@@ -109,6 +109,7 @@ const useCertificateStepper = () => {
     const isCompleted = await isStepCompleted(currentStep, formValues);
     // only for status update
     if (isCompleted) {
+      console.log('[] completed', isCompleted);
       // console.log('nextStep', state?.isFormCompleted, state?.errors);
       dispatch(setStepStatus({ status: LSTATUS.COMPLETE, step: currentStep }));
     } else {
@@ -138,14 +139,17 @@ const useCertificateStepper = () => {
       }
     } else {
       const found = findStepKey(steps, currentStep + 1);
-
+      console.log('found', found);
       if (found.length === 0) {
+        console.log('setCurrentStep', currentStep + 1);
         dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
         dispatch(addStep({ key: currentStep + 1, status: LSTATUS.PROGRESS }));
       } else {
         if (found[0].status === LSTATUS.INCOMPLETE) {
+          console.log('[] dispatch', currentStep + 1);
           dispatch(setStepStatus({ step: currentStep + 1, status: LSTATUS.PROGRESS }));
         }
+        console.log('[] dispatch', currentStep + 1);
         dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
       }
     }

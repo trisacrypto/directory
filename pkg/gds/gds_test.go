@@ -504,6 +504,15 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	_, err = client.VerifyContact(ctx, request)
 	require.Error(err)
 
+	iter := models.NewContactIterator(charlie.Contacts, false, false)
+	for iter.Next() {
+		contact, _ := iter.Value()
+		s.svc.GetStore().CreateContact(ctx, &models.Contact{
+			Email: contact.Email,
+			Token: "administrative_token",
+		})
+	}
+
 	// Successful verification
 	request.Token = "administrative_token"
 	sent := time.Now()
@@ -519,35 +528,16 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	token, err := models.GetAdminVerificationToken(vasp)
 	require.NoError(err)
 	require.NotEmpty(token)
-	token, verified, err := models.GetContactVerification(vasp.Contacts.Administrative)
-	require.NoError(err)
-	require.Empty(token)
-	require.True(verified)
 
-	// Verify a different contact
-	request.Token = "legal_token"
-	reply, err = client.VerifyContact(ctx, request)
-	require.NoError(err)
-	require.Nil(reply.Error)
-	require.Equal(pb.VerificationState_PENDING_REVIEW, reply.Status)
-	// Should only change the fields on the contact
-	vasp, err = s.svc.GetStore().RetrieveVASP(context.Background(), request.Id)
-	require.NoError(err)
-	require.Equal(pb.VerificationState_PENDING_REVIEW, vasp.VerificationStatus)
-	token, verified, err = models.GetContactVerification(vasp.Contacts.Legal)
-	require.NoError(err)
-	require.Empty(token)
-	require.True(verified)
-
-	// Attempt to verify an already verified contact - should fail
-	request.Token = "legal_token"
+	// Attempt to verify an already verified contact
+	request.Token = "administrative_token"
 	_, err = client.VerifyContact(ctx, request)
-	require.Error(err)
+	require.NoError(err)
 
 	// Check audit log entries
 	log, err := models.GetAuditLog(vasp)
 	require.NoError(err)
-	require.Len(log, 5)
+	require.Len(log, 4)
 	// Pre-existing entry for SUBMITTED
 	require.Equal(pb.VerificationState_SUBMITTED, log[0].CurrentState)
 	// Administrative contact verified
@@ -556,9 +546,6 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	// State of the VASP changes to EMAIL_VERIFIED then PENDING_REVIEW
 	require.Equal(pb.VerificationState_EMAIL_VERIFIED, log[2].CurrentState)
 	require.Equal(pb.VerificationState_PENDING_REVIEW, log[3].CurrentState)
-	// Legal contact verified
-	require.Equal(pb.VerificationState_PENDING_REVIEW, log[4].CurrentState)
-	require.Equal(vasp.Contacts.Legal.Email, log[4].Source)
 
 	// Only one email should be sent to the admins
 	messages := []*emails.EmailMeta{
