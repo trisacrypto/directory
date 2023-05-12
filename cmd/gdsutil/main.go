@@ -1272,14 +1272,15 @@ func migrateContacts(c *cli.Context) (err error) {
 			vaspContact, _ := iter.Value()
 			vaspContacts = append(vaspContacts, vaspContact)
 			modelContact, AlreadyExists := modelContacts[vaspContact.Email]
-			if !AlreadyExists {
-				vaspContactExtra := &models.GDSContactExtraData{}
-				if vaspContact.Extra != nil {
-					if err = vaspContact.Extra.UnmarshalTo(vaspContactExtra); err != nil {
-						return fmt.Errorf("could not deserialize previous extra: %s", err)
-					}
-				}
 
+			vaspContactExtra := &models.GDSContactExtraData{}
+			if vaspContact.Extra != nil {
+				if err = vaspContact.Extra.UnmarshalTo(vaspContactExtra); err != nil {
+					return fmt.Errorf("could not deserialize previous extra: %s", err)
+				}
+			}
+
+			if !AlreadyExists {
 				modelContact = &models.Contact{
 					Email:    vaspContact.Email,
 					Name:     vaspContact.Name,
@@ -1292,20 +1293,26 @@ func migrateContacts(c *cli.Context) (err error) {
 				}
 			} else {
 				modelContact.Vasps = append(modelContact.Vasps, vasp.CommonName)
-				// append email log
+				modelContact.EmailLog = append(modelContact.EmailLog, vaspContactExtra.EmailLog...)
 			}
 		}
 	}
-	for _, contact := range modelContacts {
-		if c.Bool("dryrun") {
-			// print model contacts and vasp contacts
-		} else {
+	if c.Bool("dryrun") {
+		fmt.Println("existing vasp contacts:")
+		for _, contact := range vaspContacts {
+			fmt.Print(contact)
+		}
+		fmt.Println("created contacts:")
+		for _, contact := range modelContacts {
+			fmt.Print(contact)
+		}
+	} else {
+		for _, contact := range modelContacts {
 			var data []byte
 			key := []byte(wire.NamespaceContacts + "::" + contact.Email)
 			if data, err = proto.Marshal(contact); err != nil {
 				return cli.Exit(err, 1)
 			}
-
 			if err = ldb.Put(key, data, nil); err != nil {
 				return cli.Exit(err, 1)
 			}
