@@ -267,7 +267,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 				return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
 			}
 
-			if err = s.beginRegistration(ctx, vasp, contact.Email); err != nil {
+			if err = s.beginReview(ctx, vasp, contact.Email); err != nil {
 				log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not begin registration for contact with verified email")
 				return nil, err
 			}
@@ -336,9 +336,11 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 	return out, nil
 }
 
-func (s *GDS) beginRegistration(ctx context.Context, vasp *pb.VASP, contactEmail string) (err error) {
-	// Since we have one successful email verification at this point, begin the
-	// registration review process by sending an email to the TRISA admins.
+// beginReview starts the registration review process by sending an email to the TRISA admins.
+// This method does not update the passed vasp, the caller should be aware that they will need to
+// update the vasp record. contactEmail will be used to update the vasp's verification status. The
+// returned error will be a gRPC status error.
+func (s *GDS) beginReview(ctx context.Context, vasp *pb.VASP, contactEmail string) (err error) {
 	// Step 1: mark the VASP as email verified and create an admin token.
 	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_EMAIL_VERIFIED, "completed email verification", contactEmail); err != nil {
 		log.Warn().Err(err).Msg("could not update VASP verification status")
@@ -364,7 +366,7 @@ func (s *GDS) beginRegistration(ctx context.Context, vasp *pb.VASP, contactEmail
 		// Don't stop processing if review request email could not be sent.
 		// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
 		// this ensures that we issue a CRITICAL severity without stopping the server.
-		log.WithLevel(zerolog.FatalLevel).Err(err).Msg("could not send verification review email")
+		log.WithLevel(zerolog.ErrorLevel).Err(err).Msg("could not send verification review email")
 	} else {
 		log.Info().Msg("verification review email sent to admins")
 	}
@@ -646,7 +648,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 		}, nil
 	}
 
-	if err = s.beginRegistration(ctx, vasp, contactEmail); err != nil {
+	if err = s.beginReview(ctx, vasp, contactEmail); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not begin registration for contact with verified email")
 		return nil, err
 	}
