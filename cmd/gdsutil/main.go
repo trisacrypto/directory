@@ -349,8 +349,21 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:     "contact:migrate",
+			Usage:    "migrate all contacts on vasps into the model contacts namespace",
+			Category: "contact",
+			Action:   migrateContacts,
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "dryrun",
+					Aliases: []string{"d"},
+					Usage:   "print migration results without modifying the database, used for testing",
+					Value:   true,
+				},
+			},
+		},
 	}
-
 	app.Run(os.Args)
 }
 
@@ -1241,6 +1254,86 @@ func generateTokenKey(c *cli.Context) (err error) {
 	}
 
 	fmt.Printf("RSA key id: %s -- saved with PEM encoding to %s\n", keyid, out)
+	return nil
+}
+
+func migrateContacts(c *cli.Context) (err error) {
+	// Create a list of vasp contacts and model contacts
+	modelContacts := make(map[string]*models.Contact)
+	var vaspContacts []*pb.Contact
+
+	// iterate through all vasps in the database
+	iter := ldb.NewIterator(util.BytesPrefix([]byte(wire.NamespaceVASPs)), nil)
+	for iter.Next() {
+		vasp := new(pb.VASP)
+		if err = proto.Unmarshal(iter.Value(), vasp); err != nil {
+			iter.Release()
+			return cli.Exit(err, 1)
+		}
+		iter := models.NewContactIterator(vasp.Contacts, true, false)
+
+		// Iterate through all contacts on the vasp
+		for iter.Next() {
+			vaspContact, _ := iter.Value()
+			vaspContacts = append(vaspContacts, vaspContact)
+			modelContact, AlreadyExists := modelContacts[vaspContact.Email]
+
+			// Extract the extra fields from the vasp contact
+			vaspContactExtra := &models.GDSContactExtraData{}
+			if vaspContact.Extra != nil {
+				if err = vaspContact.Extra.UnmarshalTo(vaspContactExtra); err != nil {
+					return fmt.Errorf("could not deserialize previous extra: %s", err)
+				}
+			}
+
+			// If the model contact doesn't already exist create it,
+			// if it does update the email log and vasp list
+			if !AlreadyExists {
+				modelContact = &models.Contact{
+					Email:    vaspContact.Email,
+					Name:     vaspContact.Name,
+					Vasps:    []string{vasp.CommonName},
+					Verified: vaspContactExtra.Verified,
+					Token:    vaspContactExtra.Token,
+					EmailLog: vaspContactExtra.EmailLog,
+					Created:  time.Now().Format(time.RFC3339),
+					Modified: time.Now().Format(time.RFC3339),
+				}
+			} else {
+				modelContact.Vasps = append(modelContact.Vasps, vasp.CommonName)
+				if vaspContactExtra.EmailLog != nil {
+					modelContact.EmailLog = append(modelContact.EmailLog, vaspContactExtra.EmailLog...)
+				}
+			}
+		}
+	}
+
+	// if the dryrun flag is set, print all vasp contacts and the
+	// newly created model contacts and return
+	if c.Bool("dryrun") {
+		fmt.Println("existing vasp contacts:")
+		for _, contact := range vaspContacts {
+			fmt.Print(contact)
+		}
+		fmt.Println() // Print a new line for clarity
+		fmt.Println("created contacts:")
+		for _, contact := range modelContacts {
+			fmt.Print(contact)
+		}
+		return nil
+	}
+
+	// Put all new model contacts into the leveldb database
+	for _, contact := range modelContacts {
+		var data []byte
+		key := []byte(wire.NamespaceContacts + "::" + contact.Email)
+		if data, err = proto.Marshal(contact); err != nil {
+			return cli.Exit(err, 1)
+		}
+		if err = ldb.Put(key, data, nil); err != nil {
+			return cli.Exit(err, 1)
+		}
+	}
 	return nil
 }
 
