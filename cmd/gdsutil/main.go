@@ -1301,7 +1301,9 @@ func migrateContacts(c *cli.Context) (err error) {
 				}
 			} else {
 				modelContact.Vasps = append(modelContact.Vasps, vasp.CommonName)
-				modelContact.EmailLog = append(modelContact.EmailLog, vaspContactExtra.EmailLog...)
+				if vaspContactExtra.EmailLog != nil {
+					modelContact.EmailLog = append(modelContact.EmailLog, vaspContactExtra.EmailLog...)
+				}
 			}
 		}
 	}
@@ -1313,6 +1315,7 @@ func migrateContacts(c *cli.Context) (err error) {
 		for _, contact := range vaspContacts {
 			fmt.Print(contact)
 		}
+		fmt.Println() // Print a new line for clarity
 		fmt.Println("created contacts:")
 		for _, contact := range modelContacts {
 			fmt.Print(contact)
