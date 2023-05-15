@@ -13,3 +13,7 @@ export const validationSchema = [
   trixoQuestionnaireValidationSchema,
   reviewValidationSchema
 ];
+
+export const allValidationSchema = validationSchema.reduce((acc, schema) => {
+  return acc.concat(schema.fields);
+}, []);

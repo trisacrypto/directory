@@ -23,9 +23,10 @@ const TrisaImplementationReview = () => {
   useEffect(() => {
     const validate = async () => {
       try {
-        await trisaImplementationValidationSchema.validate(trisa, {
+        const test = await trisaImplementationValidationSchema.validate(trisa, {
           abortEarly: false
         });
+        console.log('[TrisaImplementationReview] test', test);
         setIsValid(true);
       } catch (error) {
         setIsValid(false);
