@@ -1330,7 +1330,7 @@ func migrateContacts(c *cli.Context) (err error) {
 			// If the model contact doesn't already exist create it,
 			// if it does update the email log and vasp list
 			if !AlreadyExists {
-				modelContact = &models.Contact{
+				modelContacts[vaspContact.Email] = &models.Contact{
 					Email:    vaspContact.Email,
 					Name:     vaspContact.Name,
 					Vasps:    []string{vasp.CommonName},
@@ -1354,12 +1354,26 @@ func migrateContacts(c *cli.Context) (err error) {
 	if c.Bool("dryrun") {
 		fmt.Println("existing vasp contacts:")
 		for _, contact := range vaspContacts {
-			fmt.Print(contact)
+			fmt.Println(contact.Email)
+			vaspContactExtra := &models.GDSContactExtraData{}
+			if contact.Extra != nil {
+				if err = contact.Extra.UnmarshalTo(vaspContactExtra); err != nil {
+					return fmt.Errorf("could not deserialize previous extra: %s", err)
+				}
+			}
+			fmt.Println("verified", vaspContactExtra.Verified)
+			fmt.Println("token", vaspContactExtra.Token)
+			fmt.Println("log", vaspContactExtra.EmailLog)
+			fmt.Println()
 		}
 		fmt.Println() // Print a new line for clarity
 		fmt.Println("created contacts:")
 		for _, contact := range modelContacts {
-			fmt.Print(contact)
+			fmt.Println(contact.Email)
+			fmt.Println("verified", contact.Verified)
+			fmt.Println("token", contact.Token)
+			fmt.Println("log", contact.EmailLog)
+			fmt.Println()
 		}
 		return nil
 	}
