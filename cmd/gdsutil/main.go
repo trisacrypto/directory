@@ -35,10 +35,13 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/models/v1"
+	"github.com/trisacrypto/directory/pkg/store"
+	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli/v2"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v2"
@@ -354,6 +357,7 @@ func main() {
 			Usage:    "migrate all contacts on vasps into the model contacts namespace",
 			Category: "contact",
 			Action:   migrateContacts,
+			Before:   openTrtlDB,
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
 					Name:    "dryrun",
@@ -709,6 +713,41 @@ func isFile(path string) bool {
 		return !os.IsNotExist(err)
 	}
 	return fi.Mode().IsRegular()
+}
+
+//===========================================================================
+// TrtlDB Helper Functions
+//===========================================================================
+
+var trtl store.Store
+
+func openTrtlDB(c *cli.Context) (err error) {
+	// Suppress the zerolog output from the store
+	logger.Discard()
+
+	// Load the configuration from the environment
+	var conf config.Config
+	if conf, err = config.New(); err != nil {
+		return cli.Exit(err, 1)
+	}
+	conf.Database.ReindexOnBoot = false
+	conf.ConsoleLog = false
+
+	// Connect to the trtl server and create a store to access data directly like GDS
+	if trtl, err = store.Open(conf.Database); err != nil {
+		if serr, ok := status.FromError(err); ok {
+			return cli.Exit(fmt.Errorf("could not open store: %s", serr.Message()), 1)
+		}
+		return cli.Exit(err, 1)
+	}
+	return nil
+}
+
+func closeTrtlDB(c *cli.Context) (err error) {
+	if err = trtl.Close(); err != nil {
+		return cli.Exit(err, 2)
+	}
+	return nil
 }
 
 //===========================================================================
@@ -1258,23 +1297,25 @@ func generateTokenKey(c *cli.Context) (err error) {
 }
 
 func migrateContacts(c *cli.Context) (err error) {
+	defer closeTrtlDB(c)
+
 	// Create a list of vasp contacts and model contacts
 	modelContacts := make(map[string]*models.Contact)
 	var vaspContacts []*pb.Contact
 
 	// iterate through all vasps in the database
-	iter := ldb.NewIterator(util.BytesPrefix([]byte(wire.NamespaceVASPs)), nil)
-	for iter.Next() {
-		vasp := new(pb.VASP)
-		if err = proto.Unmarshal(iter.Value(), vasp); err != nil {
-			iter.Release()
+	vaspIter := trtl.ListVASPs(context.Background())
+	for vaspIter.Next() {
+		var vasp *pb.VASP
+		if vasp, err = vaspIter.VASP(); err != nil {
+			vaspIter.Release()
 			return cli.Exit(err, 1)
 		}
-		iter := models.NewContactIterator(vasp.Contacts, true, false)
+		contactIter := models.NewContactIterator(vasp.Contacts, true, false)
 
 		// Iterate through all contacts on the vasp
-		for iter.Next() {
-			vaspContact, _ := iter.Value()
+		for contactIter.Next() {
+			vaspContact, _ := contactIter.Value()
 			vaspContacts = append(vaspContacts, vaspContact)
 			modelContact, AlreadyExists := modelContacts[vaspContact.Email]
 
