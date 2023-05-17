@@ -266,6 +266,20 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 				log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update contact verification on vasp")
 				return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
 			}
+
+			if err = s.beginReview(ctx, vasp, contact.Email); err != nil {
+				log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not begin registration for contact with verified email")
+				return nil, err
+			}
+
+			out = &api.RegisterReply{
+				Id:                  vasp.Id,
+				RegisteredDirectory: vasp.RegisteredDirectory,
+				CommonName:          vasp.CommonName,
+				Status:              vasp.VerificationStatus,
+				Message:             "email successfully verified and verification review sent to TRISA admins",
+			}
+			return out, nil
 		}
 	}
 
@@ -320,6 +334,49 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 		Pkcs12Password:      password,
 	}
 	return out, nil
+}
+
+// beginReview starts the registration review process by sending an email to the TRISA admins.
+// This method does not update the passed vasp, the caller should be aware that they will need to
+// update the vasp record. contactEmail will be used to update the vasp's verification status. The
+// returned error will be a gRPC status error.
+func (s *GDS) beginReview(ctx context.Context, vasp *pb.VASP, contactEmail string) (err error) {
+	// Step 1: mark the VASP as email verified and create an admin token.
+	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_EMAIL_VERIFIED, "completed email verification", contactEmail); err != nil {
+		log.Warn().Err(err).Msg("could not update VASP verification status")
+		return status.Error(codes.Aborted, "could not add new entry to VASP audit log")
+	}
+
+	// Create verification token for admin and update database
+	// TODO: replace with actual authentication
+	if err = models.SetAdminVerificationToken(vasp, secrets.CreateToken(48)); err != nil {
+		log.Error().Err(err).Msg("could not create admin verification token")
+		return status.Error(codes.FailedPrecondition, "there was a problem submitting your registration review request, please contact the admins")
+	}
+	if err = s.db.UpdateVASP(ctx, vasp); err != nil {
+		log.Error().Err(err).Msg("could not save admin verification token")
+		return status.Error(codes.FailedPrecondition, "there was a problem submitting your registration review request, please contact the admins")
+	}
+
+	// Step 2: send review request email to the TRISA admins.
+	if _, err = s.svc.email.SendReviewRequest(vasp); err != nil {
+		// TODO: When the Admin UI is up, downgrade FATAL to ERROR because the admins
+		// can just check the UI for any pending reviews at that point (it is FATAL now
+		// because without the email, the admins won't know there is a review).
+		// Don't stop processing if review request email could not be sent.
+		// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
+		// this ensures that we issue a CRITICAL severity without stopping the server.
+		log.WithLevel(zerolog.ErrorLevel).Err(err).Msg("could not send verification review email")
+	} else {
+		log.Info().Msg("verification review email sent to admins")
+	}
+
+	// Step 3: if the review email has been successfully sent, mark as pending review.
+	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_PENDING_REVIEW, "review email sent", contactEmail); err != nil {
+		log.Warn().Err(err).Msg("could not update VASP verification status")
+		return status.Error(codes.Aborted, "could not add new entry to VASP audit log")
+	}
+	return nil
 }
 
 // Lookup a VASP entity by name or ID to get full details including the TRISA certification
@@ -591,42 +648,9 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 		}, nil
 	}
 
-	// Since we have one successful email verification at this point, begin the
-	// registration review process by sending an email to the TRISA admins.
-	// Step 1: mark the VASP as email verified and create an admin token.
-	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_EMAIL_VERIFIED, "completed email verification", contactEmail); err != nil {
-		log.Warn().Err(err).Msg("could not update VASP verification status")
-		return nil, status.Error(codes.Aborted, "could not add new entry to VASP audit log")
-	}
-
-	// Create verification token for admin and update database
-	// TODO: replace with actual authentication
-	if err = models.SetAdminVerificationToken(vasp, secrets.CreateToken(48)); err != nil {
-		log.Error().Err(err).Msg("could not create admin verification token")
-		return nil, status.Error(codes.FailedPrecondition, "there was a problem submitting your registration review request, please contact the admins")
-	}
-	if err = s.db.UpdateVASP(ctx, vasp); err != nil {
-		log.Error().Err(err).Msg("could not save admin verification token")
-		return nil, status.Error(codes.FailedPrecondition, "there was a problem submitting your registration review request, please contact the admins")
-	}
-
-	// Step 2: send review request email to the TRISA admins.
-	if _, err = s.svc.email.SendReviewRequest(vasp); err != nil {
-		// TODO: When the Admin UI is up, downgrade FATAL to ERROR because the admins
-		// can just check the UI for any pending reviews at that point (it is FATAL now
-		// because without the email, the admins won't know there is a review).
-		// Don't stop processing if review request email could not be sent.
-		// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
-		// this ensures that we issue a CRITICAL severity without stopping the server.
-		log.WithLevel(zerolog.FatalLevel).Err(err).Msg("could not send verification review email")
-	} else {
-		log.Info().Msg("verification review email sent to admins")
-	}
-
-	// Step 3: if the review email has been successfully sent, mark as pending review.
-	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_PENDING_REVIEW, "review email sent", contactEmail); err != nil {
-		log.Warn().Err(err).Msg("could not update VASP verification status")
-		return nil, status.Error(codes.Aborted, "could not add new entry to VASP audit log")
+	if err = s.beginReview(ctx, vasp, contactEmail); err != nil {
+		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not begin registration for contact with verified email")
+		return nil, err
 	}
 
 	// Save the VASP and newly created certificate request
