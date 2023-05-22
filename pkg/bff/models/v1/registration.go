@@ -3,8 +3,10 @@ package models
 import (
 	"errors"
 	"fmt"
+	"net/mail"
 	"strings"
 
+	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -130,9 +132,54 @@ func (r *RegistrationForm) ValidateLegalPerson() ValidationErrors {
 }
 
 // Validate only the fields in the contacts step.
-func (r *RegistrationForm) ValidateContacts() ValidationErrors {
-	// TODO: implement
-	return nil
+func (r *RegistrationForm) ValidateContacts() (v ValidationErrors) {
+	if r.Contacts == nil {
+		v = append(v, &ValidationError{Field: "contacts", Err: ErrMissingField.Error()})
+		return v
+	}
+
+	// ValidateContact handles the case where the contact is nil
+	v, _ = v.Append(ValidateContact(r.Contacts.Technical, "contacts.technical"))
+	v, _ = v.Append(ValidateContact(r.Contacts.Administrative, "contacts.administrative"))
+	v, _ = v.Append(ValidateContact(r.Contacts.Legal, "contacts.legal"))
+	v, _ = v.Append(ValidateContact(r.Contacts.Billing, "contacts.billing"))
+
+	return v
+}
+
+// Validate a single contact, using the field name to construct errors.
+func ValidateContact(contact *pb.Contact, fieldName string) (v ValidationErrors) {
+	if contact == nil {
+		v = append(v, &ValidationError{Field: fieldName, Err: ErrMissingField.Error()})
+		return v
+	}
+
+	name := strings.TrimSpace(contact.Name)
+	if name == "" {
+		v = append(v, &ValidationError{Field: fieldName + ".name", Err: ErrMissingField.Error()})
+	} else if len(name) < 2 {
+		// Check that the name is long enough to match GDS validation
+		v = append(v, &ValidationError{Field: fieldName + ".name", Err: ErrTooShort.Error()})
+	}
+
+	email := strings.TrimSpace(contact.Email)
+	if email == "" {
+		v = append(v, &ValidationError{Field: fieldName + ".email", Err: ErrMissingField.Error()})
+	} else {
+		// Check that the email is parseable by RFC 5322.
+		if _, err := mail.ParseAddress(email); err != nil {
+			v = append(v, &ValidationError{Field: fieldName + ".email", Err: ErrInvalidEmail.Error()})
+		}
+	}
+
+	phone := strings.TrimSpace(contact.Phone)
+	if phone == "" {
+		v = append(v, &ValidationError{Field: fieldName + ".phone", Err: ErrMissingField.Error()})
+	}
+
+	// TODO: Ensure this is a valid phone number
+
+	return v
 }
 
 // Validate only the fields in the trixo step.
