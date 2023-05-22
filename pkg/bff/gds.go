@@ -254,7 +254,7 @@ func (s *Server) VerifyContact(c *gin.Context) {
 // @Tags registration
 // @Produce json
 // @Param params body api.LoadRegistrationFormParams false "Load registration form parameters"
-// @Success 200 {object} api.RegistrationForm
+// @Success 200 {object} object "Registration form"
 // @Failure 400 {object} api.Reply
 // @Failure 401 {object} api.Reply
 // @Failure 500 {object} api.Reply
