@@ -2,6 +2,7 @@ package bff
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -252,29 +253,72 @@ func (s *Server) VerifyContact(c *gin.Context) {
 // @Description Get the registration form associated with the user's organization.
 // @Tags registration
 // @Produce json
-// @Success 200 {object} object "Registration form"
+// @Param params body api.LoadRegistrationFormParams false "Load registration form parameters"
+// @Success 200 {object} api.RegistrationForm
+// @Failure 400 {object} api.Reply
 // @Failure 401 {object} api.Reply
 // @Failure 500 {object} api.Reply
 // @Router /register [get]
 func (s *Server) LoadRegisterForm(c *gin.Context) {
+	var (
+		err    error
+		org    *records.Organization
+		step   records.StepType
+		params *api.LoadRegistrationFormParams
+	)
+
 	// Load the organization from the claims
 	// NOTE: this method will handle the error logging and response.
-	org, err := s.OrganizationFromClaims(c)
-	if err != nil {
+	if org, err = s.OrganizationFromClaims(c); err != nil {
 		return
 	}
 
-	// TODO: parse url query params
+	// Bind the parameters associated with the load registration request
+	// NOTE: the step is optional and does not need to be specified
+	params = &api.LoadRegistrationFormParams{}
+	if err = c.ShouldBindQuery(&params); err != nil {
+		log.Debug().Err(err).Msg("could not bind request with query params")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
+
+	// Convert the step into a StepType
+	if step, err = records.ParseStepType(string(params.Step)); err != nil {
+		log.Debug().Err(err).Msg("user requested invalid form step type")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
 
 	// Return the registration form, ensuring nil is not serialized.
 	if org.Registration == nil {
 		org.Registration = records.NewRegisterForm()
 	}
 
-	// TODO: load only the correct step if the step is specified
-	// TODO: add form validation to return any validation errors
+	// Prepare to return the requested output.
 	out := &api.RegistrationForm{
-		Form: org.Registration,
+		Step: api.RegistrationFormStep(string(step)),
+	}
+
+	// If necessary, truncate the form to the specified step
+	if out.Form, err = org.Registration.Truncate(step); err != nil {
+		log.Warn().Err(err).Msg("could not truncate registration form")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
+	}
+
+	// Get any field validation errors and attach them to the form
+	if verrs := org.Registration.Validate(step); verrs != nil {
+		var fields records.ValidationErrors
+		if errors.As(verrs, &fields) {
+			out.Errors = make([]*api.FieldValidationError, 0, len(fields))
+			for _, field := range fields {
+				out.Errors = append(out.Errors, &api.FieldValidationError{Field: field.Field, Error: field.Err})
+			}
+		} else {
+			log.Warn().Err(err).Msg("could not validate registration form")
+			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, out)
@@ -299,6 +343,7 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 	// Parse the incoming JSON data from the client request
 	var (
 		err  error
+		step records.StepType
 		form *api.RegistrationForm
 		org  *records.Organization
 	)
@@ -311,10 +356,27 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		return
 	}
 
+	// Convert the step into a StepType
+	if step, err = records.ParseStepType(string(form.Step)); err != nil {
+		log.Debug().Err(err).Msg("user requested invalid form step type")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
+
 	// Load the organization from the claims
 	// NOTE: this method will handle the error logging and response.
 	if org, err = s.OrganizationFromClaims(c); err != nil {
 		return
+	}
+
+	// If the organization form does not exist; create a new registration form
+	if org.Registration == nil {
+		org.Registration = records.NewRegisterForm()
+	}
+
+	// If the form is nil, create a new registration form to "clear" the form
+	if form.Form == nil {
+		form.Form = records.NewRegisterForm()
 	}
 
 	// Mark the form as started, the BFF relies on this state so the frontend should
@@ -325,30 +387,44 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		form.Form.State.Started = time.Now().Format(time.RFC3339)
 	}
 
+	// Prepare the response
+	out := &api.RegistrationForm{
+		Step: api.RegistrationFormStep(step),
+	}
+
+	// Update the registration form step that has been POSTED.
+	if err = org.Registration.Update(form.Form, step); err != nil {
+		// If there were validation errors, attach them to the output
+		var fields records.ValidationErrors
+		if errors.As(err, &fields) {
+			out.Errors = make([]*api.FieldValidationError, 0, len(fields))
+			for _, field := range fields {
+				out.Errors = append(out.Errors, &api.FieldValidationError{Field: field.Field, Error: field.Err})
+			}
+		} else {
+			log.Debug().Err(err).Msg("could not update registration form")
+			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+			return
+		}
+	}
+
+	// Update the organizations form
 	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
-	// Update the organizations form
-	// TODO: handle per-field validation
-	// TODO: handle the step to only update the registration form step that has been posted
-	org.Registration = form.Form
 	if err = s.db.UpdateOrganization(ctx, org); err != nil {
 		log.Error().Err(err).Msg("could not update organization")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not save registration form"))
 		return
 	}
 
-	if org.Registration.State == nil || org.Registration.State.Started == "" {
-		// If an empty form was passed in, return a 204 No Content response
-		c.Status(http.StatusNoContent)
-	} else {
-		// Otherwise, return the form in a 200 OK response
-		out := &api.RegistrationForm{
-			Form: org.Registration,
-		}
-
-		c.JSON(http.StatusOK, out)
+	// Return the updated form in a 200 OK response, truncated if necessary.
+	if out.Form, err = org.Registration.Truncate(step); err != nil {
+		log.Warn().Err(err).Msg("could not truncate registration form")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
 	}
+	c.JSON(http.StatusOK, out)
 }
 
 // SubmitRegistration makes a request on behalf of the user to either the TestNet or the

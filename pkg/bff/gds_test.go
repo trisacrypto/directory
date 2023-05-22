@@ -200,15 +200,15 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	claims.OrgID = org.Id
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 
-	// Should be able to save an empty registration form
-	reply, err := s.client.SaveRegistrationForm(context.TODO(), &api.RegistrationForm{Form: &records.RegistrationForm{}})
+	// Should be able to save an empty registration form to go back to default values.
+	reply, err := s.client.SaveRegistrationForm(context.TODO(), &api.RegistrationForm{Form: nil})
 	require.NoError(err, "should not receive an error when saving an empty registration form")
-	require.Nil(reply, "should receive 204 No Content when saving an empty registration form")
+	require.NotEmpty(reply, "should receive default values when saving a nil empty registration form")
 
-	// Empty registration form should be saved in the database
+	// Registration form should be cleared and new registration form with default values saved to database.
 	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.NoError(err, "could not retrieve organization from database")
-	require.True(proto.Equal(org.Registration, &records.RegistrationForm{}), "expected empty registration form")
+	require.True(proto.Equal(org.Registration, reply.Form), "expected registration form empty except for default values")
 
 	// Should be able to save the fixture form
 	reply, err = s.client.SaveRegistrationForm(context.TODO(), form)
@@ -225,9 +225,9 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	require.True(proto.Equal(org.Registration, form.Form), "expected form saved in database to match form uploaded")
 
 	// Should be able to "clear" a registration by saving an empty registration form
-	reply, err = s.client.SaveRegistrationForm(context.TODO(), &api.RegistrationForm{Form: &records.RegistrationForm{}})
+	reply, err = s.client.SaveRegistrationForm(context.TODO(), &api.RegistrationForm{Form: nil})
 	require.NoError(err, "should not receive an error when saving an empty registration form")
-	require.Nil(reply, "should receive 204 No Content when saving an empty registration form")
+	require.NotEmpty(reply, "should receive default values when saving an empty registration form")
 
 	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.NoError(err, "could not retrieve updated org from database")
