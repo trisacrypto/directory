@@ -264,11 +264,20 @@ func (s *Server) LoadRegisterForm(c *gin.Context) {
 		return
 	}
 
+	// TODO: parse url query params
+
 	// Return the registration form, ensuring nil is not serialized.
 	if org.Registration == nil {
 		org.Registration = records.NewRegisterForm()
 	}
-	c.JSON(http.StatusOK, org.Registration)
+
+	// TODO: load only the correct step if the step is specified
+	// TODO: add form validation to return any validation errors
+	out := &api.RegistrationForm{
+		Form: org.Registration,
+	}
+
+	c.JSON(http.StatusOK, out)
 }
 
 // Saves the registration form on the BFF to allow multiple users to edit the
@@ -290,12 +299,12 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 	// Parse the incoming JSON data from the client request
 	var (
 		err  error
-		form *records.RegistrationForm
+		form *api.RegistrationForm
 		org  *records.Organization
 	)
 
 	// Unmarshal the registration form from the POST request
-	form = &records.RegistrationForm{}
+	form = &api.RegistrationForm{}
 	if err = c.ShouldBind(form); err != nil {
 		log.Warn().Err(err).Msg("could not bind request")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
@@ -312,15 +321,17 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 	// capture the updated form returned from this endpoint to avoid overwriting the
 	// state metadata.
 	// NOTE: If an empty form was passed in, the form will not be marked as started.
-	if form.State != nil && form.State.Started == "" {
-		form.State.Started = time.Now().Format(time.RFC3339)
+	if form.Form.State != nil && form.Form.State.Started == "" {
+		form.Form.State.Started = time.Now().Format(time.RFC3339)
 	}
 
 	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
 	// Update the organizations form
-	org.Registration = form
+	// TODO: handle per-field validation
+	// TODO: handle the step to only update the registration form step that has been posted
+	org.Registration = form.Form
 	if err = s.db.UpdateOrganization(ctx, org); err != nil {
 		log.Error().Err(err).Msg("could not update organization")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not save registration form"))
@@ -332,7 +343,11 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		c.Status(http.StatusNoContent)
 	} else {
 		// Otherwise, return the form in a 200 OK response
-		c.JSON(http.StatusOK, org.Registration)
+		out := &api.RegistrationForm{
+			Form: org.Registration,
+		}
+
+		c.JSON(http.StatusOK, out)
 	}
 }
 

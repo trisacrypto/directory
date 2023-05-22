@@ -83,26 +83,26 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	}
 
 	// Endpoint must be authenticated
-	_, err := s.client.LoadRegistrationForm(context.TODO())
+	_, err := s.client.LoadRegistrationForm(context.TODO(), nil)
 	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
 	// Endpoint must have the read:vasp permission
 	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions from claims")
-	_, err = s.client.LoadRegistrationForm(context.TODO())
+	_, err = s.client.LoadRegistrationForm(context.TODO(), nil)
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Claims must have an organization ID and the server must not panic if it does not
 	claims.Permissions = []string{auth.ReadVASP}
 	require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
 
-	_, err = s.client.LoadRegistrationForm(context.TODO())
+	_, err = s.client.LoadRegistrationForm(context.TODO(), nil)
 	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 	// Create valid claims but no record in the database - should not panic and should return an error
 	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 
-	_, err = s.client.LoadRegistrationForm(context.TODO())
+	_, err = s.client.LoadRegistrationForm(context.TODO(), nil)
 	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 	// Create organization in the database, but without registration form.
@@ -118,9 +118,11 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	claims.OrgID = org.Id
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 
-	form, err := s.client.LoadRegistrationForm(context.TODO())
+	out, err := s.client.LoadRegistrationForm(context.TODO(), nil)
 	require.NoError(err, "expected no error when no form data is stored")
-	require.NotNil(form, "expected empty registration form when no form data is stored")
+	require.NotNil(out.Form, "expected empty registration form when no form data is stored")
+
+	form := out.Form
 	require.NotNil(form.State, "expected form state to be populated")
 	require.Equal(int32(1), form.State.Current, "expected initial form step to be 1")
 	require.False(form.State.ReadyToSubmit, "expected form state to be not ready to submit")
@@ -137,10 +139,10 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	err = s.DB().UpdateOrganization(context.Background(), org)
 	require.NoError(err, "could not update organization in database")
 
-	form, err = s.client.LoadRegistrationForm(context.TODO())
+	out, err = s.client.LoadRegistrationForm(context.TODO(), nil)
 	require.NoError(err, "expected no error when form data is available")
-	require.NotNil(form, "expected completed registration form when form data is available")
-	require.True(proto.Equal(form, org.Registration), "expected completed registration form when form data is available")
+	require.NotNil(out.Form, "expected completed registration form when form data is available")
+	require.True(proto.Equal(out.Form, org.Registration), "expected completed registration form when form data is available")
 }
 
 func (s *bffTestSuite) TestSaveRegisterForm() {
@@ -153,8 +155,10 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	}
 
 	// Load registration forms fixture
-	form := &records.RegistrationForm{}
-	err := loadFixture("testdata/registration_form.pb.json", form)
+	form := &api.RegistrationForm{
+		Form: &records.RegistrationForm{},
+	}
+	err := loadFixture("testdata/registration_form.pb.json", form.Form)
 	require.NoError(err, "could not load registration form fixture")
 
 	// Endpoint requires CSRF protection
@@ -197,7 +201,7 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 
 	// Should be able to save an empty registration form
-	reply, err := s.client.SaveRegistrationForm(context.TODO(), &records.RegistrationForm{})
+	reply, err := s.client.SaveRegistrationForm(context.TODO(), &api.RegistrationForm{Form: &records.RegistrationForm{}})
 	require.NoError(err, "should not receive an error when saving an empty registration form")
 	require.Nil(reply, "should receive 204 No Content when saving an empty registration form")
 
@@ -210,24 +214,24 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	reply, err = s.client.SaveRegistrationForm(context.TODO(), form)
 	require.NoError(err, "should not receive an error when saving a registration form")
 	require.NotNil(reply, "uploaded form should be returned when a non-empty registration form is saved")
-	require.NotEmpty(reply.State.Started, "expected form started timestamp to be set")
-	reply.State.Started = ""
-	require.True(proto.Equal(form, reply), "expected returned registration form to match uploaded form")
+	require.NotEmpty(reply.Form.State.Started, "expected form started timestamp to be set")
+	reply.Form.State.Started = ""
+	require.True(proto.Equal(form.Form, reply.Form), "expected returned registration form to match uploaded form")
 
 	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.NoError(err, "could not retrieve updated org from database")
 	require.NotEmpty(org.Registration.State.Started, "expected registration form started timestamp to be populated")
 	org.Registration.State.Started = ""
-	require.True(proto.Equal(org.Registration, form), "expected form saved in database to match form uploaded")
+	require.True(proto.Equal(org.Registration, form.Form), "expected form saved in database to match form uploaded")
 
 	// Should be able to "clear" a registration by saving an empty registration form
-	reply, err = s.client.SaveRegistrationForm(context.TODO(), &records.RegistrationForm{})
+	reply, err = s.client.SaveRegistrationForm(context.TODO(), &api.RegistrationForm{Form: &records.RegistrationForm{}})
 	require.NoError(err, "should not receive an error when saving an empty registration form")
 	require.Nil(reply, "should receive 204 No Content when saving an empty registration form")
 
 	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.NoError(err, "could not retrieve updated org from database")
-	require.False(proto.Equal(org.Registration, form), "expected form saved in database to be cleared")
+	require.False(proto.Equal(org.Registration, form.Form), "expected form saved in database to be cleared")
 }
 
 func (s *bffTestSuite) TestSubmitRegistration() {
