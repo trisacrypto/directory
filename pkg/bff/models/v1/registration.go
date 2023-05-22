@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -118,9 +119,59 @@ func (r *RegistrationForm) Validate(step StepType) error {
 }
 
 // Validate only the fields in the basic details step.
-func (r *RegistrationForm) ValidateBasicDetails() ValidationErrors {
-	// TODO: update basic details validation
-	return nil
+func (r *RegistrationForm) ValidateBasicDetails() (v ValidationErrors) {
+	// Validate website
+	// TODO: Check if this is a valid URL?
+	if strings.TrimSpace(r.Website) == "" {
+		v = append(v, &ValidationError{
+			Field: "website",
+			Err:   ErrMissingField.Error(),
+		})
+	}
+
+	// Validate business category
+	if r.BusinessCategory == pb.BusinessCategory_UNKNOWN_ENTITY {
+		v = append(v, &ValidationError{
+			Field: "business_category",
+			Err:   ErrMissingField.Error(),
+		})
+	}
+
+	// Validate there is at least one VASP category provided
+	// TODO: Check if these are valid categories?
+	var hasCategory bool
+	for _, cat := range r.VaspCategories {
+		if strings.TrimSpace(cat) != "" {
+			hasCategory = true
+			break
+		}
+	}
+
+	if !hasCategory {
+		v = append(v, &ValidationError{
+			Field: "vasp_categories",
+			Err:   ErrMissingField.Error(),
+		})
+	}
+
+	// Validate established date
+	// TODO: Check if this is a valid date?
+	if strings.TrimSpace(r.EstablishedOn) == "" {
+		v = append(v, &ValidationError{
+			Field: "established_on",
+			Err:   ErrMissingField.Error(),
+		})
+	}
+
+	// Validate organization name
+	if strings.TrimSpace(r.OrganizationName) == "" {
+		v = append(v, &ValidationError{
+			Field: "organization_name",
+			Err:   ErrMissingField.Error(),
+		})
+	}
+
+	return v
 }
 
 // Validate only the fields in the legal person step.

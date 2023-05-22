@@ -2,12 +2,14 @@ package models_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
+	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -82,4 +84,70 @@ func TestMarshalRegistrationForm(t *testing.T) {
 	result = &models.RegistrationForm{}
 	require.NoError(t, json.Unmarshal(data, result), "error unmarshaling registration form from JSON")
 	require.True(t, proto.Equal(form, result), "registration form should be unmarshaled correctly")
+}
+
+// Test validating the basic details step of the registration form
+func TestValidateBasicDetails(t *testing.T) {
+	testCases := []struct {
+		website          string
+		businessCategory pb.BusinessCategory
+		vaspCategories   []string
+		establishedOn    string
+		orgName          string
+		errs             models.ValidationErrors
+	}{
+		{"", pb.BusinessCategory_BUSINESS_ENTITY, []string{"P2P"}, "2021-01-01", "Example, Inc.", models.ValidationErrors{
+			{Field: "website", Err: models.ErrMissingField.Error()},
+		}},
+		{"", pb.BusinessCategory_UNKNOWN_ENTITY, []string{"P2P"}, "2021-01-01", "Example, Inc.", models.ValidationErrors{
+			{Field: "website", Err: models.ErrMissingField.Error()},
+			{Field: "business_category", Err: models.ErrMissingField.Error()},
+		}},
+		{"", pb.BusinessCategory_UNKNOWN_ENTITY, nil, "2021-01-01", "Example, Inc.", models.ValidationErrors{
+			{Field: "website", Err: models.ErrMissingField.Error()},
+			{Field: "business_category", Err: models.ErrMissingField.Error()},
+			{Field: "vasp_categories", Err: models.ErrMissingField.Error()},
+		}},
+		{"", pb.BusinessCategory_UNKNOWN_ENTITY, nil, "", "Example Inc.", models.ValidationErrors{
+			{Field: "website", Err: models.ErrMissingField.Error()},
+			{Field: "business_category", Err: models.ErrMissingField.Error()},
+			{Field: "vasp_categories", Err: models.ErrMissingField.Error()},
+			{Field: "established_on", Err: models.ErrMissingField.Error()},
+		}},
+		{"", pb.BusinessCategory_UNKNOWN_ENTITY, nil, "", "", models.ValidationErrors{
+			{Field: "website", Err: models.ErrMissingField.Error()},
+			{Field: "business_category", Err: models.ErrMissingField.Error()},
+			{Field: "vasp_categories", Err: models.ErrMissingField.Error()},
+			{Field: "established_on", Err: models.ErrMissingField.Error()},
+			{Field: "organization_name", Err: models.ErrMissingField.Error()},
+		}},
+		{"example.com", pb.BusinessCategory_GOVERNMENT_ENTITY, []string{}, " ", " ", models.ValidationErrors{
+			{Field: "vasp_categories", Err: models.ErrMissingField.Error()},
+			{Field: "established_on", Err: models.ErrMissingField.Error()},
+			{Field: "organization_name", Err: models.ErrMissingField.Error()},
+		}},
+		{" ", pb.BusinessCategory_GOVERNMENT_ENTITY, []string{}, " ", " ", models.ValidationErrors{
+			{Field: "website", Err: models.ErrMissingField.Error()},
+			{Field: "vasp_categories", Err: models.ErrMissingField.Error()},
+			{Field: "established_on", Err: models.ErrMissingField.Error()},
+			{Field: "organization_name", Err: models.ErrMissingField.Error()},
+		}},
+		{"example.com", pb.BusinessCategory_GOVERNMENT_ENTITY, []string{"Exchange"}, "2021-01-01", "Example, Inc.", nil},
+	}
+
+	for _, tc := range testCases {
+		form := models.RegistrationForm{}
+		form.Website = tc.website
+		form.BusinessCategory = tc.businessCategory
+		form.VaspCategories = tc.vaspCategories
+		form.EstablishedOn = tc.establishedOn
+		form.OrganizationName = tc.orgName
+
+		verrs := form.ValidateBasicDetails()
+		fmt.Println(tc)
+		require.Equal(t, tc.errs, verrs)
+
+		errs := form.Validate(models.StepBasicDetails)
+		require.Equal(t, tc.errs, errs)
+	}
 }
