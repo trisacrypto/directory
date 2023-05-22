@@ -72,6 +72,11 @@ definitions:
       page_size:
         type: integer
     type: object
+  api.LoadRegistrationFormParams:
+    properties:
+      step:
+        type: string
+    type: object
   api.LoginParams:
     properties:
       orgid:
@@ -784,6 +789,12 @@ paths:
   /register:
     get:
       description: Get the registration form associated with the user's organization.
+      parameters:
+      - description: Load registration form parameters
+        in: body
+        name: params
+        schema:
+          $ref: '#/definitions/api.LoadRegistrationFormParams'
       produces:
       - application/json
       responses:
@@ -791,6 +802,10 @@ paths:
           description: Registration form
           schema:
             type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Reply'
         "401":
           description: Unauthorized
           schema:

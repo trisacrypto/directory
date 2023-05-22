@@ -3,12 +3,58 @@ package models_test
 import (
 	"encoding/json"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"google.golang.org/protobuf/proto"
 )
+
+func TestStepType(t *testing.T) {
+	testCases := []struct {
+		s        string
+		expected models.StepType
+	}{
+		{"", models.StepNone},
+		{"  ", models.StepNone},
+		{"\n", models.StepNone},
+		{"all", models.StepAll},
+		{"ALL", models.StepAll},
+		{"  All  ", models.StepAll},
+		{"basic", models.StepBasicDetails},
+		{"BASIC   ", models.StepBasicDetails},
+		{"Basic", models.StepBasicDetails},
+		{"legal", models.StepLegalPerson},
+		{" LEGal\n", models.StepLegalPerson},
+		{"LEGAL\t", models.StepLegalPerson},
+		{"contacts", models.StepContacts},
+		{"trixo", models.StepTRIXO},
+		{"trisa", models.StepTRISA},
+	}
+
+	for _, tc := range testCases {
+		actual, err := models.ParseStepType(tc.s)
+		require.NoError(t, err, "expected valid step type to be parsed")
+		require.Equal(t, tc.expected, actual)
+		require.Equal(t, tc.expected.String(), actual.String())
+	}
+
+	invalidTestCases := []string{
+		"foo",
+		"FOO",
+		"  not a real step",
+		"TRISAXXAA",
+	}
+
+	for _, tc := range invalidTestCases {
+		actual, err := models.ParseStepType(tc)
+		require.Error(t, err)
+		require.True(t, strings.HasPrefix(err.Error(), "unknown registration form step"))
+		require.Equal(t, models.StepNone, actual)
+	}
+
+}
 
 // Test that the registration form marshals and unmarshals correctly to and from JSON
 func TestMarshalRegistrationForm(t *testing.T) {

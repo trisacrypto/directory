@@ -79,6 +79,7 @@ message FormState {
 message FormStep {
     int32 key = 1;
     string status = 2;
+    string name = 3;
 }
 
 // DirectoryRecord contains the information needed to lookup a VASP in a directory service.

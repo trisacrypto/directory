@@ -24,24 +24,35 @@ type BFFClient interface {
 	// Authenticated Endpoints
 	UpdateUser(context.Context, *UpdateUserParams) error
 	UserOrganization(context.Context) (*OrganizationReply, error)
+
+	// Organization management
 	CreateOrganization(context.Context, *OrganizationParams) (*OrganizationReply, error)
 	DeleteOrganization(_ context.Context, id string) error
 	PatchOrganization(_ context.Context, id string, request *OrganizationParams) (*OrganizationReply, error)
 	ListOrganizations(context.Context, *ListOrganizationsParams) (*ListOrganizationsReply, error)
+
+	// Collaborators endpoint
 	AddCollaborator(context.Context, *models.Collaborator) (*models.Collaborator, error)
 	ListCollaborators(context.Context) (*ListCollaboratorsReply, error)
 	UpdateCollaboratorRoles(_ context.Context, id string, request *UpdateRolesParams) (*models.Collaborator, error)
 	DeleteCollaborator(_ context.Context, id string) error
-	LoadRegistrationForm(context.Context) (*models.RegistrationForm, error)
-	SaveRegistrationForm(context.Context, *models.RegistrationForm) (*models.RegistrationForm, error)
+
+	MemberDetails(context.Context, *MemberDetailsParams) (*MemberDetailsReply, error)
+
+	// Registration form
+	LoadRegistrationForm(context.Context, *LoadRegistrationFormParams) (*RegistrationForm, error)
+	SaveRegistrationForm(context.Context, *RegistrationForm) (*RegistrationForm, error)
 	SubmitRegistration(_ context.Context, network string) (*RegisterReply, error)
 	RegistrationStatus(context.Context) (*RegistrationStatus, error)
+
+	// Overview and announcements
 	Overview(context.Context) (*OverviewReply, error)
 	Announcements(context.Context) (*AnnouncementsReply, error)
 	MakeAnnouncement(context.Context, *models.Announcement) error
-	Certificates(context.Context) (*CertificatesReply, error)
-	MemberDetails(context.Context, *MemberDetailsParams) (*MemberDetailsReply, error)
 	Attention(context.Context) (*AttentionReply, error)
+
+	// Certificate management
+	Certificates(context.Context) (*CertificatesReply, error)
 }
 
 //===========================================================================
@@ -67,6 +78,15 @@ type StatusReply struct {
 	Version string `json:"version,omitempty"`
 	TestNet string `json:"testnet,omitempty"`
 	MainNet string `json:"mainnet,omitempty"`
+}
+
+// A per-field validation error that is intended for human consumption - if the field is
+// not valid (e.g. empty when required, doesn't match regular expression, etc.) then
+// this struct is meant to be sent back so the front-end can render the message to the
+// user in a help-box or similar.
+type FieldValidationError struct {
+	Field string `json:"field"`
+	Error string `json:"error"`
 }
 
 //===========================================================================
@@ -157,6 +177,31 @@ type VerifyContactReply struct {
 	Error   map[string]interface{} `json:"error,omitempty"`
 	Status  string                 `json:"status"`
 	Message string                 `json:"message"`
+}
+
+type RegistrationFormStep string
+
+const (
+	StepBasicDetails RegistrationFormStep = "basic"
+	StepLegalPerson  RegistrationFormStep = "legal"
+	StepContacts     RegistrationFormStep = "contacts"
+	StepTRISA        RegistrationFormStep = "trisa"
+	StepTRIXO        RegistrationFormStep = "trixo"
+)
+
+// Allows the front-end to specify which part of the registration form they want to fetch.
+// GET /v1/registration will return the entire registration form, while
+// GET /v1/registration?step=trixo would return just the TRIXO form
+type LoadRegistrationFormParams struct {
+	Step RegistrationFormStep `url:"step,omitempty" form:"step"`
+}
+
+// RegistrationForm is a wrapper around the models.RegistrationForm that includes API-
+// specific details such as the step and field validation errors.
+type RegistrationForm struct {
+	Step   RegistrationFormStep     `json:"step,omitempty"`
+	Form   *models.RegistrationForm `json:"form"`
+	Errors []*FieldValidationError  `json:"errors,omitempty"`
 }
 
 // RegisterReply is converted from a protocol buffer RegisterReply.
