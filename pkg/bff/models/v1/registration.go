@@ -314,8 +314,9 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 
 			// Address lines cannot all be blank
 			var validAddrLines uint16
-			for _, line := range addr.AddressLine {
-				if line != "" {
+			for i, line := range addr.AddressLine {
+				addr.AddressLine[i] = strings.TrimSpace(line)
+				if strings.TrimSpace(line) != "" {
 					validAddrLines++
 				}
 			}
@@ -329,6 +330,7 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 			}
 
 			// Country must be an alpha-2 country code
+			addr.Country = strings.TrimSpace(addr.Country)
 			if addr.Country == "" {
 				err = append(err, &ValidationError{
 					Field: FieldEntityGeographicAddressCountry,
@@ -346,6 +348,7 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 	}
 
 	// Customer number must not be greater than 50 chars
+	r.Entity.CustomerNumber = strings.TrimSpace(r.Entity.CustomerNumber)
 	if r.Entity.CustomerNumber != "" && len(r.Entity.CustomerNumber) > 50 {
 		err = append(err, &ValidationError{
 			Field: FieldEntityCustomerNumber,
@@ -356,6 +359,7 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 	// Validate National Identification
 	if r.Entity.NationalIdentification != nil {
 		// Validate National Identification
+		r.Entity.NationalIdentification.NationalIdentifier = strings.TrimSpace(r.Entity.NationalIdentification.NationalIdentifier)
 		if r.Entity.NationalIdentification.NationalIdentifier == "" {
 			err = append(err, &ValidationError{
 				Field: FieldEntityNationalIdentificationID,
@@ -385,6 +389,7 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 		}
 
 		// Country of issue is only used for natural persons
+		r.Entity.NationalIdentification.CountryOfIssue = strings.TrimSpace(r.Entity.NationalIdentification.CountryOfIssue)
 		if r.Entity.NationalIdentification.CountryOfIssue != "" {
 			err = append(err, &ValidationError{
 				Field: FieldEntityNationalIdentificationCountry,
@@ -393,6 +398,7 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 		}
 
 		// If the ID is an LEIX then registration authority must be empty and vice-versa.
+		r.Entity.NationalIdentification.RegistrationAuthority = strings.TrimSpace(r.Entity.NationalIdentification.RegistrationAuthority)
 		if r.Entity.NationalIdentification.NationalIdentifierType != ivms101.NationalIdentifierLEIX {
 			if r.Entity.NationalIdentification.RegistrationAuthority == "" {
 				err = append(err, &ValidationError{
@@ -417,6 +423,7 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 	}
 
 	// Country Code Constratint
+	r.Entity.CountryOfRegistration = strings.TrimSpace(r.Entity.CountryOfRegistration)
 	if r.Entity.CountryOfRegistration != "" {
 		// TODO: ensure the country code is valid?
 		if len(r.Entity.CountryOfRegistration) != 2 {
@@ -448,6 +455,7 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 
 func ValidateLegalPersonName(name *ivms101.LegalPersonNameId) error {
 	// Validate the name identifier
+	name.LegalPersonName = strings.TrimSpace(name.LegalPersonName)
 	if name.LegalPersonName == "" {
 		return ErrMissingField
 	}
@@ -462,6 +470,7 @@ func ValidateLegalPersonName(name *ivms101.LegalPersonNameId) error {
 
 func ValidateLegalPersonLocalName(name *ivms101.LocalLegalPersonNameId) error {
 	// Validate the name identifier
+	name.LegalPersonName = strings.TrimSpace(name.LegalPersonName)
 	if name.LegalPersonName == "" {
 		return ErrMissingField
 	}
