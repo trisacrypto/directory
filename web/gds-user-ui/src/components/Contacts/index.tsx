@@ -41,7 +41,7 @@ const Contacts: React.FC = () => {
         description={t`Primary contact for handling technical queries about the operation and status of your service participating in the TRISA network. Can be a group or admin email.`}
       />
       <ContactForm
-        name=FieldContactsAdministrative
+        name="contacts.administrative"
         title={t`Administrative Contact (optional)`}
         description={t`Administrative or executive contact for your organization to field high-level requests or queries. (Strongly recommended)`}
       />
