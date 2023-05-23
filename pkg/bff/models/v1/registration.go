@@ -50,6 +50,7 @@ func (s StepType) String() string {
 type ValidationError struct {
 	Field string
 	Err   string
+	Index int
 }
 
 func (v *ValidationError) Error() string {
@@ -97,7 +98,7 @@ func (r *RegistrationForm) Validate(step StepType) error {
 	case StepContacts:
 		return r.ValidateContacts()
 	case StepTRIXO:
-		return r.ValidateContacts()
+		return r.ValidateTRIXO()
 	case StepTRISA:
 		return r.ValidateTRISA()
 	case StepNone, StepAll:
@@ -187,9 +188,134 @@ func (r *RegistrationForm) ValidateContacts() ValidationErrors {
 }
 
 // Validate only the fields in the trixo step.
-func (r *RegistrationForm) ValidateTRIXO() ValidationErrors {
-	// TODO: implement
-	return nil
+func (r *RegistrationForm) ValidateTRIXO() (v ValidationErrors) {
+	if r.Trixo == nil {
+		v = append(v, &ValidationError{
+			Field: "trixo",
+			Err:   ErrMissingField.Error(),
+		})
+		return v
+	}
+
+	// TODO: Validate country name or ISO-3166-1 code
+	if strings.TrimSpace(r.Trixo.PrimaryNationalJurisdiction) == "" {
+		v = append(v, &ValidationError{
+			Field: "trixo.primary_national_jurisdiction",
+			Err:   ErrMissingField.Error(),
+		})
+	}
+
+	if strings.TrimSpace(r.Trixo.PrimaryRegulator) == "" {
+		v = append(v, &ValidationError{
+			Field: "trixo.primary_regulator",
+			Err:   ErrMissingField.Error(),
+		})
+	}
+
+	finTransfers := strings.ToLower(strings.TrimSpace(r.Trixo.FinancialTransfersPermitted))
+	if finTransfers == "" {
+		v = append(v, &ValidationError{
+			Field: "trixo.financial_transfers_permitted",
+			Err:   ErrMissingField.Error(),
+		})
+	} else if finTransfers != "yes" && finTransfers != "no" && finTransfers != "partially" {
+		v = append(v, &ValidationError{
+			Field: "trixo.financial_transfers_permitted",
+			Err:   ErrInvalidField.Error(),
+		})
+	}
+
+	for i, juris := range r.Trixo.OtherJurisdictions {
+		// TODO: Validate country name or ISO-3166-1 code
+		if strings.TrimSpace(juris.Country) == "" {
+			v = append(v, &ValidationError{
+				Field: "trixo.other_jurisdictions.country",
+				Err:   ErrMissingField.Error(),
+				Index: i,
+			})
+		}
+
+		if strings.TrimSpace(juris.RegulatorName) == "" {
+			v = append(v, &ValidationError{
+				Field: "trixo.other_jurisdictions.regulator_name",
+				Err:   ErrMissingField.Error(),
+				Index: i,
+			})
+		}
+
+		if strings.TrimSpace(juris.LicenseNumber) == "" {
+			v = append(v, &ValidationError{
+				Field: "trixo.other_jurisdictions.license_number",
+				Err:   ErrMissingField.Error(),
+				Index: i,
+			})
+		}
+	}
+
+	hasReg := strings.ToLower(strings.TrimSpace(r.Trixo.HasRequiredRegulatoryProgram))
+	if hasReg == "" {
+		v = append(v, &ValidationError{
+			Field: "trixo.has_required_regulatory_program",
+			Err:   ErrMissingField.Error(),
+		})
+	} else if hasReg != "yes" && hasReg != "no" {
+		v = append(v, &ValidationError{
+			Field: "trixo.has_required_regulatory_program",
+			Err:   ErrInvalidField.Error(),
+		})
+	}
+
+	if r.Trixo.ConductsCustomerKyc {
+		if r.Trixo.KycThreshold < 0 {
+			v = append(v, &ValidationError{
+				Field: "trixo.kyc_threshold",
+				Err:   ErrNegativeValue.Error(),
+			})
+		}
+
+		// TODO: Validate currency code
+		if strings.TrimSpace(r.Trixo.KycThresholdCurrency) == "" {
+			v = append(v, &ValidationError{
+				Field: "trixo.kyc_threshold_currency",
+				Err:   ErrMissingField.Error(),
+			})
+		}
+	}
+
+	if r.Trixo.MustComplyTravelRule {
+		if len(r.Trixo.ApplicableRegulations) == 0 {
+			v = append(v, &ValidationError{
+				Field: "trixo.applicable_regulations",
+				Err:   ErrMissingField.Error(),
+			})
+		}
+
+		for i, reg := range r.Trixo.ApplicableRegulations {
+			if strings.TrimSpace(reg) == "" {
+				v = append(v, &ValidationError{
+					Field: "trixo.applicable_regulations",
+					Err:   ErrMissingField.Error(),
+					Index: i,
+				})
+			}
+		}
+
+		if r.Trixo.ComplianceThreshold < 0 {
+			v = append(v, &ValidationError{
+				Field: "trixo.compliance_threshold",
+				Err:   ErrNegativeValue.Error(),
+			})
+		}
+
+		if strings.TrimSpace(r.Trixo.ComplianceThresholdCurrency) == "" {
+			v = append(v, &ValidationError{
+				Field: "trixo.compliance_threshold_currency",
+				Err:   ErrMissingField.Error(),
+			})
+		}
+	}
+
+	return v
 }
 
 // Validate only the fields in the trisa step.
