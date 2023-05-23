@@ -206,19 +206,38 @@ func (r *RegistrationForm) ValidateContacts() (v ValidationErrors) {
 		// At least one contact is required
 		v = append(v, &ValidationError{Field: "contacts", Err: ErrNoContacts.Error()})
 	case 1:
-		// If there is only one contact, it must be the admin
+		// If there is only one contact, it must be the admin; if not highlight the missing fields
 		if models.ContactIsZero(r.Contacts.Administrative) {
+			// Global contact error
 			v = append(v, &ValidationError{Field: "contacts", Err: ErrMissingContact.Error()})
+			switch {
+			case !models.ContactIsZero(r.Contacts.Technical):
+				// If the technical contact is filled in then nominate the legal/admin contact to be populated
+				v = append(v, &ValidationError{Field: "contacts.administrative", Err: ErrMissingAdminOrLegal.Error()})
+				v = append(v, &ValidationError{Field: "contacts.legal", Err: ErrMissingAdminOrLegal.Error()})
+			case !models.ContactIsZero(r.Contacts.Legal):
+				// If the legal contact is filled in then nominate the technical/admin contact to be populated
+				v = append(v, &ValidationError{Field: "contacts.administrative", Err: ErrMissingAdminOrTechnical.Error()})
+				v = append(v, &ValidationError{Field: "contacts.technical", Err: ErrMissingAdminOrTechnical.Error()})
+			default:
+				// Otherwise say that one of the other fields is required
+				v = append(v, &ValidationError{Field: "contacts.administrative", Err: ErrMissingContact.Error()})
+				v = append(v, &ValidationError{Field: "contacts.technical", Err: ErrMissingContact.Error()})
+				v = append(v, &ValidationError{Field: "contacts.legal", Err: ErrMissingContact.Error()})
+			}
 		}
 	default:
 		// If there are at least two contacts, either admin or technical must be present
 		if models.ContactIsZero(r.Contacts.Administrative) && models.ContactIsZero(r.Contacts.Technical) {
 			v = append(v, &ValidationError{Field: "contacts", Err: ErrMissingContact.Error()})
+			v = append(v, &ValidationError{Field: "contacts.administrative", Err: ErrMissingAdminOrTechnical.Error()})
+			v = append(v, &ValidationError{Field: "contacts.technical", Err: ErrMissingAdminOrTechnical.Error()})
 		}
-
 		// Admin or legal must be present
 		if models.ContactIsZero(r.Contacts.Administrative) && models.ContactIsZero(r.Contacts.Legal) {
 			v = append(v, &ValidationError{Field: "contacts", Err: ErrMissingContact.Error()})
+			v = append(v, &ValidationError{Field: "contacts.administrative", Err: ErrMissingAdminOrLegal.Error()})
+			v = append(v, &ValidationError{Field: "contacts.legal", Err: ErrMissingAdminOrLegal.Error()})
 		}
 	}
 

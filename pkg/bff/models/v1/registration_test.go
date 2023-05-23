@@ -186,17 +186,36 @@ func TestValidateContacts(t *testing.T) {
 		{nil, nil, &pb.Contact{}, nil, models.ValidationErrors{
 			{Field: "contacts", Err: models.ErrNoContacts.Error()},
 		}},
-		// Only billing provided is invalid
+		// Only technical provided should nominate admin/legal contact to be populated
+		{contact, nil, nil, nil, models.ValidationErrors{
+			{Field: "contacts", Err: models.ErrMissingContact.Error()},
+			{Field: "contacts.administrative", Err: models.ErrMissingAdminOrLegal.Error()},
+			{Field: "contacts.legal", Err: models.ErrMissingAdminOrLegal.Error()},
+		}},
+		// Only legal provided should nominate admin/technical contact to be populated
+		{nil, nil, contact, nil, models.ValidationErrors{
+			{Field: "contacts", Err: models.ErrMissingContact.Error()},
+			{Field: "contacts.administrative", Err: models.ErrMissingAdminOrTechnical.Error()},
+			{Field: "contacts.technical", Err: models.ErrMissingAdminOrTechnical.Error()},
+		}},
+		// Only billing provided should nominate admin/technical/legal contact to be populated
 		{nil, nil, nil, contact, models.ValidationErrors{
 			{Field: "contacts", Err: models.ErrMissingContact.Error()},
+			{Field: "contacts.administrative", Err: models.ErrMissingContact.Error()},
+			{Field: "contacts.technical", Err: models.ErrMissingContact.Error()},
+			{Field: "contacts.legal", Err: models.ErrMissingContact.Error()},
 		}},
-		// Legal and billing provided is invalid
+		// Legal and billing provided should nominate admin/technical contact to be populated
 		{nil, nil, contact, contact, models.ValidationErrors{
 			{Field: "contacts", Err: models.ErrMissingContact.Error()},
+			{Field: "contacts.administrative", Err: models.ErrMissingAdminOrTechnical.Error()},
+			{Field: "contacts.technical", Err: models.ErrMissingAdminOrTechnical.Error()},
 		}},
-		// Technical and billing provided is invalid
+		// Technical and billing provided should nominate admin/legal contact to be populated
 		{contact, nil, nil, contact, models.ValidationErrors{
 			{Field: "contacts", Err: models.ErrMissingContact.Error()},
+			{Field: "contacts.administrative", Err: models.ErrMissingAdminOrLegal.Error()},
+			{Field: "contacts.legal", Err: models.ErrMissingAdminOrLegal.Error()},
 		}},
 		{missingEmail, contact, contact, contact, models.ValidationErrors{
 			{Field: "contacts.technical.email", Err: models.ErrMissingField.Error()},
