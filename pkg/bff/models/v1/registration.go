@@ -3,8 +3,10 @@ package models
 import (
 	"errors"
 	"fmt"
+	"net/mail"
 	"strings"
 
+	"github.com/trisacrypto/directory/pkg/models/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -182,9 +184,95 @@ func (r *RegistrationForm) ValidateLegalPerson() ValidationErrors {
 }
 
 // Validate only the fields in the contacts step.
-func (r *RegistrationForm) ValidateContacts() ValidationErrors {
-	// TODO: implement
-	return nil
+func (r *RegistrationForm) ValidateContacts() (v ValidationErrors) {
+	if r.Contacts == nil {
+		v = append(v, &ValidationError{Field: "contacts", Err: ErrMissingField.Error()})
+		return v
+	}
+
+	// Validate each non-zero contact
+	contacts := 0
+	iter := models.NewContactIterator(r.Contacts, false, false)
+	for iter.Next() {
+		contacts++
+		contact, field := iter.Value()
+		if !models.ContactIsZero(contact) {
+			v, _ = v.Append(ValidateContact(contact, "contacts."+field))
+		}
+	}
+
+	// Check that all required contacts are present (special rules)
+	switch contacts {
+	case 0:
+		// At least one contact is required
+		v = append(v, &ValidationError{Field: "contacts", Err: ErrNoContacts.Error()})
+	case 1:
+		// If there is only one contact, it must be the admin; if not highlight the missing fields
+		if models.ContactIsZero(r.Contacts.Administrative) {
+			// Global contact error
+			v = append(v, &ValidationError{Field: "contacts", Err: ErrMissingContact.Error()})
+			switch {
+			case !models.ContactIsZero(r.Contacts.Technical):
+				// If the technical contact is filled in then nominate the legal/admin contact to be populated
+				v = append(v, &ValidationError{Field: "contacts.administrative", Err: ErrMissingAdminOrLegal.Error()})
+				v = append(v, &ValidationError{Field: "contacts.legal", Err: ErrMissingAdminOrLegal.Error()})
+			case !models.ContactIsZero(r.Contacts.Legal):
+				// If the legal contact is filled in then nominate the technical/admin contact to be populated
+				v = append(v, &ValidationError{Field: "contacts.administrative", Err: ErrMissingAdminOrTechnical.Error()})
+				v = append(v, &ValidationError{Field: "contacts.technical", Err: ErrMissingAdminOrTechnical.Error()})
+			default:
+				// Otherwise say that one of the other fields is required
+				v = append(v, &ValidationError{Field: "contacts.administrative", Err: ErrMissingContact.Error()})
+				v = append(v, &ValidationError{Field: "contacts.technical", Err: ErrMissingContact.Error()})
+				v = append(v, &ValidationError{Field: "contacts.legal", Err: ErrMissingContact.Error()})
+			}
+		}
+	default:
+		// If there are at least two contacts, either admin or technical must be present
+		if models.ContactIsZero(r.Contacts.Administrative) && models.ContactIsZero(r.Contacts.Technical) {
+			v = append(v, &ValidationError{Field: "contacts", Err: ErrMissingContact.Error()})
+			v = append(v, &ValidationError{Field: "contacts.administrative", Err: ErrMissingAdminOrTechnical.Error()})
+			v = append(v, &ValidationError{Field: "contacts.technical", Err: ErrMissingAdminOrTechnical.Error()})
+		}
+		// Admin or legal must be present
+		if models.ContactIsZero(r.Contacts.Administrative) && models.ContactIsZero(r.Contacts.Legal) {
+			v = append(v, &ValidationError{Field: "contacts", Err: ErrMissingContact.Error()})
+			v = append(v, &ValidationError{Field: "contacts.administrative", Err: ErrMissingAdminOrLegal.Error()})
+			v = append(v, &ValidationError{Field: "contacts.legal", Err: ErrMissingAdminOrLegal.Error()})
+		}
+	}
+
+	return v
+}
+
+// Validate a single contact, using the field name to construct errors.
+func ValidateContact(contact *pb.Contact, fieldName string) (v ValidationErrors) {
+	name := strings.TrimSpace(contact.Name)
+	if name == "" {
+		v = append(v, &ValidationError{Field: fieldName + ".name", Err: ErrMissingField.Error()})
+	} else if len(name) < 2 {
+		// Check that the name is long enough to match GDS validation
+		v = append(v, &ValidationError{Field: fieldName + ".name", Err: ErrTooShort.Error()})
+	}
+
+	email := strings.TrimSpace(contact.Email)
+	if email == "" {
+		v = append(v, &ValidationError{Field: fieldName + ".email", Err: ErrMissingField.Error()})
+	} else {
+		// Check that the email is parseable by RFC 5322.
+		if _, err := mail.ParseAddress(email); err != nil {
+			v = append(v, &ValidationError{Field: fieldName + ".email", Err: ErrInvalidEmail.Error()})
+		}
+	}
+
+	phone := strings.TrimSpace(contact.Phone)
+	if phone == "" {
+		v = append(v, &ValidationError{Field: fieldName + ".phone", Err: ErrMissingField.Error()})
+	}
+
+	// TODO: Ensure this is a valid phone number
+
+	return v
 }
 
 // Validate only the fields in the trixo step.
