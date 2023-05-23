@@ -94,23 +94,23 @@ message DirectoryRecord {
 
 // RegistrationForm is an extension of the TRISA GDS RegistrationRequest with BFF fields.
 message RegistrationForm {
-    // Business information
+    // Business information: Basic Details Step
     string website = 1;
     trisa.gds.models.v1beta1.BusinessCategory business_category = 2;
     repeated string vasp_categories = 3;
     string established_on = 4;
     string organization_name = 5;
 
-    // IVMS 101 Legal Person record
+    // IVMS 101 Legal Person record: Legal Person Step
     ivms101.LegalPerson entity = 11;
 
-    // Directory Record contacts
+    // Directory Record contacts: Contacts Step
     trisa.gds.models.v1beta1.Contacts contacts = 12;
 
-    // TRIXO Form
+    // TRIXO Form: TRIXO Step
     trisa.gds.models.v1beta1.TRIXOQuestionnaire trixo = 13;
 
-    // Network-specific information and submission details
+    // Network-specific information and submission details: TRISA Step
     NetworkDetails testnet = 14;
     NetworkDetails mainnet = 15;
 

@@ -1,16 +1,93 @@
 package models
 
 import (
-	"errors"
 	"fmt"
 	"net/mail"
 	"strings"
 
 	"github.com/trisacrypto/directory/pkg/models/v1"
+	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+const (
+	// Basic Details Fields
+	FieldWebsite          = "website"
+	FieldBusinessCategory = "business_category"
+	FieldVASPCategories   = "vasp_categories"
+	FieldEstablishedOn    = "established_on"
+	FieldOrganizationName = "organization_name"
+
+	// Legal Person Entity Fields
+	FieldEntity                              = "entity"
+	FieldEntityName                          = "entity.name"
+	FieldEntityNameIdentifiers               = "entity.name.name_identifiers"
+	FieldEntityLocalNameIdentifiers          = "entity.name.local_name_identifiers"
+	FieldEntityPhoneticNameIdentifiers       = "entity.name.phonetic_name_identifiers"
+	FieldEntityGeographicAddresses           = "entity.geographic_addresses"
+	FieldEntityGeographicAddressLines        = "entity.geographic_addresses.address_line"
+	FieldEntityGeographicAddressCountry      = "entity.geographic_addresses.country"
+	FieldEntityCustomerNumber                = "entity.customer_number"
+	FieldEntityNationalIdentification        = "entity.national_identification"
+	FieldEntityNationalIdentificationID      = "entity.national_identification.national_identifier"
+	FieldEntityNationalIdentificationType    = "entity.national_identification.national_identifier_type"
+	FieldEntityNationalIdentificationCountry = "entity.national_identification.country_of_issue"
+	FieldEntityNationalIdentificationRA      = "entity.national_identification.registration_authority"
+	FieldEntityCountryOfRegistration         = "entity.country_of_registration"
+
+	// Contacts Fields
+	FieldContacts                    = "contacts"
+	FieldContactsTechnical           = "contacts.technical"
+	FieldContactsTechnicalName       = "contacts.technical.name"
+	FieldContactsTechnicalEmail      = "contacts.technical.email"
+	FieldContactsTechnicalPhone      = "contacts.technical.phone"
+	FieldContactsAdministrative      = "contacts.administrative"
+	FieldContactsAdministrativeName  = "contacts.administrative.name"
+	FieldContactsAdministrativeEmail = "contacts.administrative.email"
+	FieldContactsAdministrativePhone = "contacts.administrative.phone"
+	FieldContactsLegal               = "contacts.legal"
+	FieldContactsLegalName           = "contacts.legal.name"
+	FieldContactsLegalEmail          = "contacts.legal.email"
+	FieldContactsLegalPhone          = "contacts.legal.phone"
+	FieldContactsBilling             = "contacts.billing"
+	FieldContactsBillingName         = "contacts.billing.name"
+	FieldContactsBillingEmail        = "contacts.billing.email"
+	FieldContactsBillingPhone        = "contacts.billing.phone"
+
+	// TRIXO fields
+	FieldTRIXO                                = "trixo"
+	FieldTRIXOPrimaryNationalJurisdiction     = "trixo.primary_national_jurisdiction"
+	FieldTRIXOPrimaryRegulator                = "trixo.primary_regulator"
+	FieldTRIXOFinancialTransfersPermitted     = "trixo.financial_transfers_permitted"
+	FieldTRIXOOtherJurisdictions              = "trixo.other_jurisdictions"
+	FieldTRIXOOtherJurisdictionsCountry       = "trixo.other_jurisdictions.country"
+	FieldTRIXOOtherJurisdictionsRegulatorName = "trixo.other_jurisdictions.regulator_name"
+	FieldTRIXOOtherJurisdictionsLicenseNumber = "trixo.other_jurisdictions.license_number"
+	FieldTRIXOHasRequiredRegulatoryProgram    = "trixo.has_required_regulatory_program"
+	FieldTRIXOConductsCustomerKYC             = "trixo.conducts_customer_kyc"
+	FieldTRIXOKYCThreshold                    = "trixo.kyc_threshold"
+	FieldTRIXOKYCThresholdCurrency            = "trixo.kyc_threshold_currency"
+	FieldTRIXOMustComplyTravelRule            = "trixo.must_comply_travel_rule"
+	FieldTRIXOApplicableRegulations           = "trixo.applicable_regulations"
+	FieldTRIXOComplianceThreshold             = "trixo.compliance_threshold"
+	FieldTRIXOComplianceThresholdCurrency     = "trixo.compliance_threshold_currency"
+	FieldTRIXOMustSafeguardPII                = "trixo.must_safeguard_pii"
+	FieldTRIXOSafeGuardsPII                   = "trixo.safeguards_pii"
+
+	// TRISA Details Fields
+	FieldTestNet           = "testnet"
+	FieldTestNetCommonName = "testnet.common_name"
+	FieldTestNetEndpoint   = "testnet.endpoint"
+	FieldTestNetDNSNames   = "testnet.dns_names"
+	FieldMainNet           = "mainnet"
+	FieldMainNetCommonName = "mainnet.common_name"
+	FieldMainNetEndpoint   = "mainnet.endpoint"
+	FieldMainNetDNSNames   = "mainnet.dns_names"
+)
+
+// StepType represents a collection of fields in the registration form that are handled
+// together as a single step when the user is filling in the registration form.
 type StepType string
 
 const (
@@ -23,6 +100,7 @@ const (
 	StepTRIXO        StepType = "trixo"
 )
 
+// Parse a string as a step type.
 func ParseStepType(s string) (StepType, error) {
 	s = strings.ToLower(strings.TrimSpace(s))
 	switch s {
@@ -47,44 +125,6 @@ func ParseStepType(s string) (StepType, error) {
 
 func (s StepType) String() string {
 	return string(s)
-}
-
-type ValidationError struct {
-	Field string
-	Err   string
-}
-
-func (v *ValidationError) Error() string {
-	return fmt.Sprintf("invalid field %s: %s", v.Field, v.Err)
-}
-
-type ValidationErrors []*ValidationError
-
-func (v ValidationErrors) Error() string {
-	errs := make([]string, 0, len(v))
-	for _, e := range v {
-		errs = append(errs, e.Error())
-	}
-	return fmt.Sprintf("%d validation errors occurred:\n%s", len(v), strings.Join(errs, "\n"))
-}
-
-// If err is a ValidationErrors then append them to this list of validation errors and
-// return true, otherwise return false since we can't append random errors.
-func (v ValidationErrors) Append(err error) (ValidationErrors, bool) {
-	if err == nil {
-		return v, true
-	}
-
-	var e *ValidationError
-	if errors.As(err, &e) {
-		return append(v, e), true
-	}
-
-	var es ValidationErrors
-	if errors.As(err, &es) {
-		return append(v, es...), true
-	}
-	return v, false
 }
 
 // Validate the registration form returning all field errors as opposed to a single
@@ -121,20 +161,22 @@ func (r *RegistrationForm) Validate(step StepType) error {
 }
 
 // Validate only the fields in the basic details step.
-func (r *RegistrationForm) ValidateBasicDetails() (v ValidationErrors) {
+func (r *RegistrationForm) ValidateBasicDetails() error {
+	err := make(ValidationErrors, 0)
+
 	// Validate website
 	// TODO: Check if this is a valid URL?
 	if strings.TrimSpace(r.Website) == "" {
-		v = append(v, &ValidationError{
-			Field: "website",
+		err = append(err, &ValidationError{
+			Field: FieldWebsite,
 			Err:   ErrMissingField.Error(),
 		})
 	}
 
 	// Validate business category
 	if r.BusinessCategory == pb.BusinessCategory_UNKNOWN_ENTITY {
-		v = append(v, &ValidationError{
-			Field: "business_category",
+		err = append(err, &ValidationError{
+			Field: FieldBusinessCategory,
 			Err:   ErrMissingField.Error(),
 		})
 	}
@@ -150,8 +192,8 @@ func (r *RegistrationForm) ValidateBasicDetails() (v ValidationErrors) {
 	}
 
 	if !hasCategory {
-		v = append(v, &ValidationError{
-			Field: "vasp_categories",
+		err = append(err, &ValidationError{
+			Field: FieldVASPCategories,
 			Err:   ErrMissingField.Error(),
 		})
 	}
@@ -159,26 +201,276 @@ func (r *RegistrationForm) ValidateBasicDetails() (v ValidationErrors) {
 	// Validate established date
 	// TODO: Check if this is a valid date?
 	if strings.TrimSpace(r.EstablishedOn) == "" {
-		v = append(v, &ValidationError{
-			Field: "established_on",
+		err = append(err, &ValidationError{
+			Field: FieldEstablishedOn,
 			Err:   ErrMissingField.Error(),
 		})
 	}
 
 	// Validate organization name
 	if strings.TrimSpace(r.OrganizationName) == "" {
-		v = append(v, &ValidationError{
-			Field: "organization_name",
+		err = append(err, &ValidationError{
+			Field: FieldOrganizationName,
 			Err:   ErrMissingField.Error(),
 		})
 	}
 
-	return v
+	if len(err) == 0 {
+		return nil
+	}
+	return err
 }
 
 // Validate only the fields in the legal person step.
-func (r *RegistrationForm) ValidateLegalPerson() ValidationErrors {
-	// TODO: implement
+func (r *RegistrationForm) ValidateLegalPerson() error {
+	err := make(ValidationErrors, 0)
+	if r.Entity == nil {
+		return append(err, &ValidationError{
+			Field: FieldEntity,
+			Err:   ErrMissingField.Error(),
+		})
+	}
+
+	// Validate name identifiers
+	if r.Entity.Name == nil {
+		err = append(err, &ValidationError{
+			Field: FieldEntityName,
+			Err:   ErrMissingField.Error(),
+		})
+	} else {
+		// Ensure there is at least one legal name identifier
+		var legalNames uint32
+		for i, name := range r.Entity.Name.NameIdentifiers {
+			if name.LegalPersonNameIdentifierType == ivms101.LegalPersonLegal {
+				legalNames++
+			}
+
+			if verr := r.validateLegalPersonName(name); verr != nil {
+				err = append(err, &ValidationError{
+					Field: FieldEntityNameIdentifiers,
+					Err:   verr.Error(),
+					Index: i,
+				})
+			}
+		}
+
+		if legalNames == 0 {
+			err = append(err, &ValidationError{
+				Field: FieldEntityNameIdentifiers,
+				Err:   ErrNoLegalNameIdentifier.Error(),
+			})
+		}
+
+		// Validate local name identifiers
+		for i, name := range r.Entity.Name.LocalNameIdentifiers {
+			if verr := r.validateLegalPersonLocalName(name); verr != nil {
+				err = append(err, &ValidationError{
+					Field: FieldEntityLocalNameIdentifiers,
+					Err:   verr.Error(),
+					Index: i,
+				})
+			}
+		}
+
+		// Validate phonetic name identifiers
+		for i, name := range r.Entity.Name.PhoneticNameIdentifiers {
+			if verr := r.validateLegalPersonLocalName(name); verr != nil {
+				err = append(err, &ValidationError{
+					Field: FieldEntityPhoneticNameIdentifiers,
+					Err:   verr.Error(),
+					Index: i,
+				})
+			}
+		}
+	}
+
+	// Validate Geographic Addresses
+	if len(r.Entity.GeographicAddresses) == 0 {
+		err = append(err, &ValidationError{
+			Field: FieldEntityGeographicAddresses,
+			Err:   ErrNoGeographicAddress.Error(),
+		})
+	} else {
+		for i, addr := range r.Entity.GeographicAddresses {
+			// TODO: do we need to validate address type code?
+
+			// There can be at most 7 address lines
+			if len(addr.AddressLine) > 7 {
+				err = append(err, &ValidationError{
+					Field: FieldEntityGeographicAddressLines,
+					Err:   ErrTooManyAddressLines.Error(),
+					Index: i,
+				})
+			}
+
+			// Valid address is either address lines or street name + building number.
+			if len(addr.AddressLine) == 0 && (addr.StreetName == "" && (addr.BuildingName == "" || addr.BuildingNumber == "")) {
+				err = append(err, &ValidationError{
+					Field: FieldEntityGeographicAddresses,
+					Err:   ErrInvalidAddress.Error(),
+					Index: i,
+				})
+			}
+
+			// Address lines cannot all be blank
+			var validAddrLines uint16
+			for _, line := range addr.AddressLine {
+				if line != "" {
+					validAddrLines++
+				}
+			}
+
+			if validAddrLines == 0 {
+				err = append(err, &ValidationError{
+					Field: FieldEntityGeographicAddressLines,
+					Err:   ErrNoAddressLines.Error(),
+					Index: i,
+				})
+			}
+
+			// Country must be an alpha-2 country code
+			if addr.Country == "" {
+				err = append(err, &ValidationError{
+					Field: FieldEntityGeographicAddressCountry,
+					Err:   ErrMissingField.Error(),
+					Index: i,
+				})
+			} else if len(addr.Country) != 2 {
+				err = append(err, &ValidationError{
+					Field: FieldEntityGeographicAddressCountry,
+					Err:   ErrInvalidCountry.Error(),
+					Index: i,
+				})
+			}
+		}
+	}
+
+	// Customer number must not be greater than 50 chars
+	if r.Entity.CustomerNumber != "" && len(r.Entity.CustomerNumber) > 50 {
+		err = append(err, &ValidationError{
+			Field: FieldEntityCustomerNumber,
+			Err:   ErrInvalidCustomerNumber.Error(),
+		})
+	}
+
+	// Validate National Identification
+	if r.Entity.NationalIdentification != nil {
+		// Validate National Identification
+		if r.Entity.NationalIdentification.NationalIdentifier == "" {
+			err = append(err, &ValidationError{
+				Field: FieldEntityNationalIdentificationID,
+				Err:   ErrMissingField.Error(),
+			})
+		}
+
+		// Validate National Identification Type Code
+		if !(r.Entity.NationalIdentification.NationalIdentifierType == ivms101.NationalIdentifierRAID ||
+			r.Entity.NationalIdentification.NationalIdentifierType == ivms101.NationalIdentifierMISC ||
+			r.Entity.NationalIdentification.NationalIdentifierType == ivms101.NationalIdentifierLEIX ||
+			r.Entity.NationalIdentification.NationalIdentifierType == ivms101.NationalIdentifierTXID) {
+			err = append(err, &ValidationError{
+				Field: FieldEntityNationalIdentificationType,
+				Err:   ErrInvalidLegalNatID.Error(),
+			})
+		}
+
+		// TODO: validate LEI with checksum
+		if r.Entity.NationalIdentification.NationalIdentifierType == ivms101.NationalIdentifierLEIX {
+			if len(r.Entity.NationalIdentification.NationalIdentifier) > 35 {
+				err = append(err, &ValidationError{
+					Field: FieldEntityNationalIdentificationID,
+					Err:   ErrInvalidLEI.Error(),
+				})
+			}
+		}
+
+		// Country of issue is only used for natural persons
+		if r.Entity.NationalIdentification.CountryOfIssue != "" {
+			err = append(err, &ValidationError{
+				Field: FieldEntityNationalIdentificationCountry,
+				Err:   ErrNoCountryNatID.Error(),
+			})
+		}
+
+		// If the ID is an LEIX then registration authority must be empty and vice-versa.
+		if r.Entity.NationalIdentification.NationalIdentifierType != ivms101.NationalIdentifierLEIX {
+			if r.Entity.NationalIdentification.RegistrationAuthority == "" {
+				err = append(err, &ValidationError{
+					Field: FieldEntityNationalIdentificationRA,
+					Err:   ErrRARequired.Error(),
+				})
+			}
+		} else {
+			// If the ID is an LEIX, Registration Authority must be empty
+			if r.Entity.NationalIdentification.RegistrationAuthority != "" {
+				err = append(err, &ValidationError{
+					Field: FieldEntityNationalIdentificationRA,
+					Err:   ErrNoRAForLEIX.Error(),
+				})
+			}
+		}
+	} else {
+		err = append(err, &ValidationError{
+			Field: FieldEntityNationalIdentification,
+			Err:   ErrLegalNatIDRequired.Error(),
+		})
+	}
+
+	// Country Code Constratint
+	if r.Entity.CountryOfRegistration != "" {
+		// TODO: ensure the country code is valid?
+		if len(r.Entity.CountryOfRegistration) != 2 {
+			err = append(err, &ValidationError{
+				Field: FieldEntityCountryOfRegistration,
+				Err:   ErrInvalidCountry.Error(),
+			})
+		}
+	} else {
+		err = append(err, &ValidationError{
+			Field: FieldEntityCountryOfRegistration,
+			Err:   ErrMissingField.Error(),
+		})
+	}
+
+	// Final validation just to check and make sure we didn't miss anything
+	if verr := r.Entity.Validate(); verr != nil {
+		err = append(err, &ValidationError{
+			Field: FieldEntity,
+			Err:   verr.Error(),
+		})
+	}
+
+	if len(err) == 0 {
+		return nil
+	}
+	return err
+}
+
+func (r *RegistrationForm) validateLegalPersonName(name *ivms101.LegalPersonNameId) error {
+	// Validate the name identifier
+	if name.LegalPersonName == "" {
+		return ErrMissingField
+	}
+
+	if len(name.LegalPersonName) > 100 {
+		return ErrLegalPersonNameLength
+	}
+
+	// TODO: does the legal person name type code need to be validated?
+	return nil
+}
+
+func (r *RegistrationForm) validateLegalPersonLocalName(name *ivms101.LocalLegalPersonNameId) error {
+	// Validate the name identifier
+	if name.LegalPersonName == "" {
+		return ErrMissingField
+	}
+
+	if len(name.LegalPersonName) > 100 {
+		return ErrLegalPersonNameLength
+	}
+
+	// TODO: does the legal person name type code need to be validated?
 	return nil
 }
 
@@ -275,13 +567,13 @@ func ValidateContact(contact *pb.Contact, fieldName string) (v ValidationErrors)
 }
 
 // Validate only the fields in the trixo step.
-func (r *RegistrationForm) ValidateTRIXO() ValidationErrors {
+func (r *RegistrationForm) ValidateTRIXO() error {
 	// TODO: implement
 	return nil
 }
 
 // Validate only the fields in the trisa step.
-func (r *RegistrationForm) ValidateTRISA() ValidationErrors {
+func (r *RegistrationForm) ValidateTRISA() error {
 	// TODO: implement
 	return nil
 }
