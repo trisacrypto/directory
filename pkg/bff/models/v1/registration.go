@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/trisacrypto/directory/pkg/models/v1"
+	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -178,8 +179,255 @@ func (r *RegistrationForm) ValidateBasicDetails() (v ValidationErrors) {
 }
 
 // Validate only the fields in the legal person step.
-func (r *RegistrationForm) ValidateLegalPerson() ValidationErrors {
+func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
+	err = make(ValidationErrors, 0)
+	if r.Entity == nil {
+		return append(err, &ValidationError{
+			Field: "entity",
+			Err:   ErrMissingField.Error(),
+		})
+	}
 
+	// Validate name identifiers
+	if r.Entity.Name == nil {
+		err = append(err, &ValidationError{
+			Field: "entity.name",
+			Err:   ErrMissingField.Error(),
+		})
+	} else {
+		// Ensure there is at least one legal name identifier
+		var legalNames uint32
+		for i, name := range r.Entity.Name.NameIdentifiers {
+			if name.LegalPersonNameIdentifierType == ivms101.LegalPersonLegal {
+				legalNames++
+			}
+
+			if verr := r.validateLegalPersonName(name); verr != nil {
+				err = append(err, &ValidationError{
+					Field: "entity.name.name_identifiers",
+					Err:   verr.Error(),
+					Index: i,
+				})
+			}
+		}
+
+		if legalNames == 0 {
+			err = append(err, &ValidationError{
+				Field: "entity.name.name_identifiers",
+				Err:   "at least one legal name identifier is required",
+			})
+		}
+
+		// Validate local name identifiers
+		for i, name := range r.Entity.Name.LocalNameIdentifiers {
+			if verr := r.validateLegalPersonLocalName(name); verr != nil {
+				err = append(err, &ValidationError{
+					Field: "entity.name.local_name_identifiers",
+					Err:   verr.Error(),
+					Index: i,
+				})
+			}
+		}
+
+		// Validate phonetic name identifiers
+		for i, name := range r.Entity.Name.PhoneticNameIdentifiers {
+			if verr := r.validateLegalPersonLocalName(name); verr != nil {
+				err = append(err, &ValidationError{
+					Field: "entity.name.phonetic_name_identifiers",
+					Err:   verr.Error(),
+					Index: i,
+				})
+			}
+		}
+	}
+
+	// Validate Geographic Addresses
+	if len(r.Entity.GeographicAddresses) == 0 {
+		err = append(err, &ValidationError{
+			Field: "entity.geographic_addresses",
+			Err:   "at least one geographic address is required",
+		})
+	} else {
+		for i, addr := range r.Entity.GeographicAddresses {
+			// TODO: do we need to validate address type code?
+
+			// There can be at most 7 address lines
+			if len(addr.AddressLine) > 7 {
+				err = append(err, &ValidationError{
+					Field: "entity.geographic_addresses",
+					Err:   "an address can have at most 7 address lines",
+					Index: i,
+				})
+			}
+
+			// Valid address is either address lines or street name + building number.
+			if len(addr.AddressLine) == 0 && (addr.StreetName == "" && (addr.BuildingName == "" || addr.BuildingNumber == "")) {
+				err = append(err, &ValidationError{
+					Field: "entity.geographic_addresses",
+					Err:   "address must have either address lines or street name and building number/name",
+					Index: i,
+				})
+			}
+
+			// Address lines cannot all be blank
+			var validAddrLines uint16
+			for _, line := range addr.AddressLine {
+				if line != "" {
+					validAddrLines++
+				}
+			}
+
+			if validAddrLines == 0 {
+				err = append(err, &ValidationError{
+					Field: "entity.geographic_addresses",
+					Err:   "geographic address requires at least one address line",
+					Index: i,
+				})
+			}
+
+			// Country must be an alpha-2 country code
+			if addr.Country == "" {
+				err = append(err, &ValidationError{
+					Field: "entity.geographic_addresses",
+					Err:   ErrMissingField.Error(),
+					Index: i,
+				})
+			} else if len(addr.Country) != 2 {
+				err = append(err, &ValidationError{
+					Field: "entity.geographic_addresses",
+					Err:   "address country must be an ISO-3166-1 alpha-2 code",
+					Index: i,
+				})
+			}
+		}
+	}
+
+	// Customer number must not be greater than 50 chars
+	if r.Entity.CustomerNumber != "" && len(r.Entity.CustomerNumber) > 50 {
+		err = append(err, &ValidationError{
+			Field: "entity.customer_number",
+			Err:   "customer number is optional but can be at most 50 characters",
+		})
+	}
+
+	// Validate National Identification
+	if r.Entity.NationalIdentification != nil {
+		// Validate National Identification
+		if r.Entity.NationalIdentification.NationalIdentifier == "" {
+			err = append(err, &ValidationError{
+				Field: "entity.national_identification.national_identifier",
+				Err:   ErrMissingField.Error(),
+			})
+		}
+
+		// Validate National Identification Type Code
+		if !(r.Entity.NationalIdentification.NationalIdentifierType == ivms101.NationalIdentifierRAID ||
+			r.Entity.NationalIdentification.NationalIdentifierType == ivms101.NationalIdentifierMISC ||
+			r.Entity.NationalIdentification.NationalIdentifierType == ivms101.NationalIdentifierLEIX ||
+			r.Entity.NationalIdentification.NationalIdentifierType == ivms101.NationalIdentifierTXID) {
+			err = append(err, &ValidationError{
+				Field: "entity.national_identification.national_identifier_type",
+				Err:   "national identifier type must be RAID, MISC, LEIX, or TXID",
+			})
+		}
+
+		// TODO: validate LEI with checksum
+		if r.Entity.NationalIdentification.NationalIdentifierType == ivms101.NationalIdentifierLEIX {
+			if len(r.Entity.NationalIdentification.NationalIdentifier) > 35 {
+				err = append(err, &ValidationError{
+					Field: "entity.national_identification.national_identifier",
+					Err:   "LEI identifier must not be longer than 35 characters",
+				})
+			}
+		}
+
+		// Country of issue is only used for natural persons
+		if r.Entity.NationalIdentification.CountryOfIssue != "" {
+			err = append(err, &ValidationError{
+				Field: "entity.national_identification.country_of_issue",
+				Err:   "country of issue must be empty for legal persons",
+			})
+		}
+
+		// If the ID is an LEIX then registration authority must be empty and vice-versa.
+		if r.Entity.NationalIdentification.NationalIdentifierType != ivms101.NationalIdentifierLEIX {
+			if r.Entity.NationalIdentification.RegistrationAuthority == "" {
+				err = append(err, &ValidationError{
+					Field: "entity.national_identification.registration_authority",
+					Err:   "registration authority must be specified unless the identifier type is LEI",
+				})
+			}
+		} else {
+			// If the ID is an LEIX, Registration Authority must be empty
+			if r.Entity.NationalIdentification.RegistrationAuthority != "" {
+				err = append(err, &ValidationError{
+					Field: "entity.national_identification.registration_authority",
+					Err:   "registration authority must be empty for identifier type LEI",
+				})
+			}
+		}
+	} else {
+		err = append(err, &ValidationError{
+			Field: "entity.national_identification",
+			Err:   "national identification is required to verify legal person",
+		})
+	}
+
+	// Country Code Constratint
+	if r.Entity.CountryOfRegistration != "" {
+		// TODO: ensure the country code is valid?
+		if len(r.Entity.CountryOfRegistration) != 2 {
+			err = append(err, &ValidationError{
+				Field: "entity.country_of_registration",
+				Err:   "country of registration must be an ISO-3166-1 alpha-2 code",
+			})
+		}
+	} else {
+		err = append(err, &ValidationError{
+			Field: "entity.country_of_registration",
+			Err:   "country of registration is a required field",
+		})
+	}
+
+	// Final validation just to check and make sure we didn't miss anything
+	if verr := r.Entity.Validate(); verr != nil {
+		err = append(err, &ValidationError{
+			Field: "entity",
+			Err:   verr.Error(),
+		})
+	}
+
+	if len(err) == 0 {
+		return nil
+	}
+	return err
+}
+
+func (r *RegistrationForm) validateLegalPersonName(name *ivms101.LegalPersonNameId) error {
+	// Validate the name identifier
+	if name.LegalPersonName == "" {
+		return ErrMissingField
+	}
+
+	if len(name.LegalPersonName) > 100 {
+		return ErrLegalPersonNameLength
+	}
+
+	// TODO: does the legal person name type code need to be validated?
+	return nil
+}
+
+func (r *RegistrationForm) validateLegalPersonLocalName(name *ivms101.LocalLegalPersonNameId) error {
+	// Validate the name identifier
+	if name.LegalPersonName == "" {
+		return ErrMissingField
+	}
+
+	if len(name.LegalPersonName) > 100 {
+		return ErrLegalPersonNameLength
+	}
+
+	// TODO: does the legal person name type code need to be validated?
 	return nil
 }
 
