@@ -245,7 +245,7 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 				legalNames++
 			}
 
-			if verr := r.validateLegalPersonName(name); verr != nil {
+			if verr := ValidateLegalPersonName(name); verr != nil {
 				err = append(err, &ValidationError{
 					Field: FieldEntityNameIdentifiers,
 					Err:   verr.Error(),
@@ -263,7 +263,7 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 
 		// Validate local name identifiers
 		for i, name := range r.Entity.Name.LocalNameIdentifiers {
-			if verr := r.validateLegalPersonLocalName(name); verr != nil {
+			if verr := ValidateLegalPersonLocalName(name); verr != nil {
 				err = append(err, &ValidationError{
 					Field: FieldEntityLocalNameIdentifiers,
 					Err:   verr.Error(),
@@ -274,7 +274,7 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 
 		// Validate phonetic name identifiers
 		for i, name := range r.Entity.Name.PhoneticNameIdentifiers {
-			if verr := r.validateLegalPersonLocalName(name); verr != nil {
+			if verr := ValidateLegalPersonLocalName(name); verr != nil {
 				err = append(err, &ValidationError{
 					Field: FieldEntityPhoneticNameIdentifiers,
 					Err:   verr.Error(),
@@ -314,8 +314,9 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 
 			// Address lines cannot all be blank
 			var validAddrLines uint16
-			for _, line := range addr.AddressLine {
-				if line != "" {
+			for i, line := range addr.AddressLine {
+				addr.AddressLine[i] = strings.TrimSpace(line)
+				if strings.TrimSpace(line) != "" {
 					validAddrLines++
 				}
 			}
@@ -329,6 +330,7 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 			}
 
 			// Country must be an alpha-2 country code
+			addr.Country = strings.TrimSpace(addr.Country)
 			if addr.Country == "" {
 				err = append(err, &ValidationError{
 					Field: FieldEntityGeographicAddressCountry,
@@ -346,6 +348,7 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 	}
 
 	// Customer number must not be greater than 50 chars
+	r.Entity.CustomerNumber = strings.TrimSpace(r.Entity.CustomerNumber)
 	if r.Entity.CustomerNumber != "" && len(r.Entity.CustomerNumber) > 50 {
 		err = append(err, &ValidationError{
 			Field: FieldEntityCustomerNumber,
@@ -356,6 +359,7 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 	// Validate National Identification
 	if r.Entity.NationalIdentification != nil {
 		// Validate National Identification
+		r.Entity.NationalIdentification.NationalIdentifier = strings.TrimSpace(r.Entity.NationalIdentification.NationalIdentifier)
 		if r.Entity.NationalIdentification.NationalIdentifier == "" {
 			err = append(err, &ValidationError{
 				Field: FieldEntityNationalIdentificationID,
@@ -385,6 +389,7 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 		}
 
 		// Country of issue is only used for natural persons
+		r.Entity.NationalIdentification.CountryOfIssue = strings.TrimSpace(r.Entity.NationalIdentification.CountryOfIssue)
 		if r.Entity.NationalIdentification.CountryOfIssue != "" {
 			err = append(err, &ValidationError{
 				Field: FieldEntityNationalIdentificationCountry,
@@ -393,6 +398,7 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 		}
 
 		// If the ID is an LEIX then registration authority must be empty and vice-versa.
+		r.Entity.NationalIdentification.RegistrationAuthority = strings.TrimSpace(r.Entity.NationalIdentification.RegistrationAuthority)
 		if r.Entity.NationalIdentification.NationalIdentifierType != ivms101.NationalIdentifierLEIX {
 			if r.Entity.NationalIdentification.RegistrationAuthority == "" {
 				err = append(err, &ValidationError{
@@ -417,6 +423,7 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 	}
 
 	// Country Code Constratint
+	r.Entity.CountryOfRegistration = strings.TrimSpace(r.Entity.CountryOfRegistration)
 	if r.Entity.CountryOfRegistration != "" {
 		// TODO: ensure the country code is valid?
 		if len(r.Entity.CountryOfRegistration) != 2 {
@@ -446,8 +453,9 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 	return err
 }
 
-func (r *RegistrationForm) validateLegalPersonName(name *ivms101.LegalPersonNameId) error {
+func ValidateLegalPersonName(name *ivms101.LegalPersonNameId) error {
 	// Validate the name identifier
+	name.LegalPersonName = strings.TrimSpace(name.LegalPersonName)
 	if name.LegalPersonName == "" {
 		return ErrMissingField
 	}
@@ -460,8 +468,9 @@ func (r *RegistrationForm) validateLegalPersonName(name *ivms101.LegalPersonName
 	return nil
 }
 
-func (r *RegistrationForm) validateLegalPersonLocalName(name *ivms101.LocalLegalPersonNameId) error {
+func ValidateLegalPersonLocalName(name *ivms101.LocalLegalPersonNameId) error {
 	// Validate the name identifier
+	name.LegalPersonName = strings.TrimSpace(name.LegalPersonName)
 	if name.LegalPersonName == "" {
 		return ErrMissingField
 	}
@@ -475,10 +484,11 @@ func (r *RegistrationForm) validateLegalPersonLocalName(name *ivms101.LocalLegal
 }
 
 // Validate only the fields in the contacts step.
-func (r *RegistrationForm) ValidateContacts() (v ValidationErrors) {
+func (r *RegistrationForm) ValidateContacts() error {
+	err := make(ValidationErrors, 0)
 	if r.Contacts == nil {
-		v = append(v, &ValidationError{Field: "contacts", Err: ErrMissingField.Error()})
-		return v
+		err = append(err, &ValidationError{Field: FieldContacts, Err: ErrMissingField.Error()})
+		return err
 	}
 
 	// Validate each non-zero contact
@@ -488,7 +498,7 @@ func (r *RegistrationForm) ValidateContacts() (v ValidationErrors) {
 		contacts++
 		contact, field := iter.Value()
 		if !models.ContactIsZero(contact) {
-			v, _ = v.Append(ValidateContact(contact, "contacts."+field))
+			err, _ = err.Append(ValidateContact(contact, "contacts."+field))
 		}
 	}
 
@@ -496,44 +506,47 @@ func (r *RegistrationForm) ValidateContacts() (v ValidationErrors) {
 	switch contacts {
 	case 0:
 		// At least one contact is required
-		v = append(v, &ValidationError{Field: "contacts", Err: ErrNoContacts.Error()})
+		err = append(err, &ValidationError{Field: FieldContacts, Err: ErrNoContacts.Error()})
 	case 1:
 		// If there is only one contact, it must be the admin; if not highlight the missing fields
 		if models.ContactIsZero(r.Contacts.Administrative) {
 			// Global contact error
-			v = append(v, &ValidationError{Field: "contacts", Err: ErrMissingContact.Error()})
+			err = append(err, &ValidationError{Field: FieldContacts, Err: ErrMissingContact.Error()})
 			switch {
 			case !models.ContactIsZero(r.Contacts.Technical):
 				// If the technical contact is filled in then nominate the legal/admin contact to be populated
-				v = append(v, &ValidationError{Field: "contacts.administrative", Err: ErrMissingAdminOrLegal.Error()})
-				v = append(v, &ValidationError{Field: "contacts.legal", Err: ErrMissingAdminOrLegal.Error()})
+				err = append(err, &ValidationError{Field: FieldContactsAdministrative, Err: ErrMissingAdminOrLegal.Error()})
+				err = append(err, &ValidationError{Field: FieldContactsLegal, Err: ErrMissingAdminOrLegal.Error()})
 			case !models.ContactIsZero(r.Contacts.Legal):
 				// If the legal contact is filled in then nominate the technical/admin contact to be populated
-				v = append(v, &ValidationError{Field: "contacts.administrative", Err: ErrMissingAdminOrTechnical.Error()})
-				v = append(v, &ValidationError{Field: "contacts.technical", Err: ErrMissingAdminOrTechnical.Error()})
+				err = append(err, &ValidationError{Field: FieldContactsAdministrative, Err: ErrMissingAdminOrTechnical.Error()})
+				err = append(err, &ValidationError{Field: FieldContactsTechnical, Err: ErrMissingAdminOrTechnical.Error()})
 			default:
 				// Otherwise say that one of the other fields is required
-				v = append(v, &ValidationError{Field: "contacts.administrative", Err: ErrMissingContact.Error()})
-				v = append(v, &ValidationError{Field: "contacts.technical", Err: ErrMissingContact.Error()})
-				v = append(v, &ValidationError{Field: "contacts.legal", Err: ErrMissingContact.Error()})
+				err = append(err, &ValidationError{Field: FieldContactsAdministrative, Err: ErrMissingContact.Error()})
+				err = append(err, &ValidationError{Field: FieldContactsTechnical, Err: ErrMissingContact.Error()})
+				err = append(err, &ValidationError{Field: FieldContactsLegal, Err: ErrMissingContact.Error()})
 			}
 		}
 	default:
 		// If there are at least two contacts, either admin or technical must be present
 		if models.ContactIsZero(r.Contacts.Administrative) && models.ContactIsZero(r.Contacts.Technical) {
-			v = append(v, &ValidationError{Field: "contacts", Err: ErrMissingContact.Error()})
-			v = append(v, &ValidationError{Field: "contacts.administrative", Err: ErrMissingAdminOrTechnical.Error()})
-			v = append(v, &ValidationError{Field: "contacts.technical", Err: ErrMissingAdminOrTechnical.Error()})
+			err = append(err, &ValidationError{Field: FieldContacts, Err: ErrMissingContact.Error()})
+			err = append(err, &ValidationError{Field: FieldContactsAdministrative, Err: ErrMissingAdminOrTechnical.Error()})
+			err = append(err, &ValidationError{Field: FieldContactsTechnical, Err: ErrMissingAdminOrTechnical.Error()})
 		}
 		// Admin or legal must be present
 		if models.ContactIsZero(r.Contacts.Administrative) && models.ContactIsZero(r.Contacts.Legal) {
-			v = append(v, &ValidationError{Field: "contacts", Err: ErrMissingContact.Error()})
-			v = append(v, &ValidationError{Field: "contacts.administrative", Err: ErrMissingAdminOrLegal.Error()})
-			v = append(v, &ValidationError{Field: "contacts.legal", Err: ErrMissingAdminOrLegal.Error()})
+			err = append(err, &ValidationError{Field: FieldContacts, Err: ErrMissingContact.Error()})
+			err = append(err, &ValidationError{Field: FieldContactsAdministrative, Err: ErrMissingAdminOrLegal.Error()})
+			err = append(err, &ValidationError{Field: FieldContactsLegal, Err: ErrMissingAdminOrLegal.Error()})
 		}
 	}
 
-	return v
+	if len(err) == 0 {
+		return nil
+	}
+	return err
 }
 
 // Validate a single contact, using the field name to construct errors.

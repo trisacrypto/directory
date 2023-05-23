@@ -187,40 +187,12 @@ func TestValidateLegalPerson(t *testing.T) {
 	}
 }
 
-// Test that the registration form marshals and unmarshals correctly to and from JSON
-func TestMarshalRegistrationForm(t *testing.T) {
-	// Load the JSON fixture
-	fixtureData, err := os.ReadFile("testdata/default_registration_form.json")
-	require.NoError(t, err, "error reading default registration form fixture")
-
-	// Default form should be marshaled correctly
-	form := NewRegisterForm()
-	data, err := json.Marshal(form)
-	require.NoError(t, err, "error marshaling registration form to JSON")
-	require.JSONEq(t, string(fixtureData), string(data), "default registration form does not match fixture")
-
-	// Default form should be unmarshaled correctly
-	result := &RegistrationForm{}
-	require.NoError(t, json.Unmarshal(data, result), "error unmarshaling registration form from JSON")
-	require.True(t, proto.Equal(form, result), "registration form should be unmarshaled correctly")
-
-	// Modified form should be marshaled correctly
-	form.Contacts.Administrative.Email = "admin@example.com"
-	data, err = json.Marshal(form)
-	require.NoError(t, err, "error marshaling registration form to JSON")
-
-	// Modified form should be unmarshaled correctly
-	result = &RegistrationForm{}
-	require.NoError(t, json.Unmarshal(data, result), "error unmarshaling registration form from JSON")
-	require.True(t, proto.Equal(form, result), "registration form should be unmarshaled correctly")
-}
-
 // Test validating the contacts step of the registration form
 func TestValidateContacts(t *testing.T) {
 	// A single error should be returned for nil contacts
 	form := RegistrationForm{}
 	expected := ValidationErrors{
-		{Field: "contacts", Err: ErrMissingField.Error()},
+		{Field: FieldContacts, Err: ErrMissingField.Error()},
 	}
 	verrs := form.ValidateContacts()
 	require.Equal(t, expected, verrs, "expected a single error for missing contacts field")
@@ -249,66 +221,68 @@ func TestValidateContacts(t *testing.T) {
 	}{
 		// No contacts provided
 		{nil, nil, &pb.Contact{}, nil, ValidationErrors{
-			{Field: "contacts", Err: ErrNoContacts.Error()},
+			{Field: FieldContacts, Err: ErrNoContacts.Error()},
 		}},
 		// Only technical provided should nominate admin/legal contact to be populated
 		{contact, nil, nil, nil, ValidationErrors{
-			{Field: "contacts", Err: ErrMissingContact.Error()},
-			{Field: "contacts.administrative", Err: ErrMissingAdminOrLegal.Error()},
-			{Field: "contacts.legal", Err: ErrMissingAdminOrLegal.Error()},
+			{Field: FieldContacts, Err: ErrMissingContact.Error()},
+			{Field: FieldContactsAdministrative, Err: ErrMissingAdminOrLegal.Error()},
+			{Field: FieldContactsLegal, Err: ErrMissingAdminOrLegal.Error()},
 		}},
 		// Only legal provided should nominate admin/technical contact to be populated
 		{nil, nil, contact, nil, ValidationErrors{
-			{Field: "contacts", Err: ErrMissingContact.Error()},
-			{Field: "contacts.administrative", Err: ErrMissingAdminOrTechnical.Error()},
-			{Field: "contacts.technical", Err: ErrMissingAdminOrTechnical.Error()},
+			{Field: FieldContacts, Err: ErrMissingContact.Error()},
+			{Field: FieldContactsAdministrative, Err: ErrMissingAdminOrTechnical.Error()},
+			{Field: FieldContactsTechnical, Err: ErrMissingAdminOrTechnical.Error()},
 		}},
 		// Only billing provided should nominate admin/technical/legal contact to be populated
 		{nil, nil, nil, contact, ValidationErrors{
-			{Field: "contacts", Err: ErrMissingContact.Error()},
-			{Field: "contacts.administrative", Err: ErrMissingContact.Error()},
-			{Field: "contacts.technical", Err: ErrMissingContact.Error()},
-			{Field: "contacts.legal", Err: ErrMissingContact.Error()},
+			{Field: FieldContacts, Err: ErrMissingContact.Error()},
+			{Field: FieldContactsAdministrative, Err: ErrMissingContact.Error()},
+			{Field: FieldContactsTechnical, Err: ErrMissingContact.Error()},
+			{Field: FieldContactsLegal, Err: ErrMissingContact.Error()},
 		}},
 		// Legal and billing provided should nominate admin/technical contact to be populated
 		{nil, nil, contact, contact, ValidationErrors{
-			{Field: "contacts", Err: ErrMissingContact.Error()},
-			{Field: "contacts.administrative", Err: ErrMissingAdminOrTechnical.Error()},
-			{Field: "contacts.technical", Err: ErrMissingAdminOrTechnical.Error()},
+			{Field: FieldContacts, Err: ErrMissingContact.Error()},
+			{Field: FieldContactsAdministrative, Err: ErrMissingAdminOrTechnical.Error()},
+			{Field: FieldContactsTechnical, Err: ErrMissingAdminOrTechnical.Error()},
 		}},
 		// Technical and billing provided should nominate admin/legal contact to be populated
 		{contact, nil, nil, contact, ValidationErrors{
-			{Field: "contacts", Err: ErrMissingContact.Error()},
-			{Field: "contacts.administrative", Err: ErrMissingAdminOrLegal.Error()},
-			{Field: "contacts.legal", Err: ErrMissingAdminOrLegal.Error()},
+			{Field: FieldContacts, Err: ErrMissingContact.Error()},
+			{Field: FieldContactsAdministrative, Err: ErrMissingAdminOrLegal.Error()},
+			{Field: FieldContactsLegal, Err: ErrMissingAdminOrLegal.Error()},
 		}},
 		{missingEmail, contact, contact, contact, ValidationErrors{
-			{Field: "contacts.technical.email", Err: ErrMissingField.Error()},
+			{Field: FieldContactsTechnicalEmail, Err: ErrMissingField.Error()},
 		}},
 		{missingEmail, missingEmail, contact, contact, ValidationErrors{
-			{Field: "contacts.technical.email", Err: ErrMissingField.Error()},
-			{Field: "contacts.administrative.email", Err: ErrMissingField.Error()},
+			{Field: FieldContactsTechnicalEmail, Err: ErrMissingField.Error()},
+			{Field: FieldContactsAdministrativeEmail, Err: ErrMissingField.Error()},
 		}},
 		{missingEmail, missingEmail, missingEmail, contact, ValidationErrors{
-			{Field: "contacts.technical.email", Err: ErrMissingField.Error()},
-			{Field: "contacts.administrative.email", Err: ErrMissingField.Error()},
-			{Field: "contacts.legal.email", Err: ErrMissingField.Error()},
+			{Field: FieldContactsTechnicalEmail, Err: ErrMissingField.Error()},
+			{Field: FieldContactsAdministrativeEmail, Err: ErrMissingField.Error()},
+			{Field: FieldContactsLegalEmail, Err: ErrMissingField.Error()},
 		}},
 		{missingEmail, missingEmail, missingEmail, missingEmail, ValidationErrors{
-			{Field: "contacts.technical.email", Err: ErrMissingField.Error()},
-			{Field: "contacts.administrative.email", Err: ErrMissingField.Error()},
-			{Field: "contacts.legal.email", Err: ErrMissingField.Error()},
-			{Field: "contacts.billing.email", Err: ErrMissingField.Error()},
+			{Field: FieldContactsTechnicalEmail, Err: ErrMissingField.Error()},
+			{Field: FieldContactsAdministrativeEmail, Err: ErrMissingField.Error()},
+			{Field: FieldContactsLegalEmail, Err: ErrMissingField.Error()},
+			{Field: FieldContactsBillingEmail, Err: ErrMissingField.Error()},
 		}},
 		// Only admin provided is valid
 		{nil, contact, nil, nil, nil},
 		// Admin and billing provided is valid
 		{nil, contact, nil, contact, nil},
 		// Technical and legal provided is valid
+		{contact, nil, contact, nil, nil},
+		// Providing all contacts is valid
 		{contact, contact, contact, contact, nil},
 	}
 
-	for _, tc := range testCases {
+	for i, tc := range testCases {
 		form := RegistrationForm{
 			Contacts: &pb.Contacts{
 				Technical:      tc.technical,
@@ -318,11 +292,14 @@ func TestValidateContacts(t *testing.T) {
 			},
 		}
 
-		verrs := form.ValidateContacts()
-		require.Equal(t, tc.errs, verrs)
-
-		errs := form.Validate(StepContacts)
-		require.Equal(t, tc.errs, errs)
+		err := form.Validate(StepContacts)
+		if tc.errs == nil {
+			require.NoError(t, err, "test case %d failed", i)
+		} else {
+			var verrs ValidationErrors
+			require.ErrorAs(t, err, &verrs, "test case %d failed", i)
+			require.Equal(t, tc.errs, verrs, "test case %d failed", i)
+		}
 	}
 }
 
@@ -355,4 +332,32 @@ func TestValidateContact(t *testing.T) {
 		errs := ValidateContact(tc.contact, "admin")
 		require.Equal(t, tc.errs, errs)
 	}
+}
+
+// Test that the registration form marshals and unmarshals correctly to and from JSON
+func TestMarshalRegistrationForm(t *testing.T) {
+	// Load the JSON fixture
+	fixtureData, err := os.ReadFile("testdata/default_registration_form.json")
+	require.NoError(t, err, "error reading default registration form fixture")
+
+	// Default form should be marshaled correctly
+	form := NewRegisterForm()
+	data, err := json.Marshal(form)
+	require.NoError(t, err, "error marshaling registration form to JSON")
+	require.JSONEq(t, string(fixtureData), string(data), "default registration form does not match fixture")
+
+	// Default form should be unmarshaled correctly
+	result := &RegistrationForm{}
+	require.NoError(t, json.Unmarshal(data, result), "error unmarshaling registration form from JSON")
+	require.True(t, proto.Equal(form, result), "registration form should be unmarshaled correctly")
+
+	// Modified form should be marshaled correctly
+	form.Contacts.Administrative.Email = "admin@example.com"
+	data, err = json.Marshal(form)
+	require.NoError(t, err, "error marshaling registration form to JSON")
+
+	// Modified form should be unmarshaled correctly
+	result = &RegistrationForm{}
+	require.NoError(t, json.Unmarshal(data, result), "error unmarshaling registration form from JSON")
+	require.True(t, proto.Equal(form, result), "registration form should be unmarshaled correctly")
 }
