@@ -1,7 +1,6 @@
 package models
 
 import (
-	"errors"
 	"fmt"
 	"net/mail"
 	"strings"
@@ -12,6 +11,69 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+const (
+	// Basic Details Fields
+	FieldWebsite          = "website"
+	FieldBusinessCategory = "business_category"
+	FieldVASPCategories   = "vasp_categories"
+	FieldEstablishedOn    = "established_on"
+	FieldOrganizationName = "organization_name"
+
+	// Legal Person Entity Fields
+	FieldEntity = "entity"
+
+	// Contacts Fields
+	FieldContacts                    = "contacts"
+	FieldContactsTechnical           = "contacts.technical"
+	FieldContactsTechnicalName       = "contacts.technical.name"
+	FieldContactsTechnicalEmail      = "contacts.technical.email"
+	FieldContactsTechnicalPhone      = "contacts.technical.phone"
+	FieldContactsAdministrative      = "contacts.administrative"
+	FieldContactsAdministrativeName  = "contacts.administrative.name"
+	FieldContactsAdministrativeEmail = "contacts.administrative.email"
+	FieldContactsAdministrativePhone = "contacts.administrative.phone"
+	FieldContactsLegal               = "contacts.legal"
+	FieldContactsLegalName           = "contacts.legal.name"
+	FieldContactsLegalEmail          = "contacts.legal.email"
+	FieldContactsLegalPhone          = "contacts.legal.phone"
+	FieldContactsBilling             = "contacts.billing"
+	FieldContactsBillingName         = "contacts.billing.name"
+	FieldContactsBillingEmail        = "contacts.billing.email"
+	FieldContactsBillingPhone        = "contacts.billing.phone"
+
+	// TRIXO fields
+	FieldTRIXO                                = "trixo"
+	FieldTRIXOPrimaryNationalJurisdiction     = "trixo.primary_national_jurisdiction"
+	FieldTRIXOPrimaryRegulator                = "trixo.primary_regulator"
+	FieldTRIXOFinancialTransfersPermitted     = "trixo.financial_transfers_permitted"
+	FieldTRIXOOtherJurisdictions              = "trixo.other_jurisdictions"
+	FieldTRIXOOtherJurisdictionsCountry       = "trixo.other_jurisdictions.country"
+	FieldTRIXOOtherJurisdictionsRegulatorName = "trixo.other_jurisdictions.regulator_name"
+	FieldTRIXOOtherJurisdictionsLicenseNumber = "trixo.other_jurisdictions.license_number"
+	FieldTRIXOHasRequiredRegulatoryProgram    = "trixo.has_required_regulatory_program"
+	FieldTRIXOConductsCustomerKYC             = "trixo.conducts_customer_kyc"
+	FieldTRIXOKYCThreshold                    = "trixo.kyc_threshold"
+	FieldTRIXOKYCThresholdCurrency            = "trixo.kyc_threshold_currency"
+	FieldTRIXOMustComplyTravelRule            = "trixo.must_comply_travel_rule"
+	FieldTRIXOApplicableRegulations           = "trixo.applicable_regulations"
+	FieldTRIXOComplianceThreshold             = "trixo.compliance_threshold"
+	FieldTRIXOComplianceThresholdCurrency     = "trixo.compliance_threshold_currency"
+	FieldTRIXOMustSafeguardPII                = "trixo.must_safeguard_pii"
+	FieldTRIXOSafeGuardsPII                   = "trixo.safeguards_pii"
+
+	// TRISA Details Fields
+	FieldTestNet           = "testnet"
+	FieldTestNetCommonName = "testnet.common_name"
+	FieldTestNetEndpoint   = "testnet.endpoint"
+	FieldTestNetDNSNames   = "testnet.dns_names"
+	FieldMainNet           = "mainnet"
+	FieldMainNetCommonName = "mainnet.common_name"
+	FieldMainNetEndpoint   = "mainnet.endpoint"
+	FieldMainNetDNSNames   = "mainnet.dns_names"
+)
+
+// StepType represents a collection of fields in the registration form that are handled
+// together as a single step when the user is filling in the registration form.
 type StepType string
 
 const (
@@ -24,6 +86,7 @@ const (
 	StepTRIXO        StepType = "trixo"
 )
 
+// Parse a string as a step type.
 func ParseStepType(s string) (StepType, error) {
 	s = strings.ToLower(strings.TrimSpace(s))
 	switch s {
@@ -48,45 +111,6 @@ func ParseStepType(s string) (StepType, error) {
 
 func (s StepType) String() string {
 	return string(s)
-}
-
-type ValidationError struct {
-	Field string
-	Err   string
-	Index int
-}
-
-func (v *ValidationError) Error() string {
-	return fmt.Sprintf("invalid field %s: %s", v.Field, v.Err)
-}
-
-type ValidationErrors []*ValidationError
-
-func (v ValidationErrors) Error() string {
-	errs := make([]string, 0, len(v))
-	for _, e := range v {
-		errs = append(errs, e.Error())
-	}
-	return fmt.Sprintf("%d validation errors occurred:\n%s", len(v), strings.Join(errs, "\n"))
-}
-
-// If err is a ValidationErrors then append them to this list of validation errors and
-// return true, otherwise return false since we can't append random errors.
-func (v ValidationErrors) Append(err error) (ValidationErrors, bool) {
-	if err == nil {
-		return v, true
-	}
-
-	var e *ValidationError
-	if errors.As(err, &e) {
-		return append(v, e), true
-	}
-
-	var es ValidationErrors
-	if errors.As(err, &es) {
-		return append(v, es...), true
-	}
-	return v, false
 }
 
 // Validate the registration form returning all field errors as opposed to a single
