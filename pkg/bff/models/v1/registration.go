@@ -20,7 +20,21 @@ const (
 	FieldOrganizationName = "organization_name"
 
 	// Legal Person Entity Fields
-	FieldEntity = "entity"
+	FieldEntity                              = "entity"
+	FieldEntityName                          = "entity.name"
+	FieldEntityNameIdentifiers               = "entity.name.name_identifiers"
+	FieldEntityLocalNameIdentifiers          = "entity.name.local_name_identifiers"
+	FieldEntityPhoneticNameIdentifiers       = "entity.name.phonetic_name_identifiers"
+	FieldEntityGeographicAddresses           = "entity.geographic_addresses"
+	FieldEntityGeographicAddressLines        = "entity.geographic_addresses.address_line"
+	FieldEntityGeographicAddressCountry      = "entity.geographic_addresses.country"
+	FieldEntityCustomerNumber                = "entity.customer_number"
+	FieldEntityNationalIdentification        = "entity.national_identification"
+	FieldEntityNationalIdentificationID      = "entity.national_identification.national_identifier"
+	FieldEntityNationalIdentificationType    = "entity.national_identification.national_identifier_type"
+	FieldEntityNationalIdentificationCountry = "entity.national_identification.country_of_issue"
+	FieldEntityNationalIdentificationRA      = "entity.national_identification.registration_authority"
+	FieldEntityCountryOfRegistration         = "entity.country_of_registration"
 
 	// Contacts Fields
 	FieldContacts                    = "contacts"
@@ -152,7 +166,7 @@ func (r *RegistrationForm) ValidateBasicDetails() (v ValidationErrors) {
 	// TODO: Check if this is a valid URL?
 	if strings.TrimSpace(r.Website) == "" {
 		v = append(v, &ValidationError{
-			Field: "website",
+			Field: FieldWebsite,
 			Err:   ErrMissingField.Error(),
 		})
 	}
@@ -160,7 +174,7 @@ func (r *RegistrationForm) ValidateBasicDetails() (v ValidationErrors) {
 	// Validate business category
 	if r.BusinessCategory == pb.BusinessCategory_UNKNOWN_ENTITY {
 		v = append(v, &ValidationError{
-			Field: "business_category",
+			Field: FieldBusinessCategory,
 			Err:   ErrMissingField.Error(),
 		})
 	}
@@ -177,7 +191,7 @@ func (r *RegistrationForm) ValidateBasicDetails() (v ValidationErrors) {
 
 	if !hasCategory {
 		v = append(v, &ValidationError{
-			Field: "vasp_categories",
+			Field: FieldVASPCategories,
 			Err:   ErrMissingField.Error(),
 		})
 	}
@@ -186,7 +200,7 @@ func (r *RegistrationForm) ValidateBasicDetails() (v ValidationErrors) {
 	// TODO: Check if this is a valid date?
 	if strings.TrimSpace(r.EstablishedOn) == "" {
 		v = append(v, &ValidationError{
-			Field: "established_on",
+			Field: FieldEstablishedOn,
 			Err:   ErrMissingField.Error(),
 		})
 	}
@@ -194,7 +208,7 @@ func (r *RegistrationForm) ValidateBasicDetails() (v ValidationErrors) {
 	// Validate organization name
 	if strings.TrimSpace(r.OrganizationName) == "" {
 		v = append(v, &ValidationError{
-			Field: "organization_name",
+			Field: FieldOrganizationName,
 			Err:   ErrMissingField.Error(),
 		})
 	}
@@ -207,7 +221,7 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 	err = make(ValidationErrors, 0)
 	if r.Entity == nil {
 		return append(err, &ValidationError{
-			Field: "entity",
+			Field: FieldEntity,
 			Err:   ErrMissingField.Error(),
 		})
 	}
@@ -215,7 +229,7 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 	// Validate name identifiers
 	if r.Entity.Name == nil {
 		err = append(err, &ValidationError{
-			Field: "entity.name",
+			Field: FieldEntityName,
 			Err:   ErrMissingField.Error(),
 		})
 	} else {
@@ -228,7 +242,7 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 
 			if verr := r.validateLegalPersonName(name); verr != nil {
 				err = append(err, &ValidationError{
-					Field: "entity.name.name_identifiers",
+					Field: FieldEntityNameIdentifiers,
 					Err:   verr.Error(),
 					Index: i,
 				})
@@ -237,8 +251,8 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 
 		if legalNames == 0 {
 			err = append(err, &ValidationError{
-				Field: "entity.name.name_identifiers",
-				Err:   "at least one legal name identifier is required",
+				Field: FieldEntityNameIdentifiers,
+				Err:   ErrNoLegalNameIdentifier.Error(),
 			})
 		}
 
@@ -246,7 +260,7 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 		for i, name := range r.Entity.Name.LocalNameIdentifiers {
 			if verr := r.validateLegalPersonLocalName(name); verr != nil {
 				err = append(err, &ValidationError{
-					Field: "entity.name.local_name_identifiers",
+					Field: FieldEntityLocalNameIdentifiers,
 					Err:   verr.Error(),
 					Index: i,
 				})
@@ -257,7 +271,7 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 		for i, name := range r.Entity.Name.PhoneticNameIdentifiers {
 			if verr := r.validateLegalPersonLocalName(name); verr != nil {
 				err = append(err, &ValidationError{
-					Field: "entity.name.phonetic_name_identifiers",
+					Field: FieldEntityPhoneticNameIdentifiers,
 					Err:   verr.Error(),
 					Index: i,
 				})
@@ -268,8 +282,8 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 	// Validate Geographic Addresses
 	if len(r.Entity.GeographicAddresses) == 0 {
 		err = append(err, &ValidationError{
-			Field: "entity.geographic_addresses",
-			Err:   "at least one geographic address is required",
+			Field: FieldEntityGeographicAddresses,
+			Err:   ErrNoGeographicAddress.Error(),
 		})
 	} else {
 		for i, addr := range r.Entity.GeographicAddresses {
@@ -278,8 +292,8 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 			// There can be at most 7 address lines
 			if len(addr.AddressLine) > 7 {
 				err = append(err, &ValidationError{
-					Field: "entity.geographic_addresses",
-					Err:   "an address can have at most 7 address lines",
+					Field: FieldEntityGeographicAddressLines,
+					Err:   ErrTooManyAddressLines.Error(),
 					Index: i,
 				})
 			}
@@ -287,8 +301,8 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 			// Valid address is either address lines or street name + building number.
 			if len(addr.AddressLine) == 0 && (addr.StreetName == "" && (addr.BuildingName == "" || addr.BuildingNumber == "")) {
 				err = append(err, &ValidationError{
-					Field: "entity.geographic_addresses",
-					Err:   "address must have either address lines or street name and building number/name",
+					Field: FieldEntityGeographicAddresses,
+					Err:   ErrInvalidAddress.Error(),
 					Index: i,
 				})
 			}
@@ -303,8 +317,8 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 
 			if validAddrLines == 0 {
 				err = append(err, &ValidationError{
-					Field: "entity.geographic_addresses",
-					Err:   "geographic address requires at least one address line",
+					Field: FieldEntityGeographicAddressLines,
+					Err:   ErrNoAddressLines.Error(),
 					Index: i,
 				})
 			}
@@ -312,14 +326,14 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 			// Country must be an alpha-2 country code
 			if addr.Country == "" {
 				err = append(err, &ValidationError{
-					Field: "entity.geographic_addresses",
+					Field: FieldEntityGeographicAddressCountry,
 					Err:   ErrMissingField.Error(),
 					Index: i,
 				})
 			} else if len(addr.Country) != 2 {
 				err = append(err, &ValidationError{
-					Field: "entity.geographic_addresses",
-					Err:   "address country must be an ISO-3166-1 alpha-2 code",
+					Field: FieldEntityGeographicAddressCountry,
+					Err:   ErrInvalidCountry.Error(),
 					Index: i,
 				})
 			}
@@ -329,8 +343,8 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 	// Customer number must not be greater than 50 chars
 	if r.Entity.CustomerNumber != "" && len(r.Entity.CustomerNumber) > 50 {
 		err = append(err, &ValidationError{
-			Field: "entity.customer_number",
-			Err:   "customer number is optional but can be at most 50 characters",
+			Field: FieldEntityCustomerNumber,
+			Err:   ErrInvalidCustomerNumber.Error(),
 		})
 	}
 
@@ -339,7 +353,7 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 		// Validate National Identification
 		if r.Entity.NationalIdentification.NationalIdentifier == "" {
 			err = append(err, &ValidationError{
-				Field: "entity.national_identification.national_identifier",
+				Field: FieldEntityNationalIdentificationID,
 				Err:   ErrMissingField.Error(),
 			})
 		}
@@ -350,8 +364,8 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 			r.Entity.NationalIdentification.NationalIdentifierType == ivms101.NationalIdentifierLEIX ||
 			r.Entity.NationalIdentification.NationalIdentifierType == ivms101.NationalIdentifierTXID) {
 			err = append(err, &ValidationError{
-				Field: "entity.national_identification.national_identifier_type",
-				Err:   "national identifier type must be RAID, MISC, LEIX, or TXID",
+				Field: FieldEntityNationalIdentificationType,
+				Err:   ErrInvalidLegalNatID.Error(),
 			})
 		}
 
@@ -359,8 +373,8 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 		if r.Entity.NationalIdentification.NationalIdentifierType == ivms101.NationalIdentifierLEIX {
 			if len(r.Entity.NationalIdentification.NationalIdentifier) > 35 {
 				err = append(err, &ValidationError{
-					Field: "entity.national_identification.national_identifier",
-					Err:   "LEI identifier must not be longer than 35 characters",
+					Field: FieldEntityNationalIdentificationID,
+					Err:   ErrInvalidLEI.Error(),
 				})
 			}
 		}
@@ -368,8 +382,8 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 		// Country of issue is only used for natural persons
 		if r.Entity.NationalIdentification.CountryOfIssue != "" {
 			err = append(err, &ValidationError{
-				Field: "entity.national_identification.country_of_issue",
-				Err:   "country of issue must be empty for legal persons",
+				Field: FieldEntityNationalIdentificationCountry,
+				Err:   ErrNoCountryNatID.Error(),
 			})
 		}
 
@@ -377,23 +391,23 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 		if r.Entity.NationalIdentification.NationalIdentifierType != ivms101.NationalIdentifierLEIX {
 			if r.Entity.NationalIdentification.RegistrationAuthority == "" {
 				err = append(err, &ValidationError{
-					Field: "entity.national_identification.registration_authority",
-					Err:   "registration authority must be specified unless the identifier type is LEI",
+					Field: FieldEntityNationalIdentificationRA,
+					Err:   ErrRARequired.Error(),
 				})
 			}
 		} else {
 			// If the ID is an LEIX, Registration Authority must be empty
 			if r.Entity.NationalIdentification.RegistrationAuthority != "" {
 				err = append(err, &ValidationError{
-					Field: "entity.national_identification.registration_authority",
-					Err:   "registration authority must be empty for identifier type LEI",
+					Field: FieldEntityNationalIdentificationRA,
+					Err:   ErrNoRAForLEIX.Error(),
 				})
 			}
 		}
 	} else {
 		err = append(err, &ValidationError{
-			Field: "entity.national_identification",
-			Err:   "national identification is required to verify legal person",
+			Field: FieldEntityNationalIdentification,
+			Err:   ErrLegalNatIDRequired.Error(),
 		})
 	}
 
@@ -402,21 +416,21 @@ func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
 		// TODO: ensure the country code is valid?
 		if len(r.Entity.CountryOfRegistration) != 2 {
 			err = append(err, &ValidationError{
-				Field: "entity.country_of_registration",
-				Err:   "country of registration must be an ISO-3166-1 alpha-2 code",
+				Field: FieldEntityCountryOfRegistration,
+				Err:   ErrInvalidCountry.Error(),
 			})
 		}
 	} else {
 		err = append(err, &ValidationError{
-			Field: "entity.country_of_registration",
-			Err:   "country of registration is a required field",
+			Field: FieldEntityCountryOfRegistration,
+			Err:   ErrMissingField.Error(),
 		})
 	}
 
 	// Final validation just to check and make sure we didn't miss anything
 	if verr := r.Entity.Validate(); verr != nil {
 		err = append(err, &ValidationError{
-			Field: "entity",
+			Field: FieldEntity,
 			Err:   verr.Error(),
 		})
 	}
