@@ -161,11 +161,13 @@ func (r *RegistrationForm) Validate(step StepType) error {
 }
 
 // Validate only the fields in the basic details step.
-func (r *RegistrationForm) ValidateBasicDetails() (v ValidationErrors) {
+func (r *RegistrationForm) ValidateBasicDetails() error {
+	err := make(ValidationErrors, 0)
+
 	// Validate website
 	// TODO: Check if this is a valid URL?
 	if strings.TrimSpace(r.Website) == "" {
-		v = append(v, &ValidationError{
+		err = append(err, &ValidationError{
 			Field: FieldWebsite,
 			Err:   ErrMissingField.Error(),
 		})
@@ -173,7 +175,7 @@ func (r *RegistrationForm) ValidateBasicDetails() (v ValidationErrors) {
 
 	// Validate business category
 	if r.BusinessCategory == pb.BusinessCategory_UNKNOWN_ENTITY {
-		v = append(v, &ValidationError{
+		err = append(err, &ValidationError{
 			Field: FieldBusinessCategory,
 			Err:   ErrMissingField.Error(),
 		})
@@ -190,7 +192,7 @@ func (r *RegistrationForm) ValidateBasicDetails() (v ValidationErrors) {
 	}
 
 	if !hasCategory {
-		v = append(v, &ValidationError{
+		err = append(err, &ValidationError{
 			Field: FieldVASPCategories,
 			Err:   ErrMissingField.Error(),
 		})
@@ -199,7 +201,7 @@ func (r *RegistrationForm) ValidateBasicDetails() (v ValidationErrors) {
 	// Validate established date
 	// TODO: Check if this is a valid date?
 	if strings.TrimSpace(r.EstablishedOn) == "" {
-		v = append(v, &ValidationError{
+		err = append(err, &ValidationError{
 			Field: FieldEstablishedOn,
 			Err:   ErrMissingField.Error(),
 		})
@@ -207,18 +209,21 @@ func (r *RegistrationForm) ValidateBasicDetails() (v ValidationErrors) {
 
 	// Validate organization name
 	if strings.TrimSpace(r.OrganizationName) == "" {
-		v = append(v, &ValidationError{
+		err = append(err, &ValidationError{
 			Field: FieldOrganizationName,
 			Err:   ErrMissingField.Error(),
 		})
 	}
 
-	return v
+	if len(err) == 0 {
+		return nil
+	}
+	return err
 }
 
 // Validate only the fields in the legal person step.
-func (r *RegistrationForm) ValidateLegalPerson() (err ValidationErrors) {
-	err = make(ValidationErrors, 0)
+func (r *RegistrationForm) ValidateLegalPerson() error {
+	err := make(ValidationErrors, 0)
 	if r.Entity == nil {
 		return append(err, &ValidationError{
 			Field: FieldEntity,
@@ -562,13 +567,13 @@ func ValidateContact(contact *pb.Contact, fieldName string) (v ValidationErrors)
 }
 
 // Validate only the fields in the trixo step.
-func (r *RegistrationForm) ValidateTRIXO() ValidationErrors {
+func (r *RegistrationForm) ValidateTRIXO() error {
 	// TODO: implement
 	return nil
 }
 
 // Validate only the fields in the trisa step.
-func (r *RegistrationForm) ValidateTRISA() ValidationErrors {
+func (r *RegistrationForm) ValidateTRISA() error {
 	// TODO: implement
 	return nil
 }
