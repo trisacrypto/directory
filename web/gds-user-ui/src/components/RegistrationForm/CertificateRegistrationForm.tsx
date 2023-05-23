@@ -13,7 +13,7 @@ interface ProgressBarProps {
   onSetRegistrationState?: any;
   registrationState?: any;
 }
-const ProgressBar = ({ onSetRegistrationState }: ProgressBarProps) => {
+const CertificateRegistrationForm = ({ onSetRegistrationState }: ProgressBarProps) => {
   return (
     <>
       <CertificateSteps>
@@ -32,4 +32,4 @@ const ProgressBar = ({ onSetRegistrationState }: ProgressBarProps) => {
   );
 };
 
-export default ProgressBar;
+export default CertificateRegistrationForm;

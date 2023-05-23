@@ -29,7 +29,7 @@ import {
 // import { getFieldNames } from 'utils/getFieldNames';
 import { setRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
 import { findStepKey } from 'utils/utils';
-import { LSTATUS } from 'components/TestnetProgress/CertificateStepLabel';
+import { LSTATUS } from 'components/RegistrationForm/CertificateStepLabel';
 import { hasStepError } from '../utils/utils';
 import _ from 'lodash';
 import { useToast } from '@chakra-ui/react';

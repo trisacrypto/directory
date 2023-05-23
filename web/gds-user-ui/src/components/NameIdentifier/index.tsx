@@ -60,7 +60,8 @@ const NameIdentifier: React.ForwardRefExoticComponent<
   useEffect(() => {
     console.log('[] 1 name', name);
     if (type === 'legal' && fields.length === 1) {
-      setValue(`${name}[0].legal_person_name`, getOrganizationNameValue);
+      const value = `${name}[0].legal_person_name` as string;
+      setValue(`${value}`, getOrganizationNameValue);
     }
   }, [getOrganizationNameValue, setValue, type, fields.length, name, fields]);
 
@@ -69,7 +70,8 @@ const NameIdentifier: React.ForwardRefExoticComponent<
   useEffect(() => {
     console.log('[] 2 name', name);
     if (type === 'legal' && fields.length === 1) {
-      setValue(`${name}[0].legal_person_name_identifier_type`, nameIdentiferTypeOptions[0].value);
+      const value = `${name}[0].legal_person_name_identifier_type` as string;
+      setValue(`${value}`, nameIdentiferTypeOptions[0].value);
     }
   }, [nameIdentiferTypeOptions, setValue, type, fields.length, name]);
 
