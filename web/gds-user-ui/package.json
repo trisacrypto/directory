@@ -109,14 +109,16 @@
       "react-app",
       "react-app/jest"
     ],
-    "overrides": [{
-      "files": [
-        "**/*.stories.*"
-      ],
-      "rules": {
-        "import/no-anonymous-default-export": "off"
+    "overrides": [
+      {
+        "files": [
+          "**/*.stories.*"
+        ],
+        "rules": {
+          "import/no-anonymous-default-export": "off"
+        }
       }
-    }]
+    ]
   },
   "browserslist": {
     "production": [
@@ -149,6 +151,7 @@
     "@storybook/testing-library": "^0.0.13",
     "@storybook/theming": "^6.5.10",
     "@types/auth0-js": "^9.14.6",
+    "@types/cypress-cucumber-preprocessor": "^4.0.1",
     "@types/react-lazy-load-image-component": "^1.5.2",
     "@types/react-router-dom": "^5.3.3",
     "@types/react-slick": "^0.23.10",
@@ -157,7 +160,8 @@
     "@typescript-eslint/parser": "^5.13.0",
     "babel-core": "^7.0.0-bridge.0",
     "babel-plugin-polyfill-corejs2": "^0.3.2",
-    "cypress": "^9.6.0",
+    "cypress": "12.12.0",
+    "cypress-cucumber-preprocessor": "^4.3.1",
     "eslint": "^8.10.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-standard": "^16.0.3",
@@ -188,5 +192,9 @@
     "snapshotSerializers": [
       "@emotion/jest/serializer"
     ]
+  },
+  "cypress-cucumber-preprocessor": {
+    "nonGlobalStepDefinitions": true,
+    "stepDefinitions": "cypress/e2e/"
   }
 }
