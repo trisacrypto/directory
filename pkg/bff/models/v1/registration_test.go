@@ -129,36 +129,36 @@ func TestValidateTRIXO(t *testing.T) {
 		errs  models.ValidationErrors
 	}{
 		{nil, models.ValidationErrors{
-			{Field: "trixo", Err: models.ErrMissingField.Error()},
+			{Field: models.FieldTRIXO, Err: models.ErrMissingField.Error()},
 		}},
 		{&pb.TRIXOQuestionnaire{
 			PrimaryRegulator:             "FinCEN",
 			FinancialTransfersPermitted:  "Yes",
 			HasRequiredRegulatoryProgram: "Yes",
 		}, models.ValidationErrors{
-			{Field: "trixo.primary_national_jurisdiction", Err: models.ErrMissingField.Error()},
+			{Field: models.FieldTRIXOPrimaryNationalJurisdiction, Err: models.ErrMissingField.Error()},
 		}},
 		{&pb.TRIXOQuestionnaire{
 			FinancialTransfersPermitted:  "No",
 			HasRequiredRegulatoryProgram: "No",
 		}, models.ValidationErrors{
-			{Field: "trixo.primary_national_jurisdiction", Err: models.ErrMissingField.Error()},
-			{Field: "trixo.primary_regulator", Err: models.ErrMissingField.Error()},
+			{Field: models.FieldTRIXOPrimaryNationalJurisdiction, Err: models.ErrMissingField.Error()},
+			{Field: models.FieldTRIXOPrimaryRegulator, Err: models.ErrMissingField.Error()},
 		}},
 		{&pb.TRIXOQuestionnaire{
 			HasRequiredRegulatoryProgram: "yes",
 		}, models.ValidationErrors{
-			{Field: "trixo.primary_national_jurisdiction", Err: models.ErrMissingField.Error()},
-			{Field: "trixo.primary_regulator", Err: models.ErrMissingField.Error()},
-			{Field: "trixo.financial_transfers_permitted", Err: models.ErrMissingField.Error()},
+			{Field: models.FieldTRIXOPrimaryNationalJurisdiction, Err: models.ErrMissingField.Error()},
+			{Field: models.FieldTRIXOPrimaryRegulator, Err: models.ErrMissingField.Error()},
+			{Field: models.FieldTRIXOFinancialTransfersPermitted, Err: models.ErrMissingField.Error()},
 		}},
 		{&pb.TRIXOQuestionnaire{
 			FinancialTransfersPermitted:  "idk",
 			HasRequiredRegulatoryProgram: "YES",
 		}, models.ValidationErrors{
-			{Field: "trixo.primary_national_jurisdiction", Err: models.ErrMissingField.Error()},
-			{Field: "trixo.primary_regulator", Err: models.ErrMissingField.Error()},
-			{Field: "trixo.financial_transfers_permitted", Err: models.ErrInvalidField.Error()},
+			{Field: models.FieldTRIXOPrimaryNationalJurisdiction, Err: models.ErrMissingField.Error()},
+			{Field: models.FieldTRIXOPrimaryRegulator, Err: models.ErrMissingField.Error()},
+			{Field: models.FieldTRIXOFinancialTransfersPermitted, Err: models.ErrInvalidField.Error()},
 		}},
 		{&pb.TRIXOQuestionnaire{
 			HasRequiredRegulatoryProgram: "NO",
@@ -169,20 +169,20 @@ func TestValidateTRIXO(t *testing.T) {
 				{Country: "US"},
 			},
 		}, models.ValidationErrors{
-			{Field: "trixo.primary_national_jurisdiction", Err: models.ErrMissingField.Error()},
-			{Field: "trixo.primary_regulator", Err: models.ErrMissingField.Error()},
-			{Field: "trixo.financial_transfers_permitted", Err: models.ErrMissingField.Error()},
-			{Field: "trixo.other_jurisdictions.country", Err: models.ErrMissingField.Error(), Index: 1},
-			{Field: "trixo.other_jurisdictions.regulator_name", Err: models.ErrMissingField.Error(), Index: 2},
-			{Field: "trixo.other_jurisdictions.regulator_name", Err: models.ErrMissingField.Error(), Index: 3},
-			{Field: "trixo.other_jurisdictions.license_number", Err: models.ErrMissingField.Error(), Index: 3},
+			{Field: models.FieldTRIXOPrimaryNationalJurisdiction, Err: models.ErrMissingField.Error()},
+			{Field: models.FieldTRIXOPrimaryRegulator, Err: models.ErrMissingField.Error()},
+			{Field: models.FieldTRIXOFinancialTransfersPermitted, Err: models.ErrMissingField.Error()},
+			{Field: models.FieldTRIXOOtherJurisdictionsCountry, Err: models.ErrMissingField.Error(), Index: 1},
+			{Field: models.FieldTRIXOOtherJurisdictionsRegulatorName, Err: models.ErrMissingField.Error(), Index: 2},
+			{Field: models.FieldTRIXOOtherJurisdictionsRegulatorName, Err: models.ErrMissingField.Error(), Index: 3},
+			{Field: models.FieldTRIXOOtherJurisdictionsLicenseNumber, Err: models.ErrMissingField.Error(), Index: 3},
 		}},
 		{&pb.TRIXOQuestionnaire{
 			PrimaryNationalJurisdiction: "US",
 			PrimaryRegulator:            "FinCEN",
 			FinancialTransfersPermitted: "Yes",
 		}, models.ValidationErrors{
-			{Field: "trixo.has_required_regulatory_program", Err: models.ErrMissingField.Error()},
+			{Field: models.FieldTRIXOHasRequiredRegulatoryProgram, Err: models.ErrMissingField.Error()},
 		}},
 		{&pb.TRIXOQuestionnaire{
 			PrimaryNationalJurisdiction:  "US",
@@ -190,7 +190,7 @@ func TestValidateTRIXO(t *testing.T) {
 			FinancialTransfersPermitted:  "Yes",
 			HasRequiredRegulatoryProgram: "idk",
 		}, models.ValidationErrors{
-			{Field: "trixo.has_required_regulatory_program", Err: models.ErrInvalidField.Error()},
+			{Field: models.FieldTRIXOHasRequiredRegulatoryProgram, Err: models.ErrInvalidField.Error()},
 		}},
 		{&pb.TRIXOQuestionnaire{
 			PrimaryNationalJurisdiction:  "US",
@@ -200,8 +200,8 @@ func TestValidateTRIXO(t *testing.T) {
 			ConductsCustomerKyc:          true,
 			KycThreshold:                 -1,
 		}, models.ValidationErrors{
-			{Field: "trixo.kyc_threshold", Err: models.ErrNegativeValue.Error()},
-			{Field: "trixo.kyc_threshold_currency", Err: models.ErrMissingField.Error()},
+			{Field: models.FieldTRIXOKYCThreshold, Err: models.ErrNegativeValue.Error()},
+			{Field: models.FieldTRIXOKYCThresholdCurrency, Err: models.ErrMissingField.Error()},
 		}},
 		{&pb.TRIXOQuestionnaire{
 			PrimaryNationalJurisdiction:  "US",
@@ -211,9 +211,9 @@ func TestValidateTRIXO(t *testing.T) {
 			MustComplyTravelRule:         true,
 			ComplianceThreshold:          -1,
 		}, models.ValidationErrors{
-			{Field: "trixo.applicable_regulations", Err: models.ErrMissingField.Error()},
-			{Field: "trixo.compliance_threshold", Err: models.ErrNegativeValue.Error()},
-			{Field: "trixo.compliance_threshold_currency", Err: models.ErrMissingField.Error()},
+			{Field: models.FieldTRIXOApplicableRegulations, Err: models.ErrMissingField.Error()},
+			{Field: models.FieldTRIXOKYCThreshold, Err: models.ErrNegativeValue.Error()},
+			{Field: models.FieldTRIXOKYCThresholdCurrency, Err: models.ErrMissingField.Error()},
 		}},
 		{&pb.TRIXOQuestionnaire{
 			PrimaryNationalJurisdiction:  "US",
@@ -225,8 +225,8 @@ func TestValidateTRIXO(t *testing.T) {
 			ComplianceThreshold:          -1,
 			ComplianceThresholdCurrency:  "USD",
 		}, models.ValidationErrors{
-			{Field: "trixo.applicable_regulations", Err: models.ErrMissingField.Error(), Index: 1},
-			{Field: "trixo.compliance_threshold", Err: models.ErrNegativeValue.Error()},
+			{Field: models.FieldTRIXOApplicableRegulations, Err: models.ErrMissingField.Error(), Index: 1},
+			{Field: models.FieldTRIXOKYCThreshold, Err: models.ErrNegativeValue.Error()},
 		}},
 		{&pb.TRIXOQuestionnaire{
 			PrimaryNationalJurisdiction:  "US",

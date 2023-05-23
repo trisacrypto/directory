@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
@@ -83,10 +84,34 @@ type StatusReply struct {
 // A per-field validation error that is intended for human consumption - if the field is
 // not valid (e.g. empty when required, doesn't match regular expression, etc.) then
 // this struct is meant to be sent back so the front-end can render the message to the
-// user in a help-box or similar.
+// user in a help-box or similar. If the field is an array element, then the index field
+// will contain the index of the erroring element.
 type FieldValidationError struct {
 	Field string `json:"field"`
 	Error string `json:"error"`
+	Index int    `json:"index"`
+}
+
+func NewFieldValidationError(err error) *FieldValidationError {
+	var verr *models.ValidationError
+	if errors.As(err, &verr) {
+		return &FieldValidationError{Field: verr.Field, Error: verr.Err, Index: verr.Index}
+	}
+	return &FieldValidationError{Error: err.Error()}
+}
+
+func FromValidationErrors(err error) []*FieldValidationError {
+	var verrs models.ValidationErrors
+	if errors.As(err, &verrs) {
+		out := make([]*FieldValidationError, 0, len(verrs))
+		for _, verr := range verrs {
+			out = append(out, NewFieldValidationError(verr))
+		}
+		return out
+	}
+
+	out := make([]*FieldValidationError, 0, 1)
+	return append(out, NewFieldValidationError(err))
 }
 
 //===========================================================================
