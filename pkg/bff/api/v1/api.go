@@ -2,8 +2,10 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
+	"github.com/gin-gonic/gin"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 )
@@ -227,6 +229,38 @@ type RegistrationForm struct {
 	Step   RegistrationFormStep     `json:"step,omitempty"`
 	Form   *models.RegistrationForm `json:"form"`
 	Errors []*FieldValidationError  `json:"errors,omitempty"`
+}
+
+// MarshalStepJSON removes any unnecessary fields from the registration form.
+func (r *RegistrationForm) MarshalStepJSON() (_ gin.H, err error) {
+	// Marshal everything but the registration form
+	form := r.Form
+	r.Form = nil
+	defer func() {
+		// Reset the form
+		r.Form = form
+	}()
+
+	var data []byte
+	if data, err = json.Marshal(r); err != nil {
+		return nil, err
+	}
+
+	var intermediate gin.H
+	if err = json.Unmarshal(data, &intermediate); err != nil {
+		return nil, err
+	}
+
+	var step models.StepType
+	if step, err = models.ParseStepType(string(r.Step)); err != nil {
+		return nil, err
+	}
+
+	// Marshal the registration form with the step
+	if intermediate["form"], err = form.MarshalStep(step); err != nil {
+		return nil, err
+	}
+	return intermediate, nil
 }
 
 // RegisterReply is converted from a protocol buffer RegisterReply.
