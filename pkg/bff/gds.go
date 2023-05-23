@@ -310,10 +310,7 @@ func (s *Server) LoadRegisterForm(c *gin.Context) {
 	if verrs := org.Registration.Validate(step); verrs != nil {
 		var fields records.ValidationErrors
 		if errors.As(verrs, &fields) {
-			out.Errors = make([]*api.FieldValidationError, 0, len(fields))
-			for _, field := range fields {
-				out.Errors = append(out.Errors, &api.FieldValidationError{Field: field.Field, Error: field.Err})
-			}
+			out.Errors = api.FromValidationErrors(fields)
 		} else {
 			log.Warn().Err(err).Msg("could not validate registration form")
 			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
@@ -397,10 +394,7 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		// If there were validation errors, attach them to the output
 		var fields records.ValidationErrors
 		if errors.As(err, &fields) {
-			out.Errors = make([]*api.FieldValidationError, 0, len(fields))
-			for _, field := range fields {
-				out.Errors = append(out.Errors, &api.FieldValidationError{Field: field.Field, Error: field.Err})
-			}
+			out.Errors = api.FromValidationErrors(fields)
 		} else {
 			log.Debug().Err(err).Msg("could not update registration form")
 			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))

@@ -52,6 +52,7 @@ func (s StepType) String() string {
 type ValidationError struct {
 	Field string
 	Err   string
+	Index int
 }
 
 func (v *ValidationError) Error() string {
@@ -178,7 +179,7 @@ func (r *RegistrationForm) ValidateBasicDetails() (v ValidationErrors) {
 
 // Validate only the fields in the legal person step.
 func (r *RegistrationForm) ValidateLegalPerson() ValidationErrors {
-	// TODO: implement
+
 	return nil
 }
 
