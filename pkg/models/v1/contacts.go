@@ -24,6 +24,11 @@ type contactType struct {
 	err     error
 }
 
+// Returns True if a Contact is nil or is empty.
+func ContactIsZero(contact *pb.Contact) bool {
+	return contact == nil || contact.IsZero()
+}
+
 // Returns True if a Contact is not nil and has an email address.
 func ContactHasEmail(contact *pb.Contact) bool {
 	return contact != nil && contact.Email != ""

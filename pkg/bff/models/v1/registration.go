@@ -6,6 +6,7 @@ import (
 	"net/mail"
 	"strings"
 
+	"github.com/trisacrypto/directory/pkg/models/v1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -188,22 +189,44 @@ func (r *RegistrationForm) ValidateContacts() (v ValidationErrors) {
 		return v
 	}
 
-	// ValidateContact handles the case where the contact is nil
-	v, _ = v.Append(ValidateContact(r.Contacts.Technical, "contacts.technical"))
-	v, _ = v.Append(ValidateContact(r.Contacts.Administrative, "contacts.administrative"))
-	v, _ = v.Append(ValidateContact(r.Contacts.Legal, "contacts.legal"))
-	v, _ = v.Append(ValidateContact(r.Contacts.Billing, "contacts.billing"))
+	// Validate each non-zero contact
+	contacts := 0
+	iter := models.NewContactIterator(r.Contacts, false, false)
+	for iter.Next() {
+		contacts++
+		contact, field := iter.Value()
+		if !models.ContactIsZero(contact) {
+			v, _ = v.Append(ValidateContact(contact, "contacts."+field))
+		}
+	}
+
+	// Check that all required contacts are present (special rules)
+	switch contacts {
+	case 0:
+		// At least one contact is required
+		v = append(v, &ValidationError{Field: "contacts", Err: ErrNoContacts.Error()})
+	case 1:
+		// If there is only one contact, it must be the admin
+		if models.ContactIsZero(r.Contacts.Administrative) {
+			v = append(v, &ValidationError{Field: "contacts", Err: ErrMissingContact.Error()})
+		}
+	default:
+		// If there are at least two contacts, either admin or technical must be present
+		if models.ContactIsZero(r.Contacts.Administrative) && models.ContactIsZero(r.Contacts.Technical) {
+			v = append(v, &ValidationError{Field: "contacts", Err: ErrMissingContact.Error()})
+		}
+
+		// Admin or legal must be present
+		if models.ContactIsZero(r.Contacts.Administrative) && models.ContactIsZero(r.Contacts.Legal) {
+			v = append(v, &ValidationError{Field: "contacts", Err: ErrMissingContact.Error()})
+		}
+	}
 
 	return v
 }
 
 // Validate a single contact, using the field name to construct errors.
 func ValidateContact(contact *pb.Contact, fieldName string) (v ValidationErrors) {
-	if contact == nil {
-		v = append(v, &ValidationError{Field: fieldName, Err: ErrMissingField.Error()})
-		return v
-	}
-
 	name := strings.TrimSpace(contact.Name)
 	if name == "" {
 		v = append(v, &ValidationError{Field: fieldName + ".name", Err: ErrMissingField.Error()})

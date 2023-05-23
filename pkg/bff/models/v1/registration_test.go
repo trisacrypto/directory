@@ -174,7 +174,7 @@ func TestValidateContacts(t *testing.T) {
 		Phone: contact.Phone,
 	}
 
-	// Test that all contacts are validated
+	// Test that contacts are valided if not empty
 	testCases := []struct {
 		technical *pb.Contact
 		admin     *pb.Contact
@@ -182,11 +182,21 @@ func TestValidateContacts(t *testing.T) {
 		billing   *pb.Contact
 		errs      models.ValidationErrors
 	}{
-		{nil, nil, nil, nil, models.ValidationErrors{
-			{Field: "contacts.technical", Err: models.ErrMissingField.Error()},
-			{Field: "contacts.administrative", Err: models.ErrMissingField.Error()},
-			{Field: "contacts.legal", Err: models.ErrMissingField.Error()},
-			{Field: "contacts.billing", Err: models.ErrMissingField.Error()},
+		// No contacts provided
+		{nil, nil, &pb.Contact{}, nil, models.ValidationErrors{
+			{Field: "contacts", Err: models.ErrNoContacts.Error()},
+		}},
+		// Only billing provided is invalid
+		{nil, nil, nil, contact, models.ValidationErrors{
+			{Field: "contacts", Err: models.ErrMissingContact.Error()},
+		}},
+		// Legal and billing provided is invalid
+		{nil, nil, contact, contact, models.ValidationErrors{
+			{Field: "contacts", Err: models.ErrMissingContact.Error()},
+		}},
+		// Technical and billing provided is invalid
+		{contact, nil, nil, contact, models.ValidationErrors{
+			{Field: "contacts", Err: models.ErrMissingContact.Error()},
 		}},
 		{missingEmail, contact, contact, contact, models.ValidationErrors{
 			{Field: "contacts.technical.email", Err: models.ErrMissingField.Error()},
@@ -206,6 +216,11 @@ func TestValidateContacts(t *testing.T) {
 			{Field: "contacts.legal.email", Err: models.ErrMissingField.Error()},
 			{Field: "contacts.billing.email", Err: models.ErrMissingField.Error()},
 		}},
+		// Only admin provided is valid
+		{nil, contact, nil, nil, nil},
+		// Admin and billing provided is valid
+		{nil, contact, nil, contact, nil},
+		// Technical and legal provided is valid
 		{contact, contact, contact, contact, nil},
 	}
 
@@ -233,10 +248,6 @@ func TestValidateContact(t *testing.T) {
 		contact *pb.Contact
 		errs    models.ValidationErrors
 	}{
-		{nil, models.ValidationErrors{{Field: "admin", Err: models.ErrMissingField.Error()}}},
-		{&pb.Contact{Email: "leopold.wentzel@gmail.com", Phone: "555-867-5309"}, models.ValidationErrors{
-			{Field: "admin.name", Err: models.ErrMissingField.Error()},
-		}},
 		{&pb.Contact{Name: "L", Email: " leopold.wentzel@gmail.com ", Phone: "555-867-5309"}, models.ValidationErrors{
 			{Field: "admin.name", Err: models.ErrTooShort.Error()},
 		}},
