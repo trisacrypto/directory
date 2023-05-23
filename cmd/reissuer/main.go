@@ -103,6 +103,12 @@ func main() {
 					Usage:   "skip the confirmation prompt and immediately send notifications",
 					Value:   false,
 				},
+				&cli.StringFlag{
+					Name:    "endpoint",
+					Aliases: []string{"e"},
+					Usage:   "update the TRISA endpoint and common name for the new certs",
+					Value:   "",
+				},
 				&cli.StringSliceFlag{
 					Name:    "dns-names",
 					Aliases: []string{"sans", "d"},
@@ -375,6 +381,17 @@ func reissueCerts(c *cli.Context) (err error) {
 		if !askForConfirmation("continue with certificate reissuance?") {
 			return cli.Exit(fmt.Errorf("canceled by user"), 1)
 		}
+	}
+
+	if endpoint := c.String("endpoint"); endpoint != "" {
+		var cname string
+		if cname, _, err = net.SplitHostPort(endpoint); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		fmt.Printf("updating common name to %s and endpoint to %s\n", cname, endpoint)
+		vasp.CommonName = cname
+		vasp.TrisaEndpoint = endpoint
 	}
 
 	// Step 2: Create a CertificateRequest

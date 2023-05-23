@@ -565,17 +565,13 @@ func TestLoadRegistrationForm(t *testing.T) {
 		require.Equal(t, http.MethodGet, r.Method)
 		require.Equal(t, "/v1/register", r.URL.Path)
 
-		pbjson := protojson.MarshalOptions{
-			AllowPartial:    true,
-			EmitUnpopulated: true,
-			UseProtoNames:   true,
+		form := &api.RegistrationForm{
+			Form: fixture,
 		}
-		data, err := pbjson.Marshal(fixture)
-		require.NoError(t, err, "could not marshal fixture")
 
 		w.Header().Add("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
-		w.Write(data)
+		json.NewEncoder(w).Encode(form)
 	}))
 	defer ts.Close()
 
@@ -583,15 +579,17 @@ func TestLoadRegistrationForm(t *testing.T) {
 	client, err := api.New(ts.URL)
 	require.NoError(t, err)
 
-	out, err := client.LoadRegistrationForm(context.TODO())
+	out, err := client.LoadRegistrationForm(context.TODO(), nil)
 	require.NoError(t, err)
-	require.Equal(t, fixture, out)
+	require.Equal(t, fixture, out.Form)
 }
 
 func TestSaveRegistrationForm(t *testing.T) {
 	// Load a fixture from testdata
-	fixture := &models.RegistrationForm{
-		Website: "https://example.com",
+	fixture := &api.RegistrationForm{
+		Form: &models.RegistrationForm{
+			Website: "https://example.com",
+		},
 	}
 	err := loadFixture("testdata/registration.pb.json", fixture)
 	require.NoError(t, err, "could not load registration fixture")

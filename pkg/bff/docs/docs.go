@@ -744,11 +744,27 @@ const docTemplate = `{
                     "registration"
                 ],
                 "summary": "Get the user's current registration form [read:vasp]",
+                "parameters": [
+                    {
+                        "description": "Load registration form parameters",
+                        "name": "params",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/api.LoadRegistrationFormParams"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Registration form",
                         "schema": {
                             "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
                         }
                     },
                     "401": {
@@ -1231,6 +1247,14 @@ const docTemplate = `{
                 },
                 "page_size": {
                     "type": "integer"
+                }
+            }
+        },
+        "api.LoadRegistrationFormParams": {
+            "type": "object",
+            "properties": {
+                "step": {
+                    "type": "string"
                 }
             }
         },

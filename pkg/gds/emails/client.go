@@ -151,6 +151,35 @@ func (m *EmailManager) SendVerifyContact(vasp *pb.VASP, contact *pb.Contact) (er
 	return nil
 }
 
+// SendVerifyContact sends a verification email to a contact.
+func (m *EmailManager) SendVerifyModelContact(vasp *pb.VASP, contact *models.Contact) (err error) {
+	ctx := VerifyContactData{
+		Name:        contact.Name,
+		VID:         vasp.Id,
+		BaseURL:     m.conf.VerifyContactBaseURL,
+		DirectoryID: m.conf.DirectoryID,
+	}
+
+	ctx.Token = contact.Token
+
+	msg, err := VerifyContactEmail(
+		m.serviceEmail.Name, m.serviceEmail.Address,
+		contact.Name, contact.Email,
+		ctx,
+	)
+	if err != nil {
+		log.Error().Err(err).Msg("could not create verify contact email")
+		return err
+	}
+
+	if err = m.Send(msg); err != nil {
+		log.Error().Err(err).Msg("could not send verify contact email")
+		return err
+	}
+	contact.AppendEmailLog(string(admin.ResendVerifyContact), msg.Subject)
+	return nil
+}
+
 // SendReviewRequest is a shortcut for iComply verification in which we simply send
 // an email to the TRISA admins and have them manually verify registrations.
 func (m *EmailManager) SendReviewRequest(vasp *pb.VASP) (sent int, err error) {

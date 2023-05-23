@@ -109,7 +109,8 @@
     "steps": [
       {
         "key": 1,
-        "status": "progress"
+        "status": "progress",
+        "name": ""
       }
     ]
   }
