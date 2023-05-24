@@ -1,0 +1,150 @@
+{
+    "website": "https://spudkoin.ai",
+    "business_category": "BUSINESS_ENTITY",
+    "vasp_categories": [
+        "DEX",
+        "Kiosk",
+        "Project",
+        "Mixer"
+    ],
+    "established_on": "2020-04-07",
+    "organization_name": "SpudCoin AI",
+    "entity": {
+        "name": {
+            "name_identifiers": [
+                {
+                    "legal_person_name": "SpudCoin Potato Ltd",
+                    "legal_person_name_identifier_type": "LEGAL_PERSON_NAME_TYPE_CODE_LEGL"
+                },
+                {
+                    "legal_person_name": "SpudKoin",
+                    "legal_person_name_identifier_type": "LEGAL_PERSON_NAME_TYPE_CODE_SHRT"
+                }
+            ],
+            "local_name_identifiers": [],
+            "phonetic_name_identifiers": []
+        },
+        "geographic_addresses": [
+            {
+                "address_type": "ADDRESS_TYPE_CODE_BIZZ",
+                "department": "",
+                "sub_department": "",
+                "street_name": "",
+                "building_number": "",
+                "building_name": "",
+                "floor": "",
+                "post_box": "",
+                "room": "",
+                "post_code": "56678",
+                "town_name": "Delvara",
+                "town_location_name": "",
+                "district_name": "",
+                "country_sub_division": "Michigan",
+                "address_line": [
+                    "155 Main Street",
+                    ""
+                ],
+                "country": "US"
+            }
+        ],
+        "customer_number": "",
+        "national_identification": {
+            "national_identifier": "42312342123122",
+            "national_identifier_type": "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX",
+            "country_of_issue": "",
+            "registration_authority": "RA777777"
+        },
+        "country_of_registration": "US"
+    },
+    "contacts": {
+        "technical": {
+            "name": "Benjamin Bengfort",
+            "email": "benjamin@rotational.io",
+            "phone": "+14106450594",
+            "person": null,
+            "extra": null
+        },
+        "administrative": {
+            "name": "",
+            "email": "",
+            "phone": "",
+            "person": null,
+            "extra": null
+        },
+        "legal": {
+            "name": "Fred Spatchford",
+            "email": "fred@spudkoin.ai",
+            "phone": "+55555555555",
+            "person": null,
+            "extra": null
+        },
+        "billing": {
+            "name": "",
+            "email": "",
+            "phone": "",
+            "person": null,
+            "extra": null
+        }
+    },
+    "trixo": {
+        "primary_national_jurisdiction": "US",
+        "primary_regulator": "FinCen",
+        "financial_transfers_permitted": "yes",
+        "other_jurisdictions": [
+            {
+                "country": "BR",
+                "regulator_name": "BrasilaFin",
+                "license_number": ""
+            }
+        ],
+        "has_required_regulatory_program": "partial",
+        "conducts_customer_kyc": false,
+        "kyc_threshold": 0,
+        "kyc_threshold_currency": "USD",
+        "must_comply_travel_rule": false,
+        "applicable_regulations": [
+            "FATF Recommendation 16"
+        ],
+        "compliance_threshold": 0,
+        "compliance_threshold_currency": "USD",
+        "must_safeguard_pii": false,
+        "safeguards_pii": true
+    },
+    "testnet": {
+        "common_name": "testnet.trisa.spudkoin.ai",
+        "endpoint": "testnet.trisa.spudkoin.ai:443",
+        "dns_names": []
+    },
+    "mainnet": {
+        "common_name": "trisa.spudkoin.ai",
+        "endpoint": "trisa.spudkoin.ai:443",
+        "dns_names": []
+    },
+    "state": {
+        "current": 5,
+        "ready_to_submit": false,
+        "steps": [
+            {
+                "key": 1,
+                "status": "complete"
+            },
+            {
+                "key": 2,
+                "status": "complete"
+            },
+            {
+                "key": 3,
+                "status": "complete"
+            },
+            {
+                "key": 4,
+                "status": "complete"
+            },
+            {
+                "key": 5,
+                "status": "progress"
+            }
+        ],
+        "started": "2023-05-23T21:57:37Z"
+    }
+}

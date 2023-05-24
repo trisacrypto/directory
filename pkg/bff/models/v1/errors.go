@@ -33,6 +33,13 @@ var (
 	ErrLegalNatIDRequired      = errors.New("national identification is required to verify legal person")
 	ErrNoRAForLEIX             = errors.New("registration authority must be empty for identifier type LEI")
 	ErrRARequired              = errors.New("registration authority must be specified unless the identifier type is LEI")
+	ErrInvalidEndpoint         = errors.New("endpoint must have the format host:port")
+	ErrDuplicateEndpoint       = errors.New("mainnet endpoint cannot be the same as testnet endpoint")
+	ErrMissingHost             = errors.New("endpoint string must have a host")
+	ErrMissingPort             = errors.New("endpoint string must have a port")
+	ErrInvalidPort             = errors.New("port must be a number between 1 and 65535")
+	ErrInvalidCommonName       = errors.New("common name cannot contain wildcard characters (*) and must not have a scheme or port")
+	ErrCommonNameMismatch      = errors.New("common name must match the endpoint host")
 )
 
 type ValidationError struct {
