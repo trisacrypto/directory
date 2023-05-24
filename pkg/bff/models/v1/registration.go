@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/mail"
 	"strconv"
@@ -88,6 +89,9 @@ const (
 	FieldMainNetCommonName = "mainnet.common_name"
 	FieldMainNetEndpoint   = "mainnet.endpoint"
 	FieldMainNetDNSNames   = "mainnet.dns_names"
+
+	// Default fields
+	FieldState = "state"
 )
 
 // StepType represents a collection of fields in the registration form that are handled
@@ -867,4 +871,61 @@ func (r *RegistrationForm) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON uses protojson with default unmarshaling options.
 func (r *RegistrationForm) UnmarshalJSON(data []byte) error {
 	return pbdecoder.Unmarshal(data, r)
+}
+
+// MarshalStepJSON excludes all fields not related to the specified step when returning
+// JSON data, ensuring the front-end only gets the data it needs.
+func (r *RegistrationForm) MarshalStepJSON(step StepType) (_ []byte, err error) {
+	var intermediate map[string]interface{}
+	if intermediate, err = r.MarshalStep(step); err != nil {
+		return nil, err
+	}
+	return json.Marshal(intermediate)
+}
+
+func (r *RegistrationForm) MarshalStep(step StepType) (intermediate map[string]interface{}, err error) {
+	// Create an intermediate JSON representation from the protojson.
+	var data []byte
+	if data, err = r.MarshalJSON(); err != nil {
+		return nil, err
+	}
+
+	if err = json.Unmarshal(data, &intermediate); err != nil {
+		return nil, err
+	}
+
+	// Delete all keys except for the specified step and state
+	toKeep := map[string]struct{}{
+		FieldState: {},
+	}
+
+	switch step {
+	case StepAll, StepNone:
+		return intermediate, nil
+	case StepBasicDetails:
+		toKeep[FieldWebsite] = struct{}{}
+		toKeep[FieldBusinessCategory] = struct{}{}
+		toKeep[FieldVASPCategories] = struct{}{}
+		toKeep[FieldEstablishedOn] = struct{}{}
+		toKeep[FieldOrganizationName] = struct{}{}
+	case StepLegalPerson:
+		toKeep[FieldEntity] = struct{}{}
+	case StepContacts:
+		toKeep[FieldContacts] = struct{}{}
+	case StepTRIXO:
+		toKeep[FieldTRIXO] = struct{}{}
+	case StepTRISA:
+		toKeep[FieldTestNet] = struct{}{}
+		toKeep[FieldMainNet] = struct{}{}
+	default:
+		return nil, fmt.Errorf("unknown registration form step %q", step)
+	}
+
+	for key := range intermediate {
+		if _, ok := toKeep[key]; !ok {
+			delete(intermediate, key)
+		}
+	}
+
+	return intermediate, nil
 }

@@ -437,3 +437,49 @@ func TestMarshalRegistrationForm(t *testing.T) {
 	require.NoError(t, json.Unmarshal(data, result), "error unmarshaling registration form from JSON")
 	require.True(t, proto.Equal(form, result), "registration form should be unmarshaled correctly")
 }
+
+func TestMarshalRegistrationFormStep(t *testing.T) {
+	fixtureData, err := os.ReadFile("testdata/registration_form.json")
+	require.NoError(t, err, "error reading default registration form fixture")
+
+	form := &RegistrationForm{}
+	err = form.UnmarshalJSON(fixtureData)
+	require.NoError(t, err, "error marshaling registration form to JSON")
+
+	t.Run("All", func(t *testing.T) {
+		for _, step := range []StepType{StepNone, StepAll} {
+			formData, err := form.MarshalJSON()
+			require.NoError(t, err, "could not marshal form data")
+
+			stepData, err := form.MarshalStepJSON(step)
+			require.NoError(t, err, "could not marshal form step data for step %s", step)
+
+			require.JSONEq(t, string(formData), string(stepData))
+		}
+	})
+
+	makeStepTest := func(step StepType, keys ...string) func(t *testing.T) {
+		// Ensure the keys always has the state
+		keys = append(keys, FieldState)
+
+		return func(t *testing.T) {
+			data, err := form.MarshalStepJSON(step)
+			require.NoError(t, err, "could not marshal json for step %s", step)
+
+			var reply map[string]interface{}
+			err = json.Unmarshal(data, &reply)
+			require.NoError(t, err, "could not unmarshal json for step %s", step)
+
+			require.Len(t, reply, len(keys), "expected reply to have expected number of keys for step %s", step)
+			for _, key := range keys {
+				require.Contains(t, reply, key, "expected reply to contain key for step %s", step)
+			}
+		}
+	}
+
+	t.Run("Basic", makeStepTest(StepBasicDetails, FieldWebsite, FieldBusinessCategory, FieldVASPCategories, FieldEstablishedOn, FieldOrganizationName))
+	t.Run("Legal", makeStepTest(StepLegalPerson, FieldEntity))
+	t.Run("Contacts", makeStepTest(StepContacts, FieldContacts))
+	t.Run("TRIXO", makeStepTest(StepTRIXO, FieldTRIXO))
+	t.Run("TRISA", makeStepTest(StepTRISA, FieldMainNet, FieldTestNet))
+}
