@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	. "github.com/trisacrypto/directory/pkg/bff/models/v1"
+	ivms101 "github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
 )
@@ -121,6 +122,67 @@ func TestValidateBasicDetails(t *testing.T) {
 			var verrs ValidationErrors
 			require.ErrorAs(t, err, &verrs, "test case %d failed", i)
 			require.Equal(t, tc.errs, verrs, "test case %d failed", i)
+		}
+	}
+}
+
+func TestValidateLegalPerson(t *testing.T) {
+	testCases := []struct {
+		entity *ivms101.LegalPerson
+		errs   ValidationErrors
+	}{
+		{nil, ValidationErrors{{Field: FieldEntity, Err: ErrMissingField.Error()}}},
+		{
+			&ivms101.LegalPerson{},
+			ValidationErrors{
+				{Field: FieldEntityName, Err: ErrMissingField.Error()},
+				{Field: FieldEntityGeographicAddresses, Err: ErrNoGeographicAddress.Error()},
+				{Field: FieldEntityNationalIdentification, Err: ErrLegalNatIDRequired.Error()},
+				{Field: FieldEntityCountryOfRegistration, Err: ErrMissingField.Error()},
+				{Field: FieldEntity, Err: "one or more legal person name identifiers is required"},
+			},
+		},
+		{
+			&ivms101.LegalPerson{
+				Name: &ivms101.LegalPersonName{
+					NameIdentifiers: []*ivms101.LegalPersonNameId{
+						{
+							LegalPersonName:               "Wayne Enterprises, LTD",
+							LegalPersonNameIdentifierType: ivms101.LegalPersonLegal,
+						},
+					},
+				},
+				GeographicAddresses: []*ivms101.Address{
+					{
+						AddressType: ivms101.AddressTypeBusiness,
+						AddressLine: []string{
+							"1 Wayne Tower",
+							"Gotham City, NJ 08302",
+						},
+						Country: "US",
+					},
+				},
+				NationalIdentification: &ivms101.NationalIdentification{
+					NationalIdentifier:     "ZGWO00PIA5JMETFLPG72",
+					NationalIdentifierType: ivms101.NationalIdentifierLEIX,
+				},
+				CountryOfRegistration: "US",
+			},
+			nil,
+		},
+	}
+
+	for i, tc := range testCases {
+		form := &RegistrationForm{Entity: tc.entity}
+		err := form.Validate(StepLegalPerson)
+
+		if len(tc.errs) > 0 {
+			var valid ValidationErrors
+			require.ErrorAs(t, err, &valid, "expected validation errors in test case %d", i)
+			require.Len(t, valid, len(tc.errs), "expected same number of validation errors in test case %d", i)
+			require.Equal(t, tc.errs, valid, "expected same validation errors in test case %d", i)
+		} else {
+			require.NoError(t, err, "expected fully valid entity on test case %d", i)
 		}
 	}
 }
