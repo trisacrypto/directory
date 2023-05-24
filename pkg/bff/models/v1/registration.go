@@ -147,7 +147,7 @@ func (r *RegistrationForm) Validate(step StepType) error {
 	case StepContacts:
 		return r.ValidateContacts()
 	case StepTRIXO:
-		return r.ValidateContacts()
+		return r.ValidateTRIXO()
 	case StepTRISA:
 		return r.ValidateTRISA()
 	case StepNone, StepAll:
@@ -506,7 +506,7 @@ func (r *RegistrationForm) ValidateContacts() error {
 		contacts++
 		contact, field := iter.Value()
 		if !models.ContactIsZero(contact) {
-			err, _ = err.Append(ValidateContact(contact, "contacts."+field))
+			err, _ = err.Append(ValidateContact(contact, FieldContacts+"."+field))
 		}
 	}
 
@@ -558,39 +558,185 @@ func (r *RegistrationForm) ValidateContacts() error {
 }
 
 // Validate a single contact, using the field name to construct errors.
-func ValidateContact(contact *pb.Contact, fieldName string) (v ValidationErrors) {
+func ValidateContact(contact *pb.Contact, fieldName string) error {
+	err := make(ValidationErrors, 0)
 	name := strings.TrimSpace(contact.Name)
 	if name == "" {
-		v = append(v, &ValidationError{Field: fieldName + ".name", Err: ErrMissingField.Error()})
+		err = append(err, &ValidationError{Field: fieldName + ".name", Err: ErrMissingField.Error()})
 	} else if len(name) < 2 {
 		// Check that the name is long enough to match GDS validation
-		v = append(v, &ValidationError{Field: fieldName + ".name", Err: ErrTooShort.Error()})
+		err = append(err, &ValidationError{Field: fieldName + ".name", Err: ErrTooShort.Error()})
 	}
 
 	email := strings.TrimSpace(contact.Email)
 	if email == "" {
-		v = append(v, &ValidationError{Field: fieldName + ".email", Err: ErrMissingField.Error()})
+		err = append(err, &ValidationError{Field: fieldName + ".email", Err: ErrMissingField.Error()})
 	} else {
 		// Check that the email is parseable by RFC 5322.
-		if _, err := mail.ParseAddress(email); err != nil {
-			v = append(v, &ValidationError{Field: fieldName + ".email", Err: ErrInvalidEmail.Error()})
+		if _, verr := mail.ParseAddress(email); verr != nil {
+			err = append(err, &ValidationError{Field: fieldName + ".email", Err: ErrInvalidEmail.Error()})
 		}
 	}
 
 	phone := strings.TrimSpace(contact.Phone)
 	if phone == "" {
-		v = append(v, &ValidationError{Field: fieldName + ".phone", Err: ErrMissingField.Error()})
+		err = append(err, &ValidationError{Field: fieldName + ".phone", Err: ErrMissingField.Error()})
 	}
 
 	// TODO: Ensure this is a valid phone number
 
-	return v
+	if len(err) == 0 {
+		return nil
+	}
+
+	return err
 }
 
 // Validate only the fields in the trixo step.
 func (r *RegistrationForm) ValidateTRIXO() error {
-	// TODO: implement
-	return nil
+	err := make(ValidationErrors, 0)
+
+	if r.Trixo == nil {
+		err = append(err, &ValidationError{
+			Field: FieldTRIXO,
+			Err:   ErrMissingField.Error(),
+		})
+		return err
+	}
+
+	r.Trixo.PrimaryNationalJurisdiction = strings.TrimSpace(r.Trixo.PrimaryNationalJurisdiction)
+	if r.Trixo.PrimaryNationalJurisdiction == "" {
+		err = append(err, &ValidationError{
+			Field: FieldTRIXOPrimaryNationalJurisdiction,
+			Err:   ErrMissingField.Error(),
+		})
+	} else if len(r.Trixo.PrimaryNationalJurisdiction) != 2 {
+		err = append(err, &ValidationError{
+			Field: FieldTRIXOPrimaryNationalJurisdiction,
+			Err:   ErrInvalidCountry.Error(),
+		})
+	}
+
+	r.Trixo.PrimaryRegulator = strings.TrimSpace(r.Trixo.PrimaryRegulator)
+	if r.Trixo.PrimaryRegulator == "" {
+		err = append(err, &ValidationError{
+			Field: FieldTRIXOPrimaryRegulator,
+			Err:   ErrMissingField.Error(),
+		})
+	}
+
+	r.Trixo.FinancialTransfersPermitted = strings.ToLower(strings.TrimSpace(r.Trixo.FinancialTransfersPermitted))
+	if r.Trixo.FinancialTransfersPermitted == "" {
+		err = append(err, &ValidationError{
+			Field: FieldTRIXOFinancialTransfersPermitted,
+			Err:   ErrMissingField.Error(),
+		})
+	} else if r.Trixo.FinancialTransfersPermitted != "yes" && r.Trixo.FinancialTransfersPermitted != "no" && r.Trixo.FinancialTransfersPermitted != "partially" {
+		err = append(err, &ValidationError{
+			Field: FieldTRIXOFinancialTransfersPermitted,
+			Err:   ErrYesNoPartially.Error(),
+		})
+	}
+
+	for i, juris := range r.Trixo.OtherJurisdictions {
+		r.Trixo.OtherJurisdictions[i].Country = strings.TrimSpace(juris.Country)
+		if r.Trixo.OtherJurisdictions[i].Country == "" {
+			err = append(err, &ValidationError{
+				Field: FieldTRIXOOtherJurisdictionsCountry,
+				Err:   ErrMissingField.Error(),
+				Index: i,
+			})
+		} else if len(r.Trixo.OtherJurisdictions[i].Country) != 2 {
+			err = append(err, &ValidationError{
+				Field: FieldTRIXOOtherJurisdictionsCountry,
+				Err:   ErrInvalidCountry.Error(),
+				Index: i,
+			})
+		}
+
+		r.Trixo.OtherJurisdictions[i].RegulatorName = strings.TrimSpace(juris.RegulatorName)
+		if r.Trixo.OtherJurisdictions[i].RegulatorName == "" {
+			err = append(err, &ValidationError{
+				Field: FieldTRIXOOtherJurisdictionsRegulatorName,
+				Err:   ErrMissingField.Error(),
+				Index: i,
+			})
+		}
+
+		r.Trixo.OtherJurisdictions[i].LicenseNumber = strings.TrimSpace(juris.LicenseNumber)
+		if r.Trixo.OtherJurisdictions[i].LicenseNumber == "" {
+			err = append(err, &ValidationError{
+				Field: FieldTRIXOOtherJurisdictionsLicenseNumber,
+				Err:   ErrMissingField.Error(),
+				Index: i,
+			})
+		}
+	}
+
+	r.Trixo.HasRequiredRegulatoryProgram = strings.ToLower(strings.TrimSpace(r.Trixo.HasRequiredRegulatoryProgram))
+	if r.Trixo.HasRequiredRegulatoryProgram == "" {
+		err = append(err, &ValidationError{
+			Field: FieldTRIXOHasRequiredRegulatoryProgram,
+			Err:   ErrMissingField.Error(),
+		})
+	} else if r.Trixo.HasRequiredRegulatoryProgram != "yes" && r.Trixo.HasRequiredRegulatoryProgram != "no" {
+		err = append(err, &ValidationError{
+			Field: FieldTRIXOHasRequiredRegulatoryProgram,
+			Err:   ErrYesNo.Error(),
+		})
+	}
+
+	if r.Trixo.ConductsCustomerKyc {
+		if r.Trixo.KycThreshold < 0 {
+			err = append(err, &ValidationError{
+				Field: FieldTRIXOKYCThreshold,
+				Err:   ErrNegativeValue.Error(),
+			})
+		}
+
+		// TODO: Validate currency code
+		r.Trixo.KycThresholdCurrency = strings.TrimSpace(r.Trixo.KycThresholdCurrency)
+		if r.Trixo.KycThresholdCurrency == "" {
+			err = append(err, &ValidationError{
+				Field: FieldTRIXOKYCThresholdCurrency,
+				Err:   ErrMissingField.Error(),
+			})
+		}
+	}
+
+	if r.Trixo.MustComplyTravelRule {
+		for i, reg := range r.Trixo.ApplicableRegulations {
+			r.Trixo.ApplicableRegulations[i] = strings.TrimSpace(reg)
+			if r.Trixo.ApplicableRegulations[i] == "" {
+				err = append(err, &ValidationError{
+					Field: FieldTRIXOApplicableRegulations,
+					Err:   ErrMissingField.Error(),
+					Index: i,
+				})
+			}
+		}
+
+		if r.Trixo.ComplianceThreshold < 0 {
+			err = append(err, &ValidationError{
+				Field: FieldTRIXOComplianceThreshold,
+				Err:   ErrNegativeValue.Error(),
+			})
+		}
+
+		r.Trixo.ComplianceThresholdCurrency = strings.TrimSpace(r.Trixo.ComplianceThresholdCurrency)
+		if r.Trixo.ComplianceThresholdCurrency == "" {
+			err = append(err, &ValidationError{
+				Field: FieldTRIXOComplianceThresholdCurrency,
+				Err:   ErrMissingField.Error(),
+			})
+		}
+	}
+
+	if len(err) == 0 {
+		return nil
+	}
+
+	return err
 }
 
 // Validate only the fields in the trisa step.
@@ -607,7 +753,7 @@ func (r *RegistrationForm) ValidateTRISA() error {
 		err = append(err, &ValidationError{Field: FieldMainNet, Err: ErrMissingField.Error()})
 	} else {
 		err, _ = err.Append(validateNetwork(r.Mainnet, FieldMainNet))
-		if r.Testnet != nil && r.Mainnet.Endpoint == r.Testnet.Endpoint {
+		if r.Testnet != nil && r.Mainnet.Endpoint != "" && r.Mainnet.Endpoint == r.Testnet.Endpoint {
 			err = append(err, &ValidationError{Field: FieldMainNetEndpoint, Err: ErrDuplicateEndpoint.Error()})
 		}
 	}

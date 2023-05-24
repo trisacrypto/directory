@@ -8,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	. "github.com/trisacrypto/directory/pkg/bff/models/v1"
-	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
 )
@@ -107,7 +106,7 @@ func TestValidateBasicDetails(t *testing.T) {
 		{"example.com", pb.BusinessCategory_GOVERNMENT_ENTITY, []string{"Exchange"}, "2021-01-01", "Example, Inc.", nil},
 	}
 
-	for _, tc := range testCases {
+	for i, tc := range testCases {
 		form := RegistrationForm{}
 		form.Website = tc.website
 		form.BusinessCategory = tc.businessCategory
@@ -115,74 +114,167 @@ func TestValidateBasicDetails(t *testing.T) {
 		form.EstablishedOn = tc.establishedOn
 		form.OrganizationName = tc.orgName
 
-		errs := form.Validate(StepBasicDetails)
+		err := form.Validate(StepBasicDetails)
 		if tc.errs == nil {
-			require.NoError(t, errs)
+			require.NoError(t, err, "test case %d failed", i)
 		} else {
 			var verrs ValidationErrors
-			require.ErrorAs(t, errs, &verrs)
-			require.Equal(t, tc.errs, verrs)
+			require.ErrorAs(t, err, &verrs, "test case %d failed", i)
+			require.Equal(t, tc.errs, verrs, "test case %d failed", i)
 		}
 	}
 }
 
-func TestValidateLegalPerson(t *testing.T) {
+// Test validating the trixo questionnaire step of the registration form
+func TestValidateTRIXO(t *testing.T) {
 	testCases := []struct {
-		entity *ivms101.LegalPerson
-		errs   ValidationErrors
+		trixo *pb.TRIXOQuestionnaire
+		errs  ValidationErrors
 	}{
-		{nil, ValidationErrors{{Field: FieldEntity, Err: ErrMissingField.Error()}}},
-		{
-			&ivms101.LegalPerson{},
-			ValidationErrors{
-				{Field: FieldEntityName, Err: ErrMissingField.Error()},
-				{Field: FieldEntityGeographicAddresses, Err: ErrNoGeographicAddress.Error()},
-				{Field: FieldEntityNationalIdentification, Err: ErrLegalNatIDRequired.Error()},
-				{Field: FieldEntityCountryOfRegistration, Err: ErrMissingField.Error()},
-				{Field: FieldEntity, Err: "one or more legal person name identifiers is required"},
+		{nil, ValidationErrors{
+			{Field: FieldTRIXO, Err: ErrMissingField.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryRegulator:             "FinCEN",
+			FinancialTransfersPermitted:  "Yes",
+			HasRequiredRegulatoryProgram: "Yes",
+		}, ValidationErrors{
+			{Field: FieldTRIXOPrimaryNationalJurisdiction, Err: ErrMissingField.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryRegulator:             "FinCEN",
+			PrimaryNationalJurisdiction:  "USA",
+			FinancialTransfersPermitted:  "Yes",
+			HasRequiredRegulatoryProgram: "Yes",
+		}, ValidationErrors{
+			{Field: FieldTRIXOPrimaryNationalJurisdiction, Err: ErrInvalidCountry.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			FinancialTransfersPermitted:  "No",
+			HasRequiredRegulatoryProgram: "No",
+		}, ValidationErrors{
+			{Field: FieldTRIXOPrimaryNationalJurisdiction, Err: ErrMissingField.Error()},
+			{Field: FieldTRIXOPrimaryRegulator, Err: ErrMissingField.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			HasRequiredRegulatoryProgram: "yes",
+		}, ValidationErrors{
+			{Field: FieldTRIXOPrimaryNationalJurisdiction, Err: ErrMissingField.Error()},
+			{Field: FieldTRIXOPrimaryRegulator, Err: ErrMissingField.Error()},
+			{Field: FieldTRIXOFinancialTransfersPermitted, Err: ErrMissingField.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			FinancialTransfersPermitted:  "idk",
+			HasRequiredRegulatoryProgram: "YES",
+		}, ValidationErrors{
+			{Field: FieldTRIXOPrimaryNationalJurisdiction, Err: ErrMissingField.Error()},
+			{Field: FieldTRIXOPrimaryRegulator, Err: ErrMissingField.Error()},
+			{Field: FieldTRIXOFinancialTransfersPermitted, Err: ErrYesNoPartially.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			HasRequiredRegulatoryProgram: "NO",
+			OtherJurisdictions: []*pb.Jurisdiction{
+				{Country: "FR", RegulatorName: "AMF", LicenseNumber: "123"},
+				{RegulatorName: "FinCEN", LicenseNumber: "456"},
+				{Country: "US", LicenseNumber: "456"},
+				{Country: "US"},
+				{Country: "USA", RegulatorName: "FinCEN", LicenseNumber: "456"},
 			},
-		},
-		{
-			&ivms101.LegalPerson{
-				Name: &ivms101.LegalPersonName{
-					NameIdentifiers: []*ivms101.LegalPersonNameId{
-						{
-							LegalPersonName:               "Wayne Enterprises, LTD",
-							LegalPersonNameIdentifierType: ivms101.LegalPersonLegal,
-						},
-					},
-				},
-				GeographicAddresses: []*ivms101.Address{
-					{
-						AddressType: ivms101.AddressTypeBusiness,
-						AddressLine: []string{
-							"1 Wayne Tower",
-							"Gotham City, NJ 08302",
-						},
-						Country: "US",
-					},
-				},
-				NationalIdentification: &ivms101.NationalIdentification{
-					NationalIdentifier:     "ZGWO00PIA5JMETFLPG72",
-					NationalIdentifierType: ivms101.NationalIdentifierLEIX,
-				},
-				CountryOfRegistration: "US",
-			},
-			nil,
-		},
+		}, ValidationErrors{
+			{Field: FieldTRIXOPrimaryNationalJurisdiction, Err: ErrMissingField.Error()},
+			{Field: FieldTRIXOPrimaryRegulator, Err: ErrMissingField.Error()},
+			{Field: FieldTRIXOFinancialTransfersPermitted, Err: ErrMissingField.Error()},
+			{Field: FieldTRIXOOtherJurisdictionsCountry, Err: ErrMissingField.Error(), Index: 1},
+			{Field: FieldTRIXOOtherJurisdictionsRegulatorName, Err: ErrMissingField.Error(), Index: 2},
+			{Field: FieldTRIXOOtherJurisdictionsRegulatorName, Err: ErrMissingField.Error(), Index: 3},
+			{Field: FieldTRIXOOtherJurisdictionsLicenseNumber, Err: ErrMissingField.Error(), Index: 3},
+			{Field: FieldTRIXOOtherJurisdictionsCountry, Err: ErrInvalidCountry.Error(), Index: 4},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryNationalJurisdiction: "US",
+			PrimaryRegulator:            "FinCEN",
+			FinancialTransfersPermitted: "Yes",
+		}, ValidationErrors{
+			{Field: FieldTRIXOHasRequiredRegulatoryProgram, Err: ErrMissingField.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryNationalJurisdiction:  "US",
+			PrimaryRegulator:             "FinCEN",
+			FinancialTransfersPermitted:  "Yes",
+			HasRequiredRegulatoryProgram: "idk",
+		}, ValidationErrors{
+			{Field: FieldTRIXOHasRequiredRegulatoryProgram, Err: ErrYesNo.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryNationalJurisdiction:  "US",
+			PrimaryRegulator:             "FinCEN",
+			FinancialTransfersPermitted:  " Yes ",
+			HasRequiredRegulatoryProgram: " Yes ",
+			ConductsCustomerKyc:          true,
+			KycThreshold:                 -1,
+		}, ValidationErrors{
+			{Field: FieldTRIXOKYCThreshold, Err: ErrNegativeValue.Error()},
+			{Field: FieldTRIXOKYCThresholdCurrency, Err: ErrMissingField.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryNationalJurisdiction:  "US",
+			PrimaryRegulator:             "FinCEN",
+			FinancialTransfersPermitted:  "Partially",
+			HasRequiredRegulatoryProgram: "Yes",
+			MustComplyTravelRule:         true,
+			ComplianceThreshold:          -1,
+		}, ValidationErrors{
+			{Field: FieldTRIXOComplianceThreshold, Err: ErrNegativeValue.Error()},
+			{Field: FieldTRIXOComplianceThresholdCurrency, Err: ErrMissingField.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryNationalJurisdiction:  "US",
+			PrimaryRegulator:             "FinCEN",
+			FinancialTransfersPermitted:  "Partially",
+			HasRequiredRegulatoryProgram: "Yes",
+			MustComplyTravelRule:         true,
+			ApplicableRegulations:        []string{"Reg1", ""},
+			ComplianceThreshold:          -1,
+			ComplianceThresholdCurrency:  "USD",
+		}, ValidationErrors{
+			{Field: FieldTRIXOApplicableRegulations, Err: ErrMissingField.Error(), Index: 1},
+			{Field: FieldTRIXOComplianceThreshold, Err: ErrNegativeValue.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryNationalJurisdiction:  "US",
+			PrimaryRegulator:             "FinCEN",
+			FinancialTransfersPermitted:  "yes",
+			HasRequiredRegulatoryProgram: "yes",
+			ConductsCustomerKyc:          true,
+			KycThreshold:                 1000,
+			KycThresholdCurrency:         "USD",
+			MustComplyTravelRule:         true,
+			ApplicableRegulations:        []string{"Reg1", "Reg2"},
+			ComplianceThreshold:          1000,
+			ComplianceThresholdCurrency:  "USD",
+		}, nil},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryNationalJurisdiction:  "US",
+			PrimaryRegulator:             "FinCEN",
+			FinancialTransfersPermitted:  "Yes",
+			HasRequiredRegulatoryProgram: "Yes",
+			KycThreshold:                 -1,
+			ComplianceThreshold:          -1,
+		}, nil},
 	}
 
 	for i, tc := range testCases {
-		form := &RegistrationForm{Entity: tc.entity}
-		err := form.Validate(StepLegalPerson)
+		form := RegistrationForm{
+			Trixo: tc.trixo,
+		}
 
-		if len(tc.errs) > 0 {
-			var valid ValidationErrors
-			require.ErrorAs(t, err, &valid, "expected validation errors in test case %d", i)
-			require.Len(t, valid, len(tc.errs), "expected same number of validation errors in test case %d", i)
-			require.Equal(t, tc.errs, valid, "expected same validation errors in test case %d", i)
+		err := form.Validate(StepTRIXO)
+		if tc.errs == nil {
+			require.NoError(t, err, "test case %d failed", i)
 		} else {
-			require.NoError(t, err, "expected fully valid entity on test case %d", i)
+			var verrs ValidationErrors
+			require.ErrorAs(t, err, &verrs, "test case %d failed", i)
+			require.Equal(t, tc.errs, verrs, "test case %d failed", i)
 		}
 	}
 }
@@ -328,9 +420,15 @@ func TestValidateContact(t *testing.T) {
 		{&pb.Contact{Name: "Leopold Wentzel", Email: "leopold.wentzel@gmail.com", Phone: "555-867-5309"}, nil},
 	}
 
-	for _, tc := range testCases {
-		errs := ValidateContact(tc.contact, "admin")
-		require.Equal(t, tc.errs, errs)
+	for i, tc := range testCases {
+		err := ValidateContact(tc.contact, "admin")
+		if tc.errs == nil {
+			require.NoError(t, err, "test case %d failed", i)
+		} else {
+			var verrs ValidationErrors
+			require.ErrorAs(t, err, &verrs, "test case %d failed", i)
+			require.Equal(t, tc.errs, verrs, "test case %d failed", i)
+		}
 	}
 }
 
@@ -349,6 +447,12 @@ func TestValidateTRISA(t *testing.T) {
 		{nil, nil, ValidationErrors{
 			{Field: FieldTestNet, Err: ErrMissingField.Error()},
 			{Field: FieldMainNet, Err: ErrMissingField.Error()},
+		}},
+		{&NetworkDetails{}, &NetworkDetails{}, ValidationErrors{
+			{Field: FieldTestNetEndpoint, Err: ErrMissingField.Error()},
+			{Field: FieldTestNetCommonName, Err: ErrMissingField.Error()},
+			{Field: FieldMainNetEndpoint, Err: ErrMissingField.Error()},
+			{Field: FieldMainNetCommonName, Err: ErrMissingField.Error()},
 		}},
 		{&NetworkDetails{CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
 			{Field: FieldTestNetEndpoint, Err: ErrMissingField.Error()},
