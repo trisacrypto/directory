@@ -5,7 +5,7 @@ import type { GetCertificateQuery, PayloadDTO } from 'modules/dashboard/certific
 
 export function useFetchCertificateStep(payload: PayloadDTO): GetCertificateQuery {
   const query = useQuery(
-    ['fetch-certficate-step', payload.key],
+    ['fetch-certificate-step', payload.key],
     () => getCertificateStepService(payload),
     {
       enabled: !!payload.key,

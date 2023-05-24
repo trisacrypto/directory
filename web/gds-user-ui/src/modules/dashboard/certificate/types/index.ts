@@ -13,7 +13,7 @@ export interface GetCertificateQuery {
 
 export interface PostCertificateMutation {
   updateCertificateStep: UseMutateFunction<PostPayloadDTO, unknown, any, unknown>;
-  certificateStep: any;
+  updatedCertificateStep: any;
   hasCertificateStepFailed: boolean;
   wasCertificateStepUpdated: boolean;
   isUpdatingCertificateStep: boolean;
@@ -26,7 +26,6 @@ export type PayloadDTO = {
 };
 
 export type PostPayloadDTO = {
-  key: StepperType;
-  state: StateFormType;
-  form: BasicStepType | any; // add other form types later
+  step: StepperType;
+  form: any; // add other form types later
 };

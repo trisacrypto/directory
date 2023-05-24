@@ -14,70 +14,78 @@ import StepButtons from 'components/StepsButtons';
 import { isProdEnv } from 'application/config';
 import { DevTool } from '@hookform/devtools';
 import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
-
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 import useCertificateStepper from 'hooks/useCertificateStepper';
+import { StepEnum } from 'types/enums';
+
 interface BasicDetailsFormProps {
-  data: any;
+  data?: any;
   isLoading?: boolean;
 }
 const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
-  const { updateCertificateStep, wasCertificateStepUpdated } = useUpdateCertificateStep();
+  const { certificateStep } = useFetchCertificateStep({
+    key: StepEnum.BASIC
+  });
+  const { updateCertificateStep, updatedCertificateStep, wasCertificateStepUpdated, reset } =
+    useUpdateCertificateStep();
   const resolver = yupResolver(basicDetailsValidationSchema);
   const options = getBusinessCategoryOptions();
-  const { nextStep, currentState } = useCertificateStepper();
+  const { currentState, nextStep } = useCertificateStepper();
 
   const [language] = useLanguageProvider();
+
+  console.log('[] certificateStep', certificateStep);
 
   useEffect(() => {}, [language]);
 
   const methods = useForm({
-    defaultValues: data,
-    resolver,
-    mode: 'onChange'
+    defaultValues: certificateStep?.form || data,
+    resolver
   });
 
-  console.log('[] errors', methods.getValues());
+  useEffect(() => {
+    if (wasCertificateStepUpdated && updatedCertificateStep?.step === StepEnum.BASIC) {
+      nextStep(updatedCertificateStep?.errors);
+    }
+    return () => {
+      reset();
+    };
+  }, [wasCertificateStepUpdated, reset, updatedCertificateStep, nextStep]);
 
   const {
     register,
-    handleSubmit,
     formState: { errors, isDirty },
     control
   } = methods;
 
-  // const {
-  //   formState: { isDirty },
-  //   reset
-  // } = methods;
-
-  // function getFieldValue(name: string) {
-  //   return _.get(methods.getValues(), name);
-  // }
-
-  const onSubmit = (v: any) => {
-    console.log('[] v', v);
+  const handleNextStepClick = () => {
+    console.log('[] handleNextStep', methods.getValues());
     // if the form is dirty, then we need to save the data and move to the next step
-    if (isDirty) {
+    console.log('[] isDirty', isDirty);
+    if (!isDirty) {
+      console.log('[] isDirty handleNextStepClick 1 ', certificateStep);
+      console.log('[] isDirty handleNextStepClick 2 ', updatedCertificateStep);
+      nextStep(updatedCertificateStep?.errors ?? certificateStep?.errors);
+    } else {
       const payload = {
-        key: 'basic',
-        form: methods.getValues(),
-        state: currentState()
+        step: StepEnum.BASIC,
+        form: {
+          ...methods.getValues(),
+          state: currentState()
+        } as any
       };
-      console.log('[] payload', payload);
+      console.log('[] isDirty 3 payload', payload);
 
       updateCertificateStep(payload);
-
-      if (wasCertificateStepUpdated) {
-        // display next step
-        nextStep();
-      }
+      console.log('[] isDirty 3 (not)', updatedCertificateStep);
+      nextStep(updatedCertificateStep?.errors);
     }
   };
 
   return (
     <FormLayout>
       <FormProvider {...methods}>
-        <chakra.form onSubmit={handleSubmit(onSubmit)}>
+        <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
           <VStack spacing={4} w="100%">
             <InputFormControl
               controlId="organization_name"
@@ -153,7 +161,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
                 />
               )}
             />
-            <StepButtons handleNextStep={() => onSubmit} />
+            <StepButtons handleNextStep={handleNextStepClick} isFirstStep={true} />
           </VStack>
         </chakra.form>
         {!isProdEnv ? <DevTool control={methods.control} /> : null}

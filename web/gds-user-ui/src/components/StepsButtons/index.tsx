@@ -8,17 +8,17 @@ type StepButtonsProps = {
   isCurrentStepLastStep?: boolean;
   handleResetForm?: () => void;
   isDefaultValue?: () => boolean;
+  isFirstStep?: boolean;
 };
 
 function StepButtons({
   handlePreviousStep,
-  currentStep,
+  isFirstStep = false,
   handleNextStep,
   isCurrentStepLastStep,
   handleResetForm,
   isDefaultValue = () => false
 }: StepButtonsProps) {
-  const isFirstStep = currentStep === 1;
   return (
     <>
       <Stack

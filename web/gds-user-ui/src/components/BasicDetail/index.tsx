@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Box, Heading, Stack, HStack, useToast } from '@chakra-ui/react';
 import BasicDetailsForm from 'components/BasicDetailsForm';
 import useCertificateStepper from 'hooks/useCertificateStepper';
@@ -18,18 +18,16 @@ interface BasicDetailProps {
   onChangeRegistrationState?: any;
 }
 const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState }) => {
-  const [basicStepData, setBasicStepData] = useState<any>({});
-
   const steps = useSelector(getSteps);
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);
   const toast = useToast();
 
   const { updateStateFromFormValues, setRegistrationValue } = useCertificateStepper();
-  const { certificateStep, wasCertificateStepFetched, isFetchingCertificateStep } =
-    useFetchCertificateStep({
-      key: StepEnum.BASIC
-    });
+  const { isFetchingCertificateStep } = useFetchCertificateStep({
+    key: StepEnum.BASIC
+  });
+
   const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState(false);
   const handleFileUploaded = (file: any) => {
     // console.log('[handleFileUploaded]', file);
@@ -80,13 +78,6 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
     reader.readAsText(file);
   };
 
-  useEffect(() => {
-    if (wasCertificateStepFetched && certificateStep.step === StepEnum.BASIC) {
-      console.log('[]certificateStep', certificateStep?.form);
-      setBasicStepData(certificateStep.form);
-    }
-  }, [setBasicStepData, wasCertificateStepFetched, certificateStep]);
-
   return (
     <Stack spacing={7} mt="2rem">
       <HStack justifyContent={'space-between'}>
@@ -104,7 +95,7 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
         {isLoadingDefaultValue || isFetchingCertificateStep ? (
           <MinusLoader text={'Loading data ...'} />
         ) : (
-          <BasicDetailsForm data={basicStepData} isLoading={isFetchingCertificateStep} />
+          <BasicDetailsForm isLoading={isFetchingCertificateStep} />
         )}
       </Box>
     </Stack>

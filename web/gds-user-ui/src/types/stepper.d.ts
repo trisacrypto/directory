@@ -3,7 +3,7 @@ type TStep = {
   status: StepStatus;
   key?: number;
   data?: any;
-  missingFields?: string[];
+  missingFields?: any[];
 };
 type TStepStatus = 'progress' | 'success' | 'error';
 type TStatusKey = 'testnet' | 'mainnet';
