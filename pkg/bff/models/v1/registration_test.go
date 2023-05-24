@@ -142,6 +142,14 @@ func TestValidateTRIXO(t *testing.T) {
 			{Field: FieldTRIXOPrimaryNationalJurisdiction, Err: ErrMissingField.Error()},
 		}},
 		{&pb.TRIXOQuestionnaire{
+			PrimaryRegulator:             "FinCEN",
+			PrimaryNationalJurisdiction:  "USA",
+			FinancialTransfersPermitted:  "Yes",
+			HasRequiredRegulatoryProgram: "Yes",
+		}, ValidationErrors{
+			{Field: FieldTRIXOPrimaryNationalJurisdiction, Err: ErrInvalidCountry.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
 			FinancialTransfersPermitted:  "No",
 			HasRequiredRegulatoryProgram: "No",
 		}, ValidationErrors{
@@ -161,7 +169,7 @@ func TestValidateTRIXO(t *testing.T) {
 		}, ValidationErrors{
 			{Field: FieldTRIXOPrimaryNationalJurisdiction, Err: ErrMissingField.Error()},
 			{Field: FieldTRIXOPrimaryRegulator, Err: ErrMissingField.Error()},
-			{Field: FieldTRIXOFinancialTransfersPermitted, Err: ErrInvalidField.Error()},
+			{Field: FieldTRIXOFinancialTransfersPermitted, Err: ErrYesNoPartially.Error()},
 		}},
 		{&pb.TRIXOQuestionnaire{
 			HasRequiredRegulatoryProgram: "NO",
@@ -170,6 +178,7 @@ func TestValidateTRIXO(t *testing.T) {
 				{RegulatorName: "FinCEN", LicenseNumber: "456"},
 				{Country: "US", LicenseNumber: "456"},
 				{Country: "US"},
+				{Country: "USA", RegulatorName: "FinCEN", LicenseNumber: "456"},
 			},
 		}, ValidationErrors{
 			{Field: FieldTRIXOPrimaryNationalJurisdiction, Err: ErrMissingField.Error()},
@@ -179,6 +188,7 @@ func TestValidateTRIXO(t *testing.T) {
 			{Field: FieldTRIXOOtherJurisdictionsRegulatorName, Err: ErrMissingField.Error(), Index: 2},
 			{Field: FieldTRIXOOtherJurisdictionsRegulatorName, Err: ErrMissingField.Error(), Index: 3},
 			{Field: FieldTRIXOOtherJurisdictionsLicenseNumber, Err: ErrMissingField.Error(), Index: 3},
+			{Field: FieldTRIXOOtherJurisdictionsCountry, Err: ErrInvalidCountry.Error(), Index: 4},
 		}},
 		{&pb.TRIXOQuestionnaire{
 			PrimaryNationalJurisdiction: "US",
@@ -193,7 +203,7 @@ func TestValidateTRIXO(t *testing.T) {
 			FinancialTransfersPermitted:  "Yes",
 			HasRequiredRegulatoryProgram: "idk",
 		}, ValidationErrors{
-			{Field: FieldTRIXOHasRequiredRegulatoryProgram, Err: ErrInvalidField.Error()},
+			{Field: FieldTRIXOHasRequiredRegulatoryProgram, Err: ErrYesNo.Error()},
 		}},
 		{&pb.TRIXOQuestionnaire{
 			PrimaryNationalJurisdiction:  "US",
@@ -214,7 +224,6 @@ func TestValidateTRIXO(t *testing.T) {
 			MustComplyTravelRule:         true,
 			ComplianceThreshold:          -1,
 		}, ValidationErrors{
-			{Field: FieldTRIXOApplicableRegulations, Err: ErrMissingField.Error()},
 			{Field: FieldTRIXOComplianceThreshold, Err: ErrNegativeValue.Error()},
 			{Field: FieldTRIXOComplianceThresholdCurrency, Err: ErrMissingField.Error()},
 		}},
@@ -438,6 +447,12 @@ func TestValidateTRISA(t *testing.T) {
 		{nil, nil, ValidationErrors{
 			{Field: FieldTestNet, Err: ErrMissingField.Error()},
 			{Field: FieldMainNet, Err: ErrMissingField.Error()},
+		}},
+		{&NetworkDetails{}, &NetworkDetails{}, ValidationErrors{
+			{Field: FieldTestNetEndpoint, Err: ErrMissingField.Error()},
+			{Field: FieldTestNetCommonName, Err: ErrMissingField.Error()},
+			{Field: FieldMainNetEndpoint, Err: ErrMissingField.Error()},
+			{Field: FieldMainNetCommonName, Err: ErrMissingField.Error()},
 		}},
 		{&NetworkDetails{CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
 			{Field: FieldTestNetEndpoint, Err: ErrMissingField.Error()},

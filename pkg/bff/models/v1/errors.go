@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	ErrInvalidField            = errors.New("invalid field")
+	ErrYesNo                   = errors.New("field must be either 'yes' or 'no'")
+	ErrYesNoPartially          = errors.New("field must be either 'yes', 'no', or 'partially'")
 	ErrNegativeValue           = errors.New("field cannot be negative")
 	ErrMissingField            = errors.New("missing required field")
 	ErrTooShort                = errors.New("field is too short")

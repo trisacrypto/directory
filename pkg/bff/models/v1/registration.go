@@ -604,45 +604,58 @@ func (r *RegistrationForm) ValidateTRIXO() error {
 		return err
 	}
 
-	// TODO: Validate country name or ISO-3166-1 code
-	if strings.TrimSpace(r.Trixo.PrimaryNationalJurisdiction) == "" {
+	r.Trixo.PrimaryNationalJurisdiction = strings.TrimSpace(r.Trixo.PrimaryNationalJurisdiction)
+	if r.Trixo.PrimaryNationalJurisdiction == "" {
 		err = append(err, &ValidationError{
 			Field: FieldTRIXOPrimaryNationalJurisdiction,
 			Err:   ErrMissingField.Error(),
 		})
+	} else if len(r.Trixo.PrimaryNationalJurisdiction) != 2 {
+		err = append(err, &ValidationError{
+			Field: FieldTRIXOPrimaryNationalJurisdiction,
+			Err:   ErrInvalidCountry.Error(),
+		})
 	}
 
-	if strings.TrimSpace(r.Trixo.PrimaryRegulator) == "" {
+	r.Trixo.PrimaryRegulator = strings.TrimSpace(r.Trixo.PrimaryRegulator)
+	if r.Trixo.PrimaryRegulator == "" {
 		err = append(err, &ValidationError{
 			Field: FieldTRIXOPrimaryRegulator,
 			Err:   ErrMissingField.Error(),
 		})
 	}
 
-	finTransfers := strings.ToLower(strings.TrimSpace(r.Trixo.FinancialTransfersPermitted))
-	if finTransfers == "" {
+	r.Trixo.FinancialTransfersPermitted = strings.ToLower(strings.TrimSpace(r.Trixo.FinancialTransfersPermitted))
+	if r.Trixo.FinancialTransfersPermitted == "" {
 		err = append(err, &ValidationError{
 			Field: FieldTRIXOFinancialTransfersPermitted,
 			Err:   ErrMissingField.Error(),
 		})
-	} else if finTransfers != "yes" && finTransfers != "no" && finTransfers != "partially" {
+	} else if r.Trixo.FinancialTransfersPermitted != "yes" && r.Trixo.FinancialTransfersPermitted != "no" && r.Trixo.FinancialTransfersPermitted != "partially" {
 		err = append(err, &ValidationError{
 			Field: FieldTRIXOFinancialTransfersPermitted,
-			Err:   ErrInvalidField.Error(),
+			Err:   ErrYesNoPartially.Error(),
 		})
 	}
 
 	for i, juris := range r.Trixo.OtherJurisdictions {
-		// TODO: Validate country name or ISO-3166-1 code
-		if strings.TrimSpace(juris.Country) == "" {
+		r.Trixo.OtherJurisdictions[i].Country = strings.TrimSpace(juris.Country)
+		if r.Trixo.OtherJurisdictions[i].Country == "" {
 			err = append(err, &ValidationError{
 				Field: FieldTRIXOOtherJurisdictionsCountry,
 				Err:   ErrMissingField.Error(),
 				Index: i,
 			})
+		} else if len(r.Trixo.OtherJurisdictions[i].Country) != 2 {
+			err = append(err, &ValidationError{
+				Field: FieldTRIXOOtherJurisdictionsCountry,
+				Err:   ErrInvalidCountry.Error(),
+				Index: i,
+			})
 		}
 
-		if strings.TrimSpace(juris.RegulatorName) == "" {
+		r.Trixo.OtherJurisdictions[i].RegulatorName = strings.TrimSpace(juris.RegulatorName)
+		if r.Trixo.OtherJurisdictions[i].RegulatorName == "" {
 			err = append(err, &ValidationError{
 				Field: FieldTRIXOOtherJurisdictionsRegulatorName,
 				Err:   ErrMissingField.Error(),
@@ -650,7 +663,8 @@ func (r *RegistrationForm) ValidateTRIXO() error {
 			})
 		}
 
-		if strings.TrimSpace(juris.LicenseNumber) == "" {
+		r.Trixo.OtherJurisdictions[i].LicenseNumber = strings.TrimSpace(juris.LicenseNumber)
+		if r.Trixo.OtherJurisdictions[i].LicenseNumber == "" {
 			err = append(err, &ValidationError{
 				Field: FieldTRIXOOtherJurisdictionsLicenseNumber,
 				Err:   ErrMissingField.Error(),
@@ -659,16 +673,16 @@ func (r *RegistrationForm) ValidateTRIXO() error {
 		}
 	}
 
-	hasReg := strings.ToLower(strings.TrimSpace(r.Trixo.HasRequiredRegulatoryProgram))
-	if hasReg == "" {
+	r.Trixo.HasRequiredRegulatoryProgram = strings.ToLower(strings.TrimSpace(r.Trixo.HasRequiredRegulatoryProgram))
+	if r.Trixo.HasRequiredRegulatoryProgram == "" {
 		err = append(err, &ValidationError{
 			Field: FieldTRIXOHasRequiredRegulatoryProgram,
 			Err:   ErrMissingField.Error(),
 		})
-	} else if hasReg != "yes" && hasReg != "no" {
+	} else if r.Trixo.HasRequiredRegulatoryProgram != "yes" && r.Trixo.HasRequiredRegulatoryProgram != "no" {
 		err = append(err, &ValidationError{
 			Field: FieldTRIXOHasRequiredRegulatoryProgram,
-			Err:   ErrInvalidField.Error(),
+			Err:   ErrYesNo.Error(),
 		})
 	}
 
@@ -681,7 +695,8 @@ func (r *RegistrationForm) ValidateTRIXO() error {
 		}
 
 		// TODO: Validate currency code
-		if strings.TrimSpace(r.Trixo.KycThresholdCurrency) == "" {
+		r.Trixo.KycThresholdCurrency = strings.TrimSpace(r.Trixo.KycThresholdCurrency)
+		if r.Trixo.KycThresholdCurrency == "" {
 			err = append(err, &ValidationError{
 				Field: FieldTRIXOKYCThresholdCurrency,
 				Err:   ErrMissingField.Error(),
@@ -690,15 +705,9 @@ func (r *RegistrationForm) ValidateTRIXO() error {
 	}
 
 	if r.Trixo.MustComplyTravelRule {
-		if len(r.Trixo.ApplicableRegulations) == 0 {
-			err = append(err, &ValidationError{
-				Field: FieldTRIXOApplicableRegulations,
-				Err:   ErrMissingField.Error(),
-			})
-		}
-
 		for i, reg := range r.Trixo.ApplicableRegulations {
-			if strings.TrimSpace(reg) == "" {
+			r.Trixo.ApplicableRegulations[i] = strings.TrimSpace(reg)
+			if r.Trixo.ApplicableRegulations[i] == "" {
 				err = append(err, &ValidationError{
 					Field: FieldTRIXOApplicableRegulations,
 					Err:   ErrMissingField.Error(),
@@ -714,7 +723,8 @@ func (r *RegistrationForm) ValidateTRIXO() error {
 			})
 		}
 
-		if strings.TrimSpace(r.Trixo.ComplianceThresholdCurrency) == "" {
+		r.Trixo.ComplianceThresholdCurrency = strings.TrimSpace(r.Trixo.ComplianceThresholdCurrency)
+		if r.Trixo.ComplianceThresholdCurrency == "" {
 			err = append(err, &ValidationError{
 				Field: FieldTRIXOComplianceThresholdCurrency,
 				Err:   ErrMissingField.Error(),
@@ -743,7 +753,7 @@ func (r *RegistrationForm) ValidateTRISA() error {
 		err = append(err, &ValidationError{Field: FieldMainNet, Err: ErrMissingField.Error()})
 	} else {
 		err, _ = err.Append(validateNetwork(r.Mainnet, FieldMainNet))
-		if r.Testnet != nil && r.Mainnet.Endpoint == r.Testnet.Endpoint {
+		if r.Testnet != nil && r.Mainnet.Endpoint != "" && r.Mainnet.Endpoint == r.Testnet.Endpoint {
 			err = append(err, &ValidationError{Field: FieldMainNetEndpoint, Err: ErrDuplicateEndpoint.Error()})
 		}
 	}
