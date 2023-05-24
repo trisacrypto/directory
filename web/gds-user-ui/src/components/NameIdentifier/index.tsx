@@ -4,7 +4,7 @@ import DeleteButton from 'components/ui/DeleteButton';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getNameIdentiferTypeOptions } from 'constants/name-identifiers';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Control,
   Controller,
@@ -32,7 +32,8 @@ const NameIdentifier: React.ForwardRefExoticComponent<
     register,
     control,
     formState: { errors },
-    getValues
+    getValues,
+    setValue
   } = useFormContext();
   const { name, controlId, description, heading, type } = props;
   const { fields, remove, append } = useFieldArray({ name, control });
@@ -54,6 +55,25 @@ const NameIdentifier: React.ForwardRefExoticComponent<
       return getOrganizationNameValue;
     }
   };
+
+  // set default value for the first legal name
+  useEffect(() => {
+    console.log('[] 1 name', name);
+    if (type === 'legal' && fields.length === 1) {
+      const value = `${name}[0].legal_person_name` as string;
+      setValue(`${value}`, getOrganizationNameValue);
+    }
+  }, [getOrganizationNameValue, setValue, type, fields.length, name, fields]);
+
+  // set the first selected value for the first legal name
+
+  useEffect(() => {
+    console.log('[] 2 name', name);
+    if (type === 'legal' && fields.length === 1) {
+      const value = `${name}[0].legal_person_name_identifier_type` as string;
+      setValue(`${value}`, nameIdentiferTypeOptions[0].value);
+    }
+  }, [nameIdentiferTypeOptions, setValue, type, fields.length, name]);
 
   return (
     <Stack align="start" width="100%">

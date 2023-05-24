@@ -1,7 +1,7 @@
 import { Meta, Story } from '@storybook/react';
 import { withReduxContext } from 'hoc/withReduxContext';
 
-import TestNetCertificateProgressBar from './TestNetCertificateProgressBar.component';
+import TestNetCertificateProgressBar from './CertificateRegistrationForm';
 
 type TestNetCertificateProgressBarProps = {};
 

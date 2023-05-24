@@ -18,19 +18,15 @@ export const trisaImplementationValidationSchema = yup.object().shape({
     endpoint: yup.string().matches(trisaEndpointPattern, {
       message: _i18n._(t`TRISA endpoint is not valid.`)
     }),
-    common_name: yup
-      .string()
-      .required()
-      .matches(commonNameRegex, {
-        message: _i18n._(
-          t`Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods.`
-        )
-      })
+    common_name: yup.string().matches(commonNameRegex, {
+      message: _i18n._(
+        t`Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods.`
+      )
+    })
   }),
   mainnet: yup.object().shape({
     endpoint: yup
       .string()
-      .required()
       .test(
         'uniqueMainetEndpoint',
         _i18n._(t`TestNet and MainNet endpoints should not be the same.`),
@@ -44,14 +40,11 @@ export const trisaImplementationValidationSchema = yup.object().shape({
       .matches(trisaEndpointPattern, {
         message: _i18n._(t`TRISA endpoint is not valid.`)
       }),
-    common_name: yup
-      .string()
-      .required()
-      .matches(commonNameRegex, {
-        message: _i18n._(
-          t`Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods.`
-        )
-      })
+    common_name: yup.string().matches(commonNameRegex, {
+      message: _i18n._(
+        t`Common name should not contain special characters, no spaces and must have a dot(.) in it and should have at least 2 characters after the periods.`
+      )
+    })
   }),
   // this field is removed from value object when trisa form is unmounted
   tempField: yup
