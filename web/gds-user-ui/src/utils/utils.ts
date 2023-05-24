@@ -100,7 +100,7 @@ export function currencyFormatter(
   });
 
   if (amount === 0) {
-    return formatedAmount.format(0.00);
+    return formatedAmount.format(0.0);
   }
 
   return formatedAmount.format(amount);
@@ -236,15 +236,17 @@ export const isTokenExpired = () => {
 
 export const getUserExpiresTime = (time: string, expiresIn: number) => {
   const updatedTime = new Date(time).getTime() / 1000;
-  return updatedTime + expiresIn as number;
+  return (updatedTime + expiresIn) as number;
 };
 
 // SET USER COOKIES
 
-export const setUserCookies = (accessToken?: string, expiresIn?: number, userLocale?: string,): void => {
+export const setUserCookies = (
+  accessToken?: string,
+  expiresIn?: number,
+  userLocale?: string
+): void => {
   if (accessToken) setCookie('access_token', accessToken);
   if (userLocale) setCookie('user_locale', userLocale);
   if (expiresIn) setCookie('expires_in', expiresIn);
 };
-
-

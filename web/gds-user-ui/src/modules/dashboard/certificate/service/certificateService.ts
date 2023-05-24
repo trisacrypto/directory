@@ -1,6 +1,15 @@
 import axiosInstance from 'utils/axios';
+import type { PayloadDTO } from 'modules/dashboard/certificate/types';
 
-export const getCertificateStep = async (network: string, key: any) => {
-  const response = await axiosInstance.get(`/register/${network}?step=${key}`);
+export const getCertificateStepService = async (payload: PayloadDTO) => {
+  const { key } = payload;
+  const response = await axiosInstance.get(`/register?step=${key}`);
+  return response.data;
+};
+
+export const postCertificateStepService = async (payload: any) => {
+  const response = await axiosInstance.post('/register', {
+    ...payload
+  });
   return response.data;
 };

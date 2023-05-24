@@ -5,37 +5,45 @@ import { getBusinessCategoryOptions, vaspCategories } from 'constants/basic-deta
 import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { t } from '@lingui/macro';
 import { useLanguageProvider } from 'contexts/LanguageContext';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import FormLayout from 'layouts/FormLayout';
 import formatDate from 'utils/formate-date';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { basicDetailsValidationSchema } from 'modules/dashboard/certificate/lib/basicDetailsValidationSchema';
 import StepButtons from 'components/StepsButtons';
-const BasicDetailsForm: React.FC = () => {
-  const [basicStepData] = useState<any>({});
+import { isProdEnv } from 'application/config';
+import { DevTool } from '@hookform/devtools';
+import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
+
+import useCertificateStepper from 'hooks/useCertificateStepper';
+interface BasicDetailsFormProps {
+  data: any;
+  isLoading?: boolean;
+}
+const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
+  const { updateCertificateStep, wasCertificateStepUpdated } = useUpdateCertificateStep();
   const resolver = yupResolver(basicDetailsValidationSchema);
   const options = getBusinessCategoryOptions();
+  const { nextStep, currentState } = useCertificateStepper();
 
   const [language] = useLanguageProvider();
 
   useEffect(() => {}, [language]);
 
   const methods = useForm({
-    defaultValues: basicStepData,
+    defaultValues: data,
     resolver,
     mode: 'onChange'
   });
 
+  console.log('[] errors', methods.getValues());
+
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isDirty },
     control
   } = methods;
-
-  // useEffect(() => {
-  //   setBasicStepData(methods?.getValues() || {});
-  // }, [methods?.getValues()]);
 
   // const {
   //   formState: { isDirty },
@@ -46,8 +54,24 @@ const BasicDetailsForm: React.FC = () => {
   //   return _.get(methods.getValues(), name);
   // }
 
-  const onSubmit = (data: any) => {
-    console.log(data);
+  const onSubmit = (v: any) => {
+    console.log('[] v', v);
+    // if the form is dirty, then we need to save the data and move to the next step
+    if (isDirty) {
+      const payload = {
+        key: 'basic',
+        form: methods.getValues(),
+        state: currentState()
+      };
+      console.log('[] payload', payload);
+
+      updateCertificateStep(payload);
+
+      if (wasCertificateStepUpdated) {
+        // display next step
+        nextStep();
+      }
+    }
   };
 
   return (
@@ -129,9 +153,10 @@ const BasicDetailsForm: React.FC = () => {
                 />
               )}
             />
-            <StepButtons />
+            <StepButtons handleNextStep={() => onSubmit} />
           </VStack>
         </chakra.form>
+        {!isProdEnv ? <DevTool control={methods.control} /> : null}
       </FormProvider>
     </FormLayout>
   );

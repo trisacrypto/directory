@@ -7,7 +7,14 @@ describe('<BasicDetailsForm />', () => {
     dynamicActivate('en');
   });
   it('should render correctly', () => {
-    render(<BasicDetailsForm />);
+    const mockData = {
+      website: 'https://www.google.com',
+      vasp_categories: ['VASP'],
+      business_category: 'Crypto Exchange',
+      organization_name: 'Google',
+      established_on: '2021-01-01'
+    };
+    render(<BasicDetailsForm data={mockData} />);
 
     // organization_name
     const organizationName = screen.getByRole('textbox', {
