@@ -7,7 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/trisacrypto/directory/pkg/bff/models/v1"
+	. "github.com/trisacrypto/directory/pkg/bff/models/v1"
+	ivms101 "github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
 )
@@ -15,27 +16,27 @@ import (
 func TestStepType(t *testing.T) {
 	testCases := []struct {
 		s        string
-		expected models.StepType
+		expected StepType
 	}{
-		{"", models.StepNone},
-		{"  ", models.StepNone},
-		{"\n", models.StepNone},
-		{"all", models.StepAll},
-		{"ALL", models.StepAll},
-		{"  All  ", models.StepAll},
-		{"basic", models.StepBasicDetails},
-		{"BASIC   ", models.StepBasicDetails},
-		{"Basic", models.StepBasicDetails},
-		{"legal", models.StepLegalPerson},
-		{" LEGal\n", models.StepLegalPerson},
-		{"LEGAL\t", models.StepLegalPerson},
-		{"contacts", models.StepContacts},
-		{"trixo", models.StepTRIXO},
-		{"trisa", models.StepTRISA},
+		{"", StepNone},
+		{"  ", StepNone},
+		{"\n", StepNone},
+		{"all", StepAll},
+		{"ALL", StepAll},
+		{"  All  ", StepAll},
+		{"basic", StepBasicDetails},
+		{"BASIC   ", StepBasicDetails},
+		{"Basic", StepBasicDetails},
+		{"legal", StepLegalPerson},
+		{" LEGal\n", StepLegalPerson},
+		{"LEGAL\t", StepLegalPerson},
+		{"contacts", StepContacts},
+		{"trixo", StepTRIXO},
+		{"trisa", StepTRISA},
 	}
 
 	for _, tc := range testCases {
-		actual, err := models.ParseStepType(tc.s)
+		actual, err := ParseStepType(tc.s)
 		require.NoError(t, err, "expected valid step type to be parsed")
 		require.Equal(t, tc.expected, actual)
 		require.Equal(t, tc.expected.String(), actual.String())
@@ -49,10 +50,10 @@ func TestStepType(t *testing.T) {
 	}
 
 	for _, tc := range invalidTestCases {
-		actual, err := models.ParseStepType(tc)
+		actual, err := ParseStepType(tc)
 		require.Error(t, err)
 		require.True(t, strings.HasPrefix(err.Error(), "unknown registration form step"))
-		require.Equal(t, models.StepNone, actual)
+		require.Equal(t, StepNone, actual)
 	}
 
 }
@@ -65,102 +66,292 @@ func TestValidateBasicDetails(t *testing.T) {
 		vaspCategories   []string
 		establishedOn    string
 		orgName          string
-		errs             models.ValidationErrors
+		errs             ValidationErrors
 	}{
-		{"", pb.BusinessCategory_BUSINESS_ENTITY, []string{"P2P"}, "2021-01-01", "Example, Inc.", models.ValidationErrors{
-			{Field: "website", Err: models.ErrMissingField.Error()},
+		{"", pb.BusinessCategory_BUSINESS_ENTITY, []string{"P2P"}, "2021-01-01", "Example, Inc.", ValidationErrors{
+			{Field: "website", Err: ErrMissingField.Error()},
 		}},
-		{"", pb.BusinessCategory_UNKNOWN_ENTITY, []string{"P2P"}, "2021-01-01", "Example, Inc.", models.ValidationErrors{
-			{Field: "website", Err: models.ErrMissingField.Error()},
-			{Field: "business_category", Err: models.ErrMissingField.Error()},
+		{"", pb.BusinessCategory_UNKNOWN_ENTITY, []string{"P2P"}, "2021-01-01", "Example, Inc.", ValidationErrors{
+			{Field: "website", Err: ErrMissingField.Error()},
+			{Field: "business_category", Err: ErrMissingField.Error()},
 		}},
-		{"", pb.BusinessCategory_UNKNOWN_ENTITY, nil, "2021-01-01", "Example, Inc.", models.ValidationErrors{
-			{Field: "website", Err: models.ErrMissingField.Error()},
-			{Field: "business_category", Err: models.ErrMissingField.Error()},
-			{Field: "vasp_categories", Err: models.ErrMissingField.Error()},
+		{"", pb.BusinessCategory_UNKNOWN_ENTITY, nil, "2021-01-01", "Example, Inc.", ValidationErrors{
+			{Field: "website", Err: ErrMissingField.Error()},
+			{Field: "business_category", Err: ErrMissingField.Error()},
+			{Field: "vasp_categories", Err: ErrMissingField.Error()},
 		}},
-		{"", pb.BusinessCategory_UNKNOWN_ENTITY, nil, "", "Example Inc.", models.ValidationErrors{
-			{Field: "website", Err: models.ErrMissingField.Error()},
-			{Field: "business_category", Err: models.ErrMissingField.Error()},
-			{Field: "vasp_categories", Err: models.ErrMissingField.Error()},
-			{Field: "established_on", Err: models.ErrMissingField.Error()},
+		{"", pb.BusinessCategory_UNKNOWN_ENTITY, nil, "", "Example Inc.", ValidationErrors{
+			{Field: "website", Err: ErrMissingField.Error()},
+			{Field: "business_category", Err: ErrMissingField.Error()},
+			{Field: "vasp_categories", Err: ErrMissingField.Error()},
+			{Field: "established_on", Err: ErrMissingField.Error()},
 		}},
-		{"", pb.BusinessCategory_UNKNOWN_ENTITY, nil, "", "", models.ValidationErrors{
-			{Field: "website", Err: models.ErrMissingField.Error()},
-			{Field: "business_category", Err: models.ErrMissingField.Error()},
-			{Field: "vasp_categories", Err: models.ErrMissingField.Error()},
-			{Field: "established_on", Err: models.ErrMissingField.Error()},
-			{Field: "organization_name", Err: models.ErrMissingField.Error()},
+		{"", pb.BusinessCategory_UNKNOWN_ENTITY, nil, "", "", ValidationErrors{
+			{Field: "website", Err: ErrMissingField.Error()},
+			{Field: "business_category", Err: ErrMissingField.Error()},
+			{Field: "vasp_categories", Err: ErrMissingField.Error()},
+			{Field: "established_on", Err: ErrMissingField.Error()},
+			{Field: "organization_name", Err: ErrMissingField.Error()},
 		}},
-		{"example.com", pb.BusinessCategory_GOVERNMENT_ENTITY, []string{}, " ", " ", models.ValidationErrors{
-			{Field: "vasp_categories", Err: models.ErrMissingField.Error()},
-			{Field: "established_on", Err: models.ErrMissingField.Error()},
-			{Field: "organization_name", Err: models.ErrMissingField.Error()},
+		{"example.com", pb.BusinessCategory_GOVERNMENT_ENTITY, []string{}, " ", " ", ValidationErrors{
+			{Field: "vasp_categories", Err: ErrMissingField.Error()},
+			{Field: "established_on", Err: ErrMissingField.Error()},
+			{Field: "organization_name", Err: ErrMissingField.Error()},
 		}},
-		{" ", pb.BusinessCategory_GOVERNMENT_ENTITY, []string{}, " ", " ", models.ValidationErrors{
-			{Field: "website", Err: models.ErrMissingField.Error()},
-			{Field: "vasp_categories", Err: models.ErrMissingField.Error()},
-			{Field: "established_on", Err: models.ErrMissingField.Error()},
-			{Field: "organization_name", Err: models.ErrMissingField.Error()},
+		{" ", pb.BusinessCategory_GOVERNMENT_ENTITY, []string{}, " ", " ", ValidationErrors{
+			{Field: "website", Err: ErrMissingField.Error()},
+			{Field: "vasp_categories", Err: ErrMissingField.Error()},
+			{Field: "established_on", Err: ErrMissingField.Error()},
+			{Field: "organization_name", Err: ErrMissingField.Error()},
 		}},
 		{"example.com", pb.BusinessCategory_GOVERNMENT_ENTITY, []string{"Exchange"}, "2021-01-01", "Example, Inc.", nil},
 	}
 
-	for _, tc := range testCases {
-		form := models.RegistrationForm{}
+	for i, tc := range testCases {
+		form := RegistrationForm{}
 		form.Website = tc.website
 		form.BusinessCategory = tc.businessCategory
 		form.VaspCategories = tc.vaspCategories
 		form.EstablishedOn = tc.establishedOn
 		form.OrganizationName = tc.orgName
 
-		verrs := form.ValidateBasicDetails()
-		require.Equal(t, tc.errs, verrs)
-
-		errs := form.Validate(models.StepBasicDetails)
-		require.Equal(t, tc.errs, errs)
+		err := form.Validate(StepBasicDetails)
+		if tc.errs == nil {
+			require.NoError(t, err, "test case %d failed", i)
+		} else {
+			var verrs ValidationErrors
+			require.ErrorAs(t, err, &verrs, "test case %d failed", i)
+			require.Equal(t, tc.errs, verrs, "test case %d failed", i)
+		}
 	}
 }
 
-// Test that the registration form marshals and unmarshals correctly to and from JSON
-func TestMarshalRegistrationForm(t *testing.T) {
-	// Load the JSON fixture
-	fixtureData, err := os.ReadFile("testdata/default_registration_form.json")
-	require.NoError(t, err, "error reading default registration form fixture")
+func TestValidateLegalPerson(t *testing.T) {
+	testCases := []struct {
+		entity *ivms101.LegalPerson
+		errs   ValidationErrors
+	}{
+		{nil, ValidationErrors{{Field: FieldEntity, Err: ErrMissingField.Error()}}},
+		{
+			&ivms101.LegalPerson{},
+			ValidationErrors{
+				{Field: FieldEntityName, Err: ErrMissingField.Error()},
+				{Field: FieldEntityGeographicAddresses, Err: ErrNoGeographicAddress.Error()},
+				{Field: FieldEntityNationalIdentification, Err: ErrLegalNatIDRequired.Error()},
+				{Field: FieldEntityCountryOfRegistration, Err: ErrMissingField.Error()},
+				{Field: FieldEntity, Err: "one or more legal person name identifiers is required"},
+			},
+		},
+		{
+			&ivms101.LegalPerson{
+				Name: &ivms101.LegalPersonName{
+					NameIdentifiers: []*ivms101.LegalPersonNameId{
+						{
+							LegalPersonName:               "Wayne Enterprises, LTD",
+							LegalPersonNameIdentifierType: ivms101.LegalPersonLegal,
+						},
+					},
+				},
+				GeographicAddresses: []*ivms101.Address{
+					{
+						AddressType: ivms101.AddressTypeBusiness,
+						AddressLine: []string{
+							"1 Wayne Tower",
+							"Gotham City, NJ 08302",
+						},
+						Country: "US",
+					},
+				},
+				NationalIdentification: &ivms101.NationalIdentification{
+					NationalIdentifier:     "ZGWO00PIA5JMETFLPG72",
+					NationalIdentifierType: ivms101.NationalIdentifierLEIX,
+				},
+				CountryOfRegistration: "US",
+			},
+			nil,
+		},
+	}
 
-	// Default form should be marshaled correctly
-	form := models.NewRegisterForm()
-	data, err := json.Marshal(form)
-	require.NoError(t, err, "error marshaling registration form to JSON")
-	require.JSONEq(t, string(fixtureData), string(data), "default registration form does not match fixture")
+	for i, tc := range testCases {
+		form := &RegistrationForm{Entity: tc.entity}
+		err := form.Validate(StepLegalPerson)
 
-	// Default form should be unmarshaled correctly
-	result := &models.RegistrationForm{}
-	require.NoError(t, json.Unmarshal(data, result), "error unmarshaling registration form from JSON")
-	require.True(t, proto.Equal(form, result), "registration form should be unmarshaled correctly")
+		if len(tc.errs) > 0 {
+			var valid ValidationErrors
+			require.ErrorAs(t, err, &valid, "expected validation errors in test case %d", i)
+			require.Len(t, valid, len(tc.errs), "expected same number of validation errors in test case %d", i)
+			require.Equal(t, tc.errs, valid, "expected same validation errors in test case %d", i)
+		} else {
+			require.NoError(t, err, "expected fully valid entity on test case %d", i)
+		}
+	}
+}
 
-	// Modified form should be marshaled correctly
-	form.Contacts.Administrative.Email = "admin@example.com"
-	data, err = json.Marshal(form)
-	require.NoError(t, err, "error marshaling registration form to JSON")
+// Test validating the trixo questionnaire step of the registration form
+func TestValidateTRIXO(t *testing.T) {
+	testCases := []struct {
+		trixo *pb.TRIXOQuestionnaire
+		errs  ValidationErrors
+	}{
+		{nil, ValidationErrors{
+			{Field: FieldTRIXO, Err: ErrMissingField.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryRegulator:             "FinCEN",
+			FinancialTransfersPermitted:  "Yes",
+			HasRequiredRegulatoryProgram: "Yes",
+		}, ValidationErrors{
+			{Field: FieldTRIXOPrimaryNationalJurisdiction, Err: ErrMissingField.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryRegulator:             "FinCEN",
+			PrimaryNationalJurisdiction:  "USA",
+			FinancialTransfersPermitted:  "Yes",
+			HasRequiredRegulatoryProgram: "Yes",
+		}, ValidationErrors{
+			{Field: FieldTRIXOPrimaryNationalJurisdiction, Err: ErrInvalidCountry.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			FinancialTransfersPermitted:  "No",
+			HasRequiredRegulatoryProgram: "No",
+		}, ValidationErrors{
+			{Field: FieldTRIXOPrimaryNationalJurisdiction, Err: ErrMissingField.Error()},
+			{Field: FieldTRIXOPrimaryRegulator, Err: ErrMissingField.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			HasRequiredRegulatoryProgram: "yes",
+		}, ValidationErrors{
+			{Field: FieldTRIXOPrimaryNationalJurisdiction, Err: ErrMissingField.Error()},
+			{Field: FieldTRIXOPrimaryRegulator, Err: ErrMissingField.Error()},
+			{Field: FieldTRIXOFinancialTransfersPermitted, Err: ErrMissingField.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			FinancialTransfersPermitted:  "idk",
+			HasRequiredRegulatoryProgram: "YES",
+		}, ValidationErrors{
+			{Field: FieldTRIXOPrimaryNationalJurisdiction, Err: ErrMissingField.Error()},
+			{Field: FieldTRIXOPrimaryRegulator, Err: ErrMissingField.Error()},
+			{Field: FieldTRIXOFinancialTransfersPermitted, Err: ErrYesNoPartially.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			HasRequiredRegulatoryProgram: "NO",
+			OtherJurisdictions: []*pb.Jurisdiction{
+				{Country: "FR", RegulatorName: "AMF", LicenseNumber: "123"},
+				{RegulatorName: "FinCEN", LicenseNumber: "456"},
+				{Country: "US", LicenseNumber: "456"},
+				{Country: "US"},
+				{Country: "USA", RegulatorName: "FinCEN", LicenseNumber: "456"},
+			},
+		}, ValidationErrors{
+			{Field: FieldTRIXOPrimaryNationalJurisdiction, Err: ErrMissingField.Error()},
+			{Field: FieldTRIXOPrimaryRegulator, Err: ErrMissingField.Error()},
+			{Field: FieldTRIXOFinancialTransfersPermitted, Err: ErrMissingField.Error()},
+			{Field: FieldTRIXOOtherJurisdictionsCountry, Err: ErrMissingField.Error(), Index: 1},
+			{Field: FieldTRIXOOtherJurisdictionsRegulatorName, Err: ErrMissingField.Error(), Index: 2},
+			{Field: FieldTRIXOOtherJurisdictionsRegulatorName, Err: ErrMissingField.Error(), Index: 3},
+			{Field: FieldTRIXOOtherJurisdictionsLicenseNumber, Err: ErrMissingField.Error(), Index: 3},
+			{Field: FieldTRIXOOtherJurisdictionsCountry, Err: ErrInvalidCountry.Error(), Index: 4},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryNationalJurisdiction: "US",
+			PrimaryRegulator:            "FinCEN",
+			FinancialTransfersPermitted: "Yes",
+		}, ValidationErrors{
+			{Field: FieldTRIXOHasRequiredRegulatoryProgram, Err: ErrMissingField.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryNationalJurisdiction:  "US",
+			PrimaryRegulator:             "FinCEN",
+			FinancialTransfersPermitted:  "Yes",
+			HasRequiredRegulatoryProgram: "idk",
+		}, ValidationErrors{
+			{Field: FieldTRIXOHasRequiredRegulatoryProgram, Err: ErrYesNo.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryNationalJurisdiction:  "US",
+			PrimaryRegulator:             "FinCEN",
+			FinancialTransfersPermitted:  " Yes ",
+			HasRequiredRegulatoryProgram: " Yes ",
+			ConductsCustomerKyc:          true,
+			KycThreshold:                 -1,
+		}, ValidationErrors{
+			{Field: FieldTRIXOKYCThreshold, Err: ErrNegativeValue.Error()},
+			{Field: FieldTRIXOKYCThresholdCurrency, Err: ErrMissingField.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryNationalJurisdiction:  "US",
+			PrimaryRegulator:             "FinCEN",
+			FinancialTransfersPermitted:  "Partially",
+			HasRequiredRegulatoryProgram: "Yes",
+			MustComplyTravelRule:         true,
+			ComplianceThreshold:          -1,
+		}, ValidationErrors{
+			{Field: FieldTRIXOComplianceThreshold, Err: ErrNegativeValue.Error()},
+			{Field: FieldTRIXOComplianceThresholdCurrency, Err: ErrMissingField.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryNationalJurisdiction:  "US",
+			PrimaryRegulator:             "FinCEN",
+			FinancialTransfersPermitted:  "Partially",
+			HasRequiredRegulatoryProgram: "Yes",
+			MustComplyTravelRule:         true,
+			ApplicableRegulations:        []string{"Reg1", ""},
+			ComplianceThreshold:          -1,
+			ComplianceThresholdCurrency:  "USD",
+		}, ValidationErrors{
+			{Field: FieldTRIXOApplicableRegulations, Err: ErrMissingField.Error(), Index: 1},
+			{Field: FieldTRIXOComplianceThreshold, Err: ErrNegativeValue.Error()},
+		}},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryNationalJurisdiction:  "US",
+			PrimaryRegulator:             "FinCEN",
+			FinancialTransfersPermitted:  "yes",
+			HasRequiredRegulatoryProgram: "yes",
+			ConductsCustomerKyc:          true,
+			KycThreshold:                 1000,
+			KycThresholdCurrency:         "USD",
+			MustComplyTravelRule:         true,
+			ApplicableRegulations:        []string{"Reg1", "Reg2"},
+			ComplianceThreshold:          1000,
+			ComplianceThresholdCurrency:  "USD",
+		}, nil},
+		{&pb.TRIXOQuestionnaire{
+			PrimaryNationalJurisdiction:  "US",
+			PrimaryRegulator:             "FinCEN",
+			FinancialTransfersPermitted:  "Yes",
+			HasRequiredRegulatoryProgram: "Yes",
+			KycThreshold:                 -1,
+			ComplianceThreshold:          -1,
+		}, nil},
+	}
 
-	// Modified form should be unmarshaled correctly
-	result = &models.RegistrationForm{}
-	require.NoError(t, json.Unmarshal(data, result), "error unmarshaling registration form from JSON")
-	require.True(t, proto.Equal(form, result), "registration form should be unmarshaled correctly")
+	for i, tc := range testCases {
+		form := RegistrationForm{
+			Trixo: tc.trixo,
+		}
+
+		err := form.Validate(StepTRIXO)
+		if tc.errs == nil {
+			require.NoError(t, err, "test case %d failed", i)
+		} else {
+			var verrs ValidationErrors
+			require.ErrorAs(t, err, &verrs, "test case %d failed", i)
+			require.Equal(t, tc.errs, verrs, "test case %d failed", i)
+		}
+	}
 }
 
 // Test validating the contacts step of the registration form
 func TestValidateContacts(t *testing.T) {
 	// A single error should be returned for nil contacts
-	form := models.RegistrationForm{}
-	expected := models.ValidationErrors{
-		{Field: "contacts", Err: models.ErrMissingField.Error()},
+	form := RegistrationForm{}
+	expected := ValidationErrors{
+		{Field: FieldContacts, Err: ErrMissingField.Error()},
 	}
 	verrs := form.ValidateContacts()
 	require.Equal(t, expected, verrs, "expected a single error for missing contacts field")
 
-	errs := form.Validate(models.StepContacts)
+	errs := form.Validate(StepContacts)
 	require.Equal(t, expected, errs, "expected a single error for missing contacts field")
 
 	contact := &pb.Contact{
@@ -180,71 +371,73 @@ func TestValidateContacts(t *testing.T) {
 		admin     *pb.Contact
 		legal     *pb.Contact
 		billing   *pb.Contact
-		errs      models.ValidationErrors
+		errs      ValidationErrors
 	}{
 		// No contacts provided
-		{nil, nil, &pb.Contact{}, nil, models.ValidationErrors{
-			{Field: "contacts", Err: models.ErrNoContacts.Error()},
+		{nil, nil, &pb.Contact{}, nil, ValidationErrors{
+			{Field: FieldContacts, Err: ErrNoContacts.Error()},
 		}},
 		// Only technical provided should nominate admin/legal contact to be populated
-		{contact, nil, nil, nil, models.ValidationErrors{
-			{Field: "contacts", Err: models.ErrMissingContact.Error()},
-			{Field: "contacts.administrative", Err: models.ErrMissingAdminOrLegal.Error()},
-			{Field: "contacts.legal", Err: models.ErrMissingAdminOrLegal.Error()},
+		{contact, nil, nil, nil, ValidationErrors{
+			{Field: FieldContacts, Err: ErrMissingContact.Error()},
+			{Field: FieldContactsAdministrative, Err: ErrMissingAdminOrLegal.Error()},
+			{Field: FieldContactsLegal, Err: ErrMissingAdminOrLegal.Error()},
 		}},
 		// Only legal provided should nominate admin/technical contact to be populated
-		{nil, nil, contact, nil, models.ValidationErrors{
-			{Field: "contacts", Err: models.ErrMissingContact.Error()},
-			{Field: "contacts.administrative", Err: models.ErrMissingAdminOrTechnical.Error()},
-			{Field: "contacts.technical", Err: models.ErrMissingAdminOrTechnical.Error()},
+		{nil, nil, contact, nil, ValidationErrors{
+			{Field: FieldContacts, Err: ErrMissingContact.Error()},
+			{Field: FieldContactsAdministrative, Err: ErrMissingAdminOrTechnical.Error()},
+			{Field: FieldContactsTechnical, Err: ErrMissingAdminOrTechnical.Error()},
 		}},
 		// Only billing provided should nominate admin/technical/legal contact to be populated
-		{nil, nil, nil, contact, models.ValidationErrors{
-			{Field: "contacts", Err: models.ErrMissingContact.Error()},
-			{Field: "contacts.administrative", Err: models.ErrMissingContact.Error()},
-			{Field: "contacts.technical", Err: models.ErrMissingContact.Error()},
-			{Field: "contacts.legal", Err: models.ErrMissingContact.Error()},
+		{nil, nil, nil, contact, ValidationErrors{
+			{Field: FieldContacts, Err: ErrMissingContact.Error()},
+			{Field: FieldContactsAdministrative, Err: ErrMissingContact.Error()},
+			{Field: FieldContactsTechnical, Err: ErrMissingContact.Error()},
+			{Field: FieldContactsLegal, Err: ErrMissingContact.Error()},
 		}},
 		// Legal and billing provided should nominate admin/technical contact to be populated
-		{nil, nil, contact, contact, models.ValidationErrors{
-			{Field: "contacts", Err: models.ErrMissingContact.Error()},
-			{Field: "contacts.administrative", Err: models.ErrMissingAdminOrTechnical.Error()},
-			{Field: "contacts.technical", Err: models.ErrMissingAdminOrTechnical.Error()},
+		{nil, nil, contact, contact, ValidationErrors{
+			{Field: FieldContacts, Err: ErrMissingContact.Error()},
+			{Field: FieldContactsAdministrative, Err: ErrMissingAdminOrTechnical.Error()},
+			{Field: FieldContactsTechnical, Err: ErrMissingAdminOrTechnical.Error()},
 		}},
 		// Technical and billing provided should nominate admin/legal contact to be populated
-		{contact, nil, nil, contact, models.ValidationErrors{
-			{Field: "contacts", Err: models.ErrMissingContact.Error()},
-			{Field: "contacts.administrative", Err: models.ErrMissingAdminOrLegal.Error()},
-			{Field: "contacts.legal", Err: models.ErrMissingAdminOrLegal.Error()},
+		{contact, nil, nil, contact, ValidationErrors{
+			{Field: FieldContacts, Err: ErrMissingContact.Error()},
+			{Field: FieldContactsAdministrative, Err: ErrMissingAdminOrLegal.Error()},
+			{Field: FieldContactsLegal, Err: ErrMissingAdminOrLegal.Error()},
 		}},
-		{missingEmail, contact, contact, contact, models.ValidationErrors{
-			{Field: "contacts.technical.email", Err: models.ErrMissingField.Error()},
+		{missingEmail, contact, contact, contact, ValidationErrors{
+			{Field: FieldContactsTechnicalEmail, Err: ErrMissingField.Error()},
 		}},
-		{missingEmail, missingEmail, contact, contact, models.ValidationErrors{
-			{Field: "contacts.technical.email", Err: models.ErrMissingField.Error()},
-			{Field: "contacts.administrative.email", Err: models.ErrMissingField.Error()},
+		{missingEmail, missingEmail, contact, contact, ValidationErrors{
+			{Field: FieldContactsTechnicalEmail, Err: ErrMissingField.Error()},
+			{Field: FieldContactsAdministrativeEmail, Err: ErrMissingField.Error()},
 		}},
-		{missingEmail, missingEmail, missingEmail, contact, models.ValidationErrors{
-			{Field: "contacts.technical.email", Err: models.ErrMissingField.Error()},
-			{Field: "contacts.administrative.email", Err: models.ErrMissingField.Error()},
-			{Field: "contacts.legal.email", Err: models.ErrMissingField.Error()},
+		{missingEmail, missingEmail, missingEmail, contact, ValidationErrors{
+			{Field: FieldContactsTechnicalEmail, Err: ErrMissingField.Error()},
+			{Field: FieldContactsAdministrativeEmail, Err: ErrMissingField.Error()},
+			{Field: FieldContactsLegalEmail, Err: ErrMissingField.Error()},
 		}},
-		{missingEmail, missingEmail, missingEmail, missingEmail, models.ValidationErrors{
-			{Field: "contacts.technical.email", Err: models.ErrMissingField.Error()},
-			{Field: "contacts.administrative.email", Err: models.ErrMissingField.Error()},
-			{Field: "contacts.legal.email", Err: models.ErrMissingField.Error()},
-			{Field: "contacts.billing.email", Err: models.ErrMissingField.Error()},
+		{missingEmail, missingEmail, missingEmail, missingEmail, ValidationErrors{
+			{Field: FieldContactsTechnicalEmail, Err: ErrMissingField.Error()},
+			{Field: FieldContactsAdministrativeEmail, Err: ErrMissingField.Error()},
+			{Field: FieldContactsLegalEmail, Err: ErrMissingField.Error()},
+			{Field: FieldContactsBillingEmail, Err: ErrMissingField.Error()},
 		}},
 		// Only admin provided is valid
 		{nil, contact, nil, nil, nil},
 		// Admin and billing provided is valid
 		{nil, contact, nil, contact, nil},
 		// Technical and legal provided is valid
+		{contact, nil, contact, nil, nil},
+		// Providing all contacts is valid
 		{contact, contact, contact, contact, nil},
 	}
 
-	for _, tc := range testCases {
-		form := models.RegistrationForm{
+	for i, tc := range testCases {
+		form := RegistrationForm{
 			Contacts: &pb.Contacts{
 				Technical:      tc.technical,
 				Administrative: tc.admin,
@@ -253,11 +446,14 @@ func TestValidateContacts(t *testing.T) {
 			},
 		}
 
-		verrs := form.ValidateContacts()
-		require.Equal(t, tc.errs, verrs)
-
-		errs := form.Validate(models.StepContacts)
-		require.Equal(t, tc.errs, errs)
+		err := form.Validate(StepContacts)
+		if tc.errs == nil {
+			require.NoError(t, err, "test case %d failed", i)
+		} else {
+			var verrs ValidationErrors
+			require.ErrorAs(t, err, &verrs, "test case %d failed", i)
+			require.Equal(t, tc.errs, verrs, "test case %d failed", i)
+		}
 	}
 }
 
@@ -265,29 +461,191 @@ func TestValidateContacts(t *testing.T) {
 func TestValidateContact(t *testing.T) {
 	testCases := []struct {
 		contact *pb.Contact
-		errs    models.ValidationErrors
+		errs    ValidationErrors
 	}{
-		{&pb.Contact{Name: "L", Email: " leopold.wentzel@gmail.com ", Phone: "555-867-5309"}, models.ValidationErrors{
-			{Field: "admin.name", Err: models.ErrTooShort.Error()},
+		{&pb.Contact{Name: "L", Email: " leopold.wentzel@gmail.com ", Phone: "555-867-5309"}, ValidationErrors{
+			{Field: "admin.name", Err: ErrTooShort.Error()},
 		}},
-		{&pb.Contact{Email: "not an email", Phone: " 555-867-5309 "}, models.ValidationErrors{
-			{Field: "admin.name", Err: models.ErrMissingField.Error()},
-			{Field: "admin.email", Err: models.ErrInvalidEmail.Error()},
+		{&pb.Contact{Email: "not an email", Phone: " 555-867-5309 "}, ValidationErrors{
+			{Field: "admin.name", Err: ErrMissingField.Error()},
+			{Field: "admin.email", Err: ErrInvalidEmail.Error()},
 		}},
-		{&pb.Contact{Phone: "555-867-5309"}, models.ValidationErrors{
-			{Field: "admin.name", Err: models.ErrMissingField.Error()},
-			{Field: "admin.email", Err: models.ErrMissingField.Error()},
+		{&pb.Contact{Phone: "555-867-5309"}, ValidationErrors{
+			{Field: "admin.name", Err: ErrMissingField.Error()},
+			{Field: "admin.email", Err: ErrMissingField.Error()},
 		}},
-		{&pb.Contact{}, models.ValidationErrors{
-			{Field: "admin.name", Err: models.ErrMissingField.Error()},
-			{Field: "admin.email", Err: models.ErrMissingField.Error()},
-			{Field: "admin.phone", Err: models.ErrMissingField.Error()},
+		{&pb.Contact{}, ValidationErrors{
+			{Field: "admin.name", Err: ErrMissingField.Error()},
+			{Field: "admin.email", Err: ErrMissingField.Error()},
+			{Field: "admin.phone", Err: ErrMissingField.Error()},
 		}},
 		{&pb.Contact{Name: "Leopold Wentzel", Email: "leopold.wentzel@gmail.com", Phone: "555-867-5309"}, nil},
 	}
 
-	for _, tc := range testCases {
-		errs := models.ValidateContact(tc.contact, "admin")
-		require.Equal(t, tc.errs, errs)
+	for i, tc := range testCases {
+		err := ValidateContact(tc.contact, "admin")
+		if tc.errs == nil {
+			require.NoError(t, err, "test case %d failed", i)
+		} else {
+			var verrs ValidationErrors
+			require.ErrorAs(t, err, &verrs, "test case %d failed", i)
+			require.Equal(t, tc.errs, verrs, "test case %d failed", i)
+		}
 	}
+}
+
+// Test validating the TRISA implementation details
+func TestValidateTRISA(t *testing.T) {
+	validNetwork := &NetworkDetails{
+		Endpoint:   "main.trisa.io:443",
+		CommonName: "main.trisa.io",
+	}
+
+	testCases := []struct {
+		testnet *NetworkDetails
+		mainnet *NetworkDetails
+		errs    ValidationErrors
+	}{
+		{nil, nil, ValidationErrors{
+			{Field: FieldTestNet, Err: ErrMissingField.Error()},
+			{Field: FieldMainNet, Err: ErrMissingField.Error()},
+		}},
+		{&NetworkDetails{}, &NetworkDetails{}, ValidationErrors{
+			{Field: FieldTestNetEndpoint, Err: ErrMissingField.Error()},
+			{Field: FieldTestNetCommonName, Err: ErrMissingField.Error()},
+			{Field: FieldMainNetEndpoint, Err: ErrMissingField.Error()},
+			{Field: FieldMainNetCommonName, Err: ErrMissingField.Error()},
+		}},
+		{&NetworkDetails{CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetEndpoint, Err: ErrMissingField.Error()},
+			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
+		}},
+		{&NetworkDetails{Endpoint: "not an address", CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetEndpoint, Err: ErrInvalidEndpoint.Error()},
+			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
+		}},
+		{&NetworkDetails{Endpoint: ":443", CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetEndpoint, Err: ErrMissingHost.Error()},
+			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
+		}},
+		{&NetworkDetails{Endpoint: "test.trisa.io:", CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetEndpoint, Err: ErrMissingPort.Error()},
+		}},
+		{&NetworkDetails{Endpoint: "test.trisa.io:foo", CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetEndpoint, Err: ErrInvalidPort.Error()},
+		}},
+		{&NetworkDetails{Endpoint: "test.trisa.io:443"}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetCommonName, Err: ErrMissingField.Error()},
+		}},
+		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "*.trisa.io"}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetCommonName, Err: ErrInvalidCommonName.Error()},
+			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
+		}},
+		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "main.trisa.io"}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
+		}},
+		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "main.trisa.io", DnsNames: []string{"alt.trisa.io", "", "*.trisa.io", "https://trisa.io"}}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
+			{Field: FieldTestNetDNSNames, Err: ErrMissingField.Error(), Index: 1},
+			{Field: FieldTestNetDNSNames, Err: ErrInvalidCommonName.Error(), Index: 2},
+			{Field: FieldTestNetDNSNames, Err: ErrInvalidCommonName.Error(), Index: 3},
+		}},
+		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "test.trisa.io"}, &NetworkDetails{Endpoint: "main.trisa.io:443"}, ValidationErrors{
+			{Field: FieldMainNetCommonName, Err: ErrMissingField.Error()},
+		}},
+		{validNetwork, validNetwork, ValidationErrors{
+			{Field: FieldMainNetEndpoint, Err: ErrDuplicateEndpoint.Error()},
+		}},
+		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "test.trisa.io"}, validNetwork, nil},
+	}
+
+	for i, tc := range testCases {
+		form := RegistrationForm{
+			Testnet: tc.testnet,
+			Mainnet: tc.mainnet,
+		}
+
+		err := form.Validate(StepTRISA)
+		if tc.errs == nil {
+			require.NoError(t, err, "test case %d failed", i)
+		} else {
+			var verrs ValidationErrors
+			require.ErrorAs(t, err, &verrs, "test case %d failed", i)
+			require.Equal(t, tc.errs, verrs, "test case %d failed", i)
+		}
+	}
+}
+
+// Test that the registration form marshals and unmarshals correctly to and from JSON
+func TestMarshalRegistrationForm(t *testing.T) {
+	// Load the JSON fixture
+	fixtureData, err := os.ReadFile("testdata/default_registration_form.json")
+	require.NoError(t, err, "error reading default registration form fixture")
+
+	// Default form should be marshaled correctly
+	form := NewRegisterForm()
+	data, err := json.Marshal(form)
+	require.NoError(t, err, "error marshaling registration form to JSON")
+	require.JSONEq(t, string(fixtureData), string(data), "default registration form does not match fixture")
+
+	// Default form should be unmarshaled correctly
+	result := &RegistrationForm{}
+	require.NoError(t, json.Unmarshal(data, result), "error unmarshaling registration form from JSON")
+	require.True(t, proto.Equal(form, result), "registration form should be unmarshaled correctly")
+
+	// Modified form should be marshaled correctly
+	form.Contacts.Administrative.Email = "admin@example.com"
+	data, err = json.Marshal(form)
+	require.NoError(t, err, "error marshaling registration form to JSON")
+
+	// Modified form should be unmarshaled correctly
+	result = &RegistrationForm{}
+	require.NoError(t, json.Unmarshal(data, result), "error unmarshaling registration form from JSON")
+	require.True(t, proto.Equal(form, result), "registration form should be unmarshaled correctly")
+}
+
+func TestMarshalRegistrationFormStep(t *testing.T) {
+	fixtureData, err := os.ReadFile("testdata/registration_form.json")
+	require.NoError(t, err, "error reading default registration form fixture")
+
+	form := &RegistrationForm{}
+	err = form.UnmarshalJSON(fixtureData)
+	require.NoError(t, err, "error marshaling registration form to JSON")
+
+	t.Run("All", func(t *testing.T) {
+		for _, step := range []StepType{StepNone, StepAll} {
+			formData, err := form.MarshalJSON()
+			require.NoError(t, err, "could not marshal form data")
+
+			stepData, err := form.MarshalStepJSON(step)
+			require.NoError(t, err, "could not marshal form step data for step %s", step)
+
+			require.JSONEq(t, string(formData), string(stepData))
+		}
+	})
+
+	makeStepTest := func(step StepType, keys ...string) func(t *testing.T) {
+		// Ensure the keys always has the state
+		keys = append(keys, FieldState)
+
+		return func(t *testing.T) {
+			data, err := form.MarshalStepJSON(step)
+			require.NoError(t, err, "could not marshal json for step %s", step)
+
+			var reply map[string]interface{}
+			err = json.Unmarshal(data, &reply)
+			require.NoError(t, err, "could not unmarshal json for step %s", step)
+
+			require.Len(t, reply, len(keys), "expected reply to have expected number of keys for step %s", step)
+			for _, key := range keys {
+				require.Contains(t, reply, key, "expected reply to contain key for step %s", step)
+			}
+		}
+	}
+
+	t.Run("Basic", makeStepTest(StepBasicDetails, FieldWebsite, FieldBusinessCategory, FieldVASPCategories, FieldEstablishedOn, FieldOrganizationName))
+	t.Run("Legal", makeStepTest(StepLegalPerson, FieldEntity))
+	t.Run("Contacts", makeStepTest(StepContacts, FieldContacts))
+	t.Run("TRIXO", makeStepTest(StepTRIXO, FieldTRIXO))
+	t.Run("TRISA", makeStepTest(StepTRISA, FieldMainNet, FieldTestNet))
 }
