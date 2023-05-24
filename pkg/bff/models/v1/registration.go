@@ -4,9 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/mail"
+	"strconv"
 	"strings"
 
+	"net"
+
 	"github.com/trisacrypto/directory/pkg/models/v1"
+	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -591,8 +595,90 @@ func (r *RegistrationForm) ValidateTRIXO() error {
 
 // Validate only the fields in the trisa step.
 func (r *RegistrationForm) ValidateTRISA() error {
-	// TODO: implement
-	return nil
+	err := make(ValidationErrors, 0)
+
+	if r.Testnet == nil {
+		err = append(err, &ValidationError{Field: FieldTestNet, Err: ErrMissingField.Error()})
+	} else {
+		err, _ = err.Append(validateNetwork(r.Testnet, FieldTestNet))
+	}
+
+	if r.Mainnet == nil {
+		err = append(err, &ValidationError{Field: FieldMainNet, Err: ErrMissingField.Error()})
+	} else {
+		err, _ = err.Append(validateNetwork(r.Mainnet, FieldMainNet))
+		if r.Testnet != nil && r.Mainnet.Endpoint == r.Testnet.Endpoint {
+			err = append(err, &ValidationError{Field: FieldMainNetEndpoint, Err: ErrDuplicateEndpoint.Error()})
+		}
+	}
+
+	if len(err) == 0 {
+		return nil
+	}
+
+	return err
+}
+
+// Validate a network details field.
+func validateNetwork(details *NetworkDetails, fieldName string) error {
+	verr := make(ValidationErrors, 0)
+
+	// Validate the endpoint
+	var host string
+	details.Endpoint = strings.TrimSpace(details.Endpoint)
+	if details.Endpoint == "" {
+		verr = append(verr, &ValidationError{Field: fieldName + ".endpoint", Err: ErrMissingField.Error()})
+	} else {
+		var (
+			port string
+			err  error
+		)
+		if host, port, err = net.SplitHostPort(details.Endpoint); err != nil {
+			verr = append(verr, &ValidationError{Field: fieldName + ".endpoint", Err: ErrInvalidEndpoint.Error()})
+		} else {
+			if host == "" {
+				verr = append(verr, &ValidationError{Field: fieldName + ".endpoint", Err: ErrMissingHost.Error()})
+			}
+
+			if port == "" {
+				verr = append(verr, &ValidationError{Field: fieldName + ".endpoint", Err: ErrMissingPort.Error()})
+			} else if _, err := strconv.Atoi(port); err != nil {
+				verr = append(verr, &ValidationError{Field: fieldName + ".endpoint", Err: ErrInvalidPort.Error()})
+			}
+		}
+	}
+
+	// Validate the common name
+	details.CommonName = strings.TrimSpace(details.CommonName)
+	if details.CommonName == "" {
+		verr = append(verr, &ValidationError{Field: fieldName + ".common_name", Err: ErrMissingField.Error()})
+	} else {
+		if utils.ValidateCommonName(details.CommonName) != nil {
+			verr = append(verr, &ValidationError{Field: fieldName + ".common_name", Err: ErrInvalidCommonName.Error()})
+		}
+
+		// Common name must match the endpoint host if host is not an IP address
+		if net.ParseIP(host) == nil && host != details.CommonName {
+			verr = append(verr, &ValidationError{Field: fieldName + ".common_name", Err: ErrCommonNameMismatch.Error()})
+		}
+	}
+
+	// Validate the DNS names
+	for i, dns := range details.DnsNames {
+		details.DnsNames[i] = strings.TrimSpace(dns)
+		if details.DnsNames[i] == "" {
+			verr = append(verr, &ValidationError{Field: fieldName + ".dns_names", Err: ErrMissingField.Error(), Index: i})
+		} else {
+			if utils.ValidateCommonName(details.DnsNames[i]) != nil {
+				verr = append(verr, &ValidationError{Field: fieldName + ".dns_names", Err: ErrInvalidCommonName.Error(), Index: i})
+			}
+		}
+	}
+
+	if len(verr) == 0 {
+		return nil
+	}
+	return verr
 }
 
 // Update the registration form from another registration form model. If a step is

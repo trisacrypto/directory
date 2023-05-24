@@ -334,6 +334,82 @@ func TestValidateContact(t *testing.T) {
 	}
 }
 
+// Test validating the TRISA implementation details
+func TestValidateTRISA(t *testing.T) {
+	validNetwork := &NetworkDetails{
+		Endpoint:   "main.trisa.io:443",
+		CommonName: "main.trisa.io",
+	}
+
+	testCases := []struct {
+		testnet *NetworkDetails
+		mainnet *NetworkDetails
+		errs    ValidationErrors
+	}{
+		{nil, nil, ValidationErrors{
+			{Field: FieldTestNet, Err: ErrMissingField.Error()},
+			{Field: FieldMainNet, Err: ErrMissingField.Error()},
+		}},
+		{&NetworkDetails{CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetEndpoint, Err: ErrMissingField.Error()},
+			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
+		}},
+		{&NetworkDetails{Endpoint: "not an address", CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetEndpoint, Err: ErrInvalidEndpoint.Error()},
+			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
+		}},
+		{&NetworkDetails{Endpoint: ":443", CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetEndpoint, Err: ErrMissingHost.Error()},
+			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
+		}},
+		{&NetworkDetails{Endpoint: "test.trisa.io:", CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetEndpoint, Err: ErrMissingPort.Error()},
+		}},
+		{&NetworkDetails{Endpoint: "test.trisa.io:foo", CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetEndpoint, Err: ErrInvalidPort.Error()},
+		}},
+		{&NetworkDetails{Endpoint: "test.trisa.io:443"}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetCommonName, Err: ErrMissingField.Error()},
+		}},
+		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "*.trisa.io"}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetCommonName, Err: ErrInvalidCommonName.Error()},
+			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
+		}},
+		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "main.trisa.io"}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
+		}},
+		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "main.trisa.io", DnsNames: []string{"alt.trisa.io", "", "*.trisa.io", "https://trisa.io"}}, validNetwork, ValidationErrors{
+			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
+			{Field: FieldTestNetDNSNames, Err: ErrMissingField.Error(), Index: 1},
+			{Field: FieldTestNetDNSNames, Err: ErrInvalidCommonName.Error(), Index: 2},
+			{Field: FieldTestNetDNSNames, Err: ErrInvalidCommonName.Error(), Index: 3},
+		}},
+		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "test.trisa.io"}, &NetworkDetails{Endpoint: "main.trisa.io:443"}, ValidationErrors{
+			{Field: FieldMainNetCommonName, Err: ErrMissingField.Error()},
+		}},
+		{validNetwork, validNetwork, ValidationErrors{
+			{Field: FieldMainNetEndpoint, Err: ErrDuplicateEndpoint.Error()},
+		}},
+		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "test.trisa.io"}, validNetwork, nil},
+	}
+
+	for i, tc := range testCases {
+		form := RegistrationForm{
+			Testnet: tc.testnet,
+			Mainnet: tc.mainnet,
+		}
+
+		err := form.Validate(StepTRISA)
+		if tc.errs == nil {
+			require.NoError(t, err, "test case %d failed", i)
+		} else {
+			var verrs ValidationErrors
+			require.ErrorAs(t, err, &verrs, "test case %d failed", i)
+			require.Equal(t, tc.errs, verrs, "test case %d failed", i)
+		}
+	}
+}
+
 // Test that the registration form marshals and unmarshals correctly to and from JSON
 func TestMarshalRegistrationForm(t *testing.T) {
 	// Load the JSON fixture

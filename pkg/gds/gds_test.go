@@ -10,6 +10,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/models/v1"
+	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/emails/mock"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -705,9 +706,9 @@ func TestValidateCommonName(t *testing.T) {
 
 	for _, tc := range testCases {
 		if tc.expected == nil {
-			require.NoError(t, gds.ValidateCommonName(tc.input), "could not validate %q", tc.input)
+			require.NoError(t, utils.ValidateCommonName(tc.input), "could not validate %q", tc.input)
 		} else {
-			err := gds.ValidateCommonName(tc.input)
+			err := utils.ValidateCommonName(tc.input)
 			require.EqualError(t, err, tc.expected.Error(), "%q was not invalid", tc.input)
 		}
 	}
