@@ -32,6 +32,21 @@ const ContactsForm: React.FC = () => {
     formState: { isDirty }
     } = methods;
 
+    const handlePreviousStepClick = () => {
+        if (isDirty) {
+          const payload = {
+            step: StepEnum.CONTACTS,
+            form: {
+              ...methods.getValues(),
+              state: currentState()
+            } as any
+          };
+          updateCertificateStep(payload);
+          previousStep(updatedCertificateStep?.errors);
+        }
+        previousStep();
+      };
+
     const handleNextStepClick = () => {
         console.log('[] handleNextStep', methods.getValues());
         // if the form is dirty, then we need to save the data and move to the next step
@@ -83,7 +98,7 @@ const ContactsForm: React.FC = () => {
             title={t`Billing Contact (optional)`}
             description={t`Billing contact for your organization to handle account and invoice requests or queries relating to the operation of the TRISA network.`}
           />
-          <StepButtons handlePreviousStep={previousStep} handleNextStep={handleNextStepClick} />
+          <StepButtons handlePreviousStep={handlePreviousStepClick} handleNextStep={handleNextStepClick} />
         </chakra.form>
       </FormProvider>
     )}
