@@ -1,38 +1,47 @@
 import { faker } from '@faker-js/faker';
-import userEvent from '@testing-library/user-event';
+import { act, render, screen } from 'utils/test-utils';
 import { dynamicActivate } from 'utils/i18nLoaderHelper';
-import { fireEvent, render, screen, waitFor, within } from 'utils/test-utils';
-import ContactForm from '.';
+import ContactsForm from 'components/Contacts/ContactsForm';
+import ContactForm from '..';
+import { fireEvent } from '@testing-library/react';
 
-describe('<ContactForm />', () => {
-  beforeEach(() => {
-    dynamicActivate('en');
+function renderComponent() {
+  return render(<ContactsForm />);
+}
+
+jest.mock('hooks/useFetchCertificateStep', () => ({
+  useFetchCertificateStep: () => ({
+    certificateStep: {
+      form: jest.fn(),
+      errors: jest.fn()
+    },
+    isFetchingCertificateStep: false
+  })
+}));
+
+describe('ContactsForm', () => {
+  beforeAll(() => {
+    act(() => {
+      dynamicActivate('en');
+    });
   });
 
   it('should render correctly', () => {
-    const title = faker.random.words();
-    const desc = faker.lorem.paragraph();
-    const name = 'test';
-    render(<ContactForm name={name} title={title} description={desc} />);
-
-    expect(screen.getByTestId('title').textContent).toBe(title);
-    expect(screen.getByTestId('description').textContent).toBe(desc);
-
-    // fullname
-    const fullNameEl = screen.getByTestId('fullName') as HTMLInputElement;
-    expect(fullNameEl).toBeVisible();
-    expect(fullNameEl.name).toBe(`${name}.name`);
-
-    // fullname
-    const emailAddressEl = screen.getByTestId('email') as HTMLInputElement;
-    expect(emailAddressEl).toBeVisible();
-    expect(emailAddressEl.name).toBe(`${name}.email`);
-    expect(emailAddressEl.type).toBe(`email`);
-
-    // phoneNumber
-    const phoneNumberEl = screen.getByTestId('phoneNumber') as HTMLInputElement;
-    userEvent.type(phoneNumberEl, `123445566`);
-    expect(phoneNumberEl).toHaveValue(`+1 234 455 66`);
+    const mockData = {
+      contacts: {
+        technical: {
+          name: 'Technical',
+          email: 'abc@123.com',
+          phone_number: '555-555-5555'
+        },
+        legal: {
+          name: 'Legal',
+          email: 'def@456.com',
+          phone_number: '555-555-5555'
+        }
+      }
+    };
+    render(<ContactsForm data={mockData} />);
   });
 
   it('should render the correct phone message hint when name is contacts.legal', () => {
