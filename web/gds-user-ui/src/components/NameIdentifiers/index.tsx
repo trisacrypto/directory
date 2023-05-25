@@ -23,7 +23,7 @@ const NameIdentifiers: React.FC = () => {
   };
 
   return (
-    <FormLayout>
+    <FormLayout data-testid="name-identifier">
       <NameIdentifier
         name="entity.name.name_identifiers"
         heading={t`Name Identifiers`}

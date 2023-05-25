@@ -19,7 +19,7 @@ function AddressList() {
   };
 
   return (
-    <VStack width="100%" align="start" spacing={10}>
+    <VStack width="100%" align="start" spacing={10} data-testid="legal-adress">
       {fields.map((field, index) => {
         return (
           <Address key={field.id} field={field} index={index} onDelete={() => remove(index)} />
