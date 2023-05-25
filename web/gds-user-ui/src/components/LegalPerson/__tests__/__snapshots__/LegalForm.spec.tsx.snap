@@ -738,7 +738,7 @@ exports[`LegalForm should render 1`] = `
             class="chakra-button emotion-7"
             type="button"
           >
-            Add Legal Name
+            Add Another Legal Name
           </button>
           <button
             class="chakra-button emotion-8"

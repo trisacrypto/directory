@@ -2,7 +2,7 @@ import { Heading, HStack, Stack, Text } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import { getCurrentStep, getSteps } from 'application/store/selectors/stepper';
-import ContactForm from 'components/ContactForm';
+import ContactForm from 'components/Contacts/ContactForm';
 import { SectionStatus } from 'components/SectionStatus';
 import FormLayout from 'layouts/FormLayout';
 import { useSelector } from 'react-redux';
