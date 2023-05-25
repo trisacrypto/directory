@@ -48,7 +48,7 @@ const NameIdentifiers: React.FC = () => {
 
       <HStack width="100%" wrap="wrap" align="start" gap={4}>
         <Button onClick={handleAddLegalNamesRow}>
-          <Trans id="Add Another Legal Name">Add Legal Name</Trans>
+          <Trans id="Add Another Legal Name">Add Another Legal Name</Trans>
         </Button>
         <Button marginLeft="0 !important" onClick={handleAddNewLocalNamesRow}>
           <Trans id="Add Local Name">Add Local Name</Trans>
