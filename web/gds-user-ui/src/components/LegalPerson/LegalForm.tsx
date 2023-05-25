@@ -54,6 +54,23 @@ const LegalForm: React.FC = () => {
     }
   };
 
+  const handlePreviousStepClick = () => {
+    if (isDirty) {
+      const payload = {
+        step: StepEnum.LEGAL,
+        form: {
+          ...methods.getValues(),
+          state: currentState()
+        } as any
+      };
+      console.log('[] isDirty  payload', payload);
+
+      updateCertificateStep(payload);
+      previousStep(updatedCertificateStep?.errors);
+    }
+    previousStep();
+  };
+
   return (
     <FormLayout>
       {isFetchingCertificateStep ? (
@@ -65,7 +82,10 @@ const LegalForm: React.FC = () => {
             <Address />
             <CountryOfRegistration />
             <NationalIdentification />
-            <StepButtons handlePreviousStep={previousStep} handleNextStep={handleNextStepClick} />
+            <StepButtons
+              handlePreviousStep={handlePreviousStepClick}
+              handleNextStep={handleNextStepClick}
+            />
           </chakra.form>
         </FormProvider>
       )}
