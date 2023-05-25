@@ -1,18 +1,12 @@
-import { Heading, HStack, Stack, Text, chakra } from '@chakra-ui/react';
-import { t } from '@lingui/macro';
+import { Heading, HStack, Stack, Text } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import { getSteps, getCurrentStep } from 'application/store/selectors/stepper';
 import { SectionStatus } from 'components/SectionStatus';
-import TrisaImplementationForm from 'components/TrisaImplementationForm';
 import FormLayout from 'layouts/FormLayout';
 // import { useEffect } from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
 import { useSelector } from 'react-redux';
 import { getStepStatus } from 'utils/utils';
-import { trisaImplementationValidationSchema } from 'modules/dashboard/certificate/lib/trisaImplementationValidationSchema';
-import { yupResolver } from '@hookform/resolvers/yup';
-import useCertificateStepper from 'hooks/useCertificateStepper';
-import StepButtons from 'components/StepsButtons';
+import TrisaForm from 'components/TrisaImplementation/TrisaImplementationForm';
 
 const TrisaImplementation: React.FC = () => {
   const steps = useSelector(getSteps);
@@ -20,28 +14,6 @@ const TrisaImplementation: React.FC = () => {
   const stepStatus = getStepStatus(steps, currentStep);
 
   // const toast = useToast();
-
-  const { previousStep, nextStep } = useCertificateStepper();
-
-  const resolver = yupResolver(trisaImplementationValidationSchema);
-
-  const methods = useForm({
-    defaultValues: {},
-    resolver,
-    mode: 'onChange'
-  });
-
-  // const {
-  //   register,
-  //   watch,
-  //   trigger,
-  //   formState: { errors }
-  // } = methods;
-
-  const handleNextStepClick = () => {
-    console.log('[] handleNextStep ', methods.getValues());
-    nextStep();
-  };
 
   // const testnetEndpoint = watch('testnet.endpoint');
 
@@ -87,22 +59,7 @@ const TrisaImplementation: React.FC = () => {
           </Trans>
         </Text>
       </FormLayout>
-
-      <FormProvider {...methods}>
-        <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
-          <TrisaImplementationForm
-            type="TestNet"
-            name="testnet"
-            headerText={t`TRISA Endpoint: TestNet`}
-          />
-          <TrisaImplementationForm
-            type="MainNet"
-            name="mainnet"
-            headerText={t`TRISA Endpoint: MainNet`}
-          />
-          <StepButtons handlePreviousStep={previousStep} handleNextStep={handleNextStepClick} />
-        </chakra.form>
-      </FormProvider>
+      <TrisaForm />
     </Stack>
   );
 };
