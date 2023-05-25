@@ -12,7 +12,7 @@ export default {
   component: TrisaImplementationForm
 } as Meta;
 
-const Template: Story<TrisaImplementationFormProps> = (args) => (
+const Template: Story<TrisaImplementationFormProps> = (args:any) => (
   <TrisaImplementationForm {...args} />
 );
 

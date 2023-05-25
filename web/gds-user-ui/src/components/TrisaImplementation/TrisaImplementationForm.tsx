@@ -10,8 +10,7 @@ import MinusLoader from 'components/Loader/MinusLoader';
 import { StepEnum } from 'types/enums';
 import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
-import TrisaImplementationForm from '../TrisaImplementation/TrisaImplementationForm/index'
-
+import TrisaImplementationForm from './TrisaImplementationForm/index';
 
 const TrisaForm: React.FC = () => {
     const { previousStep, nextStep, currentState } = useCertificateStepper();
@@ -30,7 +29,22 @@ const TrisaForm: React.FC = () => {
     const {
       formState: { isDirty }
     } = methods;
-  
+
+    const handlePreviousStepClick = () => {
+      if (isDirty) {
+        const payload = {
+          step: StepEnum.TRISA,
+          form: {
+            ...methods.getValues(),
+            state: currentState()
+          } as any
+        };
+        updateCertificateStep(payload);
+        previousStep(updatedCertificateStep?.errors);
+      }
+      previousStep();
+    };
+
     const handleNextStepClick = () => {
       console.log('[] handleNextStep', methods.getValues());
       // if the form is dirty, then we need to save the data and move to the next step
@@ -40,7 +54,7 @@ const TrisaForm: React.FC = () => {
         nextStep(updatedCertificateStep?.errors ?? certificateStep?.errors);
       } else {
         const payload = {
-          step: StepEnum.LEGAL,
+          step: StepEnum.TRISA,
           form: {
             ...methods.getValues(),
             state: currentState()
@@ -60,7 +74,7 @@ const TrisaForm: React.FC = () => {
                 <MinusLoader />
             ) : (
                 <FormProvider {...methods}>
-        <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
+        <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)} data-testid="trisa-implementation-form">
           <TrisaImplementationForm
             type="TestNet"
             name="testnet"
@@ -71,7 +85,7 @@ const TrisaForm: React.FC = () => {
             name="mainnet"
             headerText={t`TRISA Endpoint: MainNet`}
           />
-          <StepButtons handlePreviousStep={previousStep} handleNextStep={handleNextStepClick} />
+          <StepButtons handlePreviousStep={handlePreviousStepClick} handleNextStep={handleNextStepClick} />
         </chakra.form>
       </FormProvider>
             )}
