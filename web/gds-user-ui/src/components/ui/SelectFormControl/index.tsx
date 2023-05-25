@@ -16,6 +16,7 @@ interface _FormControlProps extends Props {
   placeholder?: string;
   isDisabled?: boolean;
   defaultValue?: any;
+  [key: string]: any;
   options?: OptionsOrGroups<unknown, GroupBase<unknown>>;
 }
 
