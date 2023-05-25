@@ -26,22 +26,9 @@ describe('ContactsForm', () => {
     });
   });
 
-  it('should render correctly', () => {
-    const mockData = {
-      contacts: {
-        technical: {
-          name: 'Technical',
-          email: 'abc@123.com',
-          phone_number: '555-555-5555'
-        },
-        legal: {
-          name: 'Legal',
-          email: 'def@456.com',
-          phone_number: '555-555-5555'
-        }
-      }
-    };
-    render(<ContactsForm data={mockData} />);
+  it('should render', () => {
+    const { container } = renderComponent();
+    expect(container).toMatchSnapshot();
   });
 
   it('should render the correct phone message hint when name is contacts.legal', () => {

@@ -12,12 +12,7 @@ import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
 import FormLayout from 'layouts/FormLayout';
 import MinusLoader from 'components/Loader/MinusLoader';
 
-interface ContactsFormProps {
-    data?: any;
-    isLoading?: boolean;
-}
-
-const ContactsForm: React.FC<ContactsFormProps> = ({data}) => {
+const ContactsForm: React.FC = () => {
     const { previousStep, nextStep, currentState } = useCertificateStepper();
     const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
     key: StepEnum.CONTACTS
@@ -28,7 +23,7 @@ const ContactsForm: React.FC<ContactsFormProps> = ({data}) => {
     const resolver = yupResolver(contactsValidationSchema);
 
     const methods = useForm({
-    defaultValues: certificateStep?.form || data,
+    defaultValues: certificateStep?.form,
     resolver,
     mode: 'onChange'
   });
