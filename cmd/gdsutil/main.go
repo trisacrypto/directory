@@ -1378,16 +1378,25 @@ func migrateContacts(c *cli.Context) (err error) {
 		return nil
 	}
 
-	// Put all new model contacts into the leveldb database
+	// Put all new model contacts into the trtl database
 	for _, contact := range modelContacts {
-		var data []byte
-		key := []byte(wire.NamespaceContacts + "::" + contact.Email)
-		if data, err = proto.Marshal(contact); err != nil {
+		// Check if the contact already exists
+		if _, err = trtl.RetrieveContact(context.Background(), contact.Email); err == nil {
+			fmt.Printf("contact %s already exists\n\n", contact.Email)
+			continue
+		}
+
+		// Create if not exists
+		var email string
+		if email, err = trtl.CreateContact(context.Background(), contact); err != nil {
 			return cli.Exit(err, 1)
 		}
-		if err = ldb.Put(key, data, nil); err != nil {
-			return cli.Exit(err, 1)
-		}
+
+		fmt.Printf("created contact model for %s\n", email)
+		fmt.Println("verified", contact.Verified)
+		fmt.Println("token", contact.Token)
+		fmt.Println("log", contact.EmailLog)
+		fmt.Println()
 	}
 	return nil
 }
