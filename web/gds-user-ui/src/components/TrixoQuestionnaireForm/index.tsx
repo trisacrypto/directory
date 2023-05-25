@@ -137,7 +137,9 @@ const TrixoQuestionnaireForm: React.FC = () => {
         <MinusLoader />
       ) : (
         <FormProvider {...methods}>
-          <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
+          <chakra.form
+            onSubmit={methods.handleSubmit(handleNextStepClick)}
+            data-testid="trixo-form">
             <Controller
               control={control}
               name="trixo.primary_national_jurisdiction"
@@ -159,7 +161,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
               formHelperText={t`The name of primary regulator or supervisory authority for your national jurisdiction`}
               {...register('trixo.primary_regulator')}
             />
-            <VStack align="start" w="100%" pt={5}>
+            <VStack align="start" w="100%" py={5}>
               <Heading size="md">
                 <Trans id="Other Jurisdictions">Other Jurisdictions</Trans>
               </Heading>
@@ -171,22 +173,28 @@ const TrixoQuestionnaireForm: React.FC = () => {
 
               <OtherJuridictions name={'trixo.other_jurisdictions'} />
             </VStack>
-            <Controller
-              control={control}
-              name="trixo.financial_transfers_permitted"
-              render={({ field }) => (
-                <SelectFormControl
-                  ref={field.ref}
-                  name={field.name}
-                  options={financialTransfertsOptions}
-                  value={financialTransfertsOptions.find((option) => option.value === field.value)}
-                  onChange={(newValue: any) => field.onChange(newValue.value)}
-                  label={t`Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?`}
-                  controlId="financial_transfers_permitted"
-                />
-              )}
-            />
-            <VStack align="start" pt={5}>
+
+            <VStack data-testid="is-required-financial-transfers">
+              <Controller
+                control={control}
+                name="trixo.financial_transfers_permitted"
+                render={({ field }) => (
+                  <SelectFormControl
+                    ref={field.ref}
+                    name={field.name}
+                    data-testid="financial_transfers_permitted"
+                    options={financialTransfertsOptions}
+                    value={financialTransfertsOptions.find(
+                      (option) => option.value === field.value
+                    )}
+                    onChange={(newValue: any) => field.onChange(newValue.value)}
+                    label={t`Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?`}
+                    controlId="financial_transfers_permitted"
+                  />
+                )}
+              />
+            </VStack>
+            <VStack align="start" pt={5} data-testid="trixo-rule-policies">
               <Heading size="md">
                 <Trans id="CDD & Travel Rule Policies">CDD & Travel Rule Policies</Trans>
               </Heading>
@@ -214,7 +222,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
                 )}
               />
 
-              <VStack>
+              <VStack data-testid="trixo-kyc-before-virtual-asset-transfers">
                 <Text>
                   <Trans id="Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?">
                     Does your organization conduct KYC/CDD before permitting its customers to
@@ -270,7 +278,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
               </VStack>
             )}
 
-            <VStack align="start">
+            <VStack align="start" data-testid="trixo-must-comply-travel-rule">
               <Text>
                 <Trans id="Is your organization required to comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered?">
                   Is your organization required to comply with the application of the Travel Rule
@@ -284,7 +292,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
               />
             </VStack>
             {getMustComplyRegulations && (
-              <VStack align="start" w="100%">
+              <VStack align="start" w="100%" data-testid="tx-minimum-threshold">
                 <Text>
                   <Trans id="What is the minimum threshold for Travel Rule compliance?">
                     What is the minimum threshold for Travel Rule compliance?
