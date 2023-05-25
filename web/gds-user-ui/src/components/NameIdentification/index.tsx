@@ -113,7 +113,7 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
   }, [getCountryOfRegistration]);
 
   return (
-    <FormLayout>
+    <FormLayout data-testid="legal-name-identification">
       <Heading size="md">
         <Trans id="National Identification">National Identification</Trans>
       </Heading>

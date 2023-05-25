@@ -26,15 +26,12 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
   const { certificateStep } = useFetchCertificateStep({
     key: StepEnum.BASIC
   });
-  const { updateCertificateStep, updatedCertificateStep, wasCertificateStepUpdated, reset } =
-    useUpdateCertificateStep();
+  const { updateCertificateStep, updatedCertificateStep } = useUpdateCertificateStep();
   const resolver = yupResolver(basicDetailsValidationSchema);
   const options = getBusinessCategoryOptions();
   const { currentState, nextStep } = useCertificateStepper();
 
   const [language] = useLanguageProvider();
-
-  console.log('[] certificateStep', certificateStep);
 
   useEffect(() => {}, [language]);
 
@@ -42,15 +39,6 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
     defaultValues: certificateStep?.form || data,
     resolver
   });
-
-  useEffect(() => {
-    if (wasCertificateStepUpdated && updatedCertificateStep?.step === StepEnum.BASIC) {
-      nextStep(updatedCertificateStep?.errors);
-    }
-    return () => {
-      reset();
-    };
-  }, [wasCertificateStepUpdated, reset, updatedCertificateStep, nextStep]);
 
   const {
     register,
