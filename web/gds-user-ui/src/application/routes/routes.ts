@@ -116,7 +116,6 @@ const appRoutes = [
     layout: 'landing'
   },
 
-
   // ------- DASHBOARD ROUTES-------
   {
     path: '/dashboard/overview',

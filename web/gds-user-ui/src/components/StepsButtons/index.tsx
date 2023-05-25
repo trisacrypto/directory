@@ -28,6 +28,7 @@ function StepButtons({
         justifyContent={'center'}
         py={6}
         wrap="wrap"
+        data-testid="step-buttons"
         rowGap={2}>
         <Button onClick={handlePreviousStep} isDisabled={isFirstStep}>
           {isCurrentStepLastStep ? t`Previous` : t`Save & Previous`}
