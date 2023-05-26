@@ -46,14 +46,14 @@ const Certificate: React.FC = () => {
                   To assist in completing the registration form, the form is divided into multiple
                   sections
                 </Trans>
-                .{' '}
+                .{' '} Navigate through the form by clicking on each section of the progress bar or the buttons at the bottom of each section.
+              </Text>
                 <Text as={'span'} fontWeight={'bold'}>
-                  <Trans id="No information is sent until you complete Section 6 - Review & Submit">
-                    No information is sent until you complete Section 6 - Review & Submit
+                  <Trans id="No information is sent until you submit for a TestNet and/or MainNet certificate after the Review section">
+                    No information is sent until you submit for a TestNet and/or MainNet certificate after the Review section
                   </Trans>
                   .{' '}
                 </Text>
-              </Text>
             </Card.Body>
           </Card>
         </Stack>

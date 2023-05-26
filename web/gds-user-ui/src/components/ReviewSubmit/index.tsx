@@ -104,7 +104,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                 You must click on each confirmation link to complete the registration process.{' '}
               </Trans>
               <Text as="span" fontWeight="bold">
-                <Trans id=" Failure to click either confirmation will result in an incomplete registration">
+                <Trans id=" Failure to click either confirmation will result in an incomplete registration.">
                   Failure to click either confirmation will result in an incomplete registration.
                 </Trans>
               </Text>
