@@ -10,7 +10,7 @@ const RequiredElementMissing = ({ elementKey }: RequiredElementMissingProps) => 
   return (
     <Alert status="error" borderRadius="lg" my={4}>
       <AlertIcon />
-      <Trans>Please make sure you have filled out all required fields.</Trans>
+      <Trans>There is an error or missing data in this section. Please edit the section.</Trans>
     </Alert>
   );
 };

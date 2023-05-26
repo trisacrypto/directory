@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Text } from '@chakra-ui/react';
 import { getFormattedAmount } from 'utils/utils';
 import type { ITrixo } from 'modules/dashboard/certificate/entities';
@@ -9,6 +9,7 @@ interface KycThresholdRowProps {
     | undefined;
 }
 const KycThresholdRow = (data: KycThresholdRowProps) => {
+  console.log('[] KycThresholdRowProps data', data);
   const { kyc_threshold, kyc_threshold_currency, has_required_regulatory_program } =
     data?.data as any;
   const shouldShowKycThreshold = kyc_threshold || +kyc_threshold !== 0;
@@ -25,11 +26,13 @@ const KycThresholdRow = (data: KycThresholdRowProps) => {
 
   return (
     <>
-      {shouldShowKycThreshold ? (
-        <Text>{getAmount()}</Text>
-      ) : (
-        <Text>{hasRequiredRegulatoryProgram()}</Text>
-      )}
+      <Suspense fallback={<div>Loading...</div>}>
+        {shouldShowKycThreshold ? (
+          <Text>{getAmount()}</Text>
+        ) : (
+          <Text>{hasRequiredRegulatoryProgram()}</Text>
+        )}
+      </Suspense>
     </>
   );
 };
