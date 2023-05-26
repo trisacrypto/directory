@@ -37,7 +37,19 @@ const stepperSlice: any = createSlice({
       state.currentStep = payload.currentStep;
     },
     incrementStep: (state: any) => {
-      state.currentStep += 1;
+      if (state.currentStep < 6) {
+        state.currentStep += 1;
+      }
+      if (state.currentStep === 6) {
+        state.hasReachSubmitStep = true;
+      }
+      // if next step is not in the list, add it
+      if (!state.steps.find((step: any) => step.key === state.currentStep)) {
+        state.steps.push({
+          key: state.currentStep,
+          status: 'progress'
+        });
+      }
     },
     decrementStep: (state: any) => {
       state.currentStep -= 1;

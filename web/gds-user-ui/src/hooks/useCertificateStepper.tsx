@@ -108,6 +108,12 @@ const useCertificateStepper = () => {
     dispatch(setInitialValue(state));
   };
 
+  const hasStepErrors = () => {
+    const steps = Store.getState().stepper.steps;
+    const found = steps.filter((step: any) => step.status === 'error');
+    return found.length > 0;
+  };
+
   // update state from form values
   const updateStateFromFormValues = (values: any) => {
     const state: TPayload = {
@@ -137,7 +143,8 @@ const useCertificateStepper = () => {
     mainnetSubmissionState,
     updateStateFromFormValues,
     setRegistrationValue,
-    clearCertificateStepper
+    clearCertificateStepper,
+    hasStepErrors
   };
 };
 

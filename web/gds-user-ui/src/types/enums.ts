@@ -35,5 +35,6 @@ export const enum StepEnum {
   LEGAL = 'legal',
   CONTACTS = 'contacts',
   TRISA = 'trisa',
-  TRIXO = 'trixo'
+  TRIXO = 'trixo',
+  ALL = 'all'
 }

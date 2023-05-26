@@ -1,6 +1,10 @@
 import { Meta, Story } from '@storybook/react';
 import BasicDetailsReview from './BasicDetailsReview';
 
+// interface BasicDetailsReviewProps {
+//   data: any;
+// }
+
 export default {
   title: 'components/BasicDetailsReview',
   component: BasicDetailsReview

@@ -21,11 +21,7 @@ import {
   getTestNetSubmittedStatus,
   getMainNetSubmittedStatus
 } from 'application/store/selectors/stepper';
-import { useFormContext } from 'react-hook-form';
-import {
-  trisaImplementationMainnetFieldName,
-  trisaImplementationTestnetFieldName
-} from 'modules/dashboard/certificate/lib';
+
 import WarningBox from 'components/WarningBox';
 import { setHasReachSubmitStep } from 'application/store/stepper.slice';
 import { useAppDispatch } from 'application/store';
@@ -56,14 +52,10 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   const [mainnet, setMainnet] = useState(false);
   const { jumpToLastStep, jumpToStep } = useCertificateStepper();
   // const navigate = useNavigate();
-  const { getValues } = useFormContext();
   const dispatch = useAppDispatch();
 
-  const isTestnetNetworkFieldsIncomplete =
-    getValues(trisaImplementationTestnetFieldName).filter(Boolean).length !== 2;
-  const isMainnetNetworkIncomplete =
-    getValues(trisaImplementationMainnetFieldName).filter(Boolean).length !== 2;
-
+  const isTestnetNetworkFieldsIncomplete = false;
+  const isMainnetNetworkIncomplete = false;
   useEffect(() => {
     if (isTestNetSubmitted) {
       setTestnet(true);
