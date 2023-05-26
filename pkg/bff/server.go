@@ -384,9 +384,13 @@ func (s *Server) setupRoutes() (err error) {
 			collaborators.POST("/:collabID", auth.DoubleCookie(), auth.Authorize(auth.UpdateCollaborators), s.UpdateCollaboratorRoles)
 			collaborators.DELETE("/:collabID", auth.DoubleCookie(), auth.Authorize(auth.UpdateCollaborators), s.DeleteCollaborator)
 		}
-		v1.GET("/register", auth.Authorize(auth.ReadVASP), s.LoadRegisterForm)
-		v1.PUT("/register", auth.DoubleCookie(), auth.Authorize(auth.UpdateVASP), s.SaveRegisterForm)
-		v1.POST("/register/:network", auth.DoubleCookie(), auth.Authorize(auth.UpdateVASP), userinfo, s.SubmitRegistration)
+		register := v1.Group("/register")
+		{
+			register.GET("", auth.Authorize(auth.ReadVASP), s.LoadRegisterForm)
+			register.PUT("", auth.DoubleCookie(), auth.Authorize(auth.UpdateVASP), s.SaveRegisterForm)
+			register.DELETE("", auth.DoubleCookie(), auth.Authorize(auth.UpdateVASP), s.DeleteRegisterForm)
+			register.POST("/:network", auth.DoubleCookie(), auth.Authorize(auth.UpdateVASP), userinfo, s.SubmitRegistration)
+		}
 		v1.GET("/registration", auth.Authorize(auth.ReadVASP), s.RegistrationStatus)
 		v1.GET("/overview", auth.Authorize(auth.ReadVASP), s.Overview)
 		v1.GET("/announcements", auth.Authorize(auth.ReadVASP), s.Announcements)
