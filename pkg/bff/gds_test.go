@@ -334,11 +334,11 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	s.requireError(err, http.StatusBadRequest, "unknown registration form step \"invalid\"", "expected error when step is invalid")
 
 	// Providing no form should return an error
-	reply, err := s.client.SaveRegistrationForm(context.TODO(), &api.RegistrationForm{Form: nil})
+	_, err = s.client.SaveRegistrationForm(context.TODO(), &api.RegistrationForm{Form: nil})
 	s.requireError(err, http.StatusBadRequest, "no form was provided", "expected error when form is not provided")
 
 	// Should be able to save the fixture form
-	reply, err = s.client.SaveRegistrationForm(context.TODO(), form)
+	reply, err := s.client.SaveRegistrationForm(context.TODO(), form)
 	require.NoError(err, "should not receive an error when saving a registration form")
 	require.NotNil(reply, "uploaded form should be returned when a non-empty registration form is saved")
 	require.NotEmpty(reply.Form.State.Started, "expected form started timestamp to be set")
