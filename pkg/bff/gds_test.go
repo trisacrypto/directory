@@ -510,7 +510,7 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	}
 }
 
-func (s *bffTestSuite) TestDeleteRegisterForm() {
+func (s *bffTestSuite) TestResetRegisterForm() {
 	require := s.Require()
 
 	// Create initial claims fixture
@@ -525,29 +525,29 @@ func (s *bffTestSuite) TestDeleteRegisterForm() {
 	require.NoError(err, "could not load registration form fixture")
 
 	// Endpoint requires CSRF protection
-	_, err = s.client.DeleteRegistrationForm(context.TODO(), nil)
+	_, err = s.client.ResetRegistrationForm(context.TODO(), nil)
 	s.requireError(err, http.StatusForbidden, "csrf verification failed for request", "expected error when request is not CSRF protected")
 
 	// Endpoint must be authenticated
 	require.NoError(s.SetClientCSRFProtection(), "could not set csrf protection on client")
-	_, err = s.client.DeleteRegistrationForm(context.TODO(), nil)
+	_, err = s.client.ResetRegistrationForm(context.TODO(), nil)
 	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
 	// Endpoint requires the update:vasp permission
 	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
-	_, err = s.client.DeleteRegistrationForm(context.TODO(), nil)
+	_, err = s.client.ResetRegistrationForm(context.TODO(), nil)
 	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
 
 	// Claims must have an organization ID and the server must not panic if it does not
 	claims.Permissions = []string{auth.UpdateVASP}
 	require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
-	_, err = s.client.DeleteRegistrationForm(context.TODO(), nil)
+	_, err = s.client.ResetRegistrationForm(context.TODO(), nil)
 	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
 
 	// Create valid claims but no record in the database - should not panic and should return an error
 	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
-	_, err = s.client.DeleteRegistrationForm(context.TODO(), nil)
+	_, err = s.client.ResetRegistrationForm(context.TODO(), nil)
 	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
 
 	// Create an organization in the database
@@ -563,7 +563,7 @@ func (s *bffTestSuite) TestDeleteRegisterForm() {
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 
 	// Should return an error if the step is not a valid step
-	_, err = s.client.DeleteRegistrationForm(context.TODO(), &api.RegistrationFormParams{Step: "invalid"})
+	_, err = s.client.ResetRegistrationForm(context.TODO(), &api.RegistrationFormParams{Step: "invalid"})
 	s.requireError(err, http.StatusBadRequest, "unknown registration form step \"invalid\"", "expected error when step is invalid")
 
 	// Load the registration form on the organization
@@ -572,7 +572,7 @@ func (s *bffTestSuite) TestDeleteRegisterForm() {
 
 	// Test deleting the entire form
 	defaultForm := records.NewRegisterForm()
-	rep, err := s.client.DeleteRegistrationForm(context.Background(), nil)
+	rep, err := s.client.ResetRegistrationForm(context.Background(), nil)
 	require.NoError(err, "should not receive an error when deleting a registration form")
 	require.Nil(rep.Errors, "should not receive any validation errors when deleting a registration form")
 	require.True(proto.Equal(defaultForm, rep.Form), "default form should be returned when a registration form is deleted")
@@ -583,7 +583,7 @@ func (s *bffTestSuite) TestDeleteRegisterForm() {
 
 	// Test deleting specific steps in the form
 	params := &api.RegistrationFormParams{Step: api.StepBasicDetails}
-	rep, err = s.client.DeleteRegistrationForm(context.Background(), params)
+	rep, err = s.client.ResetRegistrationForm(context.Background(), params)
 	require.NoError(err, "should not receive an error when deleting a registration form")
 	require.Nil(rep.Errors, "should not receive any validation errors when deleting a registration form")
 	require.Equal(defaultForm.Website, rep.Form.Website, "website should be reset when basic details are deleted")
@@ -598,7 +598,7 @@ func (s *bffTestSuite) TestDeleteRegisterForm() {
 	require.Nil(rep.Form.Mainnet, "mainnet should not be returned on basic details delete")
 
 	params.Step = api.StepLegalPerson
-	rep, err = s.client.DeleteRegistrationForm(context.Background(), params)
+	rep, err = s.client.ResetRegistrationForm(context.Background(), params)
 	require.NoError(err, "should not receive an error when deleting a registration form")
 	require.Nil(rep.Errors, "should not receive any validation errors when deleting a registration form")
 	require.Empty(rep.Form.Website, "website should not be returned on legal person delete")
@@ -609,7 +609,7 @@ func (s *bffTestSuite) TestDeleteRegisterForm() {
 	require.Nil(rep.Form.Mainnet, "mainnet should not be returned on legal person delete")
 
 	params.Step = api.StepContacts
-	rep, err = s.client.DeleteRegistrationForm(context.Background(), params)
+	rep, err = s.client.ResetRegistrationForm(context.Background(), params)
 	require.NoError(err, "should not receive an error when deleting a registration form")
 	require.Nil(rep.Errors, "should not receive any validation errors when deleting a registration form")
 	require.Empty(rep.Form.Website, "website should not be returned on contacts delete")
@@ -620,7 +620,7 @@ func (s *bffTestSuite) TestDeleteRegisterForm() {
 	require.Nil(rep.Form.Mainnet, "mainnet should not be returned on contacts delete")
 
 	params.Step = api.StepTRIXO
-	rep, err = s.client.DeleteRegistrationForm(context.Background(), params)
+	rep, err = s.client.ResetRegistrationForm(context.Background(), params)
 	require.NoError(err, "should not receive an error when deleting a registration form")
 	require.Nil(rep.Errors, "should not receive any validation errors when deleting a registration form")
 	require.Empty(rep.Form.Website, "website should not be returned on trixo delete")
@@ -631,7 +631,7 @@ func (s *bffTestSuite) TestDeleteRegisterForm() {
 	require.Nil(rep.Form.Mainnet, "mainnet should not be returned on trixo delete")
 
 	params.Step = api.StepTRISA
-	rep, err = s.client.DeleteRegistrationForm(context.Background(), params)
+	rep, err = s.client.ResetRegistrationForm(context.Background(), params)
 	require.NoError(err, "should not receive an error when deleting a registration form")
 	require.Nil(rep.Errors, "should not receive any validation errors when deleting a registration form")
 	require.Empty(rep.Form.Website, "website should not be returned on trisa delete")

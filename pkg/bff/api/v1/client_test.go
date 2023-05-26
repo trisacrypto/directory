@@ -632,7 +632,7 @@ func TestSaveRegistrationForm(t *testing.T) {
 	require.Nil(t, out)
 }
 
-func TestDeleteRegistrationForm(t *testing.T) {
+func TestResetRegistrationForm(t *testing.T) {
 	// Load a defualt form
 	fixture := models.NewRegisterForm()
 
@@ -656,7 +656,7 @@ func TestDeleteRegistrationForm(t *testing.T) {
 	require.NoError(t, err)
 
 	// Should return no content
-	out, err := client.DeleteRegistrationForm(context.Background(), nil)
+	out, err := client.ResetRegistrationForm(context.Background(), nil)
 	require.NoError(t, err)
 	require.Equal(t, fixture, out.Form)
 }

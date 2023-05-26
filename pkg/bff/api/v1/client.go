@@ -391,8 +391,8 @@ func (s *APIv1) SaveRegistrationForm(ctx context.Context, form *RegistrationForm
 	return out, nil
 }
 
-// Delete registration form data from the server, resetting the form to the defaults.
-func (s *APIv1) DeleteRegistrationForm(ctx context.Context, in *RegistrationFormParams) (form *RegistrationForm, err error) {
+// Reset the registration form on the server to its default values.
+func (s *APIv1) ResetRegistrationForm(ctx context.Context, in *RegistrationFormParams) (form *RegistrationForm, err error) {
 	// Create the query params from the input
 	var params url.Values
 	if in != nil {

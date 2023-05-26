@@ -438,19 +438,19 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 	c.JSON(http.StatusOK, cleaned)
 }
 
-// Delete's the user's current registration form, resetting the form to the defaults.
+// Resets the user's current registration form to the defaults.
 //
-// @Summary Delete the user's current registration form [update:vasp]
-// @Description Delete the registration form associated with the user's organization for the requested step.
+// @Summary Reset the user's current registration form [update:vasp]
+// @Description Reset the registration form associated with the user's organization for the requested step.
 // @Tags registration
 // @Produce json
-// @Param params body api.RegistrationFormParams false "Delete registration form parameters"
+// @Param params body api.RegistrationFormParams false "Reset registration form parameters"
 // @Success 200 {object} object "Registration form"
 // @Failure 400 {object} api.Reply
 // @Failure 401 {object} api.Reply
 // @Failure 500 {object} api.Reply
 // @Router /register [delete]
-func (s *Server) DeleteRegisterForm(c *gin.Context) {
+func (s *Server) ResetRegisterForm(c *gin.Context) {
 	var (
 		err    error
 		org    *records.Organization
@@ -495,7 +495,7 @@ func (s *Server) DeleteRegisterForm(c *gin.Context) {
 		// Ignore validation errors on delete
 		var fields records.ValidationErrors
 		if !errors.As(err, &fields) {
-			log.Debug().Err(err).Msg("could not delete registration form")
+			log.Debug().Err(err).Msg("could not reset registration form")
 			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 			return
 		}
@@ -506,8 +506,8 @@ func (s *Server) DeleteRegisterForm(c *gin.Context) {
 	defer cancel()
 
 	if err = s.db.UpdateOrganization(ctx, org); err != nil {
-		log.Error().Err(err).Msg("could not update organization")
-		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not delete registration form"))
+		log.Error().Err(err).Msg("could not update organization with reset registration form")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not reset registration form"))
 		return
 	}
 

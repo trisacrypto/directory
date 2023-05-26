@@ -388,7 +388,7 @@ func (s *Server) setupRoutes() (err error) {
 		{
 			register.GET("", auth.Authorize(auth.ReadVASP), s.LoadRegisterForm)
 			register.PUT("", auth.DoubleCookie(), auth.Authorize(auth.UpdateVASP), s.SaveRegisterForm)
-			register.DELETE("", auth.DoubleCookie(), auth.Authorize(auth.UpdateVASP), s.DeleteRegisterForm)
+			register.DELETE("", auth.DoubleCookie(), auth.Authorize(auth.UpdateVASP), s.ResetRegisterForm)
 			register.POST("/:network", auth.DoubleCookie(), auth.Authorize(auth.UpdateVASP), userinfo, s.SubmitRegistration)
 		}
 		v1.GET("/registration", auth.Authorize(auth.ReadVASP), s.RegistrationStatus)

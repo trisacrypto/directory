@@ -45,7 +45,7 @@ type BFFClient interface {
 	// Registration form
 	LoadRegistrationForm(context.Context, *RegistrationFormParams) (*RegistrationForm, error)
 	SaveRegistrationForm(context.Context, *RegistrationForm) (*RegistrationForm, error)
-	DeleteRegistrationForm(context.Context, *RegistrationFormParams) (*RegistrationForm, error)
+	ResetRegistrationForm(context.Context, *RegistrationFormParams) (*RegistrationForm, error)
 	SubmitRegistration(_ context.Context, network string) (*RegisterReply, error)
 	RegistrationStatus(context.Context) (*RegistrationStatus, error)
 
