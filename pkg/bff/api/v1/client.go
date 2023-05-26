@@ -346,7 +346,7 @@ func (s *APIv1) DeleteCollaborator(ctx context.Context, id string) (err error) {
 }
 
 // Load registration form data from the server to populate the front-end form.
-func (s *APIv1) LoadRegistrationForm(ctx context.Context, in *LoadRegistrationFormParams) (form *RegistrationForm, err error) {
+func (s *APIv1) LoadRegistrationForm(ctx context.Context, in *RegistrationFormParams) (form *RegistrationForm, err error) {
 	// Create the query params from the input
 	var params url.Values
 	if in != nil {
@@ -389,6 +389,29 @@ func (s *APIv1) SaveRegistrationForm(ctx context.Context, form *RegistrationForm
 	}
 
 	return out, nil
+}
+
+// Reset the registration form on the server to its default values.
+func (s *APIv1) ResetRegistrationForm(ctx context.Context, in *RegistrationFormParams) (form *RegistrationForm, err error) {
+	// Create the query params from the input
+	var params url.Values
+	if in != nil {
+		if params, err = query.Values(in); err != nil {
+			return nil, fmt.Errorf("could not encode query params: %s", err)
+		}
+	}
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodDelete, "/v1/register", nil, &params); err != nil {
+		return nil, err
+	}
+
+	form = &RegistrationForm{}
+	if _, err = s.Do(req, form, true); err != nil {
+		return nil, err
+	}
+	return form, nil
 }
 
 // Submit the registration form to the specified network (testnet or mainnet).
