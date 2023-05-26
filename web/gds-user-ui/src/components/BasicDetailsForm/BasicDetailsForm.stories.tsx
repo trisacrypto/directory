@@ -1,8 +1,10 @@
 import { Story } from '@storybook/react';
-import { UseFormRegister, UseFormSetValue, Control } from 'react-hook-form/dist/types';
+
 import BasicDetailsForm from '.';
 
-type BasicDetailsFormProps = {};
+type BasicDetailsFormProps = {
+  data: any;
+};
 
 export default {
   title: 'components/BasicDetailsForm',

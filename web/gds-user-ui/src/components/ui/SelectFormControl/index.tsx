@@ -15,7 +15,8 @@ interface _FormControlProps extends Props {
   name?: string;
   placeholder?: string;
   isDisabled?: boolean;
-  defaultValue?: string;
+  defaultValue?: any;
+  [key: string]: any;
   options?: OptionsOrGroups<unknown, GroupBase<unknown>>;
 }
 
@@ -59,7 +60,7 @@ const SelectFormControl = React.forwardRef<any, _FormControlProps>(
           chakraStyles={chakraStyles}
           options={options}
           isDisabled={isDisabled}
-          defaultValue={defaultValue || options?.[0]}
+          defaultValue={defaultValue}
           isMulti={isMulti as any}
           {...rest}
           ref={ref}

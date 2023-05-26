@@ -634,19 +634,19 @@ type RegistrationForm struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Business information
+	// Business information: Basic Details Step
 	Website          string                   `protobuf:"bytes,1,opt,name=website,proto3" json:"website,omitempty"`
 	BusinessCategory v1beta1.BusinessCategory `protobuf:"varint,2,opt,name=business_category,json=businessCategory,proto3,enum=trisa.gds.models.v1beta1.BusinessCategory" json:"business_category,omitempty"`
 	VaspCategories   []string                 `protobuf:"bytes,3,rep,name=vasp_categories,json=vaspCategories,proto3" json:"vasp_categories,omitempty"`
 	EstablishedOn    string                   `protobuf:"bytes,4,opt,name=established_on,json=establishedOn,proto3" json:"established_on,omitempty"`
 	OrganizationName string                   `protobuf:"bytes,5,opt,name=organization_name,json=organizationName,proto3" json:"organization_name,omitempty"`
-	// IVMS 101 Legal Person record
+	// IVMS 101 Legal Person record: Legal Person Step
 	Entity *ivms101.LegalPerson `protobuf:"bytes,11,opt,name=entity,proto3" json:"entity,omitempty"`
-	// Directory Record contacts
+	// Directory Record contacts: Contacts Step
 	Contacts *v1beta1.Contacts `protobuf:"bytes,12,opt,name=contacts,proto3" json:"contacts,omitempty"`
-	// TRIXO Form
+	// TRIXO Form: TRIXO Step
 	Trixo *v1beta1.TRIXOQuestionnaire `protobuf:"bytes,13,opt,name=trixo,proto3" json:"trixo,omitempty"`
-	// Network-specific information and submission details
+	// Network-specific information and submission details: TRISA Step
 	Testnet *NetworkDetails `protobuf:"bytes,14,opt,name=testnet,proto3" json:"testnet,omitempty"`
 	Mainnet *NetworkDetails `protobuf:"bytes,15,opt,name=mainnet,proto3" json:"mainnet,omitempty"`
 	// Current progress of the form for the frontend

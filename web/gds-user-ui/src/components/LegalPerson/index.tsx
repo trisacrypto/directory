@@ -1,9 +1,7 @@
 import { Heading, HStack, Stack, Text, Link } from '@chakra-ui/react';
-import CountryOfRegistration from 'components/CountryOfRegistration';
+
 import FormLayout from 'layouts/FormLayout';
-import NameIdentifiers from '../NameIdentifiers';
-import NationalIdentification from '../NameIdentification';
-import Address from 'components/Addresses';
+import LegalForm from './LegalForm';
 import { useSelector } from 'react-redux';
 import { getCurrentStep, getSteps } from 'application/store/selectors/stepper';
 import { getStepStatus } from 'utils/utils';
@@ -42,10 +40,7 @@ const LegalPerson: React.FC = () => {
           </Trans>
         </Text>
       </FormLayout>
-      <NameIdentifiers />
-      <Address />
-      <CountryOfRegistration />
-      <NationalIdentification />
+      <LegalForm />
     </Stack>
   );
 };

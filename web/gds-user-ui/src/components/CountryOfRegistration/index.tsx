@@ -14,7 +14,7 @@ const CountryOfRegistration: React.FC = () => {
   const countries = getCountriesOptions();
 
   return (
-    <FormLayout>
+    <FormLayout data-testid="legal-country-of-registration">
       <Heading size="md">
         <Trans id="Country of Registration">Country of Registration</Trans>
       </Heading>

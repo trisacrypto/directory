@@ -301,7 +301,7 @@ func (s *Server) LoadRegisterForm(c *gin.Context) {
 
 	// If necessary, truncate the form to the specified step
 	if out.Form, err = org.Registration.Truncate(step); err != nil {
-		log.Warn().Err(err).Msg("could not truncate registration form")
+		log.Warn().Err(err).Str("step", string(step)).Msg("could not truncate registration form")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
@@ -310,10 +310,7 @@ func (s *Server) LoadRegisterForm(c *gin.Context) {
 	if verrs := org.Registration.Validate(step); verrs != nil {
 		var fields records.ValidationErrors
 		if errors.As(verrs, &fields) {
-			out.Errors = make([]*api.FieldValidationError, 0, len(fields))
-			for _, field := range fields {
-				out.Errors = append(out.Errors, &api.FieldValidationError{Field: field.Field, Error: field.Err})
-			}
+			out.Errors = api.FromValidationErrors(fields)
 		} else {
 			log.Warn().Err(err).Msg("could not validate registration form")
 			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
@@ -321,7 +318,14 @@ func (s *Server) LoadRegisterForm(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, out)
+	var cleaned gin.H
+	if cleaned, err = out.MarshalStepJSON(); err != nil {
+		log.Warn().Err(err).Str("step", string(step)).Msg("could not marshal registration form for the requested step")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, cleaned)
 }
 
 // Saves the registration form on the BFF to allow multiple users to edit the
@@ -397,10 +401,7 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		// If there were validation errors, attach them to the output
 		var fields records.ValidationErrors
 		if errors.As(err, &fields) {
-			out.Errors = make([]*api.FieldValidationError, 0, len(fields))
-			for _, field := range fields {
-				out.Errors = append(out.Errors, &api.FieldValidationError{Field: field.Field, Error: field.Err})
-			}
+			out.Errors = api.FromValidationErrors(fields)
 		} else {
 			log.Debug().Err(err).Msg("could not update registration form")
 			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
@@ -420,11 +421,19 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 
 	// Return the updated form in a 200 OK response, truncated if necessary.
 	if out.Form, err = org.Registration.Truncate(step); err != nil {
-		log.Warn().Err(err).Msg("could not truncate registration form")
+		log.Warn().Err(err).Str("step", string(step)).Msg("could not truncate registration form")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
-	c.JSON(http.StatusOK, out)
+
+	var cleaned gin.H
+	if cleaned, err = out.MarshalStepJSON(); err != nil {
+		log.Warn().Err(err).Str("step", string(step)).Msg("could not marshal registration form for the requested step")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, cleaned)
 }
 
 // SubmitRegistration makes a request on behalf of the user to either the TestNet or the

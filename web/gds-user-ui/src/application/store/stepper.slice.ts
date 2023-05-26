@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import { createSlice } from '@reduxjs/toolkit';
 
 export type TStep = {
@@ -9,6 +10,7 @@ export const initialValue: TPayload = {
   currentStep: 1,
   steps: [
     {
+      key: 1,
       status: 'progress'
     }
   ],
@@ -34,12 +36,18 @@ const stepperSlice: any = createSlice({
       }
       state.currentStep = payload.currentStep;
     },
+    incrementStep: (state: any) => {
+      state.currentStep += 1;
+    },
+    decrementStep: (state: any) => {
+      state.currentStep -= 1;
+    },
     addStep: (state: any, { payload }: any) => {
       state.steps.push(payload);
     },
     setStepStatus: (state: any, { payload }: any) => {
       state.steps.map((step: any) => {
-        if (step.key === payload.step && state.currentStep) {
+        if (step.key === payload.step) {
           console.log('payload.status', payload.status);
           step.status = payload.status;
         }
@@ -132,6 +140,8 @@ const stepperSlice: any = createSlice({
 export const stepperReducer = stepperSlice.reducer;
 export const {
   addStep,
+  incrementStep,
+  decrementStep,
   setCurrentStep,
   setStepStatus,
   setLastStep,
