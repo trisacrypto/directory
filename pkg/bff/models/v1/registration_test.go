@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	. "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	ivms101 "github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -588,10 +587,10 @@ func loadJSONFixture(path string, v interface{}) (err error) {
 
 // Test updating a registration form
 func TestUpdateRegistrationForm(t *testing.T) {
-	form := models.NewRegisterForm()
+	form := NewRegisterForm()
 
 	// Load the registration form fixture
-	update := &models.RegistrationForm{}
+	update := &RegistrationForm{}
 	err := loadJSONFixture("testdata/registration_form.json", update)
 	require.NoError(t, err, "error loading registration form fixture")
 
@@ -633,13 +632,13 @@ func TestUpdateRegistrationForm(t *testing.T) {
 	require.True(t, proto.Equal(form, update), "form should be fully updated")
 
 	// Test updating the entire form with no step
-	form = models.NewRegisterForm()
+	form = NewRegisterForm()
 	err = form.Update(update, StepNone)
 	require.NoError(t, err, "error updating entire form")
 	require.True(t, proto.Equal(form, update), "form should be fully updated")
 
 	// Test updating the entire form with the all step
-	form = models.NewRegisterForm()
+	form = NewRegisterForm()
 	err = form.Update(update, StepAll)
 	require.NoError(t, err, "error updating entire form")
 	require.True(t, proto.Equal(form, update), "form should be fully updated")
@@ -647,10 +646,10 @@ func TestUpdateRegistrationForm(t *testing.T) {
 
 // Test updating a form with validation errors
 func TestUpdateRegistrationFormErrors(t *testing.T) {
-	form := models.NewRegisterForm()
+	form := NewRegisterForm()
 
 	// Load a registration form fixture that has validation errors
-	update := &models.RegistrationForm{}
+	update := &RegistrationForm{}
 	err := loadJSONFixture("testdata/bad_registration_form.json", update)
 	require.NoError(t, err, "error loading bad registration form fixture")
 
@@ -686,12 +685,12 @@ func TestUpdateRegistrationFormErrors(t *testing.T) {
 	for _, verrs := range verrs {
 		allErrs = append(allErrs, verrs...)
 	}
-	form = models.NewRegisterForm()
+	form = NewRegisterForm()
 	err = form.Update(update, StepNone)
 	require.ElementsMatch(t, allErrs, err, "wrong validation errors for entire form")
 
 	// Test updating the entire form with the all step
-	form = models.NewRegisterForm()
+	form = NewRegisterForm()
 	err = form.Update(update, StepAll)
 	require.ElementsMatch(t, allErrs, err, "wrong validation errors for entire form")
 }
