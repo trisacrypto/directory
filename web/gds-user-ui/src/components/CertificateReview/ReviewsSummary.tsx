@@ -8,12 +8,15 @@ import LegalPersonReview from './LegalPersonReview';
 import TrisaImplementationReview from './TrisaImplementationReview';
 import TrixoReview from './TrixoReview';
 import { CgExport } from 'react-icons/cg';
-
+import StepButtons from 'components/StepsButtons';
 import { downloadRegistrationData } from 'modules/dashboard/registration/utils';
 import { handleError } from 'utils/utils';
+import useCertificateStepper from 'hooks/useCertificateStepper';
 
 const ReviewsSummary: React.FC = () => {
+  const { previousStep, nextStep, hasStepErrors } = useCertificateStepper();
   const [isLoadingExport, setIsLoadingExport] = useState(false);
+
   const handleExport = () => {
     const downloadData = async () => {
       try {
@@ -27,6 +30,18 @@ const ReviewsSummary: React.FC = () => {
     };
     downloadData();
   };
+
+  const handleNextStep = () => {
+    nextStep();
+  };
+
+  const handlePreviousStep = () => {
+    previousStep();
+  };
+
+  const handleResetForm = () => {}; // should be implemented asap we have the api from patrick
+
+  const isNextButtonDisabled = hasStepErrors();
 
   return (
     <Stack spacing={7}>
@@ -62,6 +77,13 @@ const ReviewsSummary: React.FC = () => {
       <ContactsReview />
       <TrisaImplementationReview />
       <TrixoReview />
+
+      <StepButtons
+        handleNextStep={handleNextStep}
+        handlePreviousStep={handlePreviousStep}
+        handleResetForm={handleResetForm}
+        isNextButtonDisabled={isNextButtonDisabled}
+      />
     </Stack>
   );
 };

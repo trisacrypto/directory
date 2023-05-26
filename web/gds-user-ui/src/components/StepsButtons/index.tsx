@@ -9,11 +9,13 @@ type StepButtonsProps = {
   handleResetForm?: () => void;
   isDefaultValue?: () => boolean;
   isFirstStep?: boolean;
+  isNextButtonDisabled?: boolean;
 };
 
 function StepButtons({
   handlePreviousStep,
   isFirstStep = false,
+  isNextButtonDisabled = false,
   handleNextStep,
   isCurrentStepLastStep,
   handleResetForm,
@@ -34,7 +36,7 @@ function StepButtons({
           {isCurrentStepLastStep ? t`Previous` : t`Save & Previous`}
         </Button>
 
-        <Button onClick={handleNextStep} variant="secondary">
+        <Button onClick={handleNextStep} variant="secondary" isDisabled={isNextButtonDisabled}>
           {t`Save & Next`}
         </Button>
 

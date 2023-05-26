@@ -126,54 +126,6 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
 }
 
 .emotion-5 {
-  width: 100%;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-align-items: center;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
-  -webkit-padding-start: var(--chakra-space-4);
-  padding-inline-start: var(--chakra-space-4);
-  -webkit-padding-end: var(--chakra-space-4);
-  padding-inline-end: var(--chakra-space-4);
-  padding-top: var(--chakra-space-3);
-  padding-bottom: var(--chakra-space-3);
-  background: #FED7D7;
-  border-radius: var(--chakra-radii-lg);
-  margin-top: var(--chakra-space-4);
-  margin-bottom: var(--chakra-space-4);
-}
-
-.emotion-6 {
-  -webkit-flex-shrink: 0;
-  -ms-flex-negative: 0;
-  flex-shrink: 0;
-  -webkit-margin-end: var(--chakra-space-3);
-  margin-inline-end: var(--chakra-space-3);
-  width: var(--chakra-sizes-5);
-  height: var(--chakra-sizes-6);
-  color: var(--chakra-colors-red-500);
-  display: inherit;
-}
-
-.emotion-7 {
-  width: 100%;
-  height: 100%;
-  display: inline-block;
-  line-height: 1em;
-  -webkit-flex-shrink: 0;
-  -ms-flex-negative: 0;
-  flex-shrink: 0;
-  color: currentColor;
-  vertical-align: middle;
-}
-
-.emotion-8 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -184,7 +136,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
   font-size: 18px;
 }
 
-.emotion-8>*:not(style)~*:not(style) {
+.emotion-5>*:not(style)~*:not(style) {
   margin-top: 0.5rem;
   -webkit-margin-end: 0px;
   margin-inline-end: 0px;
@@ -193,28 +145,28 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
   margin-inline-start: 0px;
 }
 
-.emotion-9 {
+.emotion-6 {
   font-variant-numeric: lining-nums tabular-nums;
   border-collapse: collapse;
   width: var(--chakra-sizes-full);
 }
 
-.emotion-9 td:nth-child(2),
-.emotion-9 td:nth-child(3) {
+.emotion-6 td:nth-child(2),
+.emotion-6 td:nth-child(3) {
   font-weight: var(--chakra-fontWeights-semibold);
   padding-left: 0px;
 }
 
-.emotion-9 Tr {
+.emotion-6 Tr {
   border-style: hidden;
 }
 
-.emotion-9 td:first-child {
+.emotion-6 td:first-child {
   width: 50%;
   padding-left: 1rem;
 }
 
-.emotion-9 td {
+.emotion-6 td {
   border-bottom: var(--chakra-borders-none);
   -webkit-padding-start: 0px;
   padding-inline-start: 0px;
@@ -222,11 +174,11 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
   padding-bottom: var(--chakra-space-2-5);
 }
 
-.emotion-10 * {
+.emotion-7 * {
   font-size: 1rem;
 }
 
-.emotion-12 {
+.emotion-9 {
   text-align: start;
   -webkit-padding-start: var(--chakra-space-6);
   padding-inline-start: var(--chakra-space-6);
@@ -242,11 +194,11 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
   background: #E5EDF1;
 }
 
-.emotion-12[data-is-numeric=true] {
+.emotion-9[data-is-numeric=true] {
   text-align: end;
 }
 
-.emotion-14 {
+.emotion-11 {
   text-align: start;
   -webkit-padding-start: var(--chakra-space-6);
   padding-inline-start: var(--chakra-space-6);
@@ -259,11 +211,11 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
   border-color: var(--chakra-colors-gray-100);
 }
 
-.emotion-14[data-is-numeric=true] {
+.emotion-11[data-is-numeric=true] {
   text-align: end;
 }
 
-.emotion-15 {
+.emotion-12 {
   text-align: start;
   -webkit-padding-start: var(--chakra-space-6);
   padding-inline-start: var(--chakra-space-6);
@@ -276,17 +228,17 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
   border-color: var(--chakra-colors-gray-100);
 }
 
-.emotion-15[data-is-numeric=true] {
+.emotion-12[data-is-numeric=true] {
   text-align: end;
 }
 
-.emotion-16 {
+.emotion-13 {
   font-variant-numeric: lining-nums tabular-nums;
   border-collapse: collapse;
   width: var(--chakra-sizes-full);
 }
 
-.emotion-19 {
+.emotion-16 {
   text-align: start;
   -webkit-padding-start: var(--chakra-space-6);
   padding-inline-start: var(--chakra-space-6);
@@ -300,11 +252,11 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
   padding-left: 1rem!important;
 }
 
-.emotion-19[data-is-numeric=true] {
+.emotion-16[data-is-numeric=true] {
   text-align: end;
 }
 
-.emotion-20 {
+.emotion-17 {
   text-align: start;
   -webkit-padding-start: var(--chakra-space-6);
   padding-inline-start: var(--chakra-space-6);
@@ -318,7 +270,25 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
   padding-left: 0px;
 }
 
-.emotion-20[data-is-numeric=true] {
+.emotion-17[data-is-numeric=true] {
+  text-align: end;
+}
+
+.emotion-19 {
+  text-align: start;
+  -webkit-padding-start: var(--chakra-space-6);
+  padding-inline-start: var(--chakra-space-6);
+  -webkit-padding-end: var(--chakra-space-6);
+  padding-inline-end: var(--chakra-space-6);
+  padding-top: 0px;
+  padding-bottom: var(--chakra-space-4);
+  line-height: var(--chakra-lineHeights-5);
+  border-bottom: var(--chakra-borders-1px);
+  border-color: var(--chakra-colors-gray-100);
+  padding-left: 0px!important;
+}
+
+.emotion-19[data-is-numeric=true] {
   text-align: end;
 }
 
@@ -333,7 +303,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
   line-height: var(--chakra-lineHeights-5);
   border-bottom: var(--chakra-borders-1px);
   border-color: var(--chakra-colors-gray-100);
-  padding-left: 0px!important;
+  padding-left: 0px;
 }
 
 .emotion-22[data-is-numeric=true] {
@@ -341,24 +311,6 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
 }
 
 .emotion-25 {
-  text-align: start;
-  -webkit-padding-start: var(--chakra-space-6);
-  padding-inline-start: var(--chakra-space-6);
-  -webkit-padding-end: var(--chakra-space-6);
-  padding-inline-end: var(--chakra-space-6);
-  padding-top: 0px;
-  padding-bottom: var(--chakra-space-4);
-  line-height: var(--chakra-lineHeights-5);
-  border-bottom: var(--chakra-borders-1px);
-  border-color: var(--chakra-colors-gray-100);
-  padding-left: 0px;
-}
-
-.emotion-25[data-is-numeric=true] {
-  text-align: end;
-}
-
-.emotion-28 {
   text-align: start;
   -webkit-padding-start: var(--chakra-space-6);
   padding-inline-start: var(--chakra-space-6);
@@ -372,11 +324,11 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
   padding-left: 0!important;
 }
 
-.emotion-28[data-is-numeric=true] {
+.emotion-25[data-is-numeric=true] {
   text-align: end;
 }
 
-.emotion-32 {
+.emotion-29 {
   text-align: start;
   -webkit-padding-start: var(--chakra-space-6);
   padding-inline-start: var(--chakra-space-6);
@@ -392,15 +344,15 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
   background: #E5EDF1;
 }
 
-.emotion-32[data-is-numeric=true] {
+.emotion-29[data-is-numeric=true] {
   text-align: end;
 }
 
-.emotion-33 {
+.emotion-30 {
   margin-bottom: var(--chakra-space-1);
 }
 
-.emotion-42 {
+.emotion-39 {
   display: -webkit-inline-box;
   display: -webkit-inline-flex;
   display: -ms-inline-flexbox;
@@ -427,8 +379,8 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
   color: var(--chakra-colors-white);
 }
 
-.emotion-42:focus,
-.emotion-42[data-focus] {
+.emotion-39:focus,
+.emotion-39[data-focus] {
   box-shadow: var(--chakra-shadows-outline);
 }
 
@@ -455,41 +407,21 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
         </button>
       </div>
       <div
-        class="chakra-alert emotion-5"
-        role="alert"
-      >
-        <span
-          class="chakra-alert__icon emotion-6"
-        >
-          <svg
-            class="chakra-icon emotion-7"
-            focusable="false"
-            viewBox="0 0 24 24"
-          >
-            <path
-              d="M11.983,0a12.206,12.206,0,0,0-8.51,3.653A11.8,11.8,0,0,0,0,12.207,11.779,11.779,0,0,0,11.8,24h.214A12.111,12.111,0,0,0,24,11.791h0A11.766,11.766,0,0,0,11.983,0ZM10.5,16.542a1.476,1.476,0,0,1,1.449-1.53h.027a1.527,1.527,0,0,1,1.523,1.47,1.475,1.475,0,0,1-1.449,1.53h-.027A1.529,1.529,0,0,1,10.5,16.542ZM11,12.5v-6a1,1,0,0,1,2,0v6a1,1,0,1,1-2,0Z"
-              fill="currentColor"
-            />
-          </svg>
-        </span>
-        Please make sure you have filled out all required fields.
-      </div>
-      <div
-        class="chakra-stack emotion-8"
+        class="chakra-stack emotion-5"
       >
         <table
-          class="chakra-table emotion-9"
+          class="chakra-table emotion-6"
           role="table"
         >
           <tbody
-            class="emotion-10"
+            class="emotion-7"
           >
             <tr
-              class="emotion-11"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="emotion-12"
+                class="emotion-9"
                 colspan="3"
                 role="gridcell"
               >
@@ -497,77 +429,77 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
               </td>
             </tr>
             <tr
-              class="emotion-11"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="emotion-14"
+                class="emotion-11"
                 role="gridcell"
               >
                 The name and type of name by which the legal person is known.
               </td>
               <td
-                class="emotion-15"
+                class="emotion-12"
                 role="gridcell"
               >
                 <table
-                  class="chakra-table emotion-16"
+                  class="chakra-table emotion-13"
                   role="table"
                 >
                   <tbody
-                    class="emotion-11"
+                    class="emotion-8"
                   />
                 </table>
               </td>
             </tr>
             <tr
-              class="emotion-11"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="emotion-19"
+                class="emotion-16"
                 role="gridcell"
               >
                 Addresses
               </td>
               <td
-                class="emotion-20"
+                class="emotion-17"
                 role="gridcell"
               >
                 <tr
-                  class="emotion-11"
+                  class="emotion-8"
                   role="row"
                 >
                   <td
-                    class="emotion-22"
+                    class="emotion-19"
                     role="gridcell"
                   />
                 </tr>
               </td>
             </tr>
             <tr
-              class="emotion-11"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="emotion-19"
+                class="emotion-16"
                 role="gridcell"
               >
                 Country of Registration
               </td>
               <td
-                class="emotion-25"
+                class="emotion-22"
                 role="gridcell"
               >
                 <tbody
-                  class="emotion-11"
+                  class="emotion-8"
                 >
                   <tr
-                    class="emotion-11"
+                    class="emotion-8"
                     role="row"
                   >
                     <td
-                      class="emotion-28"
+                      class="emotion-25"
                       role="gridcell"
                     >
                       N/A
@@ -577,102 +509,102 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
               </td>
             </tr>
             <tr
-              class="emotion-11"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="emotion-15"
+                class="emotion-12"
                 role="gridcell"
               />
             </tr>
             <tr
-              class="emotion-11"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="emotion-32"
+                class="emotion-29"
                 colspan="3"
                 role="gridcell"
               >
                 <p
-                  class="chakra-text emotion-33"
+                  class="chakra-text emotion-30"
                 >
                   National Identification
                 </p>
               </td>
             </tr>
             <tr
-              class="emotion-11"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="emotion-15"
+                class="emotion-12"
                 role="gridcell"
               />
             </tr>
             <tr
-              class="emotion-11"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="emotion-14"
+                class="emotion-11"
                 role="gridcell"
               >
                 Identification Number
               </td>
               <td
-                class="emotion-20"
+                class="emotion-17"
                 role="gridcell"
               />
             </tr>
             <tr
-              class="emotion-11"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="emotion-14"
+                class="emotion-11"
                 role="gridcell"
               >
                 Identification Type
               </td>
               <td
-                class="emotion-14"
+                class="emotion-11"
                 role="gridcell"
               >
                 <span
-                  class="emotion-42"
+                  class="emotion-39"
                 />
               </td>
             </tr>
             <tr
-              class="emotion-11"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="emotion-15"
+                class="emotion-12"
                 role="gridcell"
               >
                 Country of Registration
               </td>
               <td
-                class="emotion-15"
+                class="emotion-12"
                 role="gridcell"
               >
                 N/A
               </td>
             </tr>
             <tr
-              class="emotion-11"
+              class="emotion-8"
               role="row"
             >
               <td
-                class="emotion-14"
+                class="emotion-11"
                 role="gridcell"
               >
                 Reg Authority
               </td>
               <td
-                class="emotion-14"
+                class="emotion-11"
                 role="gridcell"
               >
                 N/A
