@@ -52,7 +52,7 @@ function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
               <Td>
                 <Table>
                   <Tbody>
-                    {data?.entity?.name?.name_identifiers?.map(
+                    {data?.name?.name_identifiers?.map(
                       (nameIdentifier: any, index: number) => {
                         return (
                           <Tr key={index}>
