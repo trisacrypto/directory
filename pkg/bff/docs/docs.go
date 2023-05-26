@@ -750,7 +750,7 @@ const docTemplate = `{
                         "name": "params",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/api.LoadRegistrationFormParams"
+                            "$ref": "#/definitions/api.RegistrationFormParams"
                         }
                     }
                 ],
@@ -813,6 +813,52 @@ const docTemplate = `{
                     },
                     "204": {
                         "description": "Empty form was provided"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Reset the registration form associated with the user's organization for the requested step.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "registration"
+                ],
+                "summary": "Reset the user's current registration form [update:vasp]",
+                "parameters": [
+                    {
+                        "description": "Reset registration form parameters",
+                        "name": "params",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/api.RegistrationFormParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Registration form",
+                        "schema": {
+                            "type": "object"
+                        }
                     },
                     "400": {
                         "description": "Bad Request",
@@ -1250,14 +1296,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.LoadRegistrationFormParams": {
-            "type": "object",
-            "properties": {
-                "step": {
-                    "type": "string"
-                }
-            }
-        },
         "api.LoginParams": {
             "type": "object",
             "properties": {
@@ -1436,6 +1474,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.RegistrationFormParams": {
+            "type": "object",
+            "properties": {
+                "step": {
                     "type": "string"
                 }
             }
