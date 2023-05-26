@@ -25,7 +25,7 @@ export default defineConfig({
 
       return config;
     },
-    specPattern: 'cypress/e2e/**/*.{feature,features}',
+    specPattern: '**/*.{feature,features}',
     env: {
       API_URL: 'http://localhost:8080/v1',
     },
