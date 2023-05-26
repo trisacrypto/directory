@@ -43,8 +43,9 @@ type BFFClient interface {
 	MemberDetails(context.Context, *MemberDetailsParams) (*MemberDetailsReply, error)
 
 	// Registration form
-	LoadRegistrationForm(context.Context, *LoadRegistrationFormParams) (*RegistrationForm, error)
+	LoadRegistrationForm(context.Context, *RegistrationFormParams) (*RegistrationForm, error)
 	SaveRegistrationForm(context.Context, *RegistrationForm) (*RegistrationForm, error)
+	ResetRegistrationForm(context.Context, *RegistrationFormParams) (*RegistrationForm, error)
 	SubmitRegistration(_ context.Context, network string) (*RegisterReply, error)
 	RegistrationStatus(context.Context) (*RegistrationStatus, error)
 
@@ -216,10 +217,13 @@ const (
 	StepTRIXO        RegistrationFormStep = "trixo"
 )
 
-// Allows the front-end to specify which part of the registration form they want to fetch.
+// Allows the front-end to specify which part of the registration form they want to
+// fetch or delete.
 // GET /v1/registration will return the entire registration form, while
 // GET /v1/registration?step=trixo would return just the TRIXO form
-type LoadRegistrationFormParams struct {
+// DELETE /v1/registration will reset the entire registration form, while
+// DELETE /v1/registration?step=trixo would reset just the TRIXO form
+type RegistrationFormParams struct {
 	Step RegistrationFormStep `url:"step,omitempty" form:"step"`
 }
 

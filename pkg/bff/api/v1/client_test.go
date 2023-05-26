@@ -632,6 +632,35 @@ func TestSaveRegistrationForm(t *testing.T) {
 	require.Nil(t, out)
 }
 
+func TestResetRegistrationForm(t *testing.T) {
+	// Load a defualt form
+	fixture := models.NewRegisterForm()
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodDelete, r.Method)
+		require.Equal(t, "/v1/register", r.URL.Path)
+
+		form := &api.RegistrationForm{
+			Form: fixture,
+		}
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(form)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	// Should return no content
+	out, err := client.ResetRegistrationForm(context.Background(), nil)
+	require.NoError(t, err)
+	require.Equal(t, fixture, out.Form)
+}
+
 func TestSubmitRegistration(t *testing.T) {
 	fixture := &api.RegisterReply{
 		Id:                  "8b2e9e78-baca-4c34-a382-8b285503c901",

@@ -894,11 +894,6 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                     >
                       🇯🇵 JA
                     </option>
-                    <option
-                      value="en-dh"
-                    >
-                      - DH
-                    </option>
                   </select>
                   <div
                     class="chakra-select__icon-wrapper emotion-13"

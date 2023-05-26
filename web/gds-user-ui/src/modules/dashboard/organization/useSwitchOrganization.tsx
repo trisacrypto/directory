@@ -49,7 +49,7 @@ const useSwitchOrganization = (organizationId: string) => {
     };
   }, [organizationId, dispatch]);
 
-  return { isLoading, isError };
+  return { isLoading, isError, isSuccess: !isError && !isLoading };
 };
 
 export { useSwitchOrganization };

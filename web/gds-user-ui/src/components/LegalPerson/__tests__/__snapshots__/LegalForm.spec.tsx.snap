@@ -1,0 +1,1170 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LegalForm should render 1`] = `
+.emotion-0 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: start;
+  -webkit-box-align: start;
+  -ms-flex-align: start;
+  align-items: start;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  background: var(--chakra-colors-white);
+  border: 2px solid #E5EDF1;
+  border-radius: 10px;
+  padding: var(--chakra-space-3);
+}
+
+.emotion-0>*:not(style)~*:not(style) {
+  margin-top: var(--chakra-space-3-5);
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+@media screen and (min-width: 48em) {
+  .emotion-0 {
+    padding: var(--chakra-space-9);
+  }
+}
+
+.emotion-3 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: start;
+  -webkit-box-align: start;
+  -ms-flex-align: start;
+  align-items: start;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  width: 100%;
+}
+
+.emotion-3>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-6 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: start;
+  -webkit-box-align: start;
+  -ms-flex-align: start;
+  align-items: start;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-box-flex-wrap: wrap;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: var(--chakra-space-4);
+}
+
+.emotion-6>*:not(style)~*:not(style) {
+  margin-top: 0px;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0.5rem;
+  margin-inline-start: 0.5rem;
+}
+
+.emotion-7 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: var(--chakra-radii-md);
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: var(--chakra-sizes-10);
+  min-width: var(--chakra-sizes-10);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  background: var(--chakra-colors-gray-100);
+}
+
+.emotion-7:focus,
+.emotion-7[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-7[disabled],
+.emotion-7[aria-disabled=true],
+.emotion-7[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-7:hover,
+.emotion-7[data-hover] {
+  background: var(--chakra-colors-gray-200);
+}
+
+.emotion-7:hover[disabled],
+.emotion-7[data-hover][disabled],
+.emotion-7:hover[aria-disabled=true],
+.emotion-7[data-hover][aria-disabled=true],
+.emotion-7:hover[data-disabled],
+.emotion-7[data-hover][data-disabled] {
+  background: var(--chakra-colors-gray-100);
+}
+
+.emotion-7:active,
+.emotion-7[data-active] {
+  background: var(--chakra-colors-gray-300);
+}
+
+.emotion-8 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: var(--chakra-radii-md);
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: var(--chakra-sizes-10);
+  min-width: var(--chakra-sizes-10);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  background: var(--chakra-colors-gray-100);
+  margin-left: 0!important;
+}
+
+.emotion-8:focus,
+.emotion-8[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-8[disabled],
+.emotion-8[aria-disabled=true],
+.emotion-8[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-8:hover,
+.emotion-8[data-hover] {
+  background: var(--chakra-colors-gray-200);
+}
+
+.emotion-8:hover[disabled],
+.emotion-8[data-hover][disabled],
+.emotion-8:hover[aria-disabled=true],
+.emotion-8[data-hover][aria-disabled=true],
+.emotion-8:hover[data-disabled],
+.emotion-8[data-hover][data-disabled] {
+  background: var(--chakra-colors-gray-100);
+}
+
+.emotion-8:active,
+.emotion-8[data-active] {
+  background: var(--chakra-colors-gray-300);
+}
+
+.emotion-11 {
+  font-family: var(--chakra-fonts-heading);
+  font-weight: var(--chakra-fontWeights-bold);
+  font-size: var(--chakra-fontSizes-xl);
+  line-height: 1.2;
+}
+
+.emotion-13 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: start;
+  -webkit-box-align: start;
+  -ms-flex-align: start;
+  align-items: start;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  width: 100%;
+}
+
+.emotion-13>*:not(style)~*:not(style) {
+  margin-top: var(--chakra-space-10);
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-18 {
+  width: 100%;
+  position: relative;
+}
+
+.emotion-19 {
+  display: block;
+  text-align: start;
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-margin-end: var(--chakra-space-3);
+  margin-inline-end: var(--chakra-space-3);
+  margin-bottom: var(--chakra-space-2);
+  font-weight: var(--chakra-fontWeights-medium);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  opacity: 1;
+}
+
+.emotion-19[disabled],
+.emotion-19[aria-disabled=true],
+.emotion-19[data-disabled] {
+  opacity: 0.4;
+}
+
+.emotion-20 {
+  position: relative;
+  pointer-events: auto;
+}
+
+.emotion-21 {
+  z-index: 9999;
+  border: 0;
+  clip: rect(1px, 1px, 1px, 1px);
+  height: 1px;
+  width: 1px;
+  position: absolute;
+  overflow: hidden;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.emotion-23 {
+  width: 100%;
+  min-width: 0px;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  position: relative;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  height: auto;
+  border-radius: 0px;
+  border: 1px solid;
+  border-color: inherit;
+  background: #E3EBEF;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  padding: 0px;
+  overflow: hidden;
+  min-height: var(--chakra-sizes-10);
+}
+
+.emotion-23:hover,
+.emotion-23[data-hover] {
+  border-color: var(--chakra-colors-gray-300);
+}
+
+.emotion-23[aria-readonly=true],
+.emotion-23[readonly],
+.emotion-23[data-readonly] {
+  box-shadow: none!important;
+  -webkit-user-select: all;
+  -moz-user-select: all;
+  -ms-user-select: all;
+  user-select: all;
+}
+
+.emotion-23[disabled],
+.emotion-23[aria-disabled=true],
+.emotion-23[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.emotion-23[aria-invalid=true],
+.emotion-23[data-invalid] {
+  border-color: #E53E3E;
+  box-shadow: 0 0 0 1px #E53E3E;
+}
+
+.emotion-23:focus,
+.emotion-23[data-focus] {
+  z-index: 1;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 1px #3182ce;
+}
+
+.emotion-24 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  padding: 0.125rem 1rem;
+  -webkit-box-flex-wrap: wrap;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  overflow: hidden;
+}
+
+.emotion-25 {
+  color: var(--chakra-colors-gray-400);
+  -webkit-margin-start: 0.125rem;
+  margin-inline-start: 0.125rem;
+  -webkit-margin-end: 0.125rem;
+  margin-inline-end: 0.125rem;
+  position: absolute;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -moz-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.emotion-26 {
+  -webkit-flex: 1 1 auto;
+  -ms-flex: 1 1 auto;
+  flex: 1 1 auto;
+  display: inline-grid;
+  grid-area: 1/1/2/3;
+  grid-template-columns: 0 min-content;
+  color: inherit;
+}
+
+.emotion-26::after {
+  content: attr(data-value) " ";
+  visibility: hidden;
+  white-space: pre;
+  padding: 0px;
+  grid-area: 1/2;
+  font: inherit;
+  min-width: 2px;
+  border: 0;
+  margin: 0px;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.emotion-27 {
+  color: inherit;
+  background: 0;
+  opacity: 1;
+  width: 100%;
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+  grid-area: 1/2;
+  font: inherit;
+  min-width: 2px;
+  border: 0;
+  margin: 0px;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.emotion-28 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-align-self: stretch;
+  -ms-flex-item-align: stretch;
+  align-self: stretch;
+  -webkit-flex-shrink: 0;
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+}
+
+.emotion-29 {
+  opacity: 1;
+  border: 0;
+  border-color: inherit;
+  border-style: solid;
+  border-left-width: 1px;
+  height: 100%;
+}
+
+.emotion-30 {
+  font-size: 20px;
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  height: 100%;
+  border-radius: 0px;
+  border: 1px solid;
+  border-color: inherit;
+  background: var(--chakra-colors-gray-100);
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  border-width: 0;
+  cursor: pointer;
+}
+
+.emotion-31 {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  line-height: 1em;
+  -webkit-flex-shrink: 0;
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+  color: currentColor;
+  vertical-align: middle;
+}
+
+.emotion-32 {
+  margin-top: var(--chakra-space-2);
+  color: var(--chakra-colors-gray-500);
+  line-height: var(--chakra-lineHeights-normal);
+  font-size: var(--chakra-fontSizes-sm);
+}
+
+.emotion-36 {
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-fast);
+  transition-timing-function: var(--chakra-transition-easing-ease-out);
+  cursor: pointer;
+  -webkit-text-decoration: none;
+  text-decoration: none;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  color: var(--chakra-colors-blue-500);
+}
+
+.emotion-36:hover,
+.emotion-36[data-hover] {
+  -webkit-text-decoration: underline;
+  text-decoration: underline;
+}
+
+.emotion-36:focus,
+.emotion-36[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-39 {
+  width: 100%;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  position: relative;
+}
+
+.emotion-40 {
+  width: 100%;
+  min-width: 0px;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  position: relative;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  height: var(--chakra-sizes-10);
+  border-radius: 0px;
+  border: 1px solid;
+  border-color: inherit;
+  background: #E3EBEF;
+}
+
+.emotion-40:hover,
+.emotion-40[data-hover] {
+  border-color: var(--chakra-colors-gray-300);
+}
+
+.emotion-40[aria-readonly=true],
+.emotion-40[readonly],
+.emotion-40[data-readonly] {
+  box-shadow: none!important;
+  -webkit-user-select: all;
+  -moz-user-select: all;
+  -ms-user-select: all;
+  user-select: all;
+}
+
+.emotion-40[disabled],
+.emotion-40[aria-disabled=true],
+.emotion-40[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.emotion-40[aria-invalid=true],
+.emotion-40[data-invalid] {
+  border-color: #E53E3E;
+  box-shadow: 0 0 0 1px #E53E3E;
+}
+
+.emotion-40:focus,
+.emotion-40[data-focus] {
+  z-index: 1;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 1px #3182ce;
+}
+
+.emotion-74 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-box-flex-wrap: wrap;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  width: 100%;
+  padding-top: var(--chakra-space-6);
+  padding-bottom: var(--chakra-space-6);
+  row-gap: var(--chakra-space-2);
+}
+
+.emotion-74>*:not(style)~*:not(style) {
+  margin-top: 0px;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: var(--chakra-space-8);
+  margin-inline-start: var(--chakra-space-8);
+}
+
+.emotion-76 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: var(--chakra-radii-md);
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: var(--chakra-sizes-10);
+  min-width: var(--chakra-sizes-10);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+}
+
+.emotion-76:focus,
+.emotion-76[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-76[disabled],
+.emotion-76[aria-disabled=true],
+.emotion-76[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-76:hover[disabled],
+.emotion-76[data-hover][disabled],
+.emotion-76:hover[aria-disabled=true],
+.emotion-76[data-hover][aria-disabled=true],
+.emotion-76:hover[data-disabled],
+.emotion-76[data-hover][data-disabled] {
+  background: initial;
+}
+
+<div>
+  <div
+    class="chakra-stack emotion-0"
+  >
+    <form
+      class="emotion-1"
+    >
+      <div
+        class="chakra-stack emotion-0"
+        data-testid="name-identifier"
+      >
+        <div
+          class="chakra-stack emotion-3"
+        />
+        <div
+          class="chakra-stack emotion-3"
+        />
+        <div
+          class="chakra-stack emotion-3"
+        />
+        <div
+          class="chakra-stack emotion-6"
+        >
+          <button
+            class="chakra-button emotion-7"
+            type="button"
+          >
+            Add Another Legal Name
+          </button>
+          <button
+            class="chakra-button emotion-8"
+            type="button"
+          >
+            Add Local Name
+          </button>
+          <button
+            class="chakra-button emotion-8"
+            type="button"
+          >
+            Add Phonetic Names
+          </button>
+        </div>
+      </div>
+      <div
+        class="chakra-stack emotion-0"
+      >
+        <h2
+          class="chakra-heading emotion-11"
+        >
+          Addresses
+        </h2>
+        <p
+          class="chakra-text emotion-1"
+        >
+          At least one geographic address is required. Enter the primary geographic address of the organization. Organizations may enter additional addresses if operating in multiple jurisdictions.
+        </p>
+        <div
+          class="chakra-stack emotion-13"
+          data-testid="legal-adress"
+        >
+          <div
+            class="emotion-1"
+          >
+            <button
+              class="chakra-button emotion-7"
+              type="button"
+            >
+              Add Address
+            </button>
+          </div>
+        </div>
+      </div>
+      <div
+        class="chakra-stack emotion-0"
+        data-testid="legal-country-of-registration"
+      >
+        <h2
+          class="chakra-heading emotion-11"
+        >
+          Country of Registration
+        </h2>
+        <div
+          class="chakra-form-control emotion-18"
+          role="group"
+        >
+          <label
+            class="chakra-form__label emotion-19"
+            for="entity.country_of_registration"
+            id="field-1-label"
+          >
+            
+          </label>
+          <div
+            class=" emotion-20"
+            id="entity.country_of_registration"
+          >
+            <span
+              class="emotion-21"
+              id="react-select-2-live-region"
+            />
+            <span
+              aria-atomic="false"
+              aria-live="polite"
+              aria-relevant="additions text"
+              class="emotion-21"
+            />
+            <div
+              class=" emotion-23"
+            >
+              <div
+                class=" emotion-24"
+              >
+                <div
+                  class=" emotion-25"
+                  id="react-select-2-placeholder"
+                >
+                  Select a country
+                </div>
+                <div
+                  class=" emotion-26"
+                  data-value=""
+                >
+                  <input
+                    aria-autocomplete="list"
+                    aria-controls="react-select-2-listbox"
+                    aria-describedby="react-select-2-placeholder"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                    aria-owns="react-select-2-listbox"
+                    autocapitalize="none"
+                    autocomplete="off"
+                    autocorrect="off"
+                    class=" emotion-27"
+                    id="field-1"
+                    role="combobox"
+                    spellcheck="false"
+                    tabindex="0"
+                    type="text"
+                    value=""
+                  />
+                </div>
+              </div>
+              <div
+                class=" emotion-28"
+              >
+                <hr
+                  aria-orientation="vertical"
+                  class="chakra-divider emotion-29"
+                />
+                <div
+                  aria-hidden="true"
+                  class=" emotion-30"
+                >
+                  <svg
+                    class="chakra-icon emotion-31"
+                    focusable="false"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <input
+              name="entity.country_of_registration"
+              type="hidden"
+              value=""
+            />
+          </div>
+          <div
+            class="chakra-form__helper-text emotion-32"
+            id="field-1-helptext"
+          />
+        </div>
+      </div>
+      <div
+        class="chakra-stack emotion-0"
+        data-testid="legal-name-identification"
+      >
+        <h2
+          class="chakra-heading emotion-11"
+        >
+          National Identification
+        </h2>
+        <p
+          class="chakra-text emotion-1"
+        >
+          Please supply a valid national identification number. TRISA recommends the use of LEI numbers. For more information, please visit
+           
+          <a
+            class="chakra-link emotion-36"
+            href="https://gleif.org"
+            rel="noopener"
+            target="_blank"
+          >
+            GLEIF.org
+          </a>
+        </p>
+        <div
+          class="chakra-form-control emotion-18"
+          role="group"
+        >
+          <label
+            class="chakra-form__label emotion-19"
+            for="identification_number"
+            id="field-2-label"
+          >
+            Identification Number
+          </label>
+          <div
+            class="chakra-input__group emotion-39"
+          >
+            <input
+              aria-describedby="field-2-helptext"
+              class="chakra-input emotion-40"
+              id="identification_number"
+              name="entity.national_identification.national_identifier"
+              type="text"
+            />
+          </div>
+          <div
+            class="chakra-form__helper-text emotion-32"
+            id="field-2-helptext"
+          >
+            An identifier issued by an appropriate issuing authority
+          </div>
+        </div>
+        <div
+          class="chakra-form-control emotion-18"
+          role="group"
+        >
+          <label
+            class="chakra-form__label emotion-19"
+            for="identification_type"
+            id="field-3-label"
+          >
+            Identification Type
+          </label>
+          <div
+            class=" emotion-20"
+            id="identification_type"
+          >
+            <span
+              class="emotion-21"
+              id="react-select-3-live-region"
+            />
+            <span
+              aria-atomic="false"
+              aria-live="polite"
+              aria-relevant="additions text"
+              class="emotion-21"
+            />
+            <div
+              class=" emotion-23"
+            >
+              <div
+                class=" emotion-24"
+              >
+                <div
+                  class=" emotion-25"
+                  id="react-select-3-placeholder"
+                >
+                  Select...
+                </div>
+                <div
+                  class=" emotion-26"
+                  data-value=""
+                >
+                  <input
+                    aria-autocomplete="list"
+                    aria-controls="react-select-3-listbox"
+                    aria-describedby="react-select-3-placeholder"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                    aria-owns="react-select-3-listbox"
+                    autocapitalize="none"
+                    autocomplete="off"
+                    autocorrect="off"
+                    class=" emotion-27"
+                    id="field-3"
+                    role="combobox"
+                    spellcheck="false"
+                    tabindex="0"
+                    type="text"
+                    value=""
+                  />
+                </div>
+              </div>
+              <div
+                class=" emotion-28"
+              >
+                <hr
+                  aria-orientation="vertical"
+                  class="chakra-divider emotion-29"
+                />
+                <div
+                  aria-hidden="true"
+                  class=" emotion-30"
+                >
+                  <svg
+                    class="chakra-icon emotion-31"
+                    focusable="false"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="chakra-form__helper-text emotion-32"
+            id="field-3-helptext"
+          />
+        </div>
+        <div
+          class="chakra-form-control emotion-18"
+          role="group"
+        >
+          <label
+            class="chakra-form__label emotion-19"
+            for="registration_authority"
+            id="field-4-label"
+          >
+            Registration Authority
+          </label>
+          <div
+            class=" emotion-20"
+            id="registration_authority"
+          >
+            <span
+              class="emotion-21"
+              id="react-select-4-live-region"
+            />
+            <span
+              aria-atomic="false"
+              aria-live="polite"
+              aria-relevant="additions text"
+              class="emotion-21"
+            />
+            <div
+              class=" emotion-23"
+            >
+              <div
+                class=" emotion-24"
+              >
+                <div
+                  class=" emotion-25"
+                  id="react-select-4-placeholder"
+                >
+                  Select...
+                </div>
+                <div
+                  class=" emotion-26"
+                  data-value=""
+                >
+                  <input
+                    aria-autocomplete="list"
+                    aria-controls="react-select-4-listbox"
+                    aria-describedby="react-select-4-placeholder"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                    aria-owns="react-select-4-listbox"
+                    autocapitalize="none"
+                    autocomplete="off"
+                    autocorrect="off"
+                    class=" emotion-27"
+                    id="field-4"
+                    role="combobox"
+                    spellcheck="false"
+                    tabindex="0"
+                    type="text"
+                    value=""
+                  />
+                </div>
+              </div>
+              <div
+                class=" emotion-28"
+              >
+                <hr
+                  aria-orientation="vertical"
+                  class="chakra-divider emotion-29"
+                />
+                <div
+                  aria-hidden="true"
+                  class=" emotion-30"
+                >
+                  <svg
+                    class="chakra-icon emotion-31"
+                    focusable="false"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="chakra-form__helper-text emotion-32"
+            id="field-4-helptext"
+          >
+            <p
+              class="chakra-text emotion-1"
+            >
+              For identifiers other than LEI specify the registration authority from the following list. See
+               
+              <a
+                class="chakra-link emotion-36"
+                href="https://www.gleif.org/en/about-lei/code-lists/gleif-registration-authorities-list"
+                rel="noopener"
+                target="_blank"
+              >
+                GLEIF Registration Authorities
+              </a>
+               
+              for more details on how to look up a registration authority. If in doubt, use RA777777 - "General Government Entities" which specifies the default registration authority for your country of registration.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div
+        class="chakra-stack emotion-74"
+        data-testid="step-buttons"
+      >
+        <button
+          class="chakra-button emotion-7"
+          type="button"
+        >
+          Save & Previous
+        </button>
+        <button
+          class="chakra-button emotion-76"
+          type="button"
+        >
+          Save & Next
+        </button>
+        <button
+          class="chakra-button emotion-7"
+          type="button"
+        >
+          Clear & Reset Form
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+`;

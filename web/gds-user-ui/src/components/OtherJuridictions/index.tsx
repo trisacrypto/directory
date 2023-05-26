@@ -25,7 +25,7 @@ const OtherJuridictions: React.FC<{ name: string }> = ({ name }) => {
       {fields.map((field, index) => (
         <HStack key={field.id} w="100%">
           <Grid templateColumns={{ base: '1fr 1fr', md: '2fr 1fr' }} gap={6} width="100%">
-            <GridItem>
+            <GridItem data-testid="trixo-country">
               <Controller
                 control={control}
                 name={`${name}[${index}].country`}
@@ -46,17 +46,24 @@ const OtherJuridictions: React.FC<{ name: string }> = ({ name }) => {
               <InputFormControl
                 label={t`Regulator Name`}
                 controlId="regulator_name"
+                data-testid="trixo-regulator-name"
                 {...register(`${name}[${index}].regulator_name`)}
               />
             </GridItem>
           </Grid>
-          <Box marginTop="24px !important" alignSelf={{ base: 'flex-end', md: 'initial' }}>
+          <Box
+            marginTop="24px !important"
+            alignSelf={{ base: 'flex-end', md: 'initial' }}
+            data-testid="trixo-del-jurisdictions-btn">
             <DeleteButton onDelete={() => remove(index)} tooltip={{ label: t`Remove line` }} />
           </Box>
         </HStack>
       ))}
 
-      <Button onClick={handleAddJuridictionClick} borderRadius={5}>
+      <Button
+        onClick={handleAddJuridictionClick}
+        borderRadius={5}
+        data-testid="trixo-add-jurisdictions-btn">
         <Trans id="Add Jurisdiction">Add Jurisdiction</Trans>
       </Button>
     </>
