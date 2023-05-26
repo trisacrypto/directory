@@ -120,7 +120,7 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
 
 	// Should return an error if the step is not a valid step
-	_, err = s.client.LoadRegistrationForm(context.TODO(), &api.LoadRegistrationFormParams{Step: "invalid"})
+	_, err = s.client.LoadRegistrationForm(context.TODO(), &api.RegistrationFormParams{Step: "invalid"})
 	s.requireError(err, http.StatusBadRequest, "unknown registration form step \"invalid\"", "expected error when step is invalid")
 
 	out, err := s.client.LoadRegistrationForm(context.TODO(), nil)
@@ -152,7 +152,7 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	// Test loading individual steps of the registration form
 	// Basic Details
 	full := out.Form
-	params := &api.LoadRegistrationFormParams{
+	params := &api.RegistrationFormParams{
 		Step: api.StepBasicDetails,
 	}
 	out, err = s.client.LoadRegistrationForm(context.Background(), params)
@@ -333,18 +333,12 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	_, err = s.client.SaveRegistrationForm(context.TODO(), &api.RegistrationForm{Step: "invalid"})
 	s.requireError(err, http.StatusBadRequest, "unknown registration form step \"invalid\"", "expected error when step is invalid")
 
-	// Should be able to save an empty registration form to go back to default values.
-	reply, err := s.client.SaveRegistrationForm(context.TODO(), &api.RegistrationForm{Form: nil})
-	require.NoError(err, "should not receive an error when saving an empty registration form")
-	require.NotEmpty(reply, "should receive default values when saving a nil empty registration form")
-
-	// Registration form should be cleared and new registration form with default values saved to database.
-	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
-	require.NoError(err, "could not retrieve organization from database")
-	require.True(proto.Equal(org.Registration, reply.Form), "expected registration form empty except for default values")
+	// Providing no form should return an error
+	_, err = s.client.SaveRegistrationForm(context.TODO(), &api.RegistrationForm{Form: nil})
+	s.requireError(err, http.StatusBadRequest, "no form was provided", "expected error when form is not provided")
 
 	// Should be able to save the fixture form
-	reply, err = s.client.SaveRegistrationForm(context.TODO(), form)
+	reply, err := s.client.SaveRegistrationForm(context.TODO(), form)
 	require.NoError(err, "should not receive an error when saving a registration form")
 	require.NotNil(reply, "uploaded form should be returned when a non-empty registration form is saved")
 	require.NotEmpty(reply.Form.State.Started, "expected form started timestamp to be set")
@@ -357,27 +351,22 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	org.Registration.State.Started = ""
 	require.True(proto.Equal(org.Registration, form.Form), "expected form saved in database to match form uploaded")
 
-	// Should be able to "clear" a registration by saving an empty registration form
-	reply, err = s.client.SaveRegistrationForm(context.TODO(), &api.RegistrationForm{Form: nil})
-	require.NoError(err, "should not receive an error when saving an empty registration form")
-	require.NotEmpty(reply, "should receive default values when saving an empty registration form")
-
-	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
-	require.NoError(err, "could not retrieve updated org from database")
-	require.False(proto.Equal(org.Registration, form.Form), "expected form saved in database to be cleared")
+	// Reset the form in the database
+	org.Registration = records.NewRegisterForm()
+	err = s.DB().UpdateOrganization(context.Background(), org)
+	require.NoError(err, "could not update org in database")
 
 	// Test saving steps of a registration form one by one
 	// Basic details
 	defaultForm := records.NewRegisterForm()
 	partial := &api.RegistrationForm{}
 	partial.Step = api.StepBasicDetails
-	partial.Form = &records.RegistrationForm{
-		Website:          form.Form.Website,
-		BusinessCategory: form.Form.BusinessCategory,
-		VaspCategories:   form.Form.VaspCategories,
-		EstablishedOn:    form.Form.EstablishedOn,
-		OrganizationName: form.Form.OrganizationName,
-	}
+	partial.Form = records.NewRegisterForm()
+	partial.Form.Website = form.Form.Website
+	partial.Form.BusinessCategory = form.Form.BusinessCategory
+	partial.Form.VaspCategories = form.Form.VaspCategories
+	partial.Form.EstablishedOn = form.Form.EstablishedOn
+	partial.Form.OrganizationName = form.Form.OrganizationName
 	reply, err = s.client.SaveRegistrationForm(context.TODO(), partial)
 	require.NoError(err, "should not receive an error when saving a partial registration form")
 	require.NotNil(reply, "uploaded form should be returned when a non-empty registration form is saved")
@@ -385,6 +374,7 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 
 	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
 	require.NoError(err, "could not retrieve updated org from database")
+	require.NotEmpty(org.Registration.State.Started, "expected registration form started timestamp to be populated")
 	require.Equal(partial.Form.Website, org.Registration.Website, "expected form saved in database to match partial form uploaded")
 	require.Equal(partial.Form.BusinessCategory, org.Registration.BusinessCategory, "expected form field in database to match partial form uploaded")
 	require.Equal(partial.Form.VaspCategories, org.Registration.VaspCategories, "expected form field in database to match partial form uploaded")
@@ -518,6 +508,143 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 		require.NotNil(reply, "uploaded form should be returned when a non-empty registration form is saved")
 		require.Equal(verrs[tc.step], reply.Errors, "wrong errors when saving form step %s", tc.step)
 	}
+}
+
+func (s *bffTestSuite) TestResetRegisterForm() {
+	require := s.Require()
+
+	// Create initial claims fixture
+	claims := &authtest.Claims{
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{"read:nothing"},
+	}
+
+	// Load registration forms fixture
+	form := &records.RegistrationForm{}
+	err := loadFixture("testdata/registration_form.pb.json", form)
+	require.NoError(err, "could not load registration form fixture")
+
+	// Endpoint requires CSRF protection
+	_, err = s.client.ResetRegistrationForm(context.TODO(), nil)
+	s.requireError(err, http.StatusForbidden, "csrf verification failed for request", "expected error when request is not CSRF protected")
+
+	// Endpoint must be authenticated
+	require.NoError(s.SetClientCSRFProtection(), "could not set csrf protection on client")
+	_, err = s.client.ResetRegistrationForm(context.TODO(), nil)
+	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
+
+	// Endpoint requires the update:vasp permission
+	require.NoError(s.SetClientCredentials(claims), "could not create token with incorrect permissions")
+	_, err = s.client.ResetRegistrationForm(context.TODO(), nil)
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error when user is not authorized")
+
+	// Claims must have an organization ID and the server must not panic if it does not
+	claims.Permissions = []string{auth.UpdateVASP}
+	require.NoError(s.SetClientCredentials(claims), "could not create token without organizationID from claims")
+	_, err = s.client.ResetRegistrationForm(context.TODO(), nil)
+	s.requireError(err, http.StatusUnauthorized, "missing claims info, try logging out and logging back in", "expected error when user claims does not have an orgid")
+
+	// Create valid claims but no record in the database - should not panic and should return an error
+	claims.OrgID = "2295c698-afdc-4aaf-9443-85a4515217e3"
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
+	_, err = s.client.ResetRegistrationForm(context.TODO(), nil)
+	s.requireError(err, http.StatusUnauthorized, "no organization found, try logging out and logging back in", "expected error when claims are valid but no organization is in the database")
+
+	// Create an organization in the database
+	org := &records.Organization{}
+	_, err = s.DB().CreateOrganization(context.Background(), org)
+	require.NoError(err, "could not create organization in the database")
+	defer func() {
+		// Ensure organization is deleted at the end of the tests
+		s.DB().DeleteOrganization(context.Background(), org.UUID())
+	}()
+
+	claims.OrgID = org.Id
+	require.NoError(s.SetClientCredentials(claims), "could not create token with valid claims")
+
+	// Should return an error if the step is not a valid step
+	_, err = s.client.ResetRegistrationForm(context.TODO(), &api.RegistrationFormParams{Step: "invalid"})
+	s.requireError(err, http.StatusBadRequest, "unknown registration form step \"invalid\"", "expected error when step is invalid")
+
+	// Load the registration form on the organization
+	org.Registration = form
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization with registration form")
+
+	// Test deleting the entire form
+	defaultForm := records.NewRegisterForm()
+	rep, err := s.client.ResetRegistrationForm(context.Background(), nil)
+	require.NoError(err, "should not receive an error when deleting a registration form")
+	require.Nil(rep.Errors, "should not receive any validation errors when deleting a registration form")
+	require.True(proto.Equal(defaultForm, rep.Form), "default form should be returned when a registration form is deleted")
+
+	// Load the complete form back on the organization
+	org.Registration = form
+	require.NoError(s.DB().UpdateOrganization(context.Background(), org), "could not update organization with registration form")
+
+	// Test deleting specific steps in the form
+	params := &api.RegistrationFormParams{Step: api.StepBasicDetails}
+	rep, err = s.client.ResetRegistrationForm(context.Background(), params)
+	require.NoError(err, "should not receive an error when deleting a registration form")
+	require.Nil(rep.Errors, "should not receive any validation errors when deleting a registration form")
+	require.Equal(defaultForm.Website, rep.Form.Website, "website should be reset when basic details are deleted")
+	require.Equal(defaultForm.BusinessCategory, rep.Form.BusinessCategory, "business category should be reset when basic details are deleted")
+	require.Equal(defaultForm.VaspCategories, rep.Form.VaspCategories, "vasp categories should be reset when basic details are deleted")
+	require.Equal(defaultForm.EstablishedOn, rep.Form.EstablishedOn, "established on should be reset when basic details are deleted")
+	require.Equal(defaultForm.OrganizationName, rep.Form.OrganizationName, "organization name should be reset when basic details are deleted")
+	require.Nil(rep.Form.Entity, "entity should not be returned on basic details delete")
+	require.Nil(rep.Form.Contacts, "contacts should not be returned on basic details delete")
+	require.Nil(rep.Form.Trixo, "trixo should not be returned on basic details delete")
+	require.Nil(rep.Form.Testnet, "testnet should not be returned on basic details delete")
+	require.Nil(rep.Form.Mainnet, "mainnet should not be returned on basic details delete")
+
+	params.Step = api.StepLegalPerson
+	rep, err = s.client.ResetRegistrationForm(context.Background(), params)
+	require.NoError(err, "should not receive an error when deleting a registration form")
+	require.Nil(rep.Errors, "should not receive any validation errors when deleting a registration form")
+	require.Empty(rep.Form.Website, "website should not be returned on legal person delete")
+	require.Equal(defaultForm.Entity, rep.Form.Entity, "entity should be reset when legal person is deleted")
+	require.Nil(rep.Form.Contacts, "contacts should not be returned on legal person delete")
+	require.Nil(rep.Form.Trixo, "trixo should not be returned on legal person delete")
+	require.Nil(rep.Form.Testnet, "testnet should not be returned on legal person delete")
+	require.Nil(rep.Form.Mainnet, "mainnet should not be returned on legal person delete")
+
+	params.Step = api.StepContacts
+	rep, err = s.client.ResetRegistrationForm(context.Background(), params)
+	require.NoError(err, "should not receive an error when deleting a registration form")
+	require.Nil(rep.Errors, "should not receive any validation errors when deleting a registration form")
+	require.Empty(rep.Form.Website, "website should not be returned on contacts delete")
+	require.Empty(rep.Form.Entity, "entity should not be returned on contacts delete")
+	require.Equal(defaultForm.Contacts, rep.Form.Contacts, "contacts should be reset when contacts are deleted")
+	require.Nil(rep.Form.Trixo, "trixo should not be returned on contacts delete")
+	require.Nil(rep.Form.Testnet, "testnet should not be returned on contacts delete")
+	require.Nil(rep.Form.Mainnet, "mainnet should not be returned on contacts delete")
+
+	params.Step = api.StepTRIXO
+	rep, err = s.client.ResetRegistrationForm(context.Background(), params)
+	require.NoError(err, "should not receive an error when deleting a registration form")
+	require.Nil(rep.Errors, "should not receive any validation errors when deleting a registration form")
+	require.Empty(rep.Form.Website, "website should not be returned on trixo delete")
+	require.Empty(rep.Form.Entity, "entity should not be returned on trixo delete")
+	require.Empty(rep.Form.Contacts, "contacts should not be returned on trixo delete")
+	require.Equal(defaultForm.Trixo, rep.Form.Trixo, "trixo should be reset when trixo is deleted")
+	require.Nil(rep.Form.Testnet, "testnet should not be returned on trixo delete")
+	require.Nil(rep.Form.Mainnet, "mainnet should not be returned on trixo delete")
+
+	params.Step = api.StepTRISA
+	rep, err = s.client.ResetRegistrationForm(context.Background(), params)
+	require.NoError(err, "should not receive an error when deleting a registration form")
+	require.Nil(rep.Errors, "should not receive any validation errors when deleting a registration form")
+	require.Empty(rep.Form.Website, "website should not be returned on trisa delete")
+	require.Empty(rep.Form.Entity, "entity should not be returned on trisa delete")
+	require.Empty(rep.Form.Contacts, "contacts should not be returned on trisa delete")
+	require.Empty(rep.Form.Trixo, "trixo should not be returned on trisa delete")
+	require.Equal(defaultForm.Testnet, rep.Form.Testnet, "testnet should be reset when trisa is deleted")
+	require.Equal(defaultForm.Mainnet, rep.Form.Mainnet, "mainnet should be reset when trisa is deleted")
+
+	// At this point the form in the database should match the default
+	org, err = s.DB().RetrieveOrganization(context.Background(), org.UUID())
+	require.NoError(err, "should not receive an error when retrieving the organization")
+	require.True(proto.Equal(defaultForm, org.Registration), "registration form should match the default form")
 }
 
 func (s *bffTestSuite) TestSubmitRegistration() {

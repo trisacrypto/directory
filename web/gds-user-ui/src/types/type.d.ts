@@ -2,7 +2,7 @@ import { isoCountries } from '../utils/country';
 
 type StepStatus = 'complete' | 'progress' | 'incomplete';
 type NetworkType = 'testnet' | 'mainnet';
-type StepperType = 'basic' | 'contacts' | 'legal' | 'trisa' | 'trixo';
+type StepperType = 'basic' | 'contacts' | 'legal' | 'trisa' | 'trixo' | 'all';
 type IsoCountryCode = keyof typeof isoCountries;
 
 type RegistrationAuthority = {

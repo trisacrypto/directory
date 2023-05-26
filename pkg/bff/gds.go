@@ -253,7 +253,7 @@ func (s *Server) VerifyContact(c *gin.Context) {
 // @Description Get the registration form associated with the user's organization.
 // @Tags registration
 // @Produce json
-// @Param params body api.LoadRegistrationFormParams false "Load registration form parameters"
+// @Param params body api.RegistrationFormParams false "Load registration form parameters"
 // @Success 200 {object} object "Registration form"
 // @Failure 400 {object} api.Reply
 // @Failure 401 {object} api.Reply
@@ -264,7 +264,7 @@ func (s *Server) LoadRegisterForm(c *gin.Context) {
 		err    error
 		org    *records.Organization
 		step   records.StepType
-		params *api.LoadRegistrationFormParams
+		params *api.RegistrationFormParams
 	)
 
 	// Load the organization from the claims
@@ -275,7 +275,7 @@ func (s *Server) LoadRegisterForm(c *gin.Context) {
 
 	// Bind the parameters associated with the load registration request
 	// NOTE: the step is optional and does not need to be specified
-	params = &api.LoadRegistrationFormParams{}
+	params = &api.RegistrationFormParams{}
 	if err = c.ShouldBindQuery(&params); err != nil {
 		log.Debug().Err(err).Msg("could not bind request with query params")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
@@ -378,9 +378,11 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		org.Registration = records.NewRegisterForm()
 	}
 
-	// If the form is nil, create a new registration form to "clear" the form
+	// A form should always be provided to this endpoint, the delete endpoint must be
+	// used to reset a form.
 	if form.Form == nil {
-		form.Form = records.NewRegisterForm()
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("no form was provided"))
+		return
 	}
 
 	// Mark the form as started, the BFF relies on this state so the frontend should
@@ -416,6 +418,96 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 	if err = s.db.UpdateOrganization(ctx, org); err != nil {
 		log.Error().Err(err).Msg("could not update organization")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not save registration form"))
+		return
+	}
+
+	// Return the updated form in a 200 OK response, truncated if necessary.
+	if out.Form, err = org.Registration.Truncate(step); err != nil {
+		log.Warn().Err(err).Str("step", string(step)).Msg("could not truncate registration form")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
+	}
+
+	var cleaned gin.H
+	if cleaned, err = out.MarshalStepJSON(); err != nil {
+		log.Warn().Err(err).Str("step", string(step)).Msg("could not marshal registration form for the requested step")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, cleaned)
+}
+
+// Resets the user's current registration form to the defaults.
+//
+// @Summary Reset the user's current registration form [update:vasp]
+// @Description Reset the registration form associated with the user's organization for the requested step.
+// @Tags registration
+// @Produce json
+// @Param params body api.RegistrationFormParams false "Reset registration form parameters"
+// @Success 200 {object} object "Registration form"
+// @Failure 400 {object} api.Reply
+// @Failure 401 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /register [delete]
+func (s *Server) ResetRegisterForm(c *gin.Context) {
+	var (
+		err    error
+		org    *records.Organization
+		step   records.StepType
+		params *api.RegistrationFormParams
+	)
+
+	// Load the organization from the claims
+	// NOTE: this method will handle the error logging and response.
+	if org, err = s.OrganizationFromClaims(c); err != nil {
+		return
+	}
+
+	// Bind the parameters associated with the delete registration request
+	// NOTE: the step is optional and does not need to be specified
+	params = &api.RegistrationFormParams{}
+	if err = c.ShouldBindQuery(&params); err != nil {
+		log.Debug().Err(err).Msg("could not bind request with query params")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
+
+	// Convert the step into a StepType
+	if step, err = records.ParseStepType(string(params.Step)); err != nil {
+		log.Debug().Err(err).Msg("user requested invalid form step type")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
+
+	// If the organization form does not exist; create a new registration form
+	if org.Registration == nil {
+		org.Registration = records.NewRegisterForm()
+	}
+
+	// Prepare the response
+	out := &api.RegistrationForm{
+		Step: api.RegistrationFormStep(step),
+	}
+
+	// Delete the form step by doing an update with a default form
+	if err = org.Registration.Update(records.NewRegisterForm(), step); err != nil {
+		// Ignore validation errors on delete
+		var fields records.ValidationErrors
+		if !errors.As(err, &fields) {
+			log.Debug().Err(err).Msg("could not reset registration form")
+			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+			return
+		}
+	}
+
+	// Update the form on the organization
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
+	if err = s.db.UpdateOrganization(ctx, org); err != nil {
+		log.Error().Err(err).Msg("could not update organization with reset registration form")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not reset registration form"))
 		return
 	}
 

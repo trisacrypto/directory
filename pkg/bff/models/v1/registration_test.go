@@ -576,6 +576,125 @@ func TestValidateTRISA(t *testing.T) {
 	}
 }
 
+func loadJSONFixture(path string, v interface{}) (err error) {
+	var f *os.File
+	if f, err = os.Open(path); err != nil {
+		return err
+	}
+	defer f.Close()
+	return json.NewDecoder(f).Decode(v)
+}
+
+// Test updating a registration form
+func TestUpdateRegistrationForm(t *testing.T) {
+	form := NewRegisterForm()
+
+	// Load the registration form fixture
+	update := &RegistrationForm{}
+	err := loadJSONFixture("testdata/registration_form.json", update)
+	require.NoError(t, err, "error loading registration form fixture")
+
+	// An error should be returned if an unknown step is provided
+	err = form.Update(update, "invalid")
+	require.EqualError(t, err, "unknown step \"invalid\"", "error should be returned for unknown step")
+
+	// Test updating the basic details step
+	update.State.Current = 1
+	err = form.Update(update, StepBasicDetails)
+	require.NoError(t, err, "error updating basic details step")
+	require.Equal(t, form.State, update.State, "state should be updated")
+
+	// Test updating the legal person step
+	update.State.Current = 2
+	err = form.Update(update, StepLegalPerson)
+	require.NoError(t, err, "error updating legal person step")
+	require.Equal(t, form.State, update.State, "state should be updated")
+
+	// Test updating the contacts step
+	update.State.Current = 3
+	err = form.Update(update, StepContacts)
+	require.NoError(t, err, "error updating contacts step")
+	require.Equal(t, form.State, update.State, "state should be updated")
+
+	// Test updating the TRIXO step
+	update.State.Current = 4
+	err = form.Update(update, StepTRIXO)
+	require.NoError(t, err, "error updating TRIXO step")
+	require.Equal(t, form.State, update.State, "state should be updated")
+
+	// Test updating the TRISA step
+	update.State.Current = 5
+	err = form.Update(update, StepTRISA)
+	require.NoError(t, err, "error updating TRISA step")
+	require.Equal(t, form.State, update.State, "state should be updated")
+
+	// At this point the form should be fully updated
+	require.True(t, proto.Equal(form, update), "form should be fully updated")
+
+	// Test updating the entire form with no step
+	form = NewRegisterForm()
+	err = form.Update(update, StepNone)
+	require.NoError(t, err, "error updating entire form")
+	require.True(t, proto.Equal(form, update), "form should be fully updated")
+
+	// Test updating the entire form with the all step
+	form = NewRegisterForm()
+	err = form.Update(update, StepAll)
+	require.NoError(t, err, "error updating entire form")
+	require.True(t, proto.Equal(form, update), "form should be fully updated")
+}
+
+// Test updating a form with validation errors
+func TestUpdateRegistrationFormErrors(t *testing.T) {
+	form := NewRegisterForm()
+
+	// Load a registration form fixture that has validation errors
+	update := &RegistrationForm{}
+	err := loadJSONFixture("testdata/bad_registration_form.json", update)
+	require.NoError(t, err, "error loading bad registration form fixture")
+
+	// All the validation errors
+	verrs := map[StepType]ValidationErrors{
+		StepBasicDetails: {
+			{Field: FieldBusinessCategory, Err: ErrMissingField.Error()},
+		},
+		StepLegalPerson: {
+			{Field: FieldEntityCountryOfRegistration, Err: ErrMissingField.Error()},
+		},
+		StepContacts: {
+			{Field: FieldContacts, Err: ErrMissingContact.Error()},
+			{Field: FieldContactsAdministrative, Err: ErrMissingAdminOrTechnical.Error()},
+			{Field: FieldContactsTechnical, Err: ErrMissingAdminOrTechnical.Error()},
+		},
+		StepTRIXO: {
+			{Field: FieldTRIXOKYCThreshold, Err: ErrNegativeValue.Error()},
+		},
+		StepTRISA: {
+			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
+		},
+	}
+
+	// Test updating the steps individually
+	for step, verrs := range verrs {
+		err = form.Update(update, step)
+		require.Equal(t, verrs, err, "wrong validation errors for step %s", step)
+	}
+
+	// Test updating the entire form with no step
+	allErrs := ValidationErrors{}
+	for _, verrs := range verrs {
+		allErrs = append(allErrs, verrs...)
+	}
+	form = NewRegisterForm()
+	err = form.Update(update, StepNone)
+	require.ElementsMatch(t, allErrs, err, "wrong validation errors for entire form")
+
+	// Test updating the entire form with the all step
+	form = NewRegisterForm()
+	err = form.Update(update, StepAll)
+	require.ElementsMatch(t, allErrs, err, "wrong validation errors for entire form")
+}
+
 // Test that the registration form marshals and unmarshals correctly to and from JSON
 func TestMarshalRegistrationForm(t *testing.T) {
 	// Load the JSON fixture

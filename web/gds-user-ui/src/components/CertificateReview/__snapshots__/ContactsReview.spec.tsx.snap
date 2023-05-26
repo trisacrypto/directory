@@ -126,54 +126,6 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
 }
 
 .emotion-5 {
-  width: 100%;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-align-items: center;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
-  -webkit-padding-start: var(--chakra-space-4);
-  padding-inline-start: var(--chakra-space-4);
-  -webkit-padding-end: var(--chakra-space-4);
-  padding-inline-end: var(--chakra-space-4);
-  padding-top: var(--chakra-space-3);
-  padding-bottom: var(--chakra-space-3);
-  background: #FED7D7;
-  border-radius: var(--chakra-radii-lg);
-  margin-top: var(--chakra-space-4);
-  margin-bottom: var(--chakra-space-4);
-}
-
-.emotion-6 {
-  -webkit-flex-shrink: 0;
-  -ms-flex-negative: 0;
-  flex-shrink: 0;
-  -webkit-margin-end: var(--chakra-space-3);
-  margin-inline-end: var(--chakra-space-3);
-  width: var(--chakra-sizes-5);
-  height: var(--chakra-sizes-6);
-  color: var(--chakra-colors-red-500);
-  display: inherit;
-}
-
-.emotion-7 {
-  width: 100%;
-  height: 100%;
-  display: inline-block;
-  line-height: 1em;
-  -webkit-flex-shrink: 0;
-  -ms-flex-negative: 0;
-  flex-shrink: 0;
-  color: currentColor;
-  vertical-align: middle;
-}
-
-.emotion-8 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -184,7 +136,7 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
   font-size: 1rem;
 }
 
-.emotion-8>*:not(style)~*:not(style) {
+.emotion-5>*:not(style)~*:not(style) {
   margin-top: 0.5rem;
   -webkit-margin-end: 0px;
   margin-inline-end: 0px;
@@ -193,27 +145,27 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
   margin-inline-start: 0px;
 }
 
-.emotion-9 {
+.emotion-6 {
   font-variant-numeric: lining-nums tabular-nums;
   border-collapse: collapse;
   width: var(--chakra-sizes-full);
 }
 
-.emotion-9 td:nth-child(2),
-.emotion-9 td:nth-child(3) {
+.emotion-6 td:nth-child(2),
+.emotion-6 td:nth-child(3) {
   font-weight: var(--chakra-fontWeights-semibold);
 }
 
-.emotion-9 Tr {
+.emotion-6 Tr {
   border-style: hidden;
 }
 
-.emotion-9 td:first-child {
+.emotion-6 td:first-child {
   width: 50%;
   padding-left: 1rem;
 }
 
-.emotion-9 td {
+.emotion-6 td {
   border-bottom: var(--chakra-borders-none);
   -webkit-padding-start: 0px;
   padding-inline-start: 0px;
@@ -221,7 +173,7 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
   padding-bottom: var(--chakra-space-2-5);
 }
 
-.emotion-12 {
+.emotion-9 {
   text-align: start;
   -webkit-padding-start: var(--chakra-space-6);
   padding-inline-start: var(--chakra-space-6);
@@ -235,11 +187,11 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
   text-transform: capitalize;
 }
 
-.emotion-12[data-is-numeric=true] {
+.emotion-9[data-is-numeric=true] {
   text-align: end;
 }
 
-.emotion-13 {
+.emotion-10 {
   text-align: start;
   -webkit-padding-start: var(--chakra-space-6);
   padding-inline-start: var(--chakra-space-6);
@@ -252,7 +204,7 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
   border-color: var(--chakra-colors-gray-100);
 }
 
-.emotion-13[data-is-numeric=true] {
+.emotion-10[data-is-numeric=true] {
   text-align: end;
 }
 
@@ -279,98 +231,78 @@ exports[`<ContactsReview /> should match snapshot 1`] = `
         </button>
       </div>
       <div
-        class="chakra-alert emotion-5"
-        role="alert"
-      >
-        <span
-          class="chakra-alert__icon emotion-6"
-        >
-          <svg
-            class="chakra-icon emotion-7"
-            focusable="false"
-            viewBox="0 0 24 24"
-          >
-            <path
-              d="M11.983,0a12.206,12.206,0,0,0-8.51,3.653A11.8,11.8,0,0,0,0,12.207,11.779,11.779,0,0,0,11.8,24h.214A12.111,12.111,0,0,0,24,11.791h0A11.766,11.766,0,0,0,11.983,0ZM10.5,16.542a1.476,1.476,0,0,1,1.449-1.53h.027a1.527,1.527,0,0,1,1.523,1.47,1.475,1.475,0,0,1-1.449,1.53h-.027A1.529,1.529,0,0,1,10.5,16.542ZM11,12.5v-6a1,1,0,0,1,2,0v6a1,1,0,1,1-2,0Z"
-              fill="currentColor"
-            />
-          </svg>
-        </span>
-        Please make sure you have filled out all required fields.
-      </div>
-      <div
-        class="chakra-stack emotion-8"
+        class="chakra-stack emotion-5"
       >
         <table
-          class="chakra-table emotion-9"
+          class="chakra-table emotion-6"
           role="table"
         >
           <tbody
-            class="emotion-10"
+            class="emotion-7"
           >
             <tr
-              class="emotion-10"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="emotion-12"
+                class="emotion-9"
                 role="gridcell"
               >
                 Compliance / legal Contact
               </td>
               <td
-                class="emotion-13"
+                class="emotion-10"
                 role="gridcell"
               >
                 N/A
               </td>
             </tr>
             <tr
-              class="emotion-10"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="emotion-12"
+                class="emotion-9"
                 role="gridcell"
               >
                 technical Contact
               </td>
               <td
-                class="emotion-13"
+                class="emotion-10"
                 role="gridcell"
               >
                 N/A
               </td>
             </tr>
             <tr
-              class="emotion-10"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="emotion-12"
+                class="emotion-9"
                 role="gridcell"
               >
                 administrative Contact
               </td>
               <td
-                class="emotion-13"
+                class="emotion-10"
                 role="gridcell"
               >
                 N/A
               </td>
             </tr>
             <tr
-              class="emotion-10"
+              class="emotion-7"
               role="row"
             >
               <td
-                class="emotion-12"
+                class="emotion-9"
                 role="gridcell"
               >
                 billing Contact
               </td>
               <td
-                class="emotion-13"
+                class="emotion-10"
                 role="gridcell"
               >
                 N/A
