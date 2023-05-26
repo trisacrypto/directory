@@ -1,6 +1,6 @@
 {
     "website": "https://spudkoin.ai",
-    "business_category": "BUSINESS_ENTITY",
+    "business_category": "UNKNOWN_ENTITY",
     "vasp_categories": [
         "DEX",
         "Kiosk",
@@ -52,24 +52,9 @@
             "national_identifier": "42312342123122",
             "national_identifier_type": "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX",
             "country_of_issue": ""
-        },
-        "country_of_registration": "US"
+        }
     },
     "contacts": {
-        "technical": {
-            "name": "Benjamin Bengfort",
-            "email": "benjamin@rotational.io",
-            "phone": "+14106450594",
-            "person": null,
-            "extra": null
-        },
-        "administrative": {
-            "name": "",
-            "email": "",
-            "phone": "",
-            "person": null,
-            "extra": null
-        },
         "legal": {
             "name": "Fred Spatchford",
             "email": "fred@spudkoin.ai",
@@ -97,8 +82,8 @@
             }
         ],
         "has_required_regulatory_program": "yes",
-        "conducts_customer_kyc": false,
-        "kyc_threshold": 0,
+        "conducts_customer_kyc": true,
+        "kyc_threshold": -1.0,
         "kyc_threshold_currency": "USD",
         "must_comply_travel_rule": false,
         "applicable_regulations": [
@@ -110,7 +95,7 @@
         "safeguards_pii": true
     },
     "testnet": {
-        "common_name": "testnet.trisa.spudkoin.ai",
+        "common_name": "trisa.spudkoin.ai",
         "endpoint": "testnet.trisa.spudkoin.ai:443",
         "dns_names": []
     },
