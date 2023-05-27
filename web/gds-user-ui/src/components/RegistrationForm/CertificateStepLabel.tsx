@@ -133,7 +133,7 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
 
   const handleStepClick = (step: number) => () => {
     setSelectedStep(step);
-    if (formContext.formState.isDirty) {
+    if (formContext?.formState.isDirty) {
       onOpen();
     } else {
       dispatch(setHasReachSubmitStep({ hasReachSubmitStep: false }));
@@ -142,7 +142,7 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
   };
 
   const handleContinueClick = () => {
-    formContext.reset(initialFormValues);
+    formContext?.reset(initialFormValues);
     jumpToStep(selectedStep);
     onClose();
   };

@@ -14,7 +14,7 @@ import { handleError } from 'utils/utils';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 
 const ReviewsSummary: React.FC = () => {
-  const { previousStep, nextStep, hasStepErrors } = useCertificateStepper();
+  const { previousStep, updateHasReachSubmitStep, hasStepErrors } = useCertificateStepper();
   const [isLoadingExport, setIsLoadingExport] = useState(false);
 
   const handleExport = () => {
@@ -32,7 +32,7 @@ const ReviewsSummary: React.FC = () => {
   };
 
   const handleNextStep = () => {
-    nextStep();
+    updateHasReachSubmitStep(true);
   };
 
   const handlePreviousStep = () => {

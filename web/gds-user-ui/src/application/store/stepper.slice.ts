@@ -40,9 +40,7 @@ const stepperSlice: any = createSlice({
       if (state.currentStep < 6) {
         state.currentStep += 1;
       }
-      if (state.currentStep === 6) {
-        state.hasReachSubmitStep = true;
-      }
+
       // if next step is not in the list, add it
       if (!state.steps.find((step: any) => step.key === state.currentStep)) {
         state.steps.push({
@@ -53,6 +51,10 @@ const stepperSlice: any = createSlice({
     },
     decrementStep: (state: any) => {
       state.currentStep -= 1;
+      // if current step is 6 then set hasReachSubmitStep to false
+      // if (state.currentStep === 6 && state.hasReachSubmitStep) {
+      //   state.hasReachSubmitStep = false;
+      // }
     },
     addStep: (state: any, { payload }: any) => {
       state.steps.push(payload);

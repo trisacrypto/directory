@@ -131,6 +131,10 @@ const useCertificateStepper = () => {
     dispatch(clearStepper());
   };
 
+  const updateHasReachSubmitStep = (hasReachSubmitStep: boolean) => {
+    dispatch(setHasReachSubmitStep({ hasReachSubmitStep }));
+  };
+
   return {
     nextStep,
     previousStep,
@@ -144,7 +148,8 @@ const useCertificateStepper = () => {
     updateStateFromFormValues,
     setRegistrationValue,
     clearCertificateStepper,
-    hasStepErrors
+    hasStepErrors,
+    updateHasReachSubmitStep
   };
 };
 
