@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { chakra } from '@chakra-ui/react';
 import CountryOfRegistration from 'components/CountryOfRegistration';
 import FormLayout from 'layouts/FormLayout';
@@ -13,8 +14,9 @@ import MinusLoader from 'components/Loader/MinusLoader';
 import { StepEnum } from 'types/enums';
 import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
+import { StepsIndexes } from 'constants/steps';
 const LegalForm: React.FC = () => {
-  const { previousStep, nextStep, currentState } = useCertificateStepper();
+  const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
     key: StepEnum.LEGAL
   });
@@ -30,6 +32,10 @@ const LegalForm: React.FC = () => {
   const {
     formState: { isDirty }
   } = methods;
+
+  useEffect(() => {
+    updateIsDirty(isDirty, StepsIndexes.LEGAL_PERSON);
+  }, [isDirty, updateIsDirty]);
 
   const handleNextStepClick = () => {
     console.log('[] handleNextStep', methods.getValues());

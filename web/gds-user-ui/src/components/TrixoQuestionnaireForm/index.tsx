@@ -19,8 +19,9 @@ import { trisaImplementationValidationSchema } from 'modules/dashboard/certifica
 import { yupResolver } from '@hookform/resolvers/yup';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import MinusLoader from 'components/Loader/MinusLoader';
+import { StepsIndexes } from 'constants/steps';
 const TrixoQuestionnaireForm: React.FC = () => {
-  const { previousStep, nextStep, currentState } = useCertificateStepper();
+  const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
     key: StepEnum.TRIXO
   });
@@ -86,6 +87,9 @@ const TrixoQuestionnaireForm: React.FC = () => {
     }
     previousStep();
   };
+  useEffect(() => {
+    updateIsDirty(isDirty, StepsIndexes.TRIXO_QUESTIONNAIRE);
+  }, [isDirty, updateIsDirty]);
 
   useEffect(() => {
     if (getCountryFromLegalAddress) {

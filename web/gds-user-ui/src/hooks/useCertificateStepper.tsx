@@ -12,7 +12,8 @@ import {
   setCertificateValue,
   setStepMissingFields,
   incrementStep,
-  decrementStep
+  decrementStep,
+  setIsDirty
 } from 'application/store/stepper.slice';
 // import { getFieldNames } from 'utils/getFieldNames';
 import { setRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
@@ -23,13 +24,12 @@ import { LSTATUS } from 'components/RegistrationForm/CertificateStepLabel';
 const useCertificateStepper = () => {
   const dispatch = useDispatch();
   const currentStep: number = useSelector(getCurrentStep);
-
   console.log('[useCertificateStepper] currentStep', currentStep);
 
   const removeMissingFields = (steps: TStep[]) => {
     return steps.map((step: TStep) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { missingFields, ...rest } = step;
+      const { missingFields, isDirty, ...rest } = step;
       return rest;
     });
   };
@@ -55,6 +55,7 @@ const useCertificateStepper = () => {
     } else {
       dispatch(setStepStatus({ step: currentStep, status: LSTATUS.COMPLETE }));
     }
+
     dispatch(incrementStep());
   };
 
@@ -135,6 +136,15 @@ const useCertificateStepper = () => {
     dispatch(setHasReachSubmitStep({ hasReachSubmitStep }));
   };
 
+  const updateIsDirty = (isDirty: boolean, step: number) => {
+    dispatch(setIsDirty({ step, isDirty: !!isDirty }));
+  };
+  const getIsDirtyState = (step = currentStep) => {
+    const steps = Store.getState().stepper.steps;
+    const found = steps.filter((s: TStep) => s.key === step && s.isDirty === true);
+    return found.length > 0;
+  };
+
   return {
     nextStep,
     previousStep,
@@ -149,7 +159,9 @@ const useCertificateStepper = () => {
     setRegistrationValue,
     clearCertificateStepper,
     hasStepErrors,
-    updateHasReachSubmitStep
+    updateHasReachSubmitStep,
+    updateIsDirty,
+    getIsDirtyState
   };
 };
 

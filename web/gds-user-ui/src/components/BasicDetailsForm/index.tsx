@@ -17,7 +17,7 @@ import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
 import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { StepEnum } from 'types/enums';
-
+import { StepsIndexes } from 'constants/steps';
 interface BasicDetailsFormProps {
   data?: any;
   isLoading?: boolean;
@@ -29,7 +29,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
   const { updateCertificateStep, updatedCertificateStep } = useUpdateCertificateStep();
   const resolver = yupResolver(basicDetailsValidationSchema);
   const options = getBusinessCategoryOptions();
-  const { currentState, nextStep } = useCertificateStepper();
+  const { currentState, nextStep, updateIsDirty } = useCertificateStepper();
 
   const [language] = useLanguageProvider();
 
@@ -45,6 +45,10 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
     formState: { errors, isDirty },
     control
   } = methods;
+
+  useEffect(() => {
+    updateIsDirty(isDirty, StepsIndexes.BASIC_DETAILS);
+  }, [isDirty, updateIsDirty]);
 
   const handleNextStepClick = () => {
     console.log('[] handleNextStep', methods.getValues());
