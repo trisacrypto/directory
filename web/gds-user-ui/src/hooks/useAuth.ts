@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { userSelector, login, logout, isLoggedInSelector } from 'modules/auth/login/user.slice';
 import { getCookie, clearCookies } from 'utils/cookies';
 import useCustomAuth0 from './useCustomAuth0';
+import { persistor } from 'application/store';
 const useAuth = () => {
   const dispatch = useDispatch();
   const user = useSelector(userSelector);
@@ -16,6 +17,8 @@ const useAuth = () => {
   const getExpiryTime: any = getCookie('expires_in') || '';
 
   const logoutUser = () => {
+    persistor.purge();
+    clearCookies();
     dispatch(logout());
   };
   const getUser: any = async () => {
@@ -23,6 +26,8 @@ const useAuth = () => {
       try {
         const userInfo: any = await auth0GetUser(getToken);
         if (userInfo) {
+          clearCookies();
+          persistor.purge();
           const u: TUser = {
             isLoggedIn: true,
             user: {
@@ -30,7 +35,6 @@ const useAuth = () => {
               email: userInfo?.email,
               pictureUrl: userInfo?.picture,
               roles: userInfo?.roles || []
-
             }
           };
           loginUser(u);

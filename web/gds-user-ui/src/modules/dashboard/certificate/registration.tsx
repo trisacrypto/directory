@@ -1,4 +1,4 @@
-import React from 'react';
+// import React, { useEffect } from 'react';
 import { SimpleDashboardLayout } from 'layouts';
 import { Box, Heading, VStack, Text, Link, Stack, useColorModeValue, Flex } from '@chakra-ui/react';
 import Card from 'components/ui/Card';

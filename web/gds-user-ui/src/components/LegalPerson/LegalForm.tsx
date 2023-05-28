@@ -38,11 +38,7 @@ const LegalForm: React.FC = () => {
   }, [isDirty, updateIsDirty]);
 
   const handleNextStepClick = () => {
-    console.log('[] handleNextStep', methods.getValues());
-    // if the form is dirty, then we need to save the data and move to the next step
-    console.log('[] isDirty', isDirty);
     if (!isDirty) {
-      console.log('[] is not Dirty', isDirty);
       nextStep(updatedCertificateStep?.errors ?? certificateStep?.errors);
     } else {
       const payload = {
@@ -52,11 +48,9 @@ const LegalForm: React.FC = () => {
           state: currentState()
         } as any
       };
-      console.log('[] isDirty  payload', payload);
 
       updateCertificateStep(payload);
-      console.log('[] isDirty 3 (not)', updatedCertificateStep);
-      nextStep(updatedCertificateStep?.errors);
+      nextStep(updatedCertificateStep);
     }
   };
 
@@ -72,7 +66,7 @@ const LegalForm: React.FC = () => {
       console.log('[] isDirty  payload', payload);
 
       updateCertificateStep(payload);
-      previousStep(updatedCertificateStep?.errors);
+      previousStep(updatedCertificateStep);
     }
     previousStep();
   };

@@ -14,7 +14,7 @@ import {
 } from '@chakra-ui/react';
 import { FaCheckCircle, FaDotCircle, FaRegCircle } from 'react-icons/fa';
 import { useSelector, RootStateOrAny } from 'react-redux';
-import { TStep, addStep, setHasReachSubmitStep, setIsDirty } from 'application/store/stepper.slice';
+import { TStep, setHasReachSubmitStep, setIsDirty } from 'application/store/stepper.slice';
 import { findStepKey } from 'utils/utils';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
@@ -126,9 +126,6 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
     setSelectedStep(step);
     // check if the current step is added to the stepper
     // if not then add it on steps state
-    if (!steps.find((s: TStep) => s.key === selectedStep)) {
-      dispatch(addStep({ step: selectedStep, status: LSTATUS.PROGRESS }));
-    }
 
     if (getIsDirtyState()) {
       onOpen();
@@ -140,6 +137,8 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
   const handleContinueClick = () => {
     // set dirty current state to false
     dispatch(setIsDirty({ isDirty: false }));
+    // updateStepStatusToIncomplete();
+
     jumpToStep(selectedStep);
     onClose();
   };

@@ -47,17 +47,13 @@ const ContactsForm: React.FC = () => {
         } as any
       };
       updateCertificateStep(payload);
-      previousStep(updatedCertificateStep?.errors);
+      previousStep(updatedCertificateStep);
     }
     previousStep();
   };
 
   const handleNextStepClick = () => {
-    console.log('[] handleNextStep', methods.getValues());
-    // if the form is dirty, then we need to save the data and move to the next step
-    console.log('[] isDirty', isDirty);
     if (!isDirty) {
-      console.log('[] is not Dirty', isDirty);
       nextStep(updatedCertificateStep?.errors ?? certificateStep?.errors);
     } else {
       const payload = {
@@ -67,11 +63,9 @@ const ContactsForm: React.FC = () => {
           state: currentState()
         } as any
       };
-      console.log('[] isDirty  payload', payload);
 
       updateCertificateStep(payload);
-      console.log('[] isDirty 3 (not)', updatedCertificateStep);
-      nextStep(updatedCertificateStep?.errors);
+      nextStep(updatedCertificateStep);
     }
   };
 

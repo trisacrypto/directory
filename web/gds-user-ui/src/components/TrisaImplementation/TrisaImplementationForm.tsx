@@ -45,7 +45,7 @@ const TrisaForm: React.FC = () => {
         } as any
       };
       updateCertificateStep(payload);
-      previousStep(updatedCertificateStep?.errors);
+      previousStep(updatedCertificateStep);
     }
     previousStep();
   };
@@ -69,7 +69,7 @@ const TrisaForm: React.FC = () => {
 
       updateCertificateStep(payload);
       console.log('[] isDirty 3 (not)', updatedCertificateStep);
-      nextStep(updatedCertificateStep?.errors);
+      nextStep(updatedCertificateStep);
     }
   };
 

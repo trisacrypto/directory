@@ -51,12 +51,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
   }, [isDirty, updateIsDirty]);
 
   const handleNextStepClick = () => {
-    console.log('[] handleNextStep', methods.getValues());
-    // if the form is dirty, then we need to save the data and move to the next step
-    console.log('[] isDirty', isDirty);
     if (!isDirty) {
-      console.log('[] isDirty handleNextStepClick 1 ', certificateStep);
-      console.log('[] isDirty handleNextStepClick 2 ', updatedCertificateStep);
       nextStep(updatedCertificateStep?.errors ?? certificateStep?.errors);
     } else {
       const payload = {
@@ -66,11 +61,9 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
           state: currentState()
         } as any
       };
-      console.log('[] isDirty 3 payload', payload);
 
       updateCertificateStep(payload);
-      console.log('[] isDirty 3 (not)', updatedCertificateStep);
-      nextStep(updatedCertificateStep?.errors);
+      nextStep(updatedCertificateStep);
     }
   };
 

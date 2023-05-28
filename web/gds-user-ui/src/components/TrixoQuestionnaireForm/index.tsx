@@ -66,7 +66,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
 
       updateCertificateStep(payload);
       console.log('[] isDirty 3 (not)', updatedCertificateStep);
-      nextStep(updatedCertificateStep?.errors);
+      nextStep(updatedCertificateStep);
     }
   };
 
@@ -83,7 +83,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
 
       updateCertificateStep(payload);
       console.log('[] isDirty 3 (not)', updatedCertificateStep);
-      previousStep(updatedCertificateStep?.errors);
+      previousStep(updatedCertificateStep);
     }
     previousStep();
   };
