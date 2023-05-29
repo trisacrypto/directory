@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import Store from 'application/store';
 import { getCurrentStep } from 'application/store/selectors/stepper';
 import { useDispatch, useSelector } from 'react-redux';
@@ -12,7 +13,9 @@ import {
   setCertificateValue,
   setStepMissingFields,
   incrementStep,
-  decrementStep
+  decrementStep,
+  setIsDirty,
+  addStep
 } from 'application/store/stepper.slice';
 // import { getFieldNames } from 'utils/getFieldNames';
 import { setRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
@@ -23,13 +26,12 @@ import { LSTATUS } from 'components/RegistrationForm/CertificateStepLabel';
 const useCertificateStepper = () => {
   const dispatch = useDispatch();
   const currentStep: number = useSelector(getCurrentStep);
-
   console.log('[useCertificateStepper] currentStep', currentStep);
 
   const removeMissingFields = (steps: TStep[]) => {
     return steps.map((step: TStep) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { missingFields, ...rest } = step;
+      const { missingFields, isDirty, ...rest } = step;
       return rest;
     });
   };
@@ -45,30 +47,34 @@ const useCertificateStepper = () => {
     return formatState;
   };
 
-  const nextStep = (errorFields?: any) => {
-    console.log('[nextStep] errorFields', errorFields);
-    if (errorFields && Object.keys(errorFields).length > 0) {
-      console.log('[nextStep] errorFields 2', errorFields);
-      // dispatch(setStepMissingFields({ step: currentStep, errors: errorFields }));
-      console.log('[nextStep] errorFields currentStep', currentStep);
+  const nextStep = (data?: any) => {
+    const errorFields = data?.errors;
+    console.log('[useCertificateStepper 1] errorFields', errorFields);
+    if (data && errorFields && Object.keys(errorFields).length > 0) {
+      console.log('[useCertificateStepper 2] errorFields', errorFields);
       dispatch(setStepStatus({ step: currentStep, status: LSTATUS.ERROR }));
     } else {
+      // setInitialState(data?.form);
       dispatch(setStepStatus({ step: currentStep, status: LSTATUS.COMPLETE }));
     }
+
     dispatch(incrementStep());
   };
 
-  const previousStep = (errorFields?: any) => {
-    if (errorFields) {
+  const previousStep = (data?: any) => {
+    const errorFields = data?.errors;
+    if (data && errorFields) {
       dispatch(setStepMissingFields({ step: currentStep, errors: errorFields }));
       dispatch(setStepStatus({ step: currentStep, status: LSTATUS.ERROR }));
     } else {
+      // setInitialState(data?.form);
       dispatch(setStepStatus({ step: currentStep, status: LSTATUS.COMPLETE }));
     }
     dispatch(decrementStep());
   };
 
   const jumpToStep = (step: number) => {
+    dispatch(setHasReachSubmitStep({ hasReachSubmitStep: false }));
     dispatch(setCurrentStep({ currentStep: step }));
   };
 
@@ -97,15 +103,20 @@ const useCertificateStepper = () => {
 
   const setInitialState = (value: any) => {
     const state: TPayload = {
-      currentStep: value.currentStep,
-      steps: value.steps,
+      currentStep: value?.state?.current,
+      steps: value?.state?.steps,
       lastStep: 6,
-      hasReachSubmitStep: value.hasReachSubmitStep,
-      testnetSubmitted: value.testnetSubmitted,
-      mainnetSubmitted: value.mainnetSubmitted,
-      data: value.data
+      hasReachSubmitStep: value?.state?.ready_to_submit || false,
+      testnetSubmitted: value?.state?.testnetSubmitted || false,
+      mainnetSubmitted: value?.state?.mainnetSubmitted || false
     };
     dispatch(setInitialValue(state));
+  };
+
+  const hasStepErrors = () => {
+    const steps = Store.getState().stepper.steps;
+    const found = steps.filter((step: any) => step.status === 'error');
+    return found.length > 0;
   };
 
   // update state from form values
@@ -125,6 +136,44 @@ const useCertificateStepper = () => {
     dispatch(clearStepper());
   };
 
+  const updateHasReachSubmitStep = (hasReachSubmitStep: boolean) => {
+    dispatch(setHasReachSubmitStep({ hasReachSubmitStep }));
+  };
+
+  const updateIsDirty = (isDirty: boolean, step: number) => {
+    dispatch(setIsDirty({ step, isDirty: !!isDirty }));
+    // if (isDirty) {
+    //   // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    //   addDefaultStep();
+    // }
+  };
+  const getIsDirtyState = (step = currentStep) => {
+    const steps = Store.getState().stepper.steps;
+    const found = steps.filter((s: TStep) => s.key === step && s.isDirty === true);
+    return found.length > 0;
+  };
+
+  const addDefaultStep = (step?: number) => {
+    const payload = {
+      step: step || currentStep,
+      status: LSTATUS.PROGRESS
+    };
+    dispatch(addStep(payload));
+  };
+
+  const updateStepStatusToIncomplete = () => {
+    // check if the current step has progress status and is not first step
+    if (currentStep !== 1) {
+      const steps = Store.getState().stepper.steps;
+      const found = steps.filter(
+        (s: TStep) => s.key === currentStep && s.status === LSTATUS.PROGRESS
+      );
+      if (found.length > 1) {
+        dispatch(setStepStatus({ step: currentStep, status: LSTATUS.INCOMPLETE }));
+      }
+    }
+  };
+
   return {
     nextStep,
     previousStep,
@@ -137,7 +186,13 @@ const useCertificateStepper = () => {
     mainnetSubmissionState,
     updateStateFromFormValues,
     setRegistrationValue,
-    clearCertificateStepper
+    clearCertificateStepper,
+    hasStepErrors,
+    updateHasReachSubmitStep,
+    updateIsDirty,
+    getIsDirtyState,
+    addDefaultStep,
+    updateStepStatusToIncomplete
   };
 };
 

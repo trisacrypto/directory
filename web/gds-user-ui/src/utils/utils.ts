@@ -94,16 +94,20 @@ export function currencyFormatter(
   amount: number | bigint,
   { style = 'currency', currency = 'USD' }: Intl.NumberFormatOptions = {}
 ) {
-  const formatedAmount = new Intl.NumberFormat('en-US', {
-    style,
-    currency
-  });
+  try {
+    const formattedAmount = new Intl.NumberFormat('en-US', {
+      style,
+      currency
+    });
+    if (amount === 0) {
+      return formattedAmount.format(0.0);
+    }
 
-  if (amount === 0) {
-    return formatedAmount.format(0.0);
+    return formattedAmount.format(amount);
+  } catch (e) {
+    console.log('[] CURRENCY [FORMATING ISSUE]', e);
+    return `${amount} [INVALID CURRENCY]`;
   }
-
-  return formatedAmount.format(amount);
 }
 
 export const getFormattedAmount = (amount: number, currency: string): string => {

@@ -1,8 +1,8 @@
 import React from 'react';
-import { waitFor, within, act } from '@testing-library/react';
+import { waitFor, within } from '@testing-library/react';
 
 import userEvent from '@testing-library/user-event';
-import { render } from 'utils/test-utils';
+import { render, act, screen, fireEvent } from 'utils/test-utils';
 import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import TrixoQuestionnaireForm from '../';
 
@@ -44,19 +44,13 @@ describe('TrixoQuestionnaire', () => {
     expect(primaryNationalJurisdiction).toBeInTheDocument();
   });
 
-  it('should render the primary national jurisdiction', () => {
-    const { getByText } = renderComponent();
-    const primaryNationalJurisdiction = getByText('Primary National Jurisdiction');
-    expect(primaryNationalJurisdiction).toBeInTheDocument();
-  });
-
   it('should render add jurisdiction button', () => {
     const { getByText } = renderComponent();
     const addJurisdiction = getByText('Add Jurisdiction');
     expect(addJurisdiction).toBeInTheDocument();
   });
 
-  it('should add a new fields when clicking on add jurisdiction button', async () => {
+  it('should add new fields when clicking on add jurisdiction button', async () => {
     const { getByTestId } = renderComponent();
     const addJurisdiction = getByTestId('trixo-add-jurisdictions-btn');
     userEvent.click(addJurisdiction);
@@ -101,13 +95,13 @@ describe('TrixoQuestionnaire', () => {
   });
 
   it('should render Travel Rule radio button', async () => {
-    const { getByTestId, getByText } = renderComponent();
+    renderComponent();
 
-    const questionnaire = getByText('Must comply with Travel Rule');
+    const questionnaire = screen.getByText('Must comply with Travel Rule');
 
     expect(questionnaire).toBeInTheDocument();
 
-    const wrapper = getByTestId('trixo-must-comply-travel-rule');
+    const wrapper = screen.getByTestId('trixo-must-comply-travel-rule');
 
     const radioButton = within(wrapper).getByRole('checkbox');
 
@@ -115,14 +109,20 @@ describe('TrixoQuestionnaire', () => {
 
     // if we click on the radio button, it should be checked
 
-    await userEvent.click(radioButton);
+    // getHasRequiredRegulatoryProgram state is updated after a delay
+    act(() => {
+      userEvent.click(radioButton);
+    });
+
+    const thresholdWrapper = screen.getByTestId('tx-minimum-threshold');
+    expect(thresholdWrapper).toBeInTheDocument();
 
     expect(radioButton).toBeChecked();
-    const wrapper2 = getByTestId('tx-minimum-threshold');
-    expect(wrapper2).toBeInTheDocument();
 
-    // const input1 = within(wrapper2).getByRole('number');
+    // const input1 = within(thresholdWrapper).getByRole('number');
     // expect(input1).toBeInTheDocument();
+    //   await userEvent.type(input1, '1000');
+    //   expect(input1).toHaveValue('1000');
 
     // userEvent.type(input1, '1000');
     // expect(input1).toHaveValue('1000');

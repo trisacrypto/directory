@@ -1,28 +1,47 @@
-import React, { Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { t } from '@lingui/macro';
 import TrixoReviewDataTable from './TrixoReviewDataTable';
 import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
-import { getCurrentState } from 'application/store/selectors/stepper';
-import useGetStepStatusByKey from './useGetStepStatusByKey';
 import RequiredElementMissing from 'components/ErrorComponent/RequiredElementMissing';
-import { useSelector } from 'react-redux';
+import { StepEnum } from 'types/enums';
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
+// import { ErrorBoundary } from '@sentry/react';
 const TrixoReview: React.FC = () => {
-  const currentStateValue = useSelector(getCurrentState);
-  const { hasErrorField } = useGetStepStatusByKey(1);
+  const { certificateStep, wasCertificateStepFetched } = useFetchCertificateStep({
+    key: StepEnum.TRIXO
+  });
 
-  const trixo = {
-    ...currentStateValue.data.trixo
-  };
+  const [trixoData, setTrixoData] = useState([]);
+
+  console.log('[] TRIXO FORM REVIEW PAGE', certificateStep?.form?.trixo);
+
+  const hasErrors = certificateStep?.errors;
+
+  useEffect(() => {
+    if (
+      wasCertificateStepFetched &&
+      certificateStep?.form?.trixo &&
+      certificateStep?.step === StepEnum.TRIXO
+    ) {
+      setTrixoData(certificateStep?.form?.trixo);
+    }
+  }, [certificateStep?.form, wasCertificateStepFetched, certificateStep?.step]);
 
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader title={t`Section 5: TRIXO Questionnaire`} step={5} />
-      {hasErrorField ? <RequiredElementMissing elementKey={5} /> : false}
-      <Suspense fallback={'Loading trixo data'}>
-        <TrixoReviewDataTable data={trixo} />
-      </Suspense>
+      {hasErrors ? <RequiredElementMissing elementKey={5} errorFields={hasErrors} /> : false}
+
+      {/* <ErrorBoundary
+        fallback={
+          <div>
+            <p>Something went wrong</p>
+          </div>
+        }> */}
+      <TrixoReviewDataTable data={trixoData} />
+      {/* </ErrorBoundary> */}
     </CertificateReviewLayout>
   );
 };

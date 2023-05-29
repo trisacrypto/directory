@@ -1,4 +1,3 @@
-
 import axiosInstance from 'utils/axios';
 // import type { Collaborator } from 'components/Collaborators/CollaboratorType';
 interface TUpdateCollaborator {
@@ -28,5 +27,3 @@ export const deleteCollaborator = async (id: string): Promise<any> => {
   const response: any = await axiosInstance.delete(`/collaborators/${id}`);
   return response;
 };
-
-

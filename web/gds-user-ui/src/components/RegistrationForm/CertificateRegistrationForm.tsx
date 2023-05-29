@@ -9,8 +9,21 @@ import Contacts from 'components/Contacts';
 import TrixoQuestionnaire from 'components/TrixoQuestionnaire';
 import TrisaImplementation from 'components/TrisaImplementation';
 import CertificateReview from 'components/CertificateReview';
+import { useDispatch, useSelector } from 'react-redux';
+import { setCurrentStep } from 'application/store/stepper.slice';
+import { getCurrentStep } from 'application/store/selectors/stepper';
+import { useEffect } from 'react';
 
 const CertificateRegistrationForm = () => {
+  const dispatch = useDispatch();
+  const currentStep: number = useSelector(getCurrentStep);
+  useEffect(() => {
+    // if currentStep is 0, then set it to 1
+    if (currentStep === 0 || !currentStep) {
+      dispatch(setCurrentStep({ currentStep: 1 }));
+    }
+  }, [currentStep, dispatch]);
+
   return (
     <>
       <CertificateSteps>

@@ -9,6 +9,7 @@ interface TrixoReviewProps {
   data?: any;
 }
 function TrixoReviewDataTable({ data }: TrixoReviewProps) {
+  console.log('[] TRIXO FORM DATA TABLE PAGE', data);
   const getConductsCustomerKYC = (conductsCustomerKYC: boolean) => {
     return conductsCustomerKYC ? t`Yes` : t`No`;
   };
@@ -73,7 +74,7 @@ function TrixoReviewDataTable({ data }: TrixoReviewProps) {
                 size={'sm'}
                 key={'sm'}
                 variant="subtle"
-                colorScheme={getColorScheme(data.financial_transfers_permitted)}>
+                colorScheme={getColorScheme(data?.financial_transfers_permitted)}>
                 <TagLabel fontWeight={'bold'}>
                   {data?.financial_transfers_permitted?.toString().toUpperCase()}
                 </TagLabel>
