@@ -52,7 +52,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
 
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep(updatedCertificateStep?.errors ?? certificateStep?.errors);
+      nextStep(updatedCertificateStep ?? certificateStep);
     } else {
       const payload = {
         step: StepEnum.BASIC,

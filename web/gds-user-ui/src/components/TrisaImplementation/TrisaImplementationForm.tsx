@@ -47,7 +47,7 @@ const TrisaForm: React.FC = () => {
       updateCertificateStep(payload);
       previousStep(updatedCertificateStep);
     }
-    previousStep();
+    previousStep(certificateStep);
   };
 
   const handleNextStepClick = () => {
@@ -56,7 +56,7 @@ const TrisaForm: React.FC = () => {
     console.log('[] isDirty', isDirty);
     if (!isDirty) {
       console.log('[] is not Dirty', isDirty);
-      nextStep(updatedCertificateStep?.errors ?? certificateStep?.errors);
+      nextStep(updatedCertificateStep ?? certificateStep);
     } else {
       const payload = {
         step: StepEnum.TRISA,

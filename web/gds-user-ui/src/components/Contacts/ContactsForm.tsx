@@ -49,12 +49,12 @@ const ContactsForm: React.FC = () => {
       updateCertificateStep(payload);
       previousStep(updatedCertificateStep);
     }
-    previousStep();
+    previousStep(certificateStep);
   };
 
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep(updatedCertificateStep?.errors ?? certificateStep?.errors);
+      nextStep(updatedCertificateStep ?? certificateStep);
     } else {
       const payload = {
         step: StepEnum.CONTACTS,

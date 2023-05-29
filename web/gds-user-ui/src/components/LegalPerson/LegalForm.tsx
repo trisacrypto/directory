@@ -17,17 +17,14 @@ import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
 import { StepsIndexes } from 'constants/steps';
 const LegalForm: React.FC = () => {
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
-  const { certificateStep, isFetchingCertificateStep, wasCertificateStepFetched } =
-    useFetchCertificateStep({
-      key: StepEnum.LEGAL
-    });
+  const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
+    key: StepEnum.LEGAL
+  });
   const { updateCertificateStep, updatedCertificateStep } = useUpdateCertificateStep();
-
-  const [defaultValues, setDefaultValues] = React.useState<any>({});
 
   const resolver = yupResolver(legalPersonValidationSchemam);
   const methods = useForm({
-    defaultValues,
+    defaultValues: certificateStep?.form,
     resolver,
     mode: 'onChange'
   });
@@ -37,18 +34,12 @@ const LegalForm: React.FC = () => {
   } = methods;
 
   useEffect(() => {
-    if (wasCertificateStepFetched) {
-      setDefaultValues(certificateStep?.form);
-    }
-  }, [certificateStep, wasCertificateStepFetched]);
-
-  useEffect(() => {
     updateIsDirty(isDirty, StepsIndexes.LEGAL_PERSON);
   }, [isDirty, updateIsDirty]);
 
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep(updatedCertificateStep?.errors ?? certificateStep?.errors);
+      nextStep(updatedCertificateStep ?? certificateStep);
     } else {
       const payload = {
         step: StepEnum.LEGAL,
@@ -77,7 +68,7 @@ const LegalForm: React.FC = () => {
       updateCertificateStep(payload);
       previousStep(updatedCertificateStep);
     }
-    previousStep();
+    previousStep(certificateStep);
   };
 
   return (

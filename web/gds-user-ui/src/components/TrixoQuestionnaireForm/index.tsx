@@ -53,7 +53,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
 
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep(updatedCertificateStep?.errors ?? certificateStep?.errors);
+      nextStep(updatedCertificateStep ?? certificateStep);
     } else {
       const payload = {
         step: StepEnum.TRIXO,
@@ -85,7 +85,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
       console.log('[] isDirty 3 (not)', updatedCertificateStep);
       previousStep(updatedCertificateStep);
     }
-    previousStep();
+    previousStep(certificateStep);
   };
   useEffect(() => {
     updateIsDirty(isDirty, StepsIndexes.TRIXO_QUESTIONNAIRE);
