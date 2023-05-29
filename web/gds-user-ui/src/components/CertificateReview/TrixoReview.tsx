@@ -32,7 +32,7 @@ const TrixoReview: React.FC = () => {
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader title={t`Section 5: TRIXO Questionnaire`} step={5} />
-      {hasErrors ? <RequiredElementMissing elementKey={5} /> : false}
+      {hasErrors ? <RequiredElementMissing elementKey={5} errorFields={hasErrors} /> : false}
 
       {/* <ErrorBoundary
         fallback={

@@ -16,3 +16,21 @@ export const getStepName = (step: number) => {
       return StepEnum.BASIC;
   }
 };
+
+export const getStepNumber = (step: string) => {
+  switch (step) {
+    case StepEnum.BASIC:
+      return 1;
+    case StepEnum.LEGAL:
+      return 2;
+    case StepEnum.CONTACTS:
+      return 3;
+    case StepEnum.TRISA:
+      return 4;
+    case StepEnum.TRIXO:
+      return 5;
+
+    default:
+      return 1;
+  }
+};

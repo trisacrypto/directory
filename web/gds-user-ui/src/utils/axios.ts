@@ -85,8 +85,14 @@ axiosInstance.interceptors.response.use(
           });
           return;
         } else {
+          // remove cookies and local storage and redirect to login page
+
+          clearCookies();
+          localStorage.removeItem('trs_stepper');
+          localStorage.removeItem('persist:root');
           window.location.href = `/auth/login?q=token_expired`;
         }
+
         clearCookies();
         switch (error.response.status) {
           // case 401:

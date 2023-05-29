@@ -6,6 +6,8 @@ import Loader from 'components/Loader';
 import { userSelector } from 'modules/auth/login/user.slice';
 import TransparentLoader from '../components/Loader/TransparentLoader';
 import { isTokenExpired } from 'utils/utils';
+import { clearCookies } from 'utils/cookies';
+import { persistor } from 'application/store';
 type DashboardLayoutProp = {
   children: React.ReactNode;
 };
@@ -28,6 +30,10 @@ const DashboardLayout: React.FC<DashboardLayoutProp> = (props) => {
   useEffect(() => {
     if (isTokenExpired()) {
       setIsLoading(true);
+      clearCookies();
+      persistor.purge();
+      localStorage.removeItem('persist:root');
+      localStorage.removeItem('trs_stepper');
       setTimeout(() => {
         window.location.href = `/auth/login?q=token_expired`;
       }, 1000);

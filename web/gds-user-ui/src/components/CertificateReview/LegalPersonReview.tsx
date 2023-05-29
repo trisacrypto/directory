@@ -17,7 +17,7 @@ const LegalPersonReview = () => {
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader step={2} title={t`Section 2: Legal Person`} />
-      {hasErrors ? <RequiredElementMissing elementKey={2} /> : false}
+      {hasErrors ? <RequiredElementMissing elementKey={2} errorFields={hasErrors} /> : false}
       <LegalPersonReviewDataTable data={certificateStep?.form?.entity} />
     </CertificateReviewLayout>
   );

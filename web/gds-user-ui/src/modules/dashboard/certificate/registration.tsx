@@ -1,4 +1,4 @@
-import React from 'react';
+// import React, { useEffect } from 'react';
 import { SimpleDashboardLayout } from 'layouts';
 import { Box, Heading, VStack, Text, Link, Stack, useColorModeValue, Flex } from '@chakra-ui/react';
 import Card from 'components/ui/Card';
@@ -10,7 +10,7 @@ import { useSelector } from 'react-redux';
 
 import HomeButton from 'components/ui/HomeButton';
 
-import { Trans } from '@lingui/react';
+import { Trans } from '@lingui/macro';
 
 const Certificate: React.FC = () => {
   const textColor = useColorModeValue('black', '#EDF2F7');
@@ -31,29 +31,30 @@ const Certificate: React.FC = () => {
           <Card maxW="100%" bg={backgroundColor} color={textColor}>
             <Card.Body>
               <Text>
-                <Trans id="This multi-section form is an important step in the registration and certificate issuance process. The information you provide will be used to verify the legal entity that you represent and, where appropriate, will be available to verified TRISA members to facilitate compliance decisions. If you need guidance, see the">
+                <Trans>
                   This multi-section form is an important step in the registration and certificate
                   issuance process. The information you provide will be used to verify the legal
                   entity that you represent and, where appropriate, will be available to verified
-                  TRISA members to facilitate compliance decisions. If you need guidance, see the
-                </Trans>{' '}
-                <Link isExternal href="/getting-started" color={'link'} fontWeight={'bold'}>
-                  <Trans id="Getting Started Help Guide">Getting Started Help Guide</Trans>.{' '}
-                </Link>
+                  TRISA members to facilitate compliance decisions. If you need guidance, see the{' '}
+                  <Link isExternal href="/getting-started" color={'link'} fontWeight={'bold'}>
+                    <Trans>Getting Started</Trans>
+                  </Link>{' '}
+                  Help Guide.
+                </Trans>
               </Text>
               <Text pt={4}>
-                <Trans id="To assist in completing the registration form, the form is divided into multiple sections">
+                <Trans>
                   To assist in completing the registration form, the form is divided into multiple
-                  sections
-                </Trans>
-                .{' '} Navigate through the form by clicking on each section of the progress bar or the buttons at the bottom of each section.
-              </Text>
-                <Text as={'span'} fontWeight={'bold'}>
-                  <Trans id="No information is sent until you submit for a TestNet and/or MainNet certificate after the Review section">
-                    No information is sent until you submit for a TestNet and/or MainNet certificate after the Review section
-                  </Trans>
-                  .{' '}
+                  sections. Navigate through the form by clicking on each section of the progress
+                  bar or the buttons at the bottom of each section.
+                </Trans>{' '}
+                <Text fontWeight={'bold'} pt={4}>
+                  <Trans>
+                    No information is sent until you submit for a TestNet and/or MainNet Certificate
+                    after the Review section.
+                  </Trans>{' '}
                 </Text>
+              </Text>
             </Card.Body>
           </Card>
         </Stack>

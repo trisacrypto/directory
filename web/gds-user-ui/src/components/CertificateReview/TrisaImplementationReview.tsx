@@ -17,7 +17,7 @@ const TrisaImplementationReview = () => {
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader step={4} title={t`Section 4: TRISA Implementation`} />
-      {hasErrors ? <RequiredElementMissing elementKey={4} /> : false}
+      {hasErrors ? <RequiredElementMissing elementKey={4} errorFields={hasErrors} /> : false}
       <TrisaImplementationReviewDataTable
         mainnet={certificateStep?.form?.mainnet}
         testnet={certificateStep?.form?.testnet}

@@ -11,7 +11,8 @@ export const initialValue: TPayload = {
   steps: [
     {
       key: 1,
-      status: 'progress'
+      status: 'progress',
+      isDirty: false
     }
   ],
   lastStep: null,
@@ -37,28 +38,55 @@ const stepperSlice: any = createSlice({
       state.currentStep = payload.currentStep;
     },
     incrementStep: (state: any) => {
+      // always set isDirty to false when incrementing step
+      if (state.currentStep) {
+        state?.steps?.map((step: any) => {
+          if (step.key === state.currentStep) {
+            step.isDirty = false;
+          }
+        });
+      }
+
       if (state.currentStep < 6) {
         state.currentStep += 1;
       }
-      if (state.currentStep === 6) {
-        state.hasReachSubmitStep = true;
-      }
+
       // if next step is not in the list, add it
-      if (!state.steps.find((step: any) => step.key === state.currentStep)) {
-        state.steps.push({
+      if (!state?.steps?.find((step: any) => step.key === state.currentStep)) {
+        state?.steps?.push({
           key: state.currentStep,
-          status: 'progress'
+          status: 'progress',
+          isDirty: false
         });
       }
     },
     decrementStep: (state: any) => {
+      if (state.currentStep) {
+        state?.steps?.map((step: any) => {
+          if (step.key === state.currentStep) {
+            step.isDirty = false;
+          }
+        });
+      }
       state.currentStep -= 1;
+      // if current step is 6 then set hasReachSubmitStep to false
+      // if (state.currentStep === 6 && state.hasReachSubmitStep) {
+      //   state.hasReachSubmitStep = false;
+      // }
     },
     addStep: (state: any, { payload }: any) => {
-      state.steps.push(payload);
+      // if step is not in the list, add it
+      const payloadStep = payload?.step || state.currentStep;
+      if (!state?.steps?.find((step: any) => step.key === payloadStep)) {
+        state?.steps?.push({
+          key: payloadStep,
+          status: payload?.status || 'progress',
+          isDirty: false
+        });
+      }
     },
     setStepStatus: (state: any, { payload }: any) => {
-      state.steps.map((step: any) => {
+      state?.steps?.map((step: any) => {
         if (step.key === payload.step) {
           console.log('payload.status', payload.status);
           step.status = payload.status;
@@ -66,7 +94,7 @@ const stepperSlice: any = createSlice({
       });
     },
     setStepMissingFields: (state: any, { payload }: any) => {
-      state.steps.map((step: any) => {
+      state?.steps?.map((step: any) => {
         if (step.key === payload.step && state.currentStep) {
           step.missingFields = payload.errors;
         }
@@ -145,6 +173,26 @@ const stepperSlice: any = createSlice({
     },
     setVaspName(state: any, { payload }: any) {
       state.data.organization_name = payload;
+    },
+    // this should help us open the popup when the user tries to jump to the step from the progress bar
+    setIsDirty(state: any, { payload }: any) {
+      const payloadStep = payload?.step || state.currentStep;
+
+      state?.steps?.map((step: any) => {
+        if (step.key === payloadStep && state.currentStep) {
+          step.isDirty = payload.isDirty ?? !step.isDirty;
+        }
+      });
+    },
+
+    getIsDirty(state: any, { payload }: any) {
+      const found = state.steps.filter(
+        (step: any) => step.key === payload?.step || state.currentStep
+      );
+      if (found.length === 1) {
+        return found[0].isDirty;
+      }
+      return null;
     }
   }
 });
@@ -169,5 +217,7 @@ export const {
   setCertificateValue,
   getCertificateData,
   setVaspName,
-  setStepMissingFields
+  setStepMissingFields,
+  setIsDirty,
+  getIsDirty
 } = stepperSlice.actions;

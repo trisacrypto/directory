@@ -17,7 +17,7 @@ const ContactsReview = () => {
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader step={3} title={t`Section 3: Contacts`} />
-      {hasErrors ? <RequiredElementMissing elementKey={3} /> : false}
+      {hasErrors ? <RequiredElementMissing elementKey={3} errorFields={hasErrors} /> : false}
       <ContactsReviewDataTable data={certificateStep?.form?.contacts} />
     </CertificateReviewLayout>
   );

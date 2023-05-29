@@ -34,6 +34,7 @@ var (
 	ErrLegalNatIDRequired      = errors.New("national identification is required to verify legal person")
 	ErrNoRAForLEIX             = errors.New("registration authority must be empty for identifier type LEI")
 	ErrRARequired              = errors.New("registration authority must be specified unless the identifier type is LEI")
+	ErrMissingTestNetOrMainNet = errors.New("node implementation details are required for at least one network: testnet or mainnet")
 	ErrInvalidEndpoint         = errors.New("endpoint must have the format host:port")
 	ErrDuplicateEndpoint       = errors.New("mainnet endpoint cannot be the same as testnet endpoint")
 	ErrMissingHost             = errors.New("endpoint string must have a host")
