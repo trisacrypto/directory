@@ -21,6 +21,16 @@ export interface PostCertificateMutation {
   reset(): void;
 }
 
+export interface DeleteCertificateMutation {
+  deleteCertificateStep: UseMutateFunction<Pick<PostPayloadDTO, 'step'>, unknown, any, unknown>;
+  deletedCertificateStep: any;
+  hasCertificateStepFailed: boolean;
+  wasCertificateStepDeleted: boolean;
+  isDeletingCertificateStep: boolean;
+  error: any;
+  reset(): void;
+}
+
 export type PayloadDTO = {
   key: StepperType;
 };

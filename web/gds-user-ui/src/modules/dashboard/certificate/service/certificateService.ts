@@ -8,7 +8,13 @@ export const getCertificateStepService = async (payload: PayloadDTO) => {
 };
 
 export const postCertificateStepService = async (payload: any) => {
-  const response = await axiosInstance.patch('/register', {
+  const response = await axiosInstance.put('/register', {
+    ...payload
+  });
+  return response.data;
+};
+export const deleteCertificateStepService = async (payload: any) => {
+  const response = await axiosInstance.delete('/register', {
     ...payload
   });
   return response.data;

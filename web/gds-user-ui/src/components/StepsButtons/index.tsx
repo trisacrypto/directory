@@ -1,6 +1,7 @@
-import { Button, Stack } from '@chakra-ui/react';
-import { t, Trans } from '@lingui/macro';
+import { Button, Stack, useDisclosure } from '@chakra-ui/react';
 
+import { t, Trans } from '@lingui/macro';
+import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
 type StepButtonsProps = {
   handlePreviousStep?: () => void;
   handleNextStep?: () => void;
@@ -10,6 +11,8 @@ type StepButtonsProps = {
   isDefaultValue?: () => boolean;
   isFirstStep?: boolean;
   isNextButtonDisabled?: boolean;
+  resetFormType?: string;
+  shouldShowResetFormModal?: boolean;
 };
 
 function StepButtons({
@@ -19,8 +22,15 @@ function StepButtons({
   handleNextStep,
   isCurrentStepLastStep,
   handleResetForm,
+  shouldShowResetFormModal = false,
+  // resetFormType = 'section',
   isDefaultValue = () => false
 }: StepButtonsProps) {
+  const { isOpen, onClose } = useDisclosure();
+  // const [isResetModalOpen, setIsResetModalOpen] = useState<boolean>(false);
+  // const onChangeModalState = (value: boolean) => {
+  //   setIsResetModalOpen(value);
+  // };
   return (
     <>
       <Stack
@@ -43,6 +53,9 @@ function StepButtons({
         <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
           <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
         </Button>
+        {shouldShowResetFormModal && (
+          <ConfirmationResetFormModal isOpen={isOpen} onClose={onClose} />
+        )}
       </Stack>
     </>
   );
