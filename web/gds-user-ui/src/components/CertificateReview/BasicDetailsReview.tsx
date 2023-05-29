@@ -27,7 +27,7 @@ const BasicDetailsReview = () => {
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader step={1} title={t`Section 1: Basic Details`} />
-      {hasErrors ? <RequiredElementMissing elementKey={1} /> : false}
+      {hasErrors ? <RequiredElementMissing elementKey={1} errorFields={hasErrors} /> : false}
       <BasicDetailsReviewDataTable data={basicDetail} />
     </CertificateReviewLayout>
   );

@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useState } from 'react';
 import {
   Box,
   Icon,
@@ -14,14 +14,15 @@ import {
 } from '@chakra-ui/react';
 import { FaCheckCircle, FaDotCircle, FaRegCircle } from 'react-icons/fa';
 import { useSelector, RootStateOrAny } from 'react-redux';
-import { TStep, setHasReachSubmitStep } from 'application/store/stepper.slice';
+import { TStep, setHasReachSubmitStep, setIsDirty } from 'application/store/stepper.slice';
 import { findStepKey } from 'utils/utils';
 import { Trans } from '@lingui/react';
 import { t } from '@lingui/macro';
-import { useFormContext } from 'react-hook-form';
+
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import InvalidFormPrompt from './InvalidFormPrompt';
 import { useAppDispatch } from 'application/store';
+
 export enum LCOLOR {
   'COMPLETE' = '#34A853',
   'PROGRESS' = '#5469D4',
@@ -59,21 +60,10 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
   const currentStep: number = useSelector((state: RootStateOrAny) => state.stepper.currentStep);
   const steps: TStep[] = useSelector((state: RootStateOrAny) => state.stepper.steps);
   const textColor = useColorModeValue('#3C4257', '#F7F8FC');
-  const { jumpToStep } = useCertificateStepper();
+  const { jumpToStep, getIsDirtyState } = useCertificateStepper();
   const { isOpen, onClose, onOpen } = useDisclosure();
-  const formContext = useFormContext();
+
   const [selectedStep, setSelectedStep] = useState<number>(currentStep);
-  const [initialFormValues, setInitialFormValues] = useState<Record<string, any>>();
-
-  useEffect(() => {
-    setInitialFormValues(formContext?.getValues());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const isStepCompleted = (step: number) => {
-    const stepStatus = steps[step - 1]?.status;
-    return stepStatus === 'complete' || stepStatus === 'progress' || stepStatus === 'error';
-  };
 
   // this function need some clean up
   const getLabel = (step: number): TStepLabel | undefined => {
@@ -132,19 +122,29 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
   const isActiveStep = (step: number) => step === currentStep;
 
   const handleStepClick = (step: number) => () => {
+    dispatch(setHasReachSubmitStep({ hasReachSubmitStep: false }));
     setSelectedStep(step);
-    if (formContext.formState.isDirty) {
+    // check if the current step is added to the stepper
+    // if not then add it on steps state
+
+    if (getIsDirtyState()) {
       onOpen();
     } else {
-      dispatch(setHasReachSubmitStep({ hasReachSubmitStep: false }));
       jumpToStep(step);
     }
   };
 
   const handleContinueClick = () => {
-    formContext.reset(initialFormValues);
+    // set dirty current state to false
+    dispatch(setIsDirty({ isDirty: false }));
+    // updateStepStatusToIncomplete();
+
     jumpToStep(selectedStep);
     onClose();
+  };
+
+  const isNextStep = () => {
+    return currentStep - selectedStep < 0;
   };
 
   const stepLabels = [
@@ -196,7 +196,6 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
                   width="100%"
                   height="100%"
                   _hover={{ bg: 'transparent' }}
-                  disabled={!(() => isStepCompleted(stepIndex))()}
                   _disabled={{ opacity: 0.9, cursor: 'not-allowed' }}
                   onClick={handleStepClick(stepIndex)}>
                   <Stack spacing={1} width="100%">
@@ -479,6 +478,7 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
           isOpen={isOpen}
           onClose={onClose}
           handleContinueClick={handleContinueClick}
+          isNextStep={isNextStep()}
         />
       </Stack>
     </>

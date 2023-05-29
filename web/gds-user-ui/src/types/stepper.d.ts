@@ -4,6 +4,7 @@ type TStep = {
   key?: number;
   data?: any;
   missingFields?: any[];
+  isDirty?: boolean;
 };
 type TStepStatus = 'progress' | 'success' | 'error';
 type TStatusKey = 'testnet' | 'mainnet';

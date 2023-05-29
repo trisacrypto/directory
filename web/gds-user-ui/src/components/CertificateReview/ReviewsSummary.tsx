@@ -12,10 +12,15 @@ import StepButtons from 'components/StepsButtons';
 import { downloadRegistrationData } from 'modules/dashboard/registration/utils';
 import { handleError } from 'utils/utils';
 import useCertificateStepper from 'hooks/useCertificateStepper';
+import { StepEnum } from 'types/enums';
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 
 const ReviewsSummary: React.FC = () => {
-  const { previousStep, nextStep, hasStepErrors } = useCertificateStepper();
+  const { previousStep, updateHasReachSubmitStep } = useCertificateStepper();
   const [isLoadingExport, setIsLoadingExport] = useState(false);
+  const { certificateStep } = useFetchCertificateStep({
+    key: StepEnum.ALL
+  });
 
   const handleExport = () => {
     const downloadData = async () => {
@@ -32,7 +37,7 @@ const ReviewsSummary: React.FC = () => {
   };
 
   const handleNextStep = () => {
-    nextStep();
+    updateHasReachSubmitStep(true);
   };
 
   const handlePreviousStep = () => {
@@ -41,7 +46,7 @@ const ReviewsSummary: React.FC = () => {
 
   const handleResetForm = () => {}; // should be implemented asap we have the api from patrick
 
-  const isNextButtonDisabled = hasStepErrors();
+  const isNextButtonDisabled = certificateStep?.errors?.length > 0;
 
   return (
     <Stack spacing={7}>
