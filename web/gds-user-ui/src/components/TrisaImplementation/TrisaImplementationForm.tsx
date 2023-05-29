@@ -13,6 +13,8 @@ import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
 import TrisaImplementationForm from './TrisaImplementationForm/index';
 import { StepsIndexes } from 'constants/steps';
+import { isProdEnv } from 'application/config';
+import { DevTool } from '@hookform/devtools';
 const TrisaForm: React.FC = () => {
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
@@ -97,6 +99,7 @@ const TrisaForm: React.FC = () => {
               handleNextStep={handleNextStepClick}
             />
           </chakra.form>
+          {!isProdEnv ? <DevTool control={methods.control} /> : null}
         </FormProvider>
       )}
     </FormLayout>

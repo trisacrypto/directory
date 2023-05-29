@@ -87,25 +87,30 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
         <VStack mt="2rem">
           <Stack align="start" w="full">
             <Heading size="md" pr={3} ml={2}>
-              <Trans id="Registration Submission">Registration Submission</Trans>
+              <Trans>Registration Submission</Trans>
             </Heading>
           </Stack>
 
           <FormLayout>
             <Text>
-              <Trans id="You must submit your registration for TestNet and MainNet separately.">
+              <Trans>
                 You must submit your registration for TestNet and MainNet separately.
               </Trans>{' '}
               <Text as="span" fontWeight="bold">
-                <Trans id="Note:">Note:</Trans>
+                <Trans>Note:</Trans>
               </Text>{' '}
-              <Trans id="You will receive two separate emails with confirmation links for each registration. You must click on each confirmation link to complete the registration process.">
-                You will receive two separate emails with confirmation links for each registration.
-                You must click on each confirmation link to complete the registration process.{' '}
-              </Trans>
+              <Trans>
+                You will receive 
+              </Trans>{' '}
+              <Text as="span" fontStyle={"italic"}>
+                <Trans>two separate emails with confirmation links for each registration.</Trans>
+              </Text>{' '}
+              <Trans>
+                You must click on each confirmation link to complete the registration process.
+              </Trans>{' '}
               <Text as="span" fontWeight="bold">
-                <Trans id=" Failure to click either confirmation will result in an incomplete registration">
-                  Failure to click either confirmation will result in an incomplete registration.
+                <Trans>
+                Failure to click either confirmation will result in an incomplete registration.
                 </Trans>
               </Text>
             </Text>
@@ -122,11 +127,11 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   <Trans id="TESTNET SUBMISSION">TESTNET SUBMISSION</Trans>
                 </Heading>
                 <Text>
-                  <Trans id="Click below to submit your">Click below to submit your</Trans>{' '}
+                  <Trans>Click below to submit your</Trans>{' '}
                   <Text as="span" fontWeight={'bold'}>
-                    <Trans id="TestNet">TestNet</Trans>
+                    <Trans>TestNet</Trans>
                   </Text>{' '}
-                  <Trans id="registration. Upon submission, you will receive an email with a confirmation link. You must click the confirmation link to complete the registration process. Failure to click the confirmation link will result in an incomplete registration">
+                  <Trans>
                     registration. Upon submission, you will receive an email with a confirmation
                     link. You must click the confirmation link to complete the registration process.
                     Failure to click the confirmation link will result in an incomplete registration
@@ -134,25 +139,25 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   .
                 </Text>
                 <Text>
-                  <Trans id="A physical verification check in the form of a phone call">
+                  <Trans>
                     A physical verification check in the form of a phone call
                   </Trans>{' '}
                   <Text as="span" fontWeight={'bold'}>
-                    <Trans id="is not required">is not required</Trans>
+                    <Trans>is not required</Trans>
                   </Text>{' '}
-                  <Trans id="for TestNet registration so your TestNet certificate will be issued upon review by the validation team">
+                  <Trans>
                     for TestNet registration so your TestNet certificate will be issued upon review
                     by the validation team
                   </Trans>
                   .
                 </Text>
                 <Text>
-                  <Trans id="If you would like to edit your registration form before submitting, please return to the">
+                  <Trans>
                     If you would like to edit your registration form before submitting, please
                     return to the
                   </Trans>{' '}
                   <Link color="link" onClick={handleJumpToLastStep} fontWeight={'bold'}>
-                    <Trans id="Review page">Review page</Trans>
+                    <Trans>Review section</Trans>
                   </Link>
                   .
                 </Text>
@@ -172,7 +177,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                       </Trans>
                     </Text>
                     <Text>
-                      <Trans id="Please note that TestNet and MainNet are separate networks that require different X.509 Identity Certificates.">
+                      <Trans>
                         Please note that TestNet and MainNet are separate networks that require
                         different X.509 Identity Certificates.
                       </Trans>
@@ -192,10 +197,10 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   isDisabled={testnet || isTestnetNetworkFieldsIncomplete}
                   data-testid="testnet-submit-btn"
                   size="lg"
-                  py="2.5rem"
+                  py={["null", "2.5rem", "2.8rem", "1.5rem"]}
                   isLoading={isTestNetSubmitting}
                   whiteSpace="normal"
-                  maxW="200px"
+                  maxW={[200, 250, 385]}
                   width="100%"
                   boxShadow="lg"
                   onClick={(e) => {
@@ -211,14 +216,14 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
             <Stack bg={'white'}>
               <Stack px={6} mb={5} pt={4}>
                 <Heading size="sm" mt={2}>
-                  <Trans id="MAINNET SUBMISSION">MAINNET SUBMISSION</Trans>
+                  <Trans>MAINNET SUBMISSION</Trans>
                 </Heading>
                 <Text>
-                  <Trans id="Click below to submit your">Click below to submit your</Trans>{' '}
+                  <Trans>Click below to submit your</Trans>{' '}
                   <Text as="span" fontWeight={'bold'}>
-                    <Trans id="MainNet">MainNet</Trans>
+                    <Trans>MainNet</Trans>
                   </Text>{' '}
-                  <Trans id="registration. Upon submission, you will receive an email with a confirmation link. You must click the confirmation link to complete the registration process. Failure to click the confirmation link will result in an incomplete registration">
+                  <Trans>
                     registration. Upon submission, you will receive an email with a confirmation
                     link. You must click the confirmation link to complete the registration process.
                     Failure to click the confirmation link will result in an incomplete registration
@@ -226,25 +231,26 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   .
                 </Text>
                 <Text>
-                  <Trans id="A physical verification check in the form of a phone call">
-                    physical verification check in the form of a phone call
+                  <Trans>
+                    A physical verification check in the form of a phone call
                   </Trans>{' '}
                   <Text as="span" fontWeight={'bold'}>
-                    <Trans id="is required"> is required</Trans>
+                    <Trans> is required</Trans>
                   </Text>{' '}
-                  <Trans id=" for MainNet registration so your MainNet certificate will be issued upon review by the validation team">
-                    for MainNet registration so your MainNet certificate will be issued upon review
-                    by the validation team
+                  <Trans>
+                    for MainNet registration so your MainNet certificate will be issued after the verification
+                    phone call has been completed by the validation team.
                   </Trans>
                 </Text>
                 <Text>
-                  <Trans id="If you would like to edit your registration form before submitting, please return to the">
+                  <Trans>
                     If you would like to edit your registration form before submitting, please
                     return to the
                   </Trans>{' '}
                   <Link onClick={handleJumpToLastStep} color="link" fontWeight="bold">
-                    <Trans id="Review page">Review page</Trans>
+                    <Trans>Review section</Trans>
                   </Link>
+                  .
                 </Text>
                 {isMainnetNetworkIncomplete ? (
                   <WarningBox>
@@ -261,7 +267,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                       </Trans>
                     </Text>
                     <Text>
-                      <Trans id="Please note that TestNet and MainNet are separate networks that require different X.509 Identity Certificates.">
+                      <Trans>
                         Please note that TestNet and MainNet are separate networks that require
                         different X.509 Identity Certificates.
                       </Trans>
@@ -279,13 +285,13 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   bgColor="#23a7e0e8"
                   color="#fff"
                   size="lg"
-                  py="2.5rem"
+                  py={["null", "2.5rem", "2.8rem", "1.5rem"]}
                   isLoading={isMainNetSubmitting}
                   isDisabled={mainnet || isMainnetNetworkIncomplete}
                   whiteSpace="normal"
                   boxShadow="lg"
                   data-testid="mainnet-submit-btn"
-                  maxW="200px"
+                  maxW={[200, 250, 385]}
                   onClick={(e) => {
                     onSubmitHandler(e, STEPPER_NETWORK.MAINNET);
                   }}
@@ -299,21 +305,21 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
             </Stack>
           </Stack>
 
-          <Box alignItems={'center'} textAlign="center" mx={'auto'}>
+          <Box alignSelf={'flex-start'} textAlign="center" mx={'auto'}>
             <Button
-              bgColor="#555151"
-              color="#fff"
+              bgColor="#fff"
+              color="#1026F0"
               onClick={handleJumpToLastStep}
               size="lg"
-              py="2.5rem"
+              py="2rem"
               whiteSpace="normal"
               boxShadow="lg"
-              maxW="200px"
+              maxW="285px"
               width="100%"
               _hover={{
-                bgColor: '#555151'
+                bgColor: '#E6E6E6'
               }}>
-              {t`Back to Review Page`}
+              {t`Back to Review section`}
             </Button>
           </Box>
         </VStack>

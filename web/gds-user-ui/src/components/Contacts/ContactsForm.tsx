@@ -13,6 +13,8 @@ import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
 import FormLayout from 'layouts/FormLayout';
 import MinusLoader from 'components/Loader/MinusLoader';
 import { StepsIndexes } from 'constants/steps';
+import { isProdEnv } from 'application/config';
+import { DevTool } from '@hookform/devtools';
 const ContactsForm: React.FC = () => {
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
@@ -106,6 +108,7 @@ const ContactsForm: React.FC = () => {
               handleNextStep={handleNextStepClick}
             />
           </chakra.form>
+          {!isProdEnv ? <DevTool control={methods.control} /> : null}
         </FormProvider>
       )}
     </FormLayout>
