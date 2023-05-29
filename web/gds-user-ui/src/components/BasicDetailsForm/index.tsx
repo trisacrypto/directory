@@ -26,7 +26,8 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
   const { certificateStep } = useFetchCertificateStep({
     key: StepEnum.BASIC
   });
-  const { updateCertificateStep, updatedCertificateStep } = useUpdateCertificateStep();
+  const { updateCertificateStep, updatedCertificateStep, wasCertificateStepUpdated } =
+    useUpdateCertificateStep();
   const resolver = yupResolver(basicDetailsValidationSchema);
   const options = getBusinessCategoryOptions();
   const { currentState, nextStep, updateIsDirty } = useCertificateStepper();
@@ -52,7 +53,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
 
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep(updatedCertificateStep?.errors ?? certificateStep?.errors);
+      nextStep(updatedCertificateStep ?? certificateStep);
     } else {
       const payload = {
         step: StepEnum.BASIC,
@@ -63,7 +64,9 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
       };
 
       updateCertificateStep(payload);
-      nextStep(updatedCertificateStep);
+      if (wasCertificateStepUpdated) {
+        nextStep(updatedCertificateStep);
+      }
     }
   };
 

@@ -37,8 +37,8 @@ const Certificate: React.FC = () => {
                   entity that you represent and, where appropriate, will be available to verified
                   TRISA members to facilitate compliance decisions. If you need guidance, see the{' '}
                   <Link isExternal href="/getting-started" color={'link'} fontWeight={'bold'}>
-                    <Trans>Getting Started</Trans>.{' '}
-                  </Link>
+                    <Trans>Getting Started</Trans>
+                  </Link>{' '}
                   Help Guide.
                 </Trans>
               </Text>
@@ -47,14 +47,12 @@ const Certificate: React.FC = () => {
                   To assist in completing the registration form, the form is divided into multiple
                   sections. Navigate through the form by clicking on each section of the progress
                   bar or the buttons at the bottom of each section.
-                </Trans>
-                .{' '}
+                </Trans>{' '}
                 <Text fontWeight={'bold'} pt={4}>
                   <Trans>
-                    No information is sent until you submit for a TestNet and/ or MainNet
-                    Certificate after the Review Section.
-                  </Trans>
-                  .{' '}
+                    No information is sent until you submit for a TestNet and/or MainNet Certificate
+                    after the Review section.
+                  </Trans>{' '}
                 </Text>
               </Text>
             </Card.Body>

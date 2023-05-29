@@ -48,7 +48,7 @@ function InvalidFormPrompt({
                 </Trans>
               </Text>
               <Text fontWeight={'bold'} as="span">
-                <Trans>{isNextStep ? 'Save & Next' : 'Save &Previous'} button</Trans>
+                <Trans>{isNextStep ? 'Save & Next' : 'Save & Previous'} button.</Trans>
               </Text>
             </Box>
           </VStack>

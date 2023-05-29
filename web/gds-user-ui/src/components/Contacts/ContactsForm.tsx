@@ -19,7 +19,8 @@ const ContactsForm: React.FC = () => {
     key: StepEnum.CONTACTS
   });
 
-  const { updateCertificateStep, updatedCertificateStep } = useUpdateCertificateStep();
+  const { updateCertificateStep, updatedCertificateStep, wasCertificateStepUpdated } =
+    useUpdateCertificateStep();
 
   const resolver = yupResolver(contactsValidationSchema);
 
@@ -47,14 +48,16 @@ const ContactsForm: React.FC = () => {
         } as any
       };
       updateCertificateStep(payload);
-      previousStep(updatedCertificateStep);
+      if (wasCertificateStepUpdated) {
+        previousStep(updatedCertificateStep);
+      }
     }
-    previousStep();
+    previousStep(certificateStep);
   };
 
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep(updatedCertificateStep?.errors ?? certificateStep?.errors);
+      nextStep(updatedCertificateStep ?? certificateStep);
     } else {
       const payload = {
         step: StepEnum.CONTACTS,
@@ -65,7 +68,9 @@ const ContactsForm: React.FC = () => {
       };
 
       updateCertificateStep(payload);
-      nextStep(updatedCertificateStep);
+      if (wasCertificateStepUpdated) {
+        nextStep(updatedCertificateStep);
+      }
     }
   };
 

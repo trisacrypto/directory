@@ -49,11 +49,12 @@ const TrixoQuestionnaireForm: React.FC = () => {
   const getComplianceThreshold = watch('trixo.compliance_threshold');
   const getKycThreshold = watch('trixo.kyc_threshold');
 
-  const { updateCertificateStep, updatedCertificateStep } = useUpdateCertificateStep();
+  const { updateCertificateStep, updatedCertificateStep, wasCertificateStepUpdated } =
+    useUpdateCertificateStep();
 
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep(updatedCertificateStep?.errors ?? certificateStep?.errors);
+      nextStep(updatedCertificateStep ?? certificateStep);
     } else {
       const payload = {
         step: StepEnum.TRIXO,
@@ -65,8 +66,9 @@ const TrixoQuestionnaireForm: React.FC = () => {
       console.log('[] isDirty  payload Trixo', payload);
 
       updateCertificateStep(payload);
-      console.log('[] isDirty 3 (not)', updatedCertificateStep);
-      nextStep(updatedCertificateStep);
+      if (wasCertificateStepUpdated) {
+        nextStep(updatedCertificateStep);
+      }
     }
   };
 
@@ -82,10 +84,11 @@ const TrixoQuestionnaireForm: React.FC = () => {
       console.log('[] isDirty  payload Trixo', payload);
 
       updateCertificateStep(payload);
-      console.log('[] isDirty 3 (not)', updatedCertificateStep);
-      previousStep(updatedCertificateStep);
+      if (wasCertificateStepUpdated) {
+        previousStep(updatedCertificateStep);
+      }
     }
-    previousStep();
+    previousStep(certificateStep);
   };
   useEffect(() => {
     updateIsDirty(isDirty, StepsIndexes.TRIXO_QUESTIONNAIRE);
