@@ -15,6 +15,8 @@ import { StepEnum } from 'types/enums';
 import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
 import { StepsIndexes } from 'constants/steps';
+import { isProdEnv } from 'application/config';
+import { DevTool } from '@hookform/devtools';
 const LegalForm: React.FC = () => {
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
@@ -92,6 +94,7 @@ const LegalForm: React.FC = () => {
               handleNextStep={handleNextStepClick}
             />
           </chakra.form>
+          {!isProdEnv ? <DevTool control={methods.control} /> : null}
         </FormProvider>
       )}
     </FormLayout>

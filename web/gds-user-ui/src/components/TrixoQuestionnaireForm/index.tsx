@@ -20,6 +20,8 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import MinusLoader from 'components/Loader/MinusLoader';
 import { StepsIndexes } from 'constants/steps';
+import { isProdEnv } from 'application/config';
+import { DevTool } from '@hookform/devtools';
 const TrixoQuestionnaireForm: React.FC = () => {
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
@@ -387,6 +389,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
               handlePreviousStep={handlePreviousStepClick}
             />
           </chakra.form>
+          {!isProdEnv ? <DevTool control={methods.control} /> : null}
         </FormProvider>
       )}
     </FormLayout>
