@@ -78,29 +78,25 @@ func TestValidateBasicDetails(t *testing.T) {
 		{"", pb.BusinessCategory_UNKNOWN_ENTITY, nil, "2021-01-01", "Example, Inc.", ValidationErrors{
 			{Field: "website", Err: ErrMissingField.Error()},
 			{Field: "business_category", Err: ErrMissingField.Error()},
-			{Field: "vasp_categories", Err: ErrMissingField.Error()},
 		}},
 		{"", pb.BusinessCategory_UNKNOWN_ENTITY, nil, "", "Example Inc.", ValidationErrors{
 			{Field: "website", Err: ErrMissingField.Error()},
 			{Field: "business_category", Err: ErrMissingField.Error()},
-			{Field: "vasp_categories", Err: ErrMissingField.Error()},
 			{Field: "established_on", Err: ErrMissingField.Error()},
 		}},
 		{"", pb.BusinessCategory_UNKNOWN_ENTITY, nil, "", "", ValidationErrors{
 			{Field: "website", Err: ErrMissingField.Error()},
 			{Field: "business_category", Err: ErrMissingField.Error()},
-			{Field: "vasp_categories", Err: ErrMissingField.Error()},
 			{Field: "established_on", Err: ErrMissingField.Error()},
 			{Field: "organization_name", Err: ErrMissingField.Error()},
 		}},
 		{"example.com", pb.BusinessCategory_GOVERNMENT_ENTITY, []string{}, " ", " ", ValidationErrors{
-			{Field: "vasp_categories", Err: ErrMissingField.Error()},
 			{Field: "established_on", Err: ErrMissingField.Error()},
 			{Field: "organization_name", Err: ErrMissingField.Error()},
 		}},
-		{" ", pb.BusinessCategory_GOVERNMENT_ENTITY, []string{}, " ", " ", ValidationErrors{
+		{" ", pb.BusinessCategory_GOVERNMENT_ENTITY, []string{"P2P", " "}, " ", " ", ValidationErrors{
 			{Field: "website", Err: ErrMissingField.Error()},
-			{Field: "vasp_categories", Err: ErrMissingField.Error()},
+			{Field: "vasp_categories", Err: ErrMissingField.Error(), Index: 1},
 			{Field: "established_on", Err: ErrMissingField.Error()},
 			{Field: "organization_name", Err: ErrMissingField.Error()},
 		}},
@@ -507,41 +503,39 @@ func TestValidateTRISA(t *testing.T) {
 		errs    ValidationErrors
 	}{
 		{nil, nil, ValidationErrors{
-			{Field: FieldTestNet, Err: ErrMissingField.Error()},
-			{Field: FieldMainNet, Err: ErrMissingField.Error()},
+			{Field: FieldTestNet, Err: ErrMissingTestNetOrMainNet.Error()},
+			{Field: FieldMainNet, Err: ErrMissingTestNetOrMainNet.Error()},
 		}},
 		{&NetworkDetails{}, &NetworkDetails{}, ValidationErrors{
-			{Field: FieldTestNetEndpoint, Err: ErrMissingField.Error()},
-			{Field: FieldTestNetCommonName, Err: ErrMissingField.Error()},
-			{Field: FieldMainNetEndpoint, Err: ErrMissingField.Error()},
-			{Field: FieldMainNetCommonName, Err: ErrMissingField.Error()},
+			{Field: FieldTestNet, Err: ErrMissingTestNetOrMainNet.Error()},
+			{Field: FieldMainNet, Err: ErrMissingTestNetOrMainNet.Error()},
 		}},
 		{&NetworkDetails{CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
 			{Field: FieldTestNetEndpoint, Err: ErrMissingField.Error()},
 			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
 		}},
-		{&NetworkDetails{Endpoint: "not an address", CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
+		{&NetworkDetails{Endpoint: "not an address", CommonName: "test.trisa.io"}, nil, ValidationErrors{
 			{Field: FieldTestNetEndpoint, Err: ErrInvalidEndpoint.Error()},
 			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
 		}},
-		{&NetworkDetails{Endpoint: ":443", CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
+		{&NetworkDetails{Endpoint: ":443", CommonName: "test.trisa.io"}, nil, ValidationErrors{
 			{Field: FieldTestNetEndpoint, Err: ErrMissingHost.Error()},
 			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
 		}},
-		{&NetworkDetails{Endpoint: "test.trisa.io:", CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
+		{&NetworkDetails{Endpoint: "test.trisa.io:", CommonName: "test.trisa.io"}, nil, ValidationErrors{
 			{Field: FieldTestNetEndpoint, Err: ErrMissingPort.Error()},
 		}},
-		{&NetworkDetails{Endpoint: "test.trisa.io:foo", CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
+		{&NetworkDetails{Endpoint: "test.trisa.io:foo", CommonName: "test.trisa.io"}, nil, ValidationErrors{
 			{Field: FieldTestNetEndpoint, Err: ErrInvalidPort.Error()},
 		}},
-		{&NetworkDetails{Endpoint: "test.trisa.io:443"}, validNetwork, ValidationErrors{
+		{&NetworkDetails{Endpoint: "test.trisa.io:443"}, nil, ValidationErrors{
 			{Field: FieldTestNetCommonName, Err: ErrMissingField.Error()},
 		}},
-		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "*.trisa.io"}, validNetwork, ValidationErrors{
+		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "*.trisa.io"}, nil, ValidationErrors{
 			{Field: FieldTestNetCommonName, Err: ErrInvalidCommonName.Error()},
 			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
 		}},
-		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "main.trisa.io"}, validNetwork, ValidationErrors{
+		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "main.trisa.io"}, nil, ValidationErrors{
 			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
 		}},
 		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "main.trisa.io", DnsNames: []string{"alt.trisa.io", "", "*.trisa.io", "https://trisa.io"}}, validNetwork, ValidationErrors{
@@ -556,6 +550,8 @@ func TestValidateTRISA(t *testing.T) {
 		{validNetwork, validNetwork, ValidationErrors{
 			{Field: FieldMainNetEndpoint, Err: ErrDuplicateEndpoint.Error()},
 		}},
+		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "test.trisa.io"}, nil, nil},
+		{nil, validNetwork, nil},
 		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "test.trisa.io"}, validNetwork, nil},
 	}
 
