@@ -189,21 +189,17 @@ func (r *RegistrationForm) ValidateBasicDetails() error {
 		})
 	}
 
-	// Validate there is at least one VASP category provided
+	// Validate VASP categories if provided
 	// TODO: Check if these are valid categories?
-	var hasCategory bool
-	for _, cat := range r.VaspCategories {
-		if strings.TrimSpace(cat) != "" {
-			hasCategory = true
-			break
+	for i, cat := range r.VaspCategories {
+		r.VaspCategories[i] = strings.TrimSpace(cat)
+		if r.VaspCategories[i] == "" {
+			err = append(err, &ValidationError{
+				Field: FieldVASPCategories,
+				Err:   ErrMissingField.Error(),
+				Index: i,
+			})
 		}
-	}
-
-	if !hasCategory {
-		err = append(err, &ValidationError{
-			Field: FieldVASPCategories,
-			Err:   ErrMissingField.Error(),
-		})
 	}
 
 	// Validate established date
@@ -743,17 +739,22 @@ func (r *RegistrationForm) ValidateTRIXO() error {
 func (r *RegistrationForm) ValidateTRISA() error {
 	err := make(ValidationErrors, 0)
 
-	if r.Testnet == nil {
-		err = append(err, &ValidationError{Field: FieldTestNet, Err: ErrMissingField.Error()})
-	} else {
+	// At least one network must be specified
+	if NetworkDetailsIsZero(r.Testnet) && NetworkDetailsIsZero(r.Mainnet) {
+		err = append(err, &ValidationError{Field: FieldTestNet, Err: ErrMissingTestNetOrMainNet.Error()})
+		err = append(err, &ValidationError{Field: FieldMainNet, Err: ErrMissingTestNetOrMainNet.Error()})
+		return err
+	}
+
+	// Only validate testnet if it has data on it
+	if !NetworkDetailsIsZero(r.Testnet) {
 		err, _ = err.Append(validateNetwork(r.Testnet, FieldTestNet))
 	}
 
-	if r.Mainnet == nil {
-		err = append(err, &ValidationError{Field: FieldMainNet, Err: ErrMissingField.Error()})
-	} else {
+	// Only validate mainnet if it has data on it
+	if !NetworkDetailsIsZero(r.Mainnet) {
 		err, _ = err.Append(validateNetwork(r.Mainnet, FieldMainNet))
-		if r.Testnet != nil && r.Mainnet.Endpoint != "" && r.Mainnet.Endpoint == r.Testnet.Endpoint {
+		if !NetworkDetailsIsZero(r.Testnet) && r.Mainnet.Endpoint != "" && r.Mainnet.Endpoint == r.Testnet.Endpoint {
 			err = append(err, &ValidationError{Field: FieldMainNetEndpoint, Err: ErrDuplicateEndpoint.Error()})
 		}
 	}
@@ -763,6 +764,15 @@ func (r *RegistrationForm) ValidateTRISA() error {
 	}
 
 	return err
+}
+
+// NetworkDetailsIsZero returns true if the network details are nil or zero.
+func NetworkDetailsIsZero(details *NetworkDetails) bool {
+	if details == nil {
+		return true
+	}
+
+	return details.Endpoint == "" && details.CommonName == "" && details.DnsNames == nil
 }
 
 // Validate a network details field.
