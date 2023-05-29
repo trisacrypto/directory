@@ -1,43 +1,63 @@
-import * as browserify from '@cypress/browserify-preprocessor';
-import { defineConfig } from 'cypress';
-import cucumber from 'cypress-cucumber-preprocessor';
+import { defineConfig } from "cypress";
+import webpack from "@cypress/webpack-preprocessor";
+import { addCucumberPreprocessorPlugin } from "@badeball/cypress-cucumber-preprocessor";
+
+async function setupNodeEvents(
+  on: Cypress.PluginEvents,
+  config: Cypress.PluginConfigOptions
+): Promise<Cypress.PluginConfigOptions> {
+  await addCucumberPreprocessorPlugin(on, config);
+
+  on(
+    "file:preprocessor",
+    webpack({
+      webpackOptions: {
+        resolve: {
+          extensions: [".ts", ".js"],
+        },
+        module: {
+          rules: [
+            {
+              test: /\.ts$/,
+              exclude: [/node_modules/],
+              use: [
+                {
+                  loader: "ts-loader",
+                },
+              ],
+            },
+            {
+              test: /\.feature$/,
+              use: [
+                {
+                  loader: "@badeball/cypress-cucumber-preprocessor/webpack",
+                  options: config,
+                },
+              ],
+            },
+          ],
+        },
+      },
+    })
+  );
+
+  return config;
+}
 
 export default defineConfig({
-  numTestsKeptInMemory: 0,
-  env: {
-    uncaughtCypressException: false,
-    hideXhr: true,
-  },
-  chromeWebSecurity: false,
-  retries: {
-    runMode: 1,
-    openMode: 0,  
-  },
   e2e: {
-    baseUrl: 'http://localhost:3000',
-    setupNodeEvents(on, config) {
-      const options = {
-        ...browserify.defaultOptions,
-        typescript: require.resolve('typescript'),
-      };
-
-      on('file:preprocessor', cucumber(options));
-
-      return config;
-    },
-    specPattern: '**/*.{feature,features}',
+    baseUrl: "http://localhost:3000",
+    specPattern: "**/*.feature",
+    setupNodeEvents,
     env: {
-      API_URL: 'http://localhost:8080/v1',
+        API_URL: "http://localhost:4437/v1"
     },
   },
-  reporter: 'cypress-multi-reporters',
+  reporter: "mochawesome",
   reporterOptions: {
-    reporterEnabled: ['mochawesome'],
-    mochawesomeReporterOptions: {
-      reportDir: 'cypress/results',
-      overwrite: false,
-      html: false,
-      json: true,
-    },
+    reportDir: "cypress/reports",
+    overwite: false,
+    html: false,
+    json: true,
   },
 });

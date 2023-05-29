@@ -134,6 +134,8 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.0",
+    "@badeball/cypress-cucumber-preprocessor": "^17.2.0",
+    "@cypress/webpack-preprocessor": "^5.17.1",
     "@faker-js/faker": "^7.2.0",
     "@hookform/devtools": "^4.1.0",
     "@lingui/cli": "^3.13.3",
@@ -151,7 +153,6 @@
     "@storybook/testing-library": "^0.0.13",
     "@storybook/theming": "^6.5.10",
     "@types/auth0-js": "^9.14.6",
-    "@types/cypress-cucumber-preprocessor": "^4.0.1",
     "@types/react-lazy-load-image-component": "^1.5.2",
     "@types/react-router-dom": "^5.3.3",
     "@types/react-slick": "^0.23.10",
@@ -161,7 +162,6 @@
     "babel-core": "^7.0.0-bridge.0",
     "babel-plugin-polyfill-corejs2": "^0.3.2",
     "cypress": "12.12.0",
-    "cypress-cucumber-preprocessor": "^4.3.1",
     "eslint": "^8.10.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-standard": "^16.0.3",
@@ -177,6 +177,7 @@
     "nock": "^13.2.9",
     "prettier": "^2.8.0",
     "redux-mock-store": "^1.5.4",
+    "ts-loader": "^9.4.3",
     "webpack": "^5.69.1"
   },
   "jest": {
@@ -192,9 +193,5 @@
     "snapshotSerializers": [
       "@emotion/jest/serializer"
     ]
-  },
-  "cypress-cucumber-preprocessor": {
-    "nonGlobalStepDefinitions": true,
-    "stepDefinitions": "cypress/e2e/"
   }
 }
