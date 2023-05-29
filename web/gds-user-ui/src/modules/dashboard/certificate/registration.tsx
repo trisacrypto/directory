@@ -37,8 +37,8 @@ const Certificate: React.FC = () => {
                   entity that you represent and, where appropriate, will be available to verified
                   TRISA members to facilitate compliance decisions. If you need guidance, see the{' '}
                   <Link isExternal href="/getting-started" color={'link'} fontWeight={'bold'}>
-                    <Trans>Getting Started</Trans>.{' '}
-                  </Link>
+                    <Trans>Getting Started</Trans>
+                  </Link>{' '}
                   Help Guide.
                 </Trans>
               </Text>
