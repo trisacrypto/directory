@@ -20,7 +20,8 @@ const LegalForm: React.FC = () => {
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
     key: StepEnum.LEGAL
   });
-  const { updateCertificateStep, updatedCertificateStep } = useUpdateCertificateStep();
+  const { updateCertificateStep, updatedCertificateStep, wasCertificateStepUpdated } =
+    useUpdateCertificateStep();
 
   const resolver = yupResolver(legalPersonValidationSchemam);
   const methods = useForm({
@@ -50,7 +51,9 @@ const LegalForm: React.FC = () => {
       };
 
       updateCertificateStep(payload);
-      nextStep(updatedCertificateStep);
+      if (wasCertificateStepUpdated) {
+        nextStep(updatedCertificateStep);
+      }
     }
   };
 
@@ -66,7 +69,9 @@ const LegalForm: React.FC = () => {
       console.log('[] isDirty  payload', payload);
 
       updateCertificateStep(payload);
-      previousStep(updatedCertificateStep);
+      if (wasCertificateStepUpdated) {
+        previousStep(updatedCertificateStep);
+      }
     }
     previousStep(certificateStep);
   };
