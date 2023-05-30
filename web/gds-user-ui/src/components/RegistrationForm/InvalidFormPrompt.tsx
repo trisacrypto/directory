@@ -25,6 +25,7 @@ function InvalidFormPrompt({
   handleContinueClick,
   isNextStep
 }: InvalidFormPromptProps) {
+  console.log("isNextStep: " + isNextStep);
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
