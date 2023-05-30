@@ -533,7 +533,8 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 		select {
 		case <-ctx.Done():
 			if err = ctx.Err(); err != nil && err != io.EOF {
-				log.Warn().Err(err).Msg("cursor canceled by client with error")
+				// Downgrading to a debug message since this occurs relatively frequently
+				log.Debug().Err(err).Msg("cursor canceled by client with error")
 				return status.Errorf(codes.Canceled, "cursor canceled by client: %s", err)
 			}
 			log.Info().
@@ -577,7 +578,8 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 
 		// Send the message on the stream
 		if err = stream.Send(msg); err != nil {
-			log.Warn().Err(err).Msg("could not send cursor reply during iteration")
+			// Downgrading to a debug message since this occurs relatively frequently.
+			log.Debug().Err(err).Msg("could not send cursor reply during iteration")
 			return status.Errorf(codes.Aborted, "send error occurred: %s", err)
 		}
 
