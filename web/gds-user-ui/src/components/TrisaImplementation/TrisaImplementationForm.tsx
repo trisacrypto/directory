@@ -13,6 +13,8 @@ import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
 import TrisaImplementationForm from './TrisaImplementationForm/index';
 import { StepsIndexes } from 'constants/steps';
+import { isProdEnv } from 'application/config';
+import { DevTool } from '@hookform/devtools';
 const TrisaForm: React.FC = () => {
   const { isOpen, onClose, onOpen } = useDisclosure();
   const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
@@ -120,6 +122,7 @@ const TrisaForm: React.FC = () => {
               shouldShowResetFormModal={shouldShowResetFormModal}
             />
           </chakra.form>
+          {!isProdEnv ? <DevTool control={methods.control} /> : null}
         </FormProvider>
       )}
     </FormLayout>

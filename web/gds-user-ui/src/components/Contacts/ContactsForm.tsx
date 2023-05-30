@@ -13,6 +13,8 @@ import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
 import FormLayout from 'layouts/FormLayout';
 import MinusLoader from 'components/Loader/MinusLoader';
 import { StepsIndexes } from 'constants/steps';
+import { isProdEnv } from 'application/config';
+import { DevTool } from '@hookform/devtools';
 const ContactsForm: React.FC = () => {
   const { isOpen, onClose, onOpen } = useDisclosure();
   const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
@@ -129,6 +131,7 @@ const ContactsForm: React.FC = () => {
               shouldShowResetFormModal={shouldShowResetFormModal}
             />
           </chakra.form>
+          {!isProdEnv ? <DevTool control={methods.control} /> : null}
         </FormProvider>
       )}
     </FormLayout>
