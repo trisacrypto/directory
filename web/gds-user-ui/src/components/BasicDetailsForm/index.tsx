@@ -32,13 +32,10 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
 
   const {
     updateCertificateStep,
-    updatedCertificateStep,
-    wasCertificateStepUpdated
+    updatedCertificateStep
     // reset,
     // isUpdatingCertificateStep
   } = useUpdateCertificateStep();
-
-  console.log('[] updateCertificateStep', wasCertificateStepUpdated);
 
   const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const resolver = yupResolver(basicDetailsValidationSchema);

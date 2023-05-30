@@ -22,13 +22,9 @@ import { getStepNumber } from 'components/BasicDetailsForm/util';
 import { StepEnum } from 'types/enums';
 const ConfirmationResetForm = (props: any) => {
   const { step } = props;
-  const {
-    deleteCertificateStep,
-    isDeletingCertificateStep,
-    wasCertificateStepDeleted,
-    deletedCertificateStep
-  } = useDeleteCertificateStep(step);
-  const { updateStepStatusState, setInitialState } = useCertificateStepper();
+  const { deleteCertificateStep, isDeletingCertificateStep, wasCertificateStepDeleted } =
+    useDeleteCertificateStep(step);
+  const { updateStepStatusState, clearStepperState } = useCertificateStepper();
   // const navigate = useNavigate();
   const { onClose: onAlertClose } = useDisclosure();
   // const { resetForm } = useCertificateStepper();
@@ -59,11 +55,11 @@ const ConfirmationResetForm = (props: any) => {
         status: 'incomplete'
       });
       if (props.step === StepEnum.ALL) {
-        setInitialState(deletedCertificateStep?.form?.state);
+        clearStepperState();
       }
       props.onClose();
     }
-  }, [wasCertificateStepDeleted, props, updateStepStatusState, setInitialState, props.step]);
+  }, [wasCertificateStepDeleted, props, updateStepStatusState, clearStepperState, props.step]);
 
   return (
     <>
