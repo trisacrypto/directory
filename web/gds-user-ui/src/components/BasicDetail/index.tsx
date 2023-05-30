@@ -29,6 +29,7 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
   });
 
   const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState(false);
+  // create a hook to handle file uploaded
   const handleFileUploaded = (file: any) => {
     // console.log('[handleFileUploaded]', file);
     setIsLoadingDefaultValue(true);
@@ -91,13 +92,13 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
           <FileUploader onReadFileUploaded={handleFileUploaded} />
         </Box>
       </HStack>
-      <Box w={{ base: '100%' }}>
+      <Stack w={{ base: '100%' }}>
         {isLoadingDefaultValue || isFetchingCertificateStep ? (
           <MinusLoader text={'Loading data ...'} />
         ) : (
           <BasicDetailsForm isLoading={isFetchingCertificateStep} />
         )}
-      </Box>
+      </Stack>
     </Stack>
   );
 };

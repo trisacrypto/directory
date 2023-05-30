@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { chakra } from '@chakra-ui/react';
+import React, { useEffect, useState } from 'react';
+import { chakra, useDisclosure } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
 import FormLayout from 'layouts/FormLayout';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -14,6 +14,8 @@ import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
 import TrisaImplementationForm from './TrisaImplementationForm/index';
 import { StepsIndexes } from 'constants/steps';
 const TrisaForm: React.FC = () => {
+  const { isOpen, onClose, onOpen } = useDisclosure();
+  const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
     key: StepEnum.TRISA
@@ -34,6 +36,13 @@ const TrisaForm: React.FC = () => {
   useEffect(() => {
     updateIsDirty(isDirty, StepsIndexes.TRISA_IMPLEMENTATION);
   }, [isDirty, updateIsDirty]);
+
+  useEffect(() => {
+    if (shouldShowResetFormModal) {
+      onOpen();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldShowResetFormModal]);
 
   const handlePreviousStepClick = () => {
     if (isDirty) {
@@ -72,6 +81,13 @@ const TrisaForm: React.FC = () => {
       nextStep(updatedCertificateStep);
     }
   };
+  const handleResetForm = () => {
+    setShouldShowResetFormModal(true); // this will show the modal
+  };
+
+  const handleResetClick = () => {
+    setShouldShowResetFormModal(false); // this will close the modal
+  };
 
   return (
     <FormLayout>
@@ -95,6 +111,13 @@ const TrisaForm: React.FC = () => {
             <StepButtons
               handlePreviousStep={handlePreviousStepClick}
               handleNextStep={handleNextStepClick}
+              onResetModalClose={handleResetClick}
+              isOpened={isOpen}
+              handleResetForm={handleResetForm}
+              resetFormType={StepEnum.TRISA}
+              onClosed={onClose}
+              handleResetClick={handleResetClick}
+              shouldShowResetFormModal={shouldShowResetFormModal}
             />
           </chakra.form>
         </FormProvider>

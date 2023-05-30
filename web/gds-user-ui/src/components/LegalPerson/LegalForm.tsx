@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { chakra } from '@chakra-ui/react';
+import React, { useEffect, useState } from 'react';
+import { chakra, useDisclosure } from '@chakra-ui/react';
 import CountryOfRegistration from 'components/CountryOfRegistration';
 import FormLayout from 'layouts/FormLayout';
 import NameIdentifiers from '../NameIdentifiers';
@@ -16,6 +16,8 @@ import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
 import { StepsIndexes } from 'constants/steps';
 const LegalForm: React.FC = () => {
+  const { isOpen, onClose, onOpen } = useDisclosure();
+  const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
     key: StepEnum.LEGAL
@@ -56,6 +58,12 @@ const LegalForm: React.FC = () => {
       }
     }
   };
+  useEffect(() => {
+    if (shouldShowResetFormModal) {
+      onOpen();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldShowResetFormModal]);
 
   const handlePreviousStepClick = () => {
     if (isDirty) {
@@ -76,6 +84,14 @@ const LegalForm: React.FC = () => {
     previousStep(certificateStep);
   };
 
+  const handleResetForm = () => {
+    setShouldShowResetFormModal(true); // this will show the modal
+  };
+
+  const handleResetClick = () => {
+    setShouldShowResetFormModal(false); // this will close the modal
+  };
+
   return (
     <FormLayout>
       {isFetchingCertificateStep ? (
@@ -90,6 +106,13 @@ const LegalForm: React.FC = () => {
             <StepButtons
               handlePreviousStep={handlePreviousStepClick}
               handleNextStep={handleNextStepClick}
+              onResetModalClose={handleResetClick}
+              isOpened={isOpen}
+              handleResetForm={handleResetForm}
+              resetFormType={StepEnum.LEGAL}
+              onClosed={onClose}
+              handleResetClick={handleResetClick}
+              shouldShowResetFormModal={shouldShowResetFormModal}
             />
           </chakra.form>
         </FormProvider>

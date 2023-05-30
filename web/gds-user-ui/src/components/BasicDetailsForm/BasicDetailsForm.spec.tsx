@@ -2,6 +2,15 @@ import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import { render, screen } from 'utils/test-utils';
 import BasicDetailsForm from '.';
 
+jest.mock('@chakra-ui/react', () => ({
+  ...jest.requireActual('@chakra-ui/react'),
+  useDisclosure: jest.fn(() => ({
+    isOpen: false,
+    onClose: jest.fn(),
+    onOpen: jest.fn()
+  }))
+}));
+
 describe('<BasicDetailsForm />', () => {
   beforeEach(() => {
     dynamicActivate('en');

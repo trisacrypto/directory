@@ -1,4 +1,4 @@
-import { Grid, GridItem, Heading, Text, VStack, chakra } from '@chakra-ui/react';
+import { Grid, GridItem, Heading, Text, VStack, chakra, useDisclosure } from '@chakra-ui/react';
 import OtherJuridictions from 'components/OtherJuridictions';
 import Regulations from 'components/Regulations';
 import SwitchFormControl from 'components/SwitchFormControl';
@@ -8,7 +8,7 @@ import { getCountriesOptions } from 'constants/countries';
 import { getCurrenciesOptions, getFinancialTransfertsPermittedOptions } from 'constants/trixo';
 import FormLayout from 'layouts/FormLayout';
 import { Controller, useForm, FormProvider } from 'react-hook-form';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
@@ -21,6 +21,8 @@ import useCertificateStepper from 'hooks/useCertificateStepper';
 import MinusLoader from 'components/Loader/MinusLoader';
 import { StepsIndexes } from 'constants/steps';
 const TrixoQuestionnaireForm: React.FC = () => {
+  const { isOpen, onClose, onOpen } = useDisclosure();
+  const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
     key: StepEnum.TRIXO
@@ -90,6 +92,14 @@ const TrixoQuestionnaireForm: React.FC = () => {
     }
     previousStep(certificateStep);
   };
+
+  useEffect(() => {
+    if (shouldShowResetFormModal) {
+      onOpen();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldShowResetFormModal]);
+
   useEffect(() => {
     updateIsDirty(isDirty, StepsIndexes.TRIXO_QUESTIONNAIRE);
   }, [isDirty, updateIsDirty]);
@@ -137,6 +147,14 @@ const TrixoQuestionnaireForm: React.FC = () => {
       }
     }
   }, [getKycThreshold, getComplianceThreshold, setValue]);
+
+  const handleResetForm = () => {
+    setShouldShowResetFormModal(true); // this will show the modal
+  };
+
+  const handleResetClick = () => {
+    setShouldShowResetFormModal(false); // this will close the modal
+  };
 
   return (
     <FormLayout spacing={5}>
@@ -385,6 +403,13 @@ const TrixoQuestionnaireForm: React.FC = () => {
             <StepButtons
               handleNextStep={handleNextStepClick}
               handlePreviousStep={handlePreviousStepClick}
+              onResetModalClose={handleResetClick}
+              isOpened={isOpen}
+              handleResetForm={handleResetForm}
+              resetFormType={StepEnum.TRIXO}
+              onClosed={onClose}
+              handleResetClick={handleResetClick}
+              shouldShowResetFormModal={shouldShowResetFormModal}
             />
           </chakra.form>
         </FormProvider>

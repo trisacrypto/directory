@@ -1,5 +1,14 @@
-import React, { useState } from 'react';
-import { Stack, HStack, Heading, Text, Box, Button, useColorModeValue } from '@chakra-ui/react';
+import React, { useState, useEffect } from 'react';
+import {
+  Stack,
+  HStack,
+  Heading,
+  Text,
+  Box,
+  Button,
+  useColorModeValue,
+  useDisclosure
+} from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import FormLayout from 'layouts/FormLayout';
 import BasicDetailsReview from './BasicDetailsReview';
@@ -16,6 +25,8 @@ import { StepEnum } from 'types/enums';
 import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 
 const ReviewsSummary: React.FC = () => {
+  const { isOpen, onClose, onOpen } = useDisclosure();
+  const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const { previousStep, updateHasReachSubmitStep } = useCertificateStepper();
   const [isLoadingExport, setIsLoadingExport] = useState(false);
   const { certificateStep } = useFetchCertificateStep({
@@ -44,10 +55,22 @@ const ReviewsSummary: React.FC = () => {
     previousStep();
   };
 
-  const handleResetForm = () => {}; // should be implemented asap we have the api from patrick
-
   const isNextButtonDisabled = certificateStep?.errors?.length > 0;
 
+  const handleResetForm = () => {
+    setShouldShowResetFormModal(true); // this will show the modal
+  };
+
+  const handleResetClick = () => {
+    setShouldShowResetFormModal(false); // this will close the modal
+  };
+
+  useEffect(() => {
+    if (shouldShowResetFormModal) {
+      onOpen();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldShowResetFormModal]);
   return (
     <Stack spacing={7}>
       <HStack pt={10} justifyContent={'space-between'}>
@@ -86,8 +109,14 @@ const ReviewsSummary: React.FC = () => {
       <StepButtons
         handleNextStep={handleNextStep}
         handlePreviousStep={handlePreviousStep}
-        handleResetForm={handleResetForm}
         isNextButtonDisabled={isNextButtonDisabled}
+        onResetModalClose={handleResetClick}
+        isOpened={isOpen}
+        handleResetForm={handleResetForm}
+        resetFormType={StepEnum.ALL}
+        onClosed={onClose}
+        handleResetClick={handleResetClick}
+        shouldShowResetFormModal={shouldShowResetFormModal}
       />
     </Stack>
   );

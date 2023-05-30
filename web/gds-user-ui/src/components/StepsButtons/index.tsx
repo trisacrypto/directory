@@ -1,17 +1,21 @@
-import { Button, Stack, useDisclosure } from '@chakra-ui/react';
-
+import { Button, Stack } from '@chakra-ui/react';
+import { StepEnum } from 'types/enums';
 import { t, Trans } from '@lingui/macro';
 import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
 type StepButtonsProps = {
   handlePreviousStep?: () => void;
   handleNextStep?: () => void;
+  handleResetClick?: () => void;
   currentStep?: number;
   isCurrentStepLastStep?: boolean;
   handleResetForm?: () => void;
   isDefaultValue?: () => boolean;
   isFirstStep?: boolean;
+  isOpened?: boolean;
+  onClosed?: () => void;
   isNextButtonDisabled?: boolean;
   resetFormType?: string;
+  onResetModalClose?: () => void;
   shouldShowResetFormModal?: boolean;
 };
 
@@ -22,11 +26,13 @@ function StepButtons({
   handleNextStep,
   isCurrentStepLastStep,
   handleResetForm,
-  shouldShowResetFormModal = false,
-  // resetFormType = 'section',
+  shouldShowResetFormModal,
+  resetFormType,
+  isOpened,
+  onClosed,
+  onResetModalClose,
   isDefaultValue = () => false
 }: StepButtonsProps) {
-  const { isOpen, onClose } = useDisclosure();
   // const [isResetModalOpen, setIsResetModalOpen] = useState<boolean>(false);
   // const onChangeModalState = (value: boolean) => {
   //   setIsResetModalOpen(value);
@@ -51,12 +57,25 @@ function StepButtons({
         </Button>
 
         <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
-          <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
+          {resetFormType !== StepEnum.ALL ? (
+            <Trans>
+              <Trans>Clear & Reset Section</Trans>
+            </Trans>
+          ) : (
+            <Trans>Clear & Reset Form</Trans>
+          )}
         </Button>
-        {shouldShowResetFormModal && (
-          <ConfirmationResetFormModal isOpen={isOpen} onClose={onClose} />
-        )}
       </Stack>
+
+      {shouldShowResetFormModal && (
+        <ConfirmationResetFormModal
+          isOpen={isOpened}
+          onClose={onClosed}
+          step={resetFormType}
+          onReset={onResetModalClose}
+          resetType={resetFormType}
+        />
+      )}
     </>
   );
 }

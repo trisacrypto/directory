@@ -49,9 +49,8 @@ const useCertificateStepper = () => {
 
   const nextStep = (data?: any) => {
     const errorFields = data?.errors;
-    console.log('[useCertificateStepper 1] errorFields', errorFields);
+
     if (data && errorFields && Object.keys(errorFields).length > 0) {
-      console.log('[useCertificateStepper 2] errorFields', errorFields);
       dispatch(setStepStatus({ step: currentStep, status: LSTATUS.ERROR }));
     } else {
       // setInitialState(data?.form);
@@ -174,6 +173,10 @@ const useCertificateStepper = () => {
     }
   };
 
+  const updateStepStatusState = (payload: any) => {
+    dispatch(setStepStatus(payload));
+  };
+
   return {
     nextStep,
     previousStep,
@@ -192,7 +195,8 @@ const useCertificateStepper = () => {
     updateIsDirty,
     getIsDirtyState,
     addDefaultStep,
-    updateStepStatusToIncomplete
+    updateStepStatusToIncomplete,
+    updateStepStatusState
   };
 };
 

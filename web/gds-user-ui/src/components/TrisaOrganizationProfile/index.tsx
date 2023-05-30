@@ -1,13 +1,15 @@
 import OrganizationalDetail from 'components/OrganizationProfile/OrganizationalDetail';
 import TrisaImplementation from 'components/OrganizationProfile/TrisaImplementation';
-import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
-import { useAsync } from 'react-use';
+
 import { handleError } from 'utils/utils';
-
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
+import { StepEnum } from 'types/enums';
 function TrisaOrganizationProfile() {
-  const { value, error, loading } = useAsync(getRegistrationDefaultValue);
+  const { certificateStep, isFetchingCertificateStep, error } = useFetchCertificateStep({
+    key: StepEnum.ALL
+  });
 
-  if (loading) {
+  if (isFetchingCertificateStep) {
     return <>loading...</>;
   }
 
@@ -18,9 +20,12 @@ function TrisaOrganizationProfile() {
 
   return (
     <div>
-      <OrganizationalDetail data={value} />
+      <OrganizationalDetail data={certificateStep?.form} />
       <TrisaImplementation
-        data={{ mainnet: value?.mainnet || {}, testnet: value?.testnet || {} }}
+        data={{
+          mainnet: certificateStep?.form?.mainnet || {},
+          testnet: certificateStep?.form?.testnet || {}
+        }}
       />
     </div>
   );

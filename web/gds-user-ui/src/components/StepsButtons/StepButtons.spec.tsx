@@ -4,6 +4,19 @@ import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import { render, screen } from 'utils/test-utils';
 import StepButtons from '.';
 
+// mock the useFetchCertificateStep hook
+jest.mock('hooks/useFetchCertificateStep', () => ({
+  useFetchCertificateStep: () => ({
+    certificateStep: {
+      form: jest.fn(), // mock the form function
+      errors: jest.fn() // mock the errors function
+    },
+    isFetchingCertificateStep: false
+  })
+}));
+
+// mock
+
 describe('<StepButtons />', () => {
   let handlePreviousStep = jest.fn();
   let currentStep;
@@ -20,6 +33,13 @@ describe('<StepButtons />', () => {
     isCurrentStepLastStep = false;
     handleResetForm = jest.fn();
     isDefaultValue = jest.fn(() => true);
+    const props = {
+      onClosed: jest.fn(),
+      onResetModalClose: jest.fn(),
+      shouldShowResetFormModal: false,
+      resetFormType: 'all'
+    } as any;
+
     render(
       <StepButtons
         handlePreviousStep={handlePreviousStep}
@@ -27,6 +47,7 @@ describe('<StepButtons />', () => {
         isCurrentStepLastStep={isCurrentStepLastStep}
         handleResetForm={handleResetForm}
         isDefaultValue={isDefaultValue}
+        {...props}
       />
     );
 

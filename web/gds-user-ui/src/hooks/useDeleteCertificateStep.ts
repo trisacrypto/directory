@@ -3,11 +3,10 @@ import { queryClient } from 'utils/react-query';
 import { deleteCertificateStepService } from 'modules/dashboard/certificate/service/certificateService';
 import type { DeleteCertificateMutation } from 'modules/dashboard/certificate/types';
 
-export function useDeleteCertificateStep(): DeleteCertificateMutation {
-  const mutation = useMutation(deleteCertificateStepService, {
+export function useDeleteCertificateStep(key?: string): DeleteCertificateMutation {
+  const mutation = useMutation(['delete-certificate-step'], deleteCertificateStepService, {
     onSuccess: () => {
-      // queryClient.setQueryData(['fetch-certificate-step'], mutation.data);
-      queryClient.invalidateQueries({ queryKey: ['fetch-certificate-step'] });
+      queryClient.invalidateQueries({ queryKey: ['fetch-certificate-step', key] });
     }
   });
 

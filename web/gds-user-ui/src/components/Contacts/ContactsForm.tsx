@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { t } from '@lingui/macro';
-import { chakra } from '@chakra-ui/react';
+import { chakra, useDisclosure } from '@chakra-ui/react';
 import StepButtons from 'components/StepsButtons';
 import ContactForm from 'components/Contacts/ContactForm';
 import useCertificateStepper from 'hooks/useCertificateStepper';
@@ -14,6 +14,8 @@ import FormLayout from 'layouts/FormLayout';
 import MinusLoader from 'components/Loader/MinusLoader';
 import { StepsIndexes } from 'constants/steps';
 const ContactsForm: React.FC = () => {
+  const { isOpen, onClose, onOpen } = useDisclosure();
+  const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
     key: StepEnum.CONTACTS
@@ -55,6 +57,13 @@ const ContactsForm: React.FC = () => {
     previousStep(certificateStep);
   };
 
+  useEffect(() => {
+    if (shouldShowResetFormModal) {
+      onOpen();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldShowResetFormModal]);
+
   const handleNextStepClick = () => {
     if (!isDirty) {
       nextStep(updatedCertificateStep ?? certificateStep);
@@ -72,6 +81,13 @@ const ContactsForm: React.FC = () => {
         nextStep(updatedCertificateStep);
       }
     }
+  };
+  const handleResetForm = () => {
+    setShouldShowResetFormModal(true); // this will show the modal
+  };
+
+  const handleResetClick = () => {
+    setShouldShowResetFormModal(false); // this will close the modal
   };
 
   return (
@@ -104,6 +120,13 @@ const ContactsForm: React.FC = () => {
             <StepButtons
               handlePreviousStep={handlePreviousStepClick}
               handleNextStep={handleNextStepClick}
+              onResetModalClose={handleResetClick}
+              isOpened={isOpen}
+              handleResetForm={handleResetForm}
+              resetFormType="basic"
+              onClosed={onClose}
+              handleResetClick={handleResetClick}
+              shouldShowResetFormModal={shouldShowResetFormModal}
             />
           </chakra.form>
         </FormProvider>
