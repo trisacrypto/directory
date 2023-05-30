@@ -14,6 +14,7 @@ import { getRegistrationData } from 'modules/dashboard/registration/service';
 import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 import MinusLoader from 'components/Loader/MinusLoader';
 import { StepEnum } from 'types/enums';
+import Store from 'application/store';
 interface BasicDetailProps {
   onChangeRegistrationState?: any;
 }
@@ -23,12 +24,15 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
   const stepStatus = getStepStatus(steps, currentStep);
   const toast = useToast();
 
-  const { updateStateFromFormValues, setRegistrationValue } = useCertificateStepper();
-  const { isFetchingCertificateStep } = useFetchCertificateStep({
-    key: StepEnum.BASIC
-  });
+  const { updateStateFromFormValues, setRegistrationValue, setInitialState } =
+    useCertificateStepper();
+  const { isFetchingCertificateStep, certificateStep, wasCertificateStepFetched } =
+    useFetchCertificateStep({
+      key: StepEnum.BASIC
+    });
 
   const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState(false);
+  // create a hook to handle file uploaded
   const handleFileUploaded = (file: any) => {
     // console.log('[handleFileUploaded]', file);
     setIsLoadingDefaultValue(true);
@@ -78,6 +82,14 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
     reader.readAsText(file);
   };
 
+  if (wasCertificateStepFetched) {
+    const { stepper } = Store.getState();
+    if (!stepper?.steps) {
+      // init stepper
+      setInitialState(certificateStep?.form);
+    }
+  }
+
   return (
     <Stack spacing={7} mt="2rem">
       <HStack justifyContent={'space-between'}>
@@ -91,13 +103,13 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
           <FileUploader onReadFileUploaded={handleFileUploaded} />
         </Box>
       </HStack>
-      <Box w={{ base: '100%' }}>
+      <Stack w={{ base: '100%' }}>
         {isLoadingDefaultValue || isFetchingCertificateStep ? (
           <MinusLoader text={'Loading data ...'} />
         ) : (
-          <BasicDetailsForm isLoading={isFetchingCertificateStep} />
+          <BasicDetailsForm isLoading={isFetchingCertificateStep} data={certificateStep?.form} />
         )}
-      </Box>
+      </Stack>
     </Stack>
   );
 };

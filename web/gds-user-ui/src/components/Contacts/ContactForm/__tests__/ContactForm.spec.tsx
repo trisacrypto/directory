@@ -8,6 +8,15 @@ import { fireEvent } from '@testing-library/react';
 function renderComponent() {
   return render(<ContactsForm />);
 }
+// mock chakra useDisclosure hook
+jest.mock('@chakra-ui/react', () => ({
+  ...jest.requireActual('@chakra-ui/react'),
+  useDisclosure: jest.fn(() => ({
+    isOpen: false,
+    onClose: jest.fn(),
+    onOpen: jest.fn()
+  }))
+}));
 
 jest.mock('hooks/useFetchCertificateStep', () => ({
   useFetchCertificateStep: () => ({
@@ -15,8 +24,10 @@ jest.mock('hooks/useFetchCertificateStep', () => ({
       form: jest.fn(),
       errors: jest.fn()
     },
+
     isFetchingCertificateStep: false
-  })
+  }),
+  __esModule: true
 }));
 
 describe('ContactsForm', () => {

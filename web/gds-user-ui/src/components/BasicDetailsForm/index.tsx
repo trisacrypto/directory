@@ -1,11 +1,11 @@
-import { VStack, chakra } from '@chakra-ui/react';
+import { VStack, chakra, useDisclosure } from '@chakra-ui/react';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getBusinessCategoryOptions, vaspCategories } from 'constants/basic-details';
 import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { t } from '@lingui/macro';
 import { useLanguageProvider } from 'contexts/LanguageContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import FormLayout from 'layouts/FormLayout';
 import formatDate from 'utils/formate-date';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -16,28 +16,40 @@ import { DevTool } from '@hookform/devtools';
 import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
 import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 import useCertificateStepper from 'hooks/useCertificateStepper';
+// import { useDeleteCertificateStep } from 'hooks/useDeleteCertificateStep';
 import { StepEnum } from 'types/enums';
 import { StepsIndexes } from 'constants/steps';
+// import MinusLoader from 'components/Loader/MinusLoader';
+
 interface BasicDetailsFormProps {
   data?: any;
   isLoading?: boolean;
+  onRefreshCertificate?: () => void;
 }
 const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
-  const { certificateStep } = useFetchCertificateStep({
-    key: StepEnum.BASIC
-  });
-  const { updateCertificateStep, updatedCertificateStep, wasCertificateStepUpdated } =
-    useUpdateCertificateStep();
+  const { isOpen, onClose, onOpen } = useDisclosure();
+  // const nextStepClick = useRef<boolean>(false);
+
+  const {
+    updateCertificateStep,
+    updatedCertificateStep
+    // reset,
+    // isUpdatingCertificateStep
+  } = useUpdateCertificateStep();
+
+  const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const resolver = yupResolver(basicDetailsValidationSchema);
   const options = getBusinessCategoryOptions();
   const { currentState, nextStep, updateIsDirty } = useCertificateStepper();
-
+  const { certificateStep } = useFetchCertificateStep({
+    key: StepEnum.BASIC
+  });
   const [language] = useLanguageProvider();
 
   useEffect(() => {}, [language]);
 
   const methods = useForm({
-    defaultValues: certificateStep?.form || data,
+    defaultValues: certificateStep?.form ?? data,
     resolver
   });
 
@@ -47,13 +59,15 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
     control
   } = methods;
 
-  useEffect(() => {
-    updateIsDirty(isDirty, StepsIndexes.BASIC_DETAILS);
-  }, [isDirty, updateIsDirty]);
+  const onCloseModalHandler = () => {
+    setShouldShowResetFormModal(false);
+    onClose();
+  };
 
+  // this is the function that is called when the user clicks on the next button
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep(updatedCertificateStep ?? certificateStep);
+      nextStep(certificateStep ?? data);
     } else {
       const payload = {
         step: StepEnum.BASIC,
@@ -62,19 +76,36 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
           state: currentState()
         } as any
       };
-
       updateCertificateStep(payload);
-      if (wasCertificateStepUpdated) {
-        nextStep(updatedCertificateStep);
-      }
+      nextStep(updatedCertificateStep);
     }
   };
 
+  const handleResetForm = () => {
+    setShouldShowResetFormModal(true); // this will show the modal
+  };
+
+  const handleResetClick = () => {
+    setShouldShowResetFormModal(false); // this will close the modal
+  };
+
+  useEffect(() => {
+    updateIsDirty(isDirty, StepsIndexes.BASIC_DETAILS);
+  }, [isDirty, updateIsDirty]);
+
+  useEffect(() => {
+    if (shouldShowResetFormModal) {
+      onOpen();
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldShowResetFormModal]);
+
   return (
-    <FormLayout>
+    <FormLayout spacing={5}>
       <FormProvider {...methods}>
         <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
-          <VStack spacing={4} w="100%">
+          <VStack align="start" spacing={4} w="100%">
             <InputFormControl
               controlId="organization_name"
               data-testid="organization_name"
@@ -149,8 +180,18 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
                 />
               )}
             />
-            <StepButtons handleNextStep={handleNextStepClick} isFirstStep={true} />
           </VStack>
+          <StepButtons
+            handleNextStep={handleNextStepClick}
+            isFirstStep={true}
+            onResetModalClose={handleResetClick}
+            isOpened={isOpen}
+            handleResetForm={handleResetForm}
+            resetFormType={StepEnum.BASIC}
+            onClosed={onCloseModalHandler}
+            handleResetClick={handleResetClick}
+            shouldShowResetFormModal={shouldShowResetFormModal}
+          />
         </chakra.form>
         {!isProdEnv ? <DevTool control={methods.control} /> : null}
       </FormProvider>

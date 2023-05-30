@@ -4,7 +4,7 @@ import { postCertificateStepService } from 'modules/dashboard/certificate/servic
 import type { PostCertificateMutation } from 'modules/dashboard/certificate/types';
 
 export function useUpdateCertificateStep(): PostCertificateMutation {
-  const mutation = useMutation(postCertificateStepService, {
+  const mutation = useMutation(['update-registration-form'], postCertificateStepService, {
     onSuccess: () => {
       // queryClient.setQueryData(['fetch-certificate-step'], mutation.data);
       queryClient.invalidateQueries({ queryKey: ['fetch-certificate-step'] });

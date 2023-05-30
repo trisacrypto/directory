@@ -9,7 +9,7 @@ export function useFetchCertificateStep(payload: PayloadDTO): GetCertificateQuer
     () => getCertificateStepService(payload),
     {
       enabled: !!payload.key,
-      retry: false
+      retry: 0
     }
   );
   return {
