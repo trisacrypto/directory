@@ -112,6 +112,7 @@ const useCertificateStepper = () => {
       testnetSubmitted: value?.state?.testnetSubmitted || false,
       mainnetSubmitted: value?.state?.mainnetSubmitted || false
     };
+    console.log('[setInitialState] state', state);
     dispatch(setInitialValue(state));
   };
 
@@ -185,6 +186,10 @@ const useCertificateStepper = () => {
     dispatch(setCurrentStep({ currentStep: s }));
   };
 
+  const clearStepperState = () => {
+    dispatch(clearStepper());
+  };
+
   return {
     nextStep,
     previousStep,
@@ -205,7 +210,8 @@ const useCertificateStepper = () => {
     addDefaultStep,
     updateStepStatusToIncomplete,
     updateStepStatusState,
-    updateCurrentStepState
+    updateCurrentStepState,
+    clearStepperState
   };
 };
 
