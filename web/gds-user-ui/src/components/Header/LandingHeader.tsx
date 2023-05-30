@@ -84,7 +84,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
               <Stack>
                 {!isLoggedIn ? (
                   <NavLink to={'/auth/login'}>
-                    <Button variant="secondary">
+                    <Button variant="secondary" data-cy="nav-login-bttn">
                       <Trans id="Login">Login</Trans>
                     </Button>
                   </NavLink>
