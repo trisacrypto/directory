@@ -32,7 +32,6 @@ const ConfirmationResetForm = (props: any) => {
   const handleOnClose = () => {
     props.onClose();
     onAlertClose();
-    // props.onChangeState(false);
   };
 
   const isResetAllType = props.step === StepEnum.ALL;
@@ -41,6 +40,7 @@ const ConfirmationResetForm = (props: any) => {
     deleteCertificateStep({
       key: props.step as StepperType
     });
+
     // resetForm();
     // props.onChangeResetState(true);
     // props.onChangeState(false);
@@ -56,7 +56,7 @@ const ConfirmationResetForm = (props: any) => {
       });
       props.onClose();
     }
-  }, [wasCertificateStepDeleted, props, onAlertClose, updateStepStatusState]);
+  }, [wasCertificateStepDeleted, props, updateStepStatusState]);
 
   return (
     <>

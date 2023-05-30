@@ -21,8 +21,7 @@ const ContactsForm: React.FC = () => {
     key: StepEnum.CONTACTS
   });
 
-  const { updateCertificateStep, updatedCertificateStep, wasCertificateStepUpdated } =
-    useUpdateCertificateStep();
+  const { updateCertificateStep, updatedCertificateStep } = useUpdateCertificateStep();
 
   const resolver = yupResolver(contactsValidationSchema);
 
@@ -50,9 +49,7 @@ const ContactsForm: React.FC = () => {
         } as any
       };
       updateCertificateStep(payload);
-      if (wasCertificateStepUpdated) {
-        previousStep(updatedCertificateStep);
-      }
+      previousStep(updatedCertificateStep);
     }
     previousStep(certificateStep);
   };
@@ -63,6 +60,11 @@ const ContactsForm: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldShowResetFormModal]);
+
+  const onCloseModalHandler = () => {
+    setShouldShowResetFormModal(false);
+    onClose();
+  };
 
   const handleNextStepClick = () => {
     if (!isDirty) {
@@ -77,9 +79,7 @@ const ContactsForm: React.FC = () => {
       };
 
       updateCertificateStep(payload);
-      if (wasCertificateStepUpdated) {
-        nextStep(updatedCertificateStep);
-      }
+      nextStep(updatedCertificateStep);
     }
   };
   const handleResetForm = () => {
@@ -124,7 +124,7 @@ const ContactsForm: React.FC = () => {
               isOpened={isOpen}
               handleResetForm={handleResetForm}
               resetFormType="basic"
-              onClosed={onClose}
+              onClosed={onCloseModalHandler}
               handleResetClick={handleResetClick}
               shouldShowResetFormModal={shouldShowResetFormModal}
             />

@@ -24,7 +24,7 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
   const toast = useToast();
 
   const { updateStateFromFormValues, setRegistrationValue } = useCertificateStepper();
-  const { isFetchingCertificateStep } = useFetchCertificateStep({
+  const { isFetchingCertificateStep, certificateStep } = useFetchCertificateStep({
     key: StepEnum.BASIC
   });
 
@@ -96,7 +96,7 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
         {isLoadingDefaultValue || isFetchingCertificateStep ? (
           <MinusLoader text={'Loading data ...'} />
         ) : (
-          <BasicDetailsForm isLoading={isFetchingCertificateStep} />
+          <BasicDetailsForm isLoading={isFetchingCertificateStep} data={certificateStep?.form} />
         )}
       </Stack>
     </Stack>

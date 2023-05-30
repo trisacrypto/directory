@@ -22,8 +22,7 @@ const LegalForm: React.FC = () => {
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
     key: StepEnum.LEGAL
   });
-  const { updateCertificateStep, updatedCertificateStep, wasCertificateStepUpdated } =
-    useUpdateCertificateStep();
+  const { updateCertificateStep, updatedCertificateStep } = useUpdateCertificateStep();
 
   const resolver = yupResolver(legalPersonValidationSchemam);
   const methods = useForm({
@@ -40,6 +39,11 @@ const LegalForm: React.FC = () => {
     updateIsDirty(isDirty, StepsIndexes.LEGAL_PERSON);
   }, [isDirty, updateIsDirty]);
 
+  const onCloseModalHandler = () => {
+    setShouldShowResetFormModal(false);
+    onClose();
+  };
+
   const handleNextStepClick = () => {
     if (!isDirty) {
       nextStep(updatedCertificateStep ?? certificateStep);
@@ -53,9 +57,7 @@ const LegalForm: React.FC = () => {
       };
 
       updateCertificateStep(payload);
-      if (wasCertificateStepUpdated) {
-        nextStep(updatedCertificateStep);
-      }
+      nextStep(updatedCertificateStep);
     }
   };
   useEffect(() => {
@@ -77,9 +79,7 @@ const LegalForm: React.FC = () => {
       console.log('[] isDirty  payload', payload);
 
       updateCertificateStep(payload);
-      if (wasCertificateStepUpdated) {
-        previousStep(updatedCertificateStep);
-      }
+      previousStep(updatedCertificateStep);
     }
     previousStep(certificateStep);
   };
@@ -110,7 +110,7 @@ const LegalForm: React.FC = () => {
               isOpened={isOpen}
               handleResetForm={handleResetForm}
               resetFormType={StepEnum.LEGAL}
-              onClosed={onClose}
+              onClosed={onCloseModalHandler}
               handleResetClick={handleResetClick}
               shouldShowResetFormModal={shouldShowResetFormModal}
             />

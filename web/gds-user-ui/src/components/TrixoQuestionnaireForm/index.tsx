@@ -51,12 +51,14 @@ const TrixoQuestionnaireForm: React.FC = () => {
   const getComplianceThreshold = watch('trixo.compliance_threshold');
   const getKycThreshold = watch('trixo.kyc_threshold');
 
-  const { updateCertificateStep, updatedCertificateStep, wasCertificateStepUpdated } =
-    useUpdateCertificateStep();
-
+  const { updateCertificateStep, updatedCertificateStep } = useUpdateCertificateStep();
+  const onCloseModalHandler = () => {
+    setShouldShowResetFormModal(false);
+    onClose();
+  };
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep(updatedCertificateStep ?? certificateStep);
+      nextStep(certificateStep);
     } else {
       const payload = {
         step: StepEnum.TRIXO,
@@ -65,12 +67,9 @@ const TrixoQuestionnaireForm: React.FC = () => {
           state: currentState()
         } as any
       };
-      console.log('[] isDirty  payload Trixo', payload);
 
       updateCertificateStep(payload);
-      if (wasCertificateStepUpdated) {
-        nextStep(updatedCertificateStep);
-      }
+      nextStep(updatedCertificateStep);
     }
   };
 
@@ -86,9 +85,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
       console.log('[] isDirty  payload Trixo', payload);
 
       updateCertificateStep(payload);
-      if (wasCertificateStepUpdated) {
-        previousStep(updatedCertificateStep);
-      }
+      previousStep(updatedCertificateStep);
     }
     previousStep(certificateStep);
   };
@@ -407,7 +404,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
               isOpened={isOpen}
               handleResetForm={handleResetForm}
               resetFormType={StepEnum.TRIXO}
-              onClosed={onClose}
+              onClosed={onCloseModalHandler}
               handleResetClick={handleResetClick}
               shouldShowResetFormModal={shouldShowResetFormModal}
             />

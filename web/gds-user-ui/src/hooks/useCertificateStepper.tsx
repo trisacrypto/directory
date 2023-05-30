@@ -50,6 +50,8 @@ const useCertificateStepper = () => {
   const nextStep = (data?: any) => {
     const errorFields = data?.errors;
 
+    console.log('[nextStep] errorFields', errorFields);
+
     if (data && errorFields && Object.keys(errorFields).length > 0) {
       dispatch(setStepStatus({ step: currentStep, status: LSTATUS.ERROR }));
     } else {

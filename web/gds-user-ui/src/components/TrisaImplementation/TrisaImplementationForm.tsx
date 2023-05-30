@@ -60,12 +60,8 @@ const TrisaForm: React.FC = () => {
   };
 
   const handleNextStepClick = () => {
-    console.log('[] handleNextStep', methods.getValues());
-    // if the form is dirty, then we need to save the data and move to the next step
-    console.log('[] isDirty', isDirty);
     if (!isDirty) {
-      console.log('[] is not Dirty', isDirty);
-      nextStep(updatedCertificateStep ?? certificateStep);
+      nextStep(certificateStep);
     } else {
       const payload = {
         step: StepEnum.TRISA,
@@ -87,6 +83,10 @@ const TrisaForm: React.FC = () => {
 
   const handleResetClick = () => {
     setShouldShowResetFormModal(false); // this will close the modal
+  };
+  const onCloseModalHandler = () => {
+    setShouldShowResetFormModal(false);
+    onClose();
   };
 
   return (
@@ -115,7 +115,7 @@ const TrisaForm: React.FC = () => {
               isOpened={isOpen}
               handleResetForm={handleResetForm}
               resetFormType={StepEnum.TRISA}
-              onClosed={onClose}
+              onClosed={onCloseModalHandler}
               handleResetClick={handleResetClick}
               shouldShowResetFormModal={shouldShowResetFormModal}
             />
