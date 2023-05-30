@@ -11,7 +11,7 @@ import {
   Text,
   Box
 } from '@chakra-ui/react';
-import { Trans } from '@lingui/macro';
+import { Trans, t } from '@lingui/macro';
 type InvalidFormPromptProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -44,11 +44,12 @@ function InvalidFormPrompt({
               <Text>
                 <Trans>
                   If you continue, your changes will be lost. To save your changes, click Cancel and
-                  then click on :
+                  then click on the
                 </Trans>
               </Text>
               <Text fontWeight={'bold'} as="span">
-                <Trans>{isNextStep ? 'Save & Next' : 'Save & Previous'} button.</Trans>
+                {isNextStep ? t`Save & Next` : t`Save & Previous`}{' '}
+                <Trans>button.</Trans>
               </Text>
             </Box>
           </VStack>
