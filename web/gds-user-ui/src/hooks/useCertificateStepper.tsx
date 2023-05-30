@@ -21,6 +21,7 @@ import {
 import { setRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
 
 import { LSTATUS } from 'components/RegistrationForm/CertificateStepLabel';
+import { getStepNumber } from 'components/BasicDetailsForm/util';
 
 // 'TODO:' this hook should be improved to be more generic
 const useCertificateStepper = () => {
@@ -179,6 +180,11 @@ const useCertificateStepper = () => {
     dispatch(setStepStatus(payload));
   };
 
+  const updateCurrentStepState = (step: string) => {
+    const s = getStepNumber(step);
+    dispatch(setCurrentStep({ currentStep: s }));
+  };
+
   return {
     nextStep,
     previousStep,
@@ -198,7 +204,8 @@ const useCertificateStepper = () => {
     getIsDirtyState,
     addDefaultStep,
     updateStepStatusToIncomplete,
-    updateStepStatusState
+    updateStepStatusState,
+    updateCurrentStepState
   };
 };
 

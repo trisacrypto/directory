@@ -123,7 +123,7 @@ const ContactsForm: React.FC = () => {
               onResetModalClose={handleResetClick}
               isOpened={isOpen}
               handleResetForm={handleResetForm}
-              resetFormType="basic"
+              resetFormType={StepEnum.CONTACTS}
               onClosed={onCloseModalHandler}
               handleResetClick={handleResetClick}
               shouldShowResetFormModal={shouldShowResetFormModal}

@@ -27,7 +27,8 @@ import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 const ReviewsSummary: React.FC = () => {
   const { isOpen, onClose, onOpen } = useDisclosure();
   const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
-  const { previousStep, updateHasReachSubmitStep } = useCertificateStepper();
+  const { previousStep, updateHasReachSubmitStep, updateCurrentStepState } =
+    useCertificateStepper();
   const [isLoadingExport, setIsLoadingExport] = useState(false);
   const { certificateStep } = useFetchCertificateStep({
     key: StepEnum.ALL
@@ -71,6 +72,13 @@ const ReviewsSummary: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldShowResetFormModal]);
+
+  const onCloseModalHandler = () => {
+    setShouldShowResetFormModal(false);
+    onClose();
+    updateCurrentStepState(StepEnum.BASIC);
+  };
+
   return (
     <Stack spacing={7}>
       <HStack pt={10} justifyContent={'space-between'}>
@@ -114,7 +122,7 @@ const ReviewsSummary: React.FC = () => {
         isOpened={isOpen}
         handleResetForm={handleResetForm}
         resetFormType={StepEnum.ALL}
-        onClosed={onClose}
+        onClosed={onCloseModalHandler}
         handleResetClick={handleResetClick}
         shouldShowResetFormModal={shouldShowResetFormModal}
       />

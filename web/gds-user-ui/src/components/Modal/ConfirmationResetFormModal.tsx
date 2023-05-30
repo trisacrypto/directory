@@ -77,9 +77,13 @@ const ConfirmationResetForm = (props: any) => {
                 <Text pb={2} fontSize={'sm'}>
                   {isResetAllType ? (
                     <Trans>
-                      Click “Reset” to clear and reset the registration form. All data will be
-                      deleted and you will be re-directed to the beginning of the form and you will
-                      be required to restart the registration process
+                      Click “Reset” to clear and{' '}
+                      <Text as="span" fontWeight={'bold'}>
+                        reset the form.
+                      </Text>{' '}
+                      reset the registration form. All data will be deleted and you will be
+                      re-directed to the beginning of the form and you will be required to restart
+                      the registration process
                     </Trans>
                   ) : (
                     <Trans>
@@ -88,9 +92,9 @@ const ConfirmationResetForm = (props: any) => {
                         {' '}
                         this section{' '}
                       </Text>{' '}
-                      of the registration form. All data will be cleared from only this section of
-                      the registration form. Other sections of the registration form will not be
-                      cleared.
+                      of the form. All data will be deleted and cleared from the registration form.
+                      You may want to export the data first. After clearing, you will be taken to
+                      the start of the form.
                     </Trans>
                   )}
                 </Text>
