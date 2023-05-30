@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { chakra } from '@chakra-ui/react';
+import React, { useEffect, useState } from 'react';
+import { chakra, useDisclosure } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
 import FormLayout from 'layouts/FormLayout';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -16,6 +16,8 @@ import { StepsIndexes } from 'constants/steps';
 import { isProdEnv } from 'application/config';
 import { DevTool } from '@hookform/devtools';
 const TrisaForm: React.FC = () => {
+  const { isOpen, onClose, onOpen } = useDisclosure();
+  const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
     key: StepEnum.TRISA
@@ -37,6 +39,13 @@ const TrisaForm: React.FC = () => {
     updateIsDirty(isDirty, StepsIndexes.TRISA_IMPLEMENTATION);
   }, [isDirty, updateIsDirty]);
 
+  useEffect(() => {
+    if (shouldShowResetFormModal) {
+      onOpen();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldShowResetFormModal]);
+
   const handlePreviousStepClick = () => {
     if (isDirty) {
       const payload = {
@@ -53,12 +62,8 @@ const TrisaForm: React.FC = () => {
   };
 
   const handleNextStepClick = () => {
-    console.log('[] handleNextStep', methods.getValues());
-    // if the form is dirty, then we need to save the data and move to the next step
-    console.log('[] isDirty', isDirty);
     if (!isDirty) {
-      console.log('[] is not Dirty', isDirty);
-      nextStep(updatedCertificateStep ?? certificateStep);
+      nextStep(certificateStep);
     } else {
       const payload = {
         step: StepEnum.TRISA,
@@ -73,6 +78,17 @@ const TrisaForm: React.FC = () => {
       console.log('[] isDirty 3 (not)', updatedCertificateStep);
       nextStep(updatedCertificateStep);
     }
+  };
+  const handleResetForm = () => {
+    setShouldShowResetFormModal(true); // this will show the modal
+  };
+
+  const handleResetClick = () => {
+    setShouldShowResetFormModal(false); // this will close the modal
+  };
+  const onCloseModalHandler = () => {
+    setShouldShowResetFormModal(false);
+    onClose();
   };
 
   return (
@@ -97,6 +113,13 @@ const TrisaForm: React.FC = () => {
             <StepButtons
               handlePreviousStep={handlePreviousStepClick}
               handleNextStep={handleNextStepClick}
+              onResetModalClose={handleResetClick}
+              isOpened={isOpen}
+              handleResetForm={handleResetForm}
+              resetFormType={StepEnum.TRISA}
+              onClosed={onCloseModalHandler}
+              handleResetClick={handleResetClick}
+              shouldShowResetFormModal={shouldShowResetFormModal}
             />
           </chakra.form>
           {!isProdEnv ? <DevTool control={methods.control} /> : null}

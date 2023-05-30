@@ -21,6 +21,7 @@ import {
 import { setRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
 
 import { LSTATUS } from 'components/RegistrationForm/CertificateStepLabel';
+import { getStepNumber } from 'components/BasicDetailsForm/util';
 
 // 'TODO:' this hook should be improved to be more generic
 const useCertificateStepper = () => {
@@ -49,9 +50,10 @@ const useCertificateStepper = () => {
 
   const nextStep = (data?: any) => {
     const errorFields = data?.errors;
-    console.log('[useCertificateStepper 1] errorFields', errorFields);
+
+    console.log('[nextStep] errorFields', errorFields);
+
     if (data && errorFields && Object.keys(errorFields).length > 0) {
-      console.log('[useCertificateStepper 2] errorFields', errorFields);
       dispatch(setStepStatus({ step: currentStep, status: LSTATUS.ERROR }));
     } else {
       // setInitialState(data?.form);
@@ -174,6 +176,15 @@ const useCertificateStepper = () => {
     }
   };
 
+  const updateStepStatusState = (payload: any) => {
+    dispatch(setStepStatus(payload));
+  };
+
+  const updateCurrentStepState = (step: string) => {
+    const s = getStepNumber(step);
+    dispatch(setCurrentStep({ currentStep: s }));
+  };
+
   return {
     nextStep,
     previousStep,
@@ -192,7 +203,9 @@ const useCertificateStepper = () => {
     updateIsDirty,
     getIsDirtyState,
     addDefaultStep,
-    updateStepStatusToIncomplete
+    updateStepStatusToIncomplete,
+    updateStepStatusState,
+    updateCurrentStepState
   };
 };
 

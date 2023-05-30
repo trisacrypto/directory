@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { t } from '@lingui/macro';
-import { chakra } from '@chakra-ui/react';
+import { chakra, useDisclosure } from '@chakra-ui/react';
 import StepButtons from 'components/StepsButtons';
 import ContactForm from 'components/Contacts/ContactForm';
 import useCertificateStepper from 'hooks/useCertificateStepper';
@@ -16,13 +16,14 @@ import { StepsIndexes } from 'constants/steps';
 import { isProdEnv } from 'application/config';
 import { DevTool } from '@hookform/devtools';
 const ContactsForm: React.FC = () => {
+  const { isOpen, onClose, onOpen } = useDisclosure();
+  const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
     key: StepEnum.CONTACTS
   });
 
-  const { updateCertificateStep, updatedCertificateStep, wasCertificateStepUpdated } =
-    useUpdateCertificateStep();
+  const { updateCertificateStep, updatedCertificateStep } = useUpdateCertificateStep();
 
   const resolver = yupResolver(contactsValidationSchema);
 
@@ -50,11 +51,21 @@ const ContactsForm: React.FC = () => {
         } as any
       };
       updateCertificateStep(payload);
-      if (wasCertificateStepUpdated) {
-        previousStep(updatedCertificateStep);
-      }
+      previousStep(updatedCertificateStep);
     }
     previousStep(certificateStep);
+  };
+
+  useEffect(() => {
+    if (shouldShowResetFormModal) {
+      onOpen();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldShowResetFormModal]);
+
+  const onCloseModalHandler = () => {
+    setShouldShowResetFormModal(false);
+    onClose();
   };
 
   const handleNextStepClick = () => {
@@ -70,10 +81,15 @@ const ContactsForm: React.FC = () => {
       };
 
       updateCertificateStep(payload);
-      if (wasCertificateStepUpdated) {
-        nextStep(updatedCertificateStep);
-      }
+      nextStep(updatedCertificateStep);
     }
+  };
+  const handleResetForm = () => {
+    setShouldShowResetFormModal(true); // this will show the modal
+  };
+
+  const handleResetClick = () => {
+    setShouldShowResetFormModal(false); // this will close the modal
   };
 
   return (
@@ -106,6 +122,13 @@ const ContactsForm: React.FC = () => {
             <StepButtons
               handlePreviousStep={handlePreviousStepClick}
               handleNextStep={handleNextStepClick}
+              onResetModalClose={handleResetClick}
+              isOpened={isOpen}
+              handleResetForm={handleResetForm}
+              resetFormType={StepEnum.CONTACTS}
+              onClosed={onCloseModalHandler}
+              handleResetClick={handleResetClick}
+              shouldShowResetFormModal={shouldShowResetFormModal}
             />
           </chakra.form>
           {!isProdEnv ? <DevTool control={methods.control} /> : null}

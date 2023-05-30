@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { chakra } from '@chakra-ui/react';
+import React, { useEffect, useState } from 'react';
+import { chakra, useDisclosure } from '@chakra-ui/react';
 import CountryOfRegistration from 'components/CountryOfRegistration';
 import FormLayout from 'layouts/FormLayout';
 import NameIdentifiers from '../NameIdentifiers';
@@ -18,12 +18,13 @@ import { StepsIndexes } from 'constants/steps';
 import { isProdEnv } from 'application/config';
 import { DevTool } from '@hookform/devtools';
 const LegalForm: React.FC = () => {
+  const { isOpen, onClose, onOpen } = useDisclosure();
+  const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
     key: StepEnum.LEGAL
   });
-  const { updateCertificateStep, updatedCertificateStep, wasCertificateStepUpdated } =
-    useUpdateCertificateStep();
+  const { updateCertificateStep, updatedCertificateStep } = useUpdateCertificateStep();
 
   const resolver = yupResolver(legalPersonValidationSchemam);
   const methods = useForm({
@@ -40,6 +41,11 @@ const LegalForm: React.FC = () => {
     updateIsDirty(isDirty, StepsIndexes.LEGAL_PERSON);
   }, [isDirty, updateIsDirty]);
 
+  const onCloseModalHandler = () => {
+    setShouldShowResetFormModal(false);
+    onClose();
+  };
+
   const handleNextStepClick = () => {
     if (!isDirty) {
       nextStep(updatedCertificateStep ?? certificateStep);
@@ -53,11 +59,15 @@ const LegalForm: React.FC = () => {
       };
 
       updateCertificateStep(payload);
-      if (wasCertificateStepUpdated) {
-        nextStep(updatedCertificateStep);
-      }
+      nextStep(updatedCertificateStep);
     }
   };
+  useEffect(() => {
+    if (shouldShowResetFormModal) {
+      onOpen();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldShowResetFormModal]);
 
   const handlePreviousStepClick = () => {
     if (isDirty) {
@@ -71,11 +81,17 @@ const LegalForm: React.FC = () => {
       console.log('[] isDirty  payload', payload);
 
       updateCertificateStep(payload);
-      if (wasCertificateStepUpdated) {
-        previousStep(updatedCertificateStep);
-      }
+      previousStep(updatedCertificateStep);
     }
     previousStep(certificateStep);
+  };
+
+  const handleResetForm = () => {
+    setShouldShowResetFormModal(true); // this will show the modal
+  };
+
+  const handleResetClick = () => {
+    setShouldShowResetFormModal(false); // this will close the modal
   };
 
   return (
@@ -92,6 +108,13 @@ const LegalForm: React.FC = () => {
             <StepButtons
               handlePreviousStep={handlePreviousStepClick}
               handleNextStep={handleNextStepClick}
+              onResetModalClose={handleResetClick}
+              isOpened={isOpen}
+              handleResetForm={handleResetForm}
+              resetFormType={StepEnum.LEGAL}
+              onClosed={onCloseModalHandler}
+              handleResetClick={handleResetClick}
+              shouldShowResetFormModal={shouldShowResetFormModal}
             />
           </chakra.form>
           {!isProdEnv ? <DevTool control={methods.control} /> : null}

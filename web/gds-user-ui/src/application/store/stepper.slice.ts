@@ -86,12 +86,22 @@ const stepperSlice: any = createSlice({
       }
     },
     setStepStatus: (state: any, { payload }: any) => {
-      state?.steps?.map((step: any) => {
-        if (step.key === payload.step) {
-          console.log('payload.status', payload.status);
+      if (state?.steps?.length > 1) {
+        state?.steps?.map((step: any) => {
+          if (step.key === payload.step) {
+            console.log('payload.status', payload.status);
+            step.status = payload.status;
+          }
+        });
+      } else {
+        state?.steps?.map((step: any) => {
+          if (step.key === 1 && payload.status === 'incomplete') {
+            step.status = 'progress';
+          }
+
           step.status = payload.status;
-        }
-      });
+        });
+      }
     },
     setStepMissingFields: (state: any, { payload }: any) => {
       state?.steps?.map((step: any) => {
@@ -134,6 +144,10 @@ const stepperSlice: any = createSlice({
       state.testnetSubmitted = payload.testnetSubmitted;
       state.mainnetSubmitted = payload.mainnetSubmitted;
       state.hasReachReviewStep = !!(payload.currentStep === 6); // default value
+    },
+
+    setStepperSteps: (state: TPayload, { payload }: any) => {
+      state.steps = payload.steps;
     },
     // get current state
     getCurrentState: (state: TPayload) => {
@@ -219,5 +233,6 @@ export const {
   setVaspName,
   setStepMissingFields,
   setIsDirty,
-  getIsDirty
+  getIsDirty,
+  setStepperSteps
 } = stepperSlice.actions;

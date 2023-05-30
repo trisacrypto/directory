@@ -1,4 +1,4 @@
-import { Grid, GridItem, Heading, Text, VStack, chakra } from '@chakra-ui/react';
+import { Grid, GridItem, Heading, Text, VStack, chakra, useDisclosure } from '@chakra-ui/react';
 import OtherJuridictions from 'components/OtherJuridictions';
 import Regulations from 'components/Regulations';
 import SwitchFormControl from 'components/SwitchFormControl';
@@ -8,7 +8,7 @@ import { getCountriesOptions } from 'constants/countries';
 import { getCurrenciesOptions, getFinancialTransfertsPermittedOptions } from 'constants/trixo';
 import FormLayout from 'layouts/FormLayout';
 import { Controller, useForm, FormProvider } from 'react-hook-form';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
@@ -23,6 +23,8 @@ import { StepsIndexes } from 'constants/steps';
 import { isProdEnv } from 'application/config';
 import { DevTool } from '@hookform/devtools';
 const TrixoQuestionnaireForm: React.FC = () => {
+  const { isOpen, onClose, onOpen } = useDisclosure();
+  const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
     key: StepEnum.TRIXO
@@ -51,12 +53,14 @@ const TrixoQuestionnaireForm: React.FC = () => {
   const getComplianceThreshold = watch('trixo.compliance_threshold');
   const getKycThreshold = watch('trixo.kyc_threshold');
 
-  const { updateCertificateStep, updatedCertificateStep, wasCertificateStepUpdated } =
-    useUpdateCertificateStep();
-
+  const { updateCertificateStep, updatedCertificateStep } = useUpdateCertificateStep();
+  const onCloseModalHandler = () => {
+    setShouldShowResetFormModal(false);
+    onClose();
+  };
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep(updatedCertificateStep ?? certificateStep);
+      nextStep(certificateStep);
     } else {
       const payload = {
         step: StepEnum.TRIXO,
@@ -65,12 +69,9 @@ const TrixoQuestionnaireForm: React.FC = () => {
           state: currentState()
         } as any
       };
-      console.log('[] isDirty  payload Trixo', payload);
 
       updateCertificateStep(payload);
-      if (wasCertificateStepUpdated) {
-        nextStep(updatedCertificateStep);
-      }
+      nextStep(updatedCertificateStep);
     }
   };
 
@@ -86,12 +87,18 @@ const TrixoQuestionnaireForm: React.FC = () => {
       console.log('[] isDirty  payload Trixo', payload);
 
       updateCertificateStep(payload);
-      if (wasCertificateStepUpdated) {
-        previousStep(updatedCertificateStep);
-      }
+      previousStep(updatedCertificateStep);
     }
     previousStep(certificateStep);
   };
+
+  useEffect(() => {
+    if (shouldShowResetFormModal) {
+      onOpen();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldShowResetFormModal]);
+
   useEffect(() => {
     updateIsDirty(isDirty, StepsIndexes.TRIXO_QUESTIONNAIRE);
   }, [isDirty, updateIsDirty]);
@@ -139,6 +146,14 @@ const TrixoQuestionnaireForm: React.FC = () => {
       }
     }
   }, [getKycThreshold, getComplianceThreshold, setValue]);
+
+  const handleResetForm = () => {
+    setShouldShowResetFormModal(true); // this will show the modal
+  };
+
+  const handleResetClick = () => {
+    setShouldShowResetFormModal(false); // this will close the modal
+  };
 
   return (
     <FormLayout spacing={5}>
@@ -387,6 +402,13 @@ const TrixoQuestionnaireForm: React.FC = () => {
             <StepButtons
               handleNextStep={handleNextStepClick}
               handlePreviousStep={handlePreviousStepClick}
+              onResetModalClose={handleResetClick}
+              isOpened={isOpen}
+              handleResetForm={handleResetForm}
+              resetFormType={StepEnum.TRIXO}
+              onClosed={onCloseModalHandler}
+              handleResetClick={handleResetClick}
+              shouldShowResetFormModal={shouldShowResetFormModal}
             />
           </chakra.form>
           {!isProdEnv ? <DevTool control={methods.control} /> : null}

@@ -5979,7 +5979,7 @@ exports[`ContactsForm should render 1`] = `
           class="chakra-button emotion-71"
           type="button"
         >
-          Clear & Reset Form
+          Clear & Reset Section
         </button>
       </div>
     </form>

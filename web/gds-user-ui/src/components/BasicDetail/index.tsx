@@ -24,11 +24,12 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
   const toast = useToast();
 
   const { updateStateFromFormValues, setRegistrationValue } = useCertificateStepper();
-  const { isFetchingCertificateStep } = useFetchCertificateStep({
+  const { isFetchingCertificateStep, certificateStep } = useFetchCertificateStep({
     key: StepEnum.BASIC
   });
 
   const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState(false);
+  // create a hook to handle file uploaded
   const handleFileUploaded = (file: any) => {
     // console.log('[handleFileUploaded]', file);
     setIsLoadingDefaultValue(true);
@@ -91,13 +92,13 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
           <FileUploader onReadFileUploaded={handleFileUploaded} />
         </Box>
       </HStack>
-      <Box w={{ base: '100%' }}>
+      <Stack w={{ base: '100%' }}>
         {isLoadingDefaultValue || isFetchingCertificateStep ? (
           <MinusLoader text={'Loading data ...'} />
         ) : (
-          <BasicDetailsForm isLoading={isFetchingCertificateStep} />
+          <BasicDetailsForm isLoading={isFetchingCertificateStep} data={certificateStep?.form} />
         )}
-      </Box>
+      </Stack>
     </Stack>
   );
 };

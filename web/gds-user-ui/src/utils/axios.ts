@@ -41,6 +41,7 @@ axiosInstance.interceptors.request.use(
     Promise.reject(error);
   }
 );
+
 axiosInstance.interceptors.response.use(
   (response) => {
     return response;
@@ -69,6 +70,7 @@ axiosInstance.interceptors.response.use(
           axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
           axiosInstance.defaults.headers.common['X-CSRF-Token'] = csrfToken;
           originalRequest._retry += 1;
+          console.log('retrying request', originalRequest);
           return axiosInstance(originalRequest);
         }
       } else {

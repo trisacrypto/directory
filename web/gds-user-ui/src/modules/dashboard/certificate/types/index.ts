@@ -12,11 +12,21 @@ export interface GetCertificateQuery {
 }
 
 export interface PostCertificateMutation {
-  updateCertificateStep: UseMutateFunction<PostPayloadDTO, unknown, any, unknown>;
+  updateCertificateStep: UseMutateFunction<any, unknown, PostPayloadDTO, unknown>;
   updatedCertificateStep: any;
   hasCertificateStepFailed: boolean;
   wasCertificateStepUpdated: boolean;
   isUpdatingCertificateStep: boolean;
+  error: any;
+  reset(): void;
+}
+
+export interface DeleteCertificateMutation {
+  deleteCertificateStep: UseMutateFunction<any, unknown, PayloadDTO, unknown>;
+  deletedCertificateStep: any;
+  hasCertificateStepFailed: boolean;
+  wasCertificateStepDeleted: boolean;
+  isDeletingCertificateStep: boolean;
   error: any;
   reset(): void;
 }
