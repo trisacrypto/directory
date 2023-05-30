@@ -60,4 +60,5 @@ export default defineConfig({
     html: false,
     json: true,
   },
+  video: false,
 });
