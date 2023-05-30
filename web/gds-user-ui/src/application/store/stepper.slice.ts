@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import { createSlice } from '@reduxjs/toolkit';
-import { LSTATUS } from 'components/RegistrationForm/CertificateStepLabel';
 
 export type TStep = {
   status: string;
@@ -96,8 +95,8 @@ const stepperSlice: any = createSlice({
         });
       } else {
         state?.steps?.map((step: any) => {
-          if (step.key === 1 && payload.status === LSTATUS.INCOMPLETE) {
-            step.status = LSTATUS.PROGRESS;
+          if (step.key === 1 && payload.status === 'incomplete') {
+            step.status = 'progress';
           }
 
           step.status = payload.status;

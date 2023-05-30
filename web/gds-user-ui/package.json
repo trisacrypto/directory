@@ -101,7 +101,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "yarn precommit "
+      "pre-commit": "yarn precommit && yarn test --silent"
     }
   },
   "eslintConfig": {
