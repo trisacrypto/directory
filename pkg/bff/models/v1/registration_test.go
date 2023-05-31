@@ -459,6 +459,8 @@ func TestValidateContacts(t *testing.T) {
 		{nil, contact, nil, contact, nil},
 		// Technical and legal provided is valid
 		{contact, nil, contact, nil, nil},
+		// Missing phone number for technical contact is valid
+		{&pb.Contact{Name: contact.Name, Email: contact.Email}, nil, contact, nil, nil},
 		// Providing all contacts is valid
 		{contact, contact, contact, contact, nil},
 	}
