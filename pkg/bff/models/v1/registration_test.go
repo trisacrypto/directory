@@ -138,6 +138,38 @@ func TestValidateLegalPerson(t *testing.T) {
 				{Field: FieldEntity, Err: "one or more legal person name identifiers is required"},
 			},
 		},
+		// Test C9 constraint is ignored but still return an error for missing RA
+		{
+			&ivms101.LegalPerson{
+				Name: &ivms101.LegalPersonName{
+					NameIdentifiers: []*ivms101.LegalPersonNameId{
+						{
+							LegalPersonName:               "Wayne Enterprises, LTD",
+							LegalPersonNameIdentifierType: ivms101.LegalPersonLegal,
+						},
+					},
+				},
+				GeographicAddresses: []*ivms101.Address{
+					{
+						AddressType: ivms101.AddressTypeBusiness,
+						AddressLine: []string{
+							"1 Wayne Tower",
+							"Gotham City, NJ 08302",
+						},
+						Country: "US",
+					},
+				},
+				NationalIdentification: &ivms101.NationalIdentification{
+					NationalIdentifier:     "ZGWO00PIA5JMETFLPG72",
+					NationalIdentifierType: ivms101.NationalIdentifierLEIX,
+					RegistrationAuthority:  "RA777777",
+				},
+				CountryOfRegistration: "US",
+			},
+			ValidationErrors{
+				{Field: FieldEntityNationalIdentificationRA, Err: ErrNoRAForLEIX.Error()},
+			},
+		},
 		{
 			&ivms101.LegalPerson{
 				Name: &ivms101.LegalPersonName{
@@ -245,7 +277,6 @@ func TestValidateTRIXO(t *testing.T) {
 			{Field: FieldTRIXOOtherJurisdictionsCountry, Err: ErrMissingField.Error(), Index: 1},
 			{Field: FieldTRIXOOtherJurisdictionsRegulatorName, Err: ErrMissingField.Error(), Index: 2},
 			{Field: FieldTRIXOOtherJurisdictionsRegulatorName, Err: ErrMissingField.Error(), Index: 3},
-			{Field: FieldTRIXOOtherJurisdictionsLicenseNumber, Err: ErrMissingField.Error(), Index: 3},
 			{Field: FieldTRIXOOtherJurisdictionsCountry, Err: ErrInvalidCountry.Error(), Index: 4},
 		}},
 		{&pb.TRIXOQuestionnaire{
@@ -456,30 +487,32 @@ func TestValidateContacts(t *testing.T) {
 // Test validating a single contact
 func TestValidateContact(t *testing.T) {
 	testCases := []struct {
-		contact *pb.Contact
-		errs    ValidationErrors
+		contactField string
+		contact      *pb.Contact
+		errs         ValidationErrors
 	}{
-		{&pb.Contact{Name: "L", Email: " leopold.wentzel@gmail.com ", Phone: "555-867-5309"}, ValidationErrors{
-			{Field: "admin.name", Err: ErrTooShort.Error()},
+		{FieldContactsAdministrative, &pb.Contact{Name: "L", Email: " leopold.wentzel@gmail.com ", Phone: "555-867-5309"}, ValidationErrors{
+			{Field: FieldContactsAdministrativeName, Err: ErrTooShort.Error()},
 		}},
-		{&pb.Contact{Email: "not an email", Phone: " 555-867-5309 "}, ValidationErrors{
-			{Field: "admin.name", Err: ErrMissingField.Error()},
-			{Field: "admin.email", Err: ErrInvalidEmail.Error()},
+		{FieldContactsAdministrative, &pb.Contact{Email: "not an email", Phone: " 555-867-5309 "}, ValidationErrors{
+			{Field: FieldContactsAdministrativeName, Err: ErrMissingField.Error()},
+			{Field: FieldContactsAdministrativeEmail, Err: ErrInvalidEmail.Error()},
 		}},
-		{&pb.Contact{Phone: "555-867-5309"}, ValidationErrors{
-			{Field: "admin.name", Err: ErrMissingField.Error()},
-			{Field: "admin.email", Err: ErrMissingField.Error()},
+		{FieldContactsAdministrative, &pb.Contact{Phone: "555-867-5309"}, ValidationErrors{
+			{Field: FieldContactsAdministrativeName, Err: ErrMissingField.Error()},
+			{Field: FieldContactsAdministrativeEmail, Err: ErrMissingField.Error()},
 		}},
-		{&pb.Contact{}, ValidationErrors{
-			{Field: "admin.name", Err: ErrMissingField.Error()},
-			{Field: "admin.email", Err: ErrMissingField.Error()},
-			{Field: "admin.phone", Err: ErrMissingField.Error()},
+		{FieldContactsAdministrative, &pb.Contact{}, ValidationErrors{
+			{Field: FieldContactsAdministrativeName, Err: ErrMissingField.Error()},
+			{Field: FieldContactsAdministrativeEmail, Err: ErrMissingField.Error()},
+			{Field: FieldContactsAdministrativePhone, Err: ErrMissingField.Error()},
 		}},
-		{&pb.Contact{Name: "Leopold Wentzel", Email: "leopold.wentzel@gmail.com", Phone: "555-867-5309"}, nil},
+		{FieldContactsAdministrative, &pb.Contact{Name: "Leopold Wentzel", Email: "leopold.wentzel@gmail.com", Phone: "555-867-5309"}, nil},
+		{FieldContactsTechnical, &pb.Contact{Name: "Lt. Commander Data", Email: "data@enterpriseD.com"}, nil},
 	}
 
 	for i, tc := range testCases {
-		err := ValidateContact(tc.contact, "admin")
+		err := ValidateContact(tc.contact, tc.contactField)
 		if tc.errs == nil {
 			require.NoError(t, err, "test case %d failed", i)
 		} else {
