@@ -5,6 +5,7 @@ import SelectFormControl from 'components/ui/SelectFormControl';
 import { getCountriesOptions } from 'constants/countries';
 import {
   getNationalIdentificationOptions,
+  disabledIdentifiers,
 } from 'constants/national-identification';
 import FormLayout from 'layouts/FormLayout';
 import { Controller, useFormContext } from 'react-hook-form';
@@ -92,10 +93,8 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
 
 useEffect(() => {
     if (NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX') {
-      setValue('entity.national_identification.registration_authority', '');
-      setValue('entity.national_identification.country_of_issue', '');
+      setValue('entity.national_identification.registration_authority', 'N/A');
       clearErrors('entity.national_identification.registration_authority');
-      clearErrors('entity.national_identification.country_of_issue');
 
       inputRegRef?.current?.clear();
     }
@@ -159,9 +158,9 @@ useEffect(() => {
           />
         )}
       />
-      {NationalIdentificationType !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX' && (
+      {disabledIdentifiers.includes(NationalIdentificationType) && (
         <>
-        <Controller
+          <Controller
             control={control}
             name="entity.national_identification.country_of_issue"
             render={({ field }) => (
@@ -171,15 +170,20 @@ useEffect(() => {
                 value={countries.find((option) => option.value === field.value)}
                 onChange={(newValue: any) => field.onChange(newValue.value)}
                 isInvalid={!!(errors?.entity as any)?.national_identification?.country_of_issue}
-                isDisabled={NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'}
+                isDisabled={!disabledIdentifiers.includes(NationalIdentificationType)}
                 label={t`Country of Issue`}
                 controlId="country_of_issue"
                 formHelperText={
-                  (errors?.entity as any)?.national_identification?.country_of_issue?.message
+                  (errors?.entity as any)?.national_identification?.country_of_issue?.message ||
+                  t`Country of Issue is reserved for National Identifiers of Natural Persons`
                 }
               />
             )}
           />
+        </>
+      )}
+      {NationalIdentificationType !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX' && (
+        <>
           <Controller
             control={control}
             name="entity.national_identification.registration_authority"
