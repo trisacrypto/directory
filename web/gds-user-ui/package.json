@@ -72,6 +72,8 @@
     "cy:install": "cypress install",
     "cy:run": "cypress run",
     "cy:open": "cypress open",
+    "cy:report": "cypress run --reporter mochawesome --reporter-options reportDir=cypress/reports,overwrite=false,html=false,json=true",
+    "cy:mocha": "npx mochawesome-merge cypress/reports/*.json > mochawesome/reports/mochawesome.json && npx marge cypress/reports/mochawesome.json",
     "start": "react-scripts start",
     "build": "yarn compile && react-scripts build",
     "test": "react-scripts test -u --coverage --watchAll=false --passWithNoTests",
@@ -109,14 +111,16 @@
       "react-app",
       "react-app/jest"
     ],
-    "overrides": [{
-      "files": [
-        "**/*.stories.*"
-      ],
-      "rules": {
-        "import/no-anonymous-default-export": "off"
+    "overrides": [
+      {
+        "files": [
+          "**/*.stories.*"
+        ],
+        "rules": {
+          "import/no-anonymous-default-export": "off"
+        }
       }
-    }]
+    ]
   },
   "browserslist": {
     "production": [
@@ -132,6 +136,8 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.0",
+    "@badeball/cypress-cucumber-preprocessor": "^16.0.3",
+    "@cypress/webpack-preprocessor": "^5.17.1",
     "@faker-js/faker": "^7.2.0",
     "@hookform/devtools": "^4.1.0",
     "@lingui/cli": "^3.13.3",
@@ -148,6 +154,7 @@
     "@storybook/react": "^6.5.10",
     "@storybook/testing-library": "^0.0.13",
     "@storybook/theming": "^6.5.10",
+    "@testing-library/cypress": "^9.0.0",
     "@types/auth0-js": "^9.14.6",
     "@types/react-lazy-load-image-component": "^1.5.2",
     "@types/react-router-dom": "^5.3.3",
@@ -157,7 +164,7 @@
     "@typescript-eslint/parser": "^5.13.0",
     "babel-core": "^7.0.0-bridge.0",
     "babel-plugin-polyfill-corejs2": "^0.3.2",
-    "cypress": "^9.6.0",
+    "cypress": "12.12.0",
     "eslint": "^8.10.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-standard": "^16.0.3",
@@ -170,9 +177,13 @@
     "jest-localstorage-mock": "^2.4.21",
     "jest-mock-axios": "^4.7.0-beta",
     "lint-staged": "^13.0.4",
+    "mochawesome": "^7.1.3",
+    "mochawesome-merge": "^4.3.0",
+    "mochawesome-report-generator": "^6.2.0",
     "nock": "^13.2.9",
     "prettier": "^2.8.0",
     "redux-mock-store": "^1.5.4",
+    "ts-loader": "^9.4.3",
     "webpack": "^5.69.1"
   },
   "jest": {
