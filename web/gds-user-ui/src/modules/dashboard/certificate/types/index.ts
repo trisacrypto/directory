@@ -22,7 +22,7 @@ export interface PostCertificateMutation {
 }
 
 export interface DeleteCertificateMutation {
-  deleteCertificateStep: UseMutateFunction<any, unknown, PayloadDTO, unknown>;
+  deleteCertificateStep: UseMutateFunction<any, unknown, DeletePayloadDTO, unknown>;
   deletedCertificateStep: any;
   hasCertificateStepFailed: boolean;
   wasCertificateStepDeleted: boolean;
@@ -33,6 +33,11 @@ export interface DeleteCertificateMutation {
 
 export type PayloadDTO = {
   key: StepperType;
+};
+
+export type DeletePayloadDTO = {
+  step: StepperType;
+  form?: any;
 };
 
 export type PostPayloadDTO = {

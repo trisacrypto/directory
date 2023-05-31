@@ -23,7 +23,8 @@ describe('<BasicDetailsForm />', () => {
       organization_name: 'Google',
       established_on: '2021-01-01'
     };
-    render(<BasicDetailsForm data={mockData} />);
+    const mockHandleSubmit = jest.fn();
+    render(<BasicDetailsForm data={mockData} onNextStepClick={mockHandleSubmit} />);
 
     // organization_name
     const organizationName = screen.getByRole('textbox', {

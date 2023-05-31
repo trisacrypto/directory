@@ -38,7 +38,7 @@ const ConfirmationResetForm = (props: any) => {
 
   const handleResetBtn = () => {
     deleteCertificateStep({
-      key: props.step as StepperType
+      step: props.step as StepperType
     });
 
     // resetForm();
