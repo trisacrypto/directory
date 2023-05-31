@@ -7,9 +7,22 @@ import { t } from '@lingui/macro';
 import MetricsTabs from 'components/MetricsTabs';
 import TrisaOrganizationProfile from 'components/TrisaOrganizationProfile';
 import { APP_PATH } from 'utils/constants';
-
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
+import useCertificateStepper from 'hooks/useCertificateStepper';
+import { StepEnum } from 'types/enums';
 const Overview: React.FC = () => {
+  const { certificateStep, wasCertificateStepFetched } = useFetchCertificateStep({
+    key: StepEnum.ALL
+  });
+  const { setInitialState } = useCertificateStepper();
   const navigate = useNavigate();
+  // we need to add a default stepper
+
+  if (wasCertificateStepFetched) {
+    if (certificateStep) {
+      setInitialState(certificateStep?.form);
+    }
+  }
 
   return (
     <>
