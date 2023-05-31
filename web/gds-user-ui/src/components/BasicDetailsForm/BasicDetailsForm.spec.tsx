@@ -2,12 +2,29 @@ import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import { render, screen } from 'utils/test-utils';
 import BasicDetailsForm from '.';
 
+jest.mock('@chakra-ui/react', () => ({
+  ...jest.requireActual('@chakra-ui/react'),
+  useDisclosure: jest.fn(() => ({
+    isOpen: false,
+    onClose: jest.fn(),
+    onOpen: jest.fn()
+  }))
+}));
+
 describe('<BasicDetailsForm />', () => {
   beforeEach(() => {
     dynamicActivate('en');
   });
   it('should render correctly', () => {
-    render(<BasicDetailsForm />);
+    const mockData = {
+      website: 'https://www.google.com',
+      vasp_categories: ['VASP'],
+      business_category: 'Crypto Exchange',
+      organization_name: 'Google',
+      established_on: '2021-01-01'
+    };
+    const mockHandleSubmit = jest.fn();
+    render(<BasicDetailsForm data={mockData} onNextStepClick={mockHandleSubmit} />);
 
     // organization_name
     const organizationName = screen.getByRole('textbox', {

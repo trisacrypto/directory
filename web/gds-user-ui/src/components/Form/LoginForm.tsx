@@ -47,6 +47,7 @@ function LoginForm(props: LoginFormProps) {
       <Stack spacing={4}>
         <InputFormControl
           data-testid="email"
+          data-cy="email"
           controlId="email"
           placeholder={t`Email Address`}
           type="email"
@@ -57,6 +58,7 @@ function LoginForm(props: LoginFormProps) {
         />
         <InputFormControl
           data-testid="password"
+          data-cy="password"
           controlId="password"
           size="lg"
           placeholder={t`Password`}
@@ -75,6 +77,7 @@ function LoginForm(props: LoginFormProps) {
           alignItems="center">
           <Button
             data-testid="login-btn"
+            data-cy="login-btn"
             color={'white'}
             isLoading={props.isLoading}
             px={2}

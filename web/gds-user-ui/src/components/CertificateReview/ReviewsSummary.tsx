@@ -1,5 +1,14 @@
-import React, { useState } from 'react';
-import { Stack, HStack, Heading, Text, Box, Button, useColorModeValue } from '@chakra-ui/react';
+import React, { useState, useEffect } from 'react';
+import {
+  Stack,
+  HStack,
+  Heading,
+  Text,
+  Box,
+  Button,
+  useColorModeValue,
+  useDisclosure
+} from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import FormLayout from 'layouts/FormLayout';
 import BasicDetailsReview from './BasicDetailsReview';
@@ -8,12 +17,23 @@ import LegalPersonReview from './LegalPersonReview';
 import TrisaImplementationReview from './TrisaImplementationReview';
 import TrixoReview from './TrixoReview';
 import { CgExport } from 'react-icons/cg';
-
+import StepButtons from 'components/StepsButtons';
 import { downloadRegistrationData } from 'modules/dashboard/registration/utils';
 import { handleError } from 'utils/utils';
+import useCertificateStepper from 'hooks/useCertificateStepper';
+import { StepEnum } from 'types/enums';
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 
 const ReviewsSummary: React.FC = () => {
+  const { isOpen, onClose, onOpen } = useDisclosure();
+  const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
+  const { previousStep, updateHasReachSubmitStep, updateCurrentStepState } =
+    useCertificateStepper();
   const [isLoadingExport, setIsLoadingExport] = useState(false);
+  const { certificateStep } = useFetchCertificateStep({
+    key: StepEnum.ALL
+  });
+
   const handleExport = () => {
     const downloadData = async () => {
       try {
@@ -26,6 +46,37 @@ const ReviewsSummary: React.FC = () => {
       }
     };
     downloadData();
+  };
+
+  const handleNextStep = () => {
+    updateHasReachSubmitStep(true);
+  };
+
+  const handlePreviousStep = () => {
+    previousStep();
+  };
+
+  const isNextButtonDisabled = certificateStep?.errors?.length > 0;
+
+  const handleResetForm = () => {
+    setShouldShowResetFormModal(true); // this will show the modal
+  };
+
+  const handleResetClick = () => {
+    setShouldShowResetFormModal(false); // this will close the modal
+  };
+
+  useEffect(() => {
+    if (shouldShowResetFormModal) {
+      onOpen();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldShowResetFormModal]);
+
+  const onCloseModalHandler = () => {
+    setShouldShowResetFormModal(false);
+    onClose();
+    updateCurrentStepState(StepEnum.BASIC);
   };
 
   return (
@@ -62,6 +113,19 @@ const ReviewsSummary: React.FC = () => {
       <ContactsReview />
       <TrisaImplementationReview />
       <TrixoReview />
+
+      <StepButtons
+        handleNextStep={handleNextStep}
+        handlePreviousStep={handlePreviousStep}
+        isNextButtonDisabled={isNextButtonDisabled}
+        onResetModalClose={handleResetClick}
+        isOpened={isOpen}
+        handleResetForm={handleResetForm}
+        resetFormType={StepEnum.ALL}
+        onClosed={onCloseModalHandler}
+        handleResetClick={handleResetClick}
+        shouldShowResetFormModal={shouldShowResetFormModal}
+      />
     </Stack>
   );
 };

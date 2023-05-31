@@ -1,41 +1,81 @@
-import { Button } from '@chakra-ui/react';
+import { Button, Stack } from '@chakra-ui/react';
+import { StepEnum } from 'types/enums';
 import { t, Trans } from '@lingui/macro';
-
+import ConfirmationResetFormModal from 'components/Modal/ConfirmationResetFormModal';
 type StepButtonsProps = {
-  handlePreviousStep: () => void;
+  handlePreviousStep?: () => void;
   handleNextStep?: () => void;
-  currentStep: number;
-  isCurrentStepLastStep: boolean;
-  handleResetForm: () => void;
-  isDefaultValue: () => boolean;
+  handleResetClick?: () => void;
+  currentStep?: number;
+  isCurrentStepLastStep?: boolean;
+  handleResetForm?: () => void;
+  isDefaultValue?: () => boolean;
+  isFirstStep?: boolean;
+  isOpened?: boolean;
+  onClosed?: () => void;
+  isNextButtonDisabled?: boolean;
+  resetFormType?: string;
+  onResetModalClose?: () => void;
+  shouldShowResetFormModal?: boolean;
 };
 
 function StepButtons({
   handlePreviousStep,
-  currentStep,
+  isFirstStep = false,
+  isNextButtonDisabled = false,
   handleNextStep,
   isCurrentStepLastStep,
   handleResetForm,
-  isDefaultValue
+  shouldShowResetFormModal,
+  resetFormType,
+  isOpened,
+  onClosed,
+  onResetModalClose,
+  isDefaultValue = () => false
 }: StepButtonsProps) {
-  const isFirstStep = currentStep === 1;
+  // const [isResetModalOpen, setIsResetModalOpen] = useState<boolean>(false);
+  // const onChangeModalState = (value: boolean) => {
+  //   setIsResetModalOpen(value);
+  // };
   return (
     <>
-      <Button onClick={handlePreviousStep} isDisabled={isFirstStep}>
-        {isCurrentStepLastStep ? t`Previous` : t`Save & Previous`}
-      </Button>
-      {currentStep === 6 ? (
-        <Button onClick={handleNextStep} variant="secondary">
+      <Stack
+        width="100%"
+        direction={'row'}
+        spacing={8}
+        justifyContent={'center'}
+        py={6}
+        wrap="wrap"
+        data-testid="step-buttons"
+        rowGap={2}>
+        <Button onClick={handlePreviousStep} isDisabled={isFirstStep}>
+          {isCurrentStepLastStep ? t`Previous` : t`Save & Previous`}
+        </Button>
+
+        <Button onClick={handleNextStep} variant="secondary" isDisabled={isNextButtonDisabled}>
           {t`Save & Next`}
         </Button>
-      ) : (
-        <Button type="submit" variant="secondary">
-          {isCurrentStepLastStep ? t`Next` : t`Save & Next`}
+
+        <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
+          {resetFormType !== StepEnum.ALL ? (
+            <Trans>
+              <Trans>Clear & Reset Section</Trans>
+            </Trans>
+          ) : (
+            <Trans>Clear & Reset Form</Trans>
+          )}
         </Button>
+      </Stack>
+
+      {shouldShowResetFormModal && (
+        <ConfirmationResetFormModal
+          isOpen={isOpened}
+          onClose={onClosed}
+          step={resetFormType}
+          onReset={onResetModalClose}
+          resetType={resetFormType}
+        />
       )}
-      <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
-        <Trans id="Clear & Reset Form">Clear & Reset Form</Trans>
-      </Button>
     </>
   );
 }

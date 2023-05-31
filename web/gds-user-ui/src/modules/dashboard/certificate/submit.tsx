@@ -1,5 +1,5 @@
 import { SimpleDashboardLayout } from 'layouts';
-import CertificateStepLabel from 'components/TestnetProgress/CertificateStepLabel';
+import CertificateStepLabel from 'components/RegistrationForm/CertificateStepLabel';
 import { lazy, Suspense } from 'react';
 import Loader from 'components/Loader';
 

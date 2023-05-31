@@ -1,0 +1,483 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TrisaImplementation should render 1`] = `
+.emotion-0 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: start;
+  -webkit-box-align: start;
+  -ms-flex-align: start;
+  align-items: start;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  background: var(--chakra-colors-white);
+  border: 2px solid #E5EDF1;
+  border-radius: 10px;
+  padding: var(--chakra-space-3);
+}
+
+.emotion-0>*:not(style)~*:not(style) {
+  margin-top: var(--chakra-space-3-5);
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+@media screen and (min-width: 48em) {
+  .emotion-0 {
+    padding: var(--chakra-space-9);
+  }
+}
+
+.emotion-3 {
+  font-family: var(--chakra-fonts-heading);
+  font-weight: var(--chakra-fontWeights-bold);
+  font-size: var(--chakra-fontSizes-xl);
+  line-height: 1.2;
+}
+
+.emotion-4 {
+  width: 100%;
+  position: relative;
+}
+
+.emotion-5 {
+  display: block;
+  text-align: start;
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-margin-end: var(--chakra-space-3);
+  margin-inline-end: var(--chakra-space-3);
+  margin-bottom: var(--chakra-space-2);
+  font-weight: var(--chakra-fontWeights-medium);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  opacity: 1;
+}
+
+.emotion-5[disabled],
+.emotion-5[aria-disabled=true],
+.emotion-5[data-disabled] {
+  opacity: 0.4;
+}
+
+.emotion-6 {
+  width: 100%;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  position: relative;
+}
+
+.emotion-7 {
+  width: 100%;
+  min-width: 0px;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  position: relative;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  height: var(--chakra-sizes-10);
+  border-radius: 0px;
+  border: 1px solid;
+  border-color: inherit;
+  background: #E3EBEF;
+}
+
+.emotion-7:hover,
+.emotion-7[data-hover] {
+  border-color: var(--chakra-colors-gray-300);
+}
+
+.emotion-7[aria-readonly=true],
+.emotion-7[readonly],
+.emotion-7[data-readonly] {
+  box-shadow: none!important;
+  -webkit-user-select: all;
+  -moz-user-select: all;
+  -ms-user-select: all;
+  user-select: all;
+}
+
+.emotion-7[disabled],
+.emotion-7[aria-disabled=true],
+.emotion-7[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.emotion-7[aria-invalid=true],
+.emotion-7[data-invalid] {
+  border-color: #E53E3E;
+  box-shadow: 0 0 0 1px #E53E3E;
+}
+
+.emotion-7:focus,
+.emotion-7[data-focus] {
+  z-index: 1;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 1px #3182ce;
+}
+
+.emotion-8 {
+  margin-top: var(--chakra-space-2);
+  color: var(--chakra-colors-gray-500);
+  line-height: var(--chakra-lineHeights-normal);
+  font-size: var(--chakra-fontSizes-sm);
+}
+
+.emotion-26 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-box-flex-wrap: wrap;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  width: 100%;
+  padding-top: var(--chakra-space-6);
+  padding-bottom: var(--chakra-space-6);
+  row-gap: var(--chakra-space-2);
+}
+
+.emotion-26>*:not(style)~*:not(style) {
+  margin-top: 0px;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: var(--chakra-space-8);
+  margin-inline-start: var(--chakra-space-8);
+}
+
+.emotion-27 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: var(--chakra-radii-md);
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: var(--chakra-sizes-10);
+  min-width: var(--chakra-sizes-10);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  background: var(--chakra-colors-gray-100);
+}
+
+.emotion-27:focus,
+.emotion-27[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-27[disabled],
+.emotion-27[aria-disabled=true],
+.emotion-27[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-27:hover,
+.emotion-27[data-hover] {
+  background: var(--chakra-colors-gray-200);
+}
+
+.emotion-27:hover[disabled],
+.emotion-27[data-hover][disabled],
+.emotion-27:hover[aria-disabled=true],
+.emotion-27[data-hover][aria-disabled=true],
+.emotion-27:hover[data-disabled],
+.emotion-27[data-hover][data-disabled] {
+  background: var(--chakra-colors-gray-100);
+}
+
+.emotion-27:active,
+.emotion-27[data-active] {
+  background: var(--chakra-colors-gray-300);
+}
+
+.emotion-28 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: var(--chakra-radii-md);
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: var(--chakra-sizes-10);
+  min-width: var(--chakra-sizes-10);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+}
+
+.emotion-28:focus,
+.emotion-28[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-28[disabled],
+.emotion-28[aria-disabled=true],
+.emotion-28[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-28:hover[disabled],
+.emotion-28[data-hover][disabled],
+.emotion-28:hover[aria-disabled=true],
+.emotion-28[data-hover][aria-disabled=true],
+.emotion-28:hover[data-disabled],
+.emotion-28[data-hover][data-disabled] {
+  background: initial;
+}
+
+<div>
+  <div
+    class="chakra-stack emotion-0"
+  >
+    <form
+      class="emotion-1"
+      data-testid="trisa-implementation-form"
+    >
+      <div
+        class="chakra-stack emotion-0"
+      >
+        <h2
+          class="chakra-heading emotion-3"
+        >
+          TRISA Endpoint: TestNet
+        </h2>
+        <div
+          class="chakra-form-control emotion-4"
+          role="group"
+        >
+          <label
+            class="chakra-form__label emotion-5"
+            for="trisaEndpoint"
+            id="field-1-label"
+          >
+            TRISA Endpoint
+          </label>
+          <div
+            class="chakra-input__group emotion-6"
+          >
+            <input
+              aria-describedby="field-1-helptext"
+              class="chakra-input emotion-7"
+              id="trisaEndpoint"
+              name="testnet.endpoint"
+              placeholder="testnet.undefined:443"
+              type="text"
+            />
+          </div>
+          <div
+            class="chakra-form__helper-text emotion-8"
+            id="field-1-helptext"
+          >
+            The address and port of the TRISA endpoint for partner VASPs to connect on via gRPC.
+          </div>
+        </div>
+        <div
+          class="chakra-form-control emotion-4"
+          role="group"
+        >
+          <label
+            class="chakra-form__label emotion-5"
+            for="certificateCommonName"
+            id="field-2-label"
+          >
+            Certificate Common Name
+          </label>
+          <div
+            class="chakra-input__group emotion-6"
+          >
+            <input
+              aria-describedby="field-2-helptext"
+              class="chakra-input emotion-7"
+              id="certificateCommonName"
+              name="testnet.common_name"
+              placeholder="testnet.undefined"
+              type="text"
+            />
+          </div>
+          <div
+            class="chakra-form__helper-text emotion-8"
+            id="field-2-helptext"
+          >
+            The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases.
+          </div>
+        </div>
+      </div>
+      <div
+        class="chakra-stack emotion-0"
+      >
+        <h2
+          class="chakra-heading emotion-3"
+        >
+          TRISA Endpoint: MainNet
+        </h2>
+        <div
+          class="chakra-form-control emotion-4"
+          role="group"
+        >
+          <label
+            class="chakra-form__label emotion-5"
+            for="trisaEndpoint"
+            id="field-3-label"
+          >
+            TRISA Endpoint
+          </label>
+          <div
+            class="chakra-input__group emotion-6"
+          >
+            <input
+              aria-describedby="field-3-helptext"
+              class="chakra-input emotion-7"
+              id="trisaEndpoint"
+              name="mainnet.endpoint"
+              placeholder="trisa.undefined:443"
+              type="text"
+            />
+          </div>
+          <div
+            class="chakra-form__helper-text emotion-8"
+            id="field-3-helptext"
+          >
+            The address and port of the TRISA endpoint for partner VASPs to connect on via gRPC.
+          </div>
+        </div>
+        <div
+          class="chakra-form-control emotion-4"
+          role="group"
+        >
+          <label
+            class="chakra-form__label emotion-5"
+            for="certificateCommonName"
+            id="field-4-label"
+          >
+            Certificate Common Name
+          </label>
+          <div
+            class="chakra-input__group emotion-6"
+          >
+            <input
+              aria-describedby="field-4-helptext"
+              class="chakra-input emotion-7"
+              id="certificateCommonName"
+              name="mainnet.common_name"
+              placeholder="trisa.undefined"
+              type="text"
+            />
+          </div>
+          <div
+            class="chakra-form__helper-text emotion-8"
+            id="field-4-helptext"
+          >
+            The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases.
+          </div>
+        </div>
+      </div>
+      <div
+        class="chakra-stack emotion-26"
+        data-testid="step-buttons"
+      >
+        <button
+          class="chakra-button emotion-27"
+          type="button"
+        >
+          Save & Previous
+        </button>
+        <button
+          class="chakra-button emotion-28"
+          type="button"
+        >
+          Save & Next
+        </button>
+        <button
+          class="chakra-button emotion-27"
+          type="button"
+        >
+          Clear & Reset Section
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+`;

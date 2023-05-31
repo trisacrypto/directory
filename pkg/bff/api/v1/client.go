@@ -346,14 +346,22 @@ func (s *APIv1) DeleteCollaborator(ctx context.Context, id string) (err error) {
 }
 
 // Load registration form data from the server to populate the front-end form.
-func (s *APIv1) LoadRegistrationForm(ctx context.Context) (form *models.RegistrationForm, err error) {
+func (s *APIv1) LoadRegistrationForm(ctx context.Context, in *RegistrationFormParams) (form *RegistrationForm, err error) {
+	// Create the query params from the input
+	var params url.Values
+	if in != nil {
+		if params, err = query.Values(in); err != nil {
+			return nil, fmt.Errorf("could not encode query params: %s", err)
+		}
+	}
+
 	// Make the HTTP request
 	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/register", nil, nil); err != nil {
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/register", nil, &params); err != nil {
 		return nil, err
 	}
 
-	form = &models.RegistrationForm{}
+	form = &RegistrationForm{}
 	if _, err = s.Do(req, form, true); err != nil {
 		return nil, err
 	}
@@ -361,7 +369,7 @@ func (s *APIv1) LoadRegistrationForm(ctx context.Context) (form *models.Registra
 }
 
 // Save registration form data to the server in preparation for submitting it.
-func (s *APIv1) SaveRegistrationForm(ctx context.Context, form *models.RegistrationForm) (out *models.RegistrationForm, err error) {
+func (s *APIv1) SaveRegistrationForm(ctx context.Context, form *RegistrationForm) (out *RegistrationForm, err error) {
 	// Make the HTTP request
 	var req *http.Request
 	if req, err = s.NewRequest(ctx, http.MethodPut, "/v1/register", form, nil); err != nil {
@@ -370,7 +378,7 @@ func (s *APIv1) SaveRegistrationForm(ctx context.Context, form *models.Registrat
 
 	// Execute the request and get a response
 	var rep *http.Response
-	out = &models.RegistrationForm{}
+	out = &RegistrationForm{}
 	if rep, err = s.Do(req, out, true); err != nil {
 		return nil, err
 	}
@@ -383,7 +391,30 @@ func (s *APIv1) SaveRegistrationForm(ctx context.Context, form *models.Registrat
 	return out, nil
 }
 
-//  Submit the registration form to the specified network (testnet or mainnet).
+// Reset the registration form on the server to its default values.
+func (s *APIv1) ResetRegistrationForm(ctx context.Context, in *RegistrationFormParams) (form *RegistrationForm, err error) {
+	// Create the query params from the input
+	var params url.Values
+	if in != nil {
+		if params, err = query.Values(in); err != nil {
+			return nil, fmt.Errorf("could not encode query params: %s", err)
+		}
+	}
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodDelete, "/v1/register", nil, &params); err != nil {
+		return nil, err
+	}
+
+	form = &RegistrationForm{}
+	if _, err = s.Do(req, form, true); err != nil {
+		return nil, err
+	}
+	return form, nil
+}
+
+// Submit the registration form to the specified network (testnet or mainnet).
 func (s *APIv1) SubmitRegistration(ctx context.Context, network string) (out *RegisterReply, err error) {
 	// network is required for the endpoint
 	if network == "" {

@@ -1,45 +1,27 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import React from 'react';
 import TrisaImplementationReviewDataTable from './TrisaImplementationReviewDataTable';
 import CertificateReviewHeader from './CertificateReviewHeader';
 import CertificateReviewLayout from './CertificateReviewLayout';
 import { t } from '@lingui/macro';
-import { getCurrentState } from 'application/store/selectors/stepper';
-// import useGetStepStatusByKey from './useGetStepStatusByKey';
 import RequiredElementMissing from 'components/ErrorComponent/RequiredElementMissing';
-import { trisaImplementationValidationSchema } from 'modules/dashboard/certificate/lib/trisaImplementationValidationSchema';
+import { StepEnum } from 'types/enums';
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
+
 const TrisaImplementationReview = () => {
-  const currentStateValue = useSelector(getCurrentState);
-  const { data: trisaData } = currentStateValue;
+  const { certificateStep } = useFetchCertificateStep({
+    key: StepEnum.TRISA
+  });
 
-  const [isValid, setIsValid] = useState(false);
-  const trisa = useMemo(() => {
-    return {
-      mainnet: trisaData.mainnet,
-      testnet: trisaData.testnet
-    };
-  }, [trisaData.mainnet, trisaData.testnet]);
-
-  useEffect(() => {
-    const validate = async () => {
-      try {
-        const test = await trisaImplementationValidationSchema.validate(trisa, {
-          abortEarly: false
-        });
-        console.log('[TrisaImplementationReview] test', test);
-        setIsValid(true);
-      } catch (error) {
-        setIsValid(false);
-      }
-    };
-    validate();
-  }, [trisa]);
+  const hasErrors = certificateStep?.errors;
 
   return (
     <CertificateReviewLayout>
       <CertificateReviewHeader step={4} title={t`Section 4: TRISA Implementation`} />
-      {!isValid ? <RequiredElementMissing /> : false}
-      <TrisaImplementationReviewDataTable mainnet={trisa.mainnet} testnet={trisa.testnet} />
+      {hasErrors ? <RequiredElementMissing elementKey={4} errorFields={hasErrors} /> : false}
+      <TrisaImplementationReviewDataTable
+        mainnet={certificateStep?.form?.mainnet}
+        testnet={certificateStep?.form?.testnet}
+      />
     </CertificateReviewLayout>
   );
 };

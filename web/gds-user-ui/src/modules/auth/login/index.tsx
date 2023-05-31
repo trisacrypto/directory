@@ -6,11 +6,12 @@ import useCustomAuth0 from 'hooks/useCustomAuth0';
 import useSearchParams from 'hooks/useQueryParams';
 import * as Sentry from '@sentry/browser';
 import useCustomToast from 'hooks/useCustomToast';
+import useCertificateStepper from 'hooks/useCertificateStepper';
 const StartPage: React.FC = () => {
   const [isLoading, setIsloading] = useState(false);
   const [error, setError] = useState('');
   const { auth0SignIn, auth0SignWithSocial } = useCustomAuth0();
-
+  const { clearStepperState } = useCertificateStepper();
   const { loginUser } = useAuth();
   const { q, error_description, orgid } = useSearchParams();
   const toast = useCustomToast();
@@ -43,6 +44,13 @@ const StartPage: React.FC = () => {
 
   // clean cookies
 
+  useEffect(() => {
+    if (isLoading) {
+      clearStepperState();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading]);
+
   const handleSocialAuth = (evt: any, type: any) => {
     evt.preventDefault();
 
@@ -59,6 +67,7 @@ const StartPage: React.FC = () => {
   };
   const handleSignInWithEmail = async (data: any) => {
     setIsloading(true);
+
     try {
       const response: any = await auth0SignIn({
         username: data.username,
@@ -71,7 +80,6 @@ const StartPage: React.FC = () => {
         if (response.emailVerified) {
           // to implement later
           // get user info
-
           loginUser(response);
         } else {
         }

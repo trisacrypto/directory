@@ -23,11 +23,11 @@ const NameIdentifiers: React.FC = () => {
   };
 
   return (
-    <FormLayout>
+    <FormLayout data-testid="name-identifier">
       <NameIdentifier
         name="entity.name.name_identifiers"
         heading={t`Name Identifiers`}
-        type={t`legal`}
+        type="legal"
         description={t`Enter the name and type of name by which the legal person is known. At least one legal name is required. Organizations are strongly encouraged to enter additional name identifiers such as Trading Name/ Doing Business As (DBA), Local names, and phonetic names where appropriate.`}
         ref={nameIdentifiersFieldArrayRef}
       />
@@ -48,7 +48,7 @@ const NameIdentifiers: React.FC = () => {
 
       <HStack width="100%" wrap="wrap" align="start" gap={4}>
         <Button onClick={handleAddLegalNamesRow}>
-          <Trans id="Add Legal Name">Add Legal Name</Trans>
+          <Trans id="Add Another Legal Name">Add Another Legal Name</Trans>
         </Button>
         <Button marginLeft="0 !important" onClick={handleAddNewLocalNamesRow}>
           <Trans id="Add Local Name">Add Local Name</Trans>

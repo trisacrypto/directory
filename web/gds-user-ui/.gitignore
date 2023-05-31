@@ -7,6 +7,9 @@
 
 # testing
 /coverage
+/cypress/reports
+/mochawesome
+/mochawesome-report
 
 # production
 /build

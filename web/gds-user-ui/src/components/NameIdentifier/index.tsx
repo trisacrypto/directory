@@ -4,7 +4,9 @@ import DeleteButton from 'components/ui/DeleteButton';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getNameIdentiferTypeOptions } from 'constants/name-identifiers';
-import React from 'react';
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
+import { StepEnum } from 'types/enums';
+import React, { useEffect } from 'react';
 import {
   Control,
   Controller,
@@ -32,7 +34,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
     register,
     control,
     formState: { errors },
-    getValues
+    setValue
   } = useFormContext();
   const { name, controlId, description, heading, type } = props;
   const { fields, remove, append } = useFieldArray({ name, control });
@@ -47,13 +49,29 @@ const NameIdentifier: React.ForwardRefExoticComponent<
     }
   }));
 
-  const getOrganizationNameValue = getValues('organization_name');
+  const { certificateStep } = useFetchCertificateStep({
+    key: StepEnum.BASIC
+  });
 
-  const getOrganizationName = (index: number) => {
-    if (type === 'legal' && index === 0) {
-      return getOrganizationNameValue;
+  const getOrganizationName = certificateStep?.form?.organization_name;
+
+  // set default value for the first legal name
+  useEffect(() => {
+    console.log('[] 1 name', name);
+    if (type === 'legal' && fields.length === 1) {
+      const value = `${name}[0].legal_person_name` as string;
+      setValue(`${value}`, getOrganizationName || '');
     }
-  };
+  }, [getOrganizationName, setValue, type, fields.length, name, fields]);
+
+  // set the first selected value for the first legal name
+
+  useEffect(() => {
+    if (type === 'legal' && fields.length === 1) {
+      const value = `${name}[0].legal_person_name_identifier_type` as string;
+      setValue(`${value}`, nameIdentiferTypeOptions[0].value);
+    }
+  }, [nameIdentiferTypeOptions, setValue, type, fields.length, name]);
 
   return (
     <Stack align="start" width="100%">
@@ -73,7 +91,7 @@ const NameIdentifier: React.ForwardRefExoticComponent<
                     <InputFormControl
                       controlId={`${name}[${index}].legal_person_name`}
                       data-testid="legal_person_name"
-                      placeholder={getOrganizationName(index) || ''}
+                      placeholder={index === 0 ? getOrganizationName : ''}
                       isInvalid={getValueByPathname(errors, `${name}[${index}].legal_person_name`)}
                       formHelperText={
                         getValueByPathname(errors, `${name}[${index}].legal_person_name`)?.message

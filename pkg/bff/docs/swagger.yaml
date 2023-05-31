@@ -191,6 +191,11 @@ definitions:
       status:
         type: string
     type: object
+  api.RegistrationFormParams:
+    properties:
+      step:
+        type: string
+    type: object
   api.RegistrationStatus:
     properties:
       mainnet_submitted:
@@ -782,8 +787,15 @@ paths:
       tags:
       - overview
   /register:
-    get:
-      description: Get the registration form associated with the user's organization.
+    delete:
+      description: Reset the registration form associated with the user's organization
+        for the requested step.
+      parameters:
+      - description: Reset registration form parameters
+        in: body
+        name: params
+        schema:
+          $ref: '#/definitions/api.RegistrationFormParams'
       produces:
       - application/json
       responses:
@@ -791,6 +803,40 @@ paths:
           description: Registration form
           schema:
             type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Reply'
+      summary: Reset the user's current registration form [update:vasp]
+      tags:
+      - registration
+    get:
+      description: Get the registration form associated with the user's organization.
+      parameters:
+      - description: Load registration form parameters
+        in: body
+        name: params
+        schema:
+          $ref: '#/definitions/api.RegistrationFormParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Registration form
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Reply'
         "401":
           description: Unauthorized
           schema:

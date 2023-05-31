@@ -52,25 +52,27 @@ function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
               <Td>
                 <Table>
                   <Tbody>
-                    {data.name?.name_identifiers?.map((nameIdentifier: any, index: number) => {
-                      return (
-                        <Tr key={index}>
-                          <Td paddingLeft={'0 !important'} border="none" p="1px !important">
-                            {nameIdentifier?.legal_person_name || 'N/A'}
-                          </Td>
-                          {nameIdentifier?.legal_person_name_identifier_type ? (
-                            <Td paddingLeft={0} border="none" p="1px !important">
-                              (
-                              {getNameIdentiferTypeLabel(
-                                nameIdentifier?.legal_person_name_identifier_type
-                              )}
-                              )
+                    {data?.name?.name_identifiers?.map(
+                      (nameIdentifier: any, index: number) => {
+                        return (
+                          <Tr key={index}>
+                            <Td paddingLeft={'0 !important'} border="none" p="1px !important">
+                              {nameIdentifier?.legal_person_name || 'N/A'}
                             </Td>
-                          ) : null}
-                        </Tr>
-                      );
-                    })}
-                    {data.name?.local_name_identifiers?.map(
+                            {nameIdentifier?.legal_person_name_identifier_type ? (
+                              <Td paddingLeft={0} border="none" p="1px !important">
+                                (
+                                {getNameIdentiferTypeLabel(
+                                  nameIdentifier?.legal_person_name_identifier_type
+                                )}
+                                )
+                              </Td>
+                            ) : null}
+                          </Tr>
+                        );
+                      }
+                    )}
+                    {data?.name?.local_name_identifiers?.map(
                       (nameIdentifier: any, index: number) => {
                         return (
                           <Tr key={index}>
@@ -88,7 +90,7 @@ function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
                         );
                       }
                     )}
-                    {data.name?.phonetic_name_identifiers?.map(
+                    {data?.name?.phonetic_name_identifiers?.map(
                       (nameIdentifier: any, index: number) => {
                         return (
                           <Tr key={index}>
@@ -176,12 +178,12 @@ function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
                 </Tag>
               </Td>
             </Tr>
-            <Tr>
+            {/* <Tr>
               <Td>
-                <Trans id="Country of Registration">Country of Registration</Trans>
+                <Trans id="Country of Issue">Country of Issue</Trans>
               </Td>
-              <Td>{(COUNTRIES as any)[data?.country_of_registration] || 'N/A'}</Td>
-            </Tr>
+              <Td>{(COUNTRIES as any)[data?.national_identification?.country_of_issue] || 'N/A'}</Td>
+            </Tr> */}
             <Tr>
               <Td pt={0}>
                 <Trans id="Reg Authority">Reg Authority</Trans>

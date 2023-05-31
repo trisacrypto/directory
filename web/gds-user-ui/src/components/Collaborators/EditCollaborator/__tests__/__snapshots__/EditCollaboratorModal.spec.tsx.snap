@@ -229,20 +229,21 @@ exports[`UpdateCollaboratorModal should render 1`] = `
 }
 
 .emotion-15 {
+  color: var(--chakra-colors-gray-400);
   -webkit-margin-start: 0.125rem;
   margin-inline-start: 0.125rem;
   -webkit-margin-end: 0.125rem;
   margin-inline-end: 0.125rem;
-  max-width: calc(100% - 0.5rem);
-  overflow: hidden;
   position: absolute;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   top: 50%;
   -webkit-transform: translateY(-50%);
   -moz-transform: translateY(-50%);
   -ms-transform: translateY(-50%);
   transform: translateY(-50%);
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .emotion-16 {
@@ -608,8 +609,9 @@ exports[`UpdateCollaboratorModal should render 1`] = `
                   >
                     <div
                       class=" emotion-15"
+                      id="react-select-2-placeholder"
                     >
-                      ADMIN
+                      Select Role
                     </div>
                     <div
                       class=" emotion-16"
@@ -618,6 +620,7 @@ exports[`UpdateCollaboratorModal should render 1`] = `
                       <input
                         aria-autocomplete="list"
                         aria-controls="react-select-2-listbox"
+                        aria-describedby="react-select-2-placeholder"
                         aria-expanded="false"
                         aria-haspopup="true"
                         aria-owns="react-select-2-listbox"
@@ -661,7 +664,7 @@ exports[`UpdateCollaboratorModal should render 1`] = `
                 <input
                   name="role"
                   type="hidden"
-                  value="ADMIN"
+                  value=""
                 />
               </div>
               <div

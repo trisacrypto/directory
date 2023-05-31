@@ -1,187 +1,82 @@
-import { useRef } from 'react';
-import { getSteps, getLastStep } from '../application/store/selectors/stepper';
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import Store from 'application/store';
 import { getCurrentStep } from 'application/store/selectors/stepper';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  isBasicDetailsCompleted,
-  isLegalPersonCompleted,
-  isContactsCompleted,
-  isTrixoQuestionnaireCompleted,
-  isTrisaImplementationCompleted,
-  fieldNamesPerSteps
-} from 'modules/dashboard/certificate/lib';
-import {
-  addStep,
   setCurrentStep,
   setStepStatus,
-  TStep,
-  setStepFormValue,
-  setSubmitStep,
   clearStepper,
   setHasReachSubmitStep,
   setInitialValue,
   setTestnetSubmitted,
   setMainnetSubmitted,
-  setCertificateValue
-  // setStepMissingFields
+  setCertificateValue,
+  setStepMissingFields,
+  incrementStep,
+  decrementStep,
+  setIsDirty,
+  addStep
 } from 'application/store/stepper.slice';
 // import { getFieldNames } from 'utils/getFieldNames';
 import { setRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
-import { findStepKey } from 'utils/utils';
-import { LSTATUS } from 'components/TestnetProgress/CertificateStepLabel';
-import { hasStepError } from '../utils/utils';
-import _ from 'lodash';
-import { useToast } from '@chakra-ui/react';
-import { t } from '@lingui/macro';
 
-interface TState {
-  status?: boolean;
-  isMissed?: boolean;
-  step?: number;
-  errors?: any;
-  isFormCompleted?: boolean;
-  formValues?: any;
-  values?: any;
-  registrationValues?: any;
-  setRegistrationState?: any;
-  isDirty?: boolean;
-}
+import { LSTATUS } from 'components/RegistrationForm/CertificateStepLabel';
+import { getStepNumber } from 'components/BasicDetailsForm/util';
 
 // 'TODO:' this hook should be improved to be more generic
 const useCertificateStepper = () => {
   const dispatch = useDispatch();
   const currentStep: number = useSelector(getCurrentStep);
-  const steps: TStep[] = useSelector(getSteps);
-  const lastStep: number = useSelector(getLastStep);
-  const toast = useToast();
-  const trisaImplementationToastIdRef = useRef('trisa-implementation-form-error-message');
+  console.log('[useCertificateStepper] currentStep', currentStep);
+
+  const removeMissingFields = (steps: TStep[]) => {
+    return steps.map((step: TStep) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { missingFields, isDirty, ...rest } = step;
+      return rest;
+    });
+  };
 
   const currentState = () => {
     // log store state
     const updatedState = Store.getState().stepper;
     const formatState = {
       current: updatedState.currentStep,
-      steps: updatedState.steps,
+      steps: removeMissingFields(updatedState.steps),
       ready_to_submit: updatedState.hasReachSubmitStep
     };
     return formatState;
   };
 
-  const isStepCompleted = async (step: number, data: any) => {
-    switch (step) {
-      case 1:
-        return await isBasicDetailsCompleted(data);
-      case 2:
-        return await isLegalPersonCompleted(data);
-      case 3:
-        return await isContactsCompleted(data);
-      case 4:
-        return await isTrisaImplementationCompleted(data);
-      case 5:
-        return await isTrixoQuestionnaireCompleted(data);
-      default:
-        return false;
-    }
-  };
+  const nextStep = (data?: any) => {
+    const errorFields = data?.errors;
 
-  // save form data to trtl if field is dirty
+    console.log('[nextStep] errorFields', errorFields);
 
-  const saveFormValue = (formValue: any, setState?: any) => {
-    // form value
-
-    const getRegistrationData = () => {
-      return {
-        ...formValue,
-        state: {
-          ...currentState()
-        }
-      };
-    };
-    // save the form value if fields changed
-    if (setState) {
-      setState(getRegistrationData());
-    }
-  };
-
-  const nextStep = async (state?: TState) => {
-    const { values: formValues, setRegistrationState, isDirty } = state || {};
-    const isCompleted = await isStepCompleted(currentStep, formValues);
-    // only for status update
-    if (isCompleted) {
-      console.log('[] completed', isCompleted);
-      // console.log('nextStep', state?.isFormCompleted, state?.errors);
-      dispatch(setStepStatus({ status: LSTATUS.COMPLETE, step: currentStep }));
+    if (data && errorFields && Object.keys(errorFields).length > 0) {
+      dispatch(setStepStatus({ step: currentStep, status: LSTATUS.ERROR }));
     } else {
-      dispatch(setStepStatus({ status: LSTATUS.ERROR, step: currentStep }));
+      // setInitialState(data?.form);
+      dispatch(setStepStatus({ step: currentStep, status: LSTATUS.COMPLETE }));
     }
 
-    // if we reach the last step (here review step) , we need to set the submit step
-    if (currentStep === lastStep) {
-      const isTrisaImplementationFormEmpty = !fieldNamesPerSteps.trisaImplementation
-        .map((path) => _.get(formValues, path))
-        .join('');
-
-      // that mean we move to submit step
-      if (!hasStepError(steps) && !isTrisaImplementationFormEmpty) {
-        dispatch(setSubmitStep({ submitStep: true }));
-        dispatch(setCurrentStep({ currentStep: lastStep }));
-      } else if (!toast.isActive(trisaImplementationToastIdRef.current)) {
-        toast({
-          position: 'top-right',
-          title: t`Under TRISA Implementation, please provide an Endpoint or Common Name for TestNet and/or MainNet`,
-          description: t`Please provide an Endpoint and Common Name for TestNet and/or MainNet to advance to the final step. You must provide an Endpoint and Common Name for at least one network to proceed to the final step and submit the registration form. Please note that TestNet and MainNet are separate
-          networks that require different X.509 Identity Certificates. Please specify an Endpoint and Common Name for at least one network in Step 4. TRISA Implementation.`,
-          status: 'error',
-          duration: null,
-          isClosable: true
-        });
-      }
-    } else {
-      const found = findStepKey(steps, currentStep + 1);
-      console.log('found', found);
-      if (found.length === 0) {
-        console.log('setCurrentStep', currentStep + 1);
-        dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
-        dispatch(addStep({ key: currentStep + 1, status: LSTATUS.PROGRESS }));
-      } else {
-        if (found[0].status === LSTATUS.INCOMPLETE) {
-          console.log('[] dispatch', currentStep + 1);
-          dispatch(setStepStatus({ step: currentStep + 1, status: LSTATUS.PROGRESS }));
-        }
-        console.log('[] dispatch', currentStep + 1);
-        dispatch(setCurrentStep({ currentStep: currentStep + 1 }));
-      }
-    }
-    // save the form value if fields changed
-    if (isDirty) {
-      dispatch(setCertificateValue({ value: { ...formValues } }));
-      console.log('saveFormValue', currentState());
-      saveFormValue(currentState(), setRegistrationState);
-    }
+    dispatch(incrementStep());
   };
 
-  const previousStep = (state?: TState) => {
-    // if form value is set then save it to the dedicated step
-    if (state?.formValues) {
-      dispatch(setStepFormValue({ step: currentStep, formValues: state?.formValues }));
+  const previousStep = (data?: any) => {
+    const errorFields = data?.errors;
+    if (data && errorFields) {
+      dispatch(setStepMissingFields({ step: currentStep, errors: errorFields }));
+      dispatch(setStepStatus({ step: currentStep, status: LSTATUS.ERROR }));
+    } else {
+      // setInitialState(data?.form);
+      dispatch(setStepStatus({ step: currentStep, status: LSTATUS.COMPLETE }));
     }
-    // do not allow to go back for the first step
-    const step = currentStep;
-    if (currentStep === 1) {
-      return;
-    }
-    dispatch(setCurrentStep({ currentStep: step - 1 }));
-
-    // if the current status is already completed, do not change the status
-
-    const found = findStepKey(steps, currentStep);
-    if (found.length > 0 && found[0].status !== LSTATUS.COMPLETE) {
-      dispatch(setStepStatus({ step, status: LSTATUS.PROGRESS }));
-    }
+    dispatch(decrementStep());
   };
 
   const jumpToStep = (step: number) => {
+    dispatch(setHasReachSubmitStep({ hasReachSubmitStep: false }));
     dispatch(setCurrentStep({ currentStep: step }));
   };
 
@@ -210,15 +105,21 @@ const useCertificateStepper = () => {
 
   const setInitialState = (value: any) => {
     const state: TPayload = {
-      currentStep: value.currentStep,
-      steps: value.steps,
+      currentStep: value?.state?.current,
+      steps: value?.state?.steps,
       lastStep: 6,
-      hasReachSubmitStep: value.hasReachSubmitStep,
-      testnetSubmitted: value.testnetSubmitted,
-      mainnetSubmitted: value.mainnetSubmitted,
-      data: value.data
+      hasReachSubmitStep: value?.state?.ready_to_submit || false,
+      testnetSubmitted: value?.state?.testnetSubmitted || false,
+      mainnetSubmitted: value?.state?.mainnetSubmitted || false
     };
+    console.log('[setInitialState] state', state);
     dispatch(setInitialValue(state));
+  };
+
+  const hasStepErrors = () => {
+    const steps = Store.getState().stepper.steps;
+    const found = steps.filter((step: any) => step.status === 'error');
+    return found.length > 0;
   };
 
   // update state from form values
@@ -234,6 +135,68 @@ const useCertificateStepper = () => {
     dispatch(setInitialValue(state));
   };
 
+  const clearCertificateStepper = () => {
+    dispatch(clearStepper());
+  };
+
+  const updateHasReachSubmitStep = (hasReachSubmitStep: boolean) => {
+    dispatch(setHasReachSubmitStep({ hasReachSubmitStep }));
+  };
+
+  const updateIsDirty = (isDirty: boolean, step: number) => {
+    dispatch(setIsDirty({ step, isDirty: !!isDirty }));
+    // if (isDirty) {
+    //   // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    //   addDefaultStep();
+    // }
+  };
+  const getIsDirtyState = (step = currentStep) => {
+    const steps = Store.getState().stepper.steps;
+    const found = steps.filter((s: TStep) => s.key === step && s.isDirty === true);
+    return found.length > 0;
+  };
+
+  const addDefaultStep = (step?: number) => {
+    const payload = {
+      step: step || currentStep,
+      status: LSTATUS.PROGRESS
+    };
+    dispatch(addStep(payload));
+  };
+
+  const updateStepStatusToIncomplete = () => {
+    // check if the current step has progress status and is not first step
+    if (currentStep !== 1) {
+      const steps = Store.getState().stepper.steps;
+      const found = steps.filter(
+        (s: TStep) => s.key === currentStep && s.status === LSTATUS.PROGRESS
+      );
+      if (found.length > 1) {
+        dispatch(setStepStatus({ step: currentStep, status: LSTATUS.INCOMPLETE }));
+      }
+    }
+  };
+
+  const updateStepStatusState = (payload: any) => {
+    dispatch(setStepStatus(payload));
+  };
+
+  const updateCurrentStepState = (step: string) => {
+    const s = getStepNumber(step);
+    dispatch(setCurrentStep({ currentStep: s }));
+  };
+
+  const clearStepperState = () => {
+    dispatch(clearStepper());
+  };
+
+  const getIsDirtyStateByStep = (stepName: string) => {
+    const stepNumber = getStepNumber(stepName);
+    const steps = Store.getState().stepper.steps;
+    const found = steps.filter((s: TStep) => s.key === stepNumber && s.isDirty === true);
+    return found.length > 0;
+  };
+
   return {
     nextStep,
     previousStep,
@@ -245,7 +208,18 @@ const useCertificateStepper = () => {
     testnetSubmissionState,
     mainnetSubmissionState,
     updateStateFromFormValues,
-    setRegistrationValue
+    setRegistrationValue,
+    clearCertificateStepper,
+    hasStepErrors,
+    updateHasReachSubmitStep,
+    updateIsDirty,
+    getIsDirtyState,
+    addDefaultStep,
+    updateStepStatusToIncomplete,
+    updateStepStatusState,
+    updateCurrentStepState,
+    clearStepperState,
+    getIsDirtyStateByStep
   };
 };
 

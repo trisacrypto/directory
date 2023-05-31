@@ -2,7 +2,10 @@ package api
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 
+	"github.com/gin-gonic/gin"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 )
@@ -24,24 +27,36 @@ type BFFClient interface {
 	// Authenticated Endpoints
 	UpdateUser(context.Context, *UpdateUserParams) error
 	UserOrganization(context.Context) (*OrganizationReply, error)
+
+	// Organization management
 	CreateOrganization(context.Context, *OrganizationParams) (*OrganizationReply, error)
 	DeleteOrganization(_ context.Context, id string) error
 	PatchOrganization(_ context.Context, id string, request *OrganizationParams) (*OrganizationReply, error)
 	ListOrganizations(context.Context, *ListOrganizationsParams) (*ListOrganizationsReply, error)
+
+	// Collaborators endpoint
 	AddCollaborator(context.Context, *models.Collaborator) (*models.Collaborator, error)
 	ListCollaborators(context.Context) (*ListCollaboratorsReply, error)
 	UpdateCollaboratorRoles(_ context.Context, id string, request *UpdateRolesParams) (*models.Collaborator, error)
 	DeleteCollaborator(_ context.Context, id string) error
-	LoadRegistrationForm(context.Context) (*models.RegistrationForm, error)
-	SaveRegistrationForm(context.Context, *models.RegistrationForm) (*models.RegistrationForm, error)
+
+	MemberDetails(context.Context, *MemberDetailsParams) (*MemberDetailsReply, error)
+
+	// Registration form
+	LoadRegistrationForm(context.Context, *RegistrationFormParams) (*RegistrationForm, error)
+	SaveRegistrationForm(context.Context, *RegistrationForm) (*RegistrationForm, error)
+	ResetRegistrationForm(context.Context, *RegistrationFormParams) (*RegistrationForm, error)
 	SubmitRegistration(_ context.Context, network string) (*RegisterReply, error)
 	RegistrationStatus(context.Context) (*RegistrationStatus, error)
+
+	// Overview and announcements
 	Overview(context.Context) (*OverviewReply, error)
 	Announcements(context.Context) (*AnnouncementsReply, error)
 	MakeAnnouncement(context.Context, *models.Announcement) error
-	Certificates(context.Context) (*CertificatesReply, error)
-	MemberDetails(context.Context, *MemberDetailsParams) (*MemberDetailsReply, error)
 	Attention(context.Context) (*AttentionReply, error)
+
+	// Certificate management
+	Certificates(context.Context) (*CertificatesReply, error)
 }
 
 //===========================================================================
@@ -67,6 +82,39 @@ type StatusReply struct {
 	Version string `json:"version,omitempty"`
 	TestNet string `json:"testnet,omitempty"`
 	MainNet string `json:"mainnet,omitempty"`
+}
+
+// A per-field validation error that is intended for human consumption - if the field is
+// not valid (e.g. empty when required, doesn't match regular expression, etc.) then
+// this struct is meant to be sent back so the front-end can render the message to the
+// user in a help-box or similar. If the field is an array element, then the index field
+// will contain the index of the erroring element.
+type FieldValidationError struct {
+	Field string `json:"field"`
+	Error string `json:"error"`
+	Index int    `json:"index"`
+}
+
+func NewFieldValidationError(err error) *FieldValidationError {
+	var verr *models.ValidationError
+	if errors.As(err, &verr) {
+		return &FieldValidationError{Field: verr.Field, Error: verr.Err, Index: verr.Index}
+	}
+	return &FieldValidationError{Error: err.Error()}
+}
+
+func FromValidationErrors(err error) []*FieldValidationError {
+	var verrs models.ValidationErrors
+	if errors.As(err, &verrs) {
+		out := make([]*FieldValidationError, 0, len(verrs))
+		for _, verr := range verrs {
+			out = append(out, NewFieldValidationError(verr))
+		}
+		return out
+	}
+
+	out := make([]*FieldValidationError, 0, 1)
+	return append(out, NewFieldValidationError(err))
 }
 
 //===========================================================================
@@ -157,6 +205,66 @@ type VerifyContactReply struct {
 	Error   map[string]interface{} `json:"error,omitempty"`
 	Status  string                 `json:"status"`
 	Message string                 `json:"message"`
+}
+
+type RegistrationFormStep string
+
+const (
+	StepBasicDetails RegistrationFormStep = "basic"
+	StepLegalPerson  RegistrationFormStep = "legal"
+	StepContacts     RegistrationFormStep = "contacts"
+	StepTRISA        RegistrationFormStep = "trisa"
+	StepTRIXO        RegistrationFormStep = "trixo"
+)
+
+// Allows the front-end to specify which part of the registration form they want to
+// fetch or delete.
+// GET /v1/registration will return the entire registration form, while
+// GET /v1/registration?step=trixo would return just the TRIXO form
+// DELETE /v1/registration will reset the entire registration form, while
+// DELETE /v1/registration?step=trixo would reset just the TRIXO form
+type RegistrationFormParams struct {
+	Step RegistrationFormStep `url:"step,omitempty" form:"step"`
+}
+
+// RegistrationForm is a wrapper around the models.RegistrationForm that includes API-
+// specific details such as the step and field validation errors.
+type RegistrationForm struct {
+	Step   RegistrationFormStep     `json:"step,omitempty"`
+	Form   *models.RegistrationForm `json:"form"`
+	Errors []*FieldValidationError  `json:"errors,omitempty"`
+}
+
+// MarshalStepJSON removes any unnecessary fields from the registration form.
+func (r *RegistrationForm) MarshalStepJSON() (_ gin.H, err error) {
+	// Marshal everything but the registration form
+	form := r.Form
+	r.Form = nil
+	defer func() {
+		// Reset the form
+		r.Form = form
+	}()
+
+	var data []byte
+	if data, err = json.Marshal(r); err != nil {
+		return nil, err
+	}
+
+	var intermediate gin.H
+	if err = json.Unmarshal(data, &intermediate); err != nil {
+		return nil, err
+	}
+
+	var step models.StepType
+	if step, err = models.ParseStepType(string(r.Step)); err != nil {
+		return nil, err
+	}
+
+	// Marshal the registration form with the step
+	if intermediate["form"], err = form.MarshalStep(step); err != nil {
+		return nil, err
+	}
+	return intermediate, nil
 }
 
 // RegisterReply is converted from a protocol buffer RegisterReply.

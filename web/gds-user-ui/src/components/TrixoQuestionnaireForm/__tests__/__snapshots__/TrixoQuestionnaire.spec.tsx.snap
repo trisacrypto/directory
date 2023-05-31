@@ -1,0 +1,1522 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TrixoQuestionnaire should render 1`] = `
+.emotion-0 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: start;
+  -webkit-box-align: start;
+  -ms-flex-align: start;
+  align-items: start;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  background: var(--chakra-colors-white);
+  border: 2px solid #E5EDF1;
+  border-radius: 10px;
+  padding: var(--chakra-space-3);
+}
+
+.emotion-0>*:not(style)~*:not(style) {
+  margin-top: var(--chakra-space-5);
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+@media screen and (min-width: 48em) {
+  .emotion-0 {
+    padding: var(--chakra-space-9);
+  }
+}
+
+.emotion-2 {
+  width: 100%;
+  position: relative;
+}
+
+.emotion-3 {
+  display: block;
+  text-align: start;
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-margin-end: var(--chakra-space-3);
+  margin-inline-end: var(--chakra-space-3);
+  margin-bottom: var(--chakra-space-2);
+  font-weight: var(--chakra-fontWeights-medium);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  opacity: 1;
+}
+
+.emotion-3[disabled],
+.emotion-3[aria-disabled=true],
+.emotion-3[data-disabled] {
+  opacity: 0.4;
+}
+
+.emotion-4 {
+  position: relative;
+  pointer-events: auto;
+}
+
+.emotion-5 {
+  z-index: 9999;
+  border: 0;
+  clip: rect(1px, 1px, 1px, 1px);
+  height: 1px;
+  width: 1px;
+  position: absolute;
+  overflow: hidden;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.emotion-7 {
+  width: 100%;
+  min-width: 0px;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  position: relative;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  height: auto;
+  border-radius: 0px;
+  border: 1px solid;
+  border-color: inherit;
+  background: #E3EBEF;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  padding: 0px;
+  overflow: hidden;
+  min-height: var(--chakra-sizes-10);
+}
+
+.emotion-7:hover,
+.emotion-7[data-hover] {
+  border-color: var(--chakra-colors-gray-300);
+}
+
+.emotion-7[aria-readonly=true],
+.emotion-7[readonly],
+.emotion-7[data-readonly] {
+  box-shadow: none!important;
+  -webkit-user-select: all;
+  -moz-user-select: all;
+  -ms-user-select: all;
+  user-select: all;
+}
+
+.emotion-7[disabled],
+.emotion-7[aria-disabled=true],
+.emotion-7[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.emotion-7[aria-invalid=true],
+.emotion-7[data-invalid] {
+  border-color: #E53E3E;
+  box-shadow: 0 0 0 1px #E53E3E;
+}
+
+.emotion-7:focus,
+.emotion-7[data-focus] {
+  z-index: 1;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 1px #3182ce;
+}
+
+.emotion-8 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  padding: 0.125rem 1rem;
+  -webkit-box-flex-wrap: wrap;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  overflow: hidden;
+}
+
+.emotion-9 {
+  color: var(--chakra-colors-gray-400);
+  -webkit-margin-start: 0.125rem;
+  margin-inline-start: 0.125rem;
+  -webkit-margin-end: 0.125rem;
+  margin-inline-end: 0.125rem;
+  position: absolute;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -moz-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.emotion-10 {
+  -webkit-flex: 1 1 auto;
+  -ms-flex: 1 1 auto;
+  flex: 1 1 auto;
+  display: inline-grid;
+  grid-area: 1/1/2/3;
+  grid-template-columns: 0 min-content;
+  color: inherit;
+}
+
+.emotion-10::after {
+  content: attr(data-value) " ";
+  visibility: hidden;
+  white-space: pre;
+  padding: 0px;
+  grid-area: 1/2;
+  font: inherit;
+  min-width: 2px;
+  border: 0;
+  margin: 0px;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.emotion-11 {
+  color: inherit;
+  background: 0;
+  opacity: 1;
+  width: 100%;
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+  grid-area: 1/2;
+  font: inherit;
+  min-width: 2px;
+  border: 0;
+  margin: 0px;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.emotion-12 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-align-self: stretch;
+  -ms-flex-item-align: stretch;
+  align-self: stretch;
+  -webkit-flex-shrink: 0;
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+}
+
+.emotion-13 {
+  opacity: 1;
+  border: 0;
+  border-color: inherit;
+  border-style: solid;
+  border-left-width: 1px;
+  height: 100%;
+}
+
+.emotion-14 {
+  font-size: 20px;
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  height: 100%;
+  border-radius: 0px;
+  border: 1px solid;
+  border-color: inherit;
+  background: var(--chakra-colors-gray-100);
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  border-width: 0;
+  cursor: pointer;
+}
+
+.emotion-15 {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  line-height: 1em;
+  -webkit-flex-shrink: 0;
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+  color: currentColor;
+  vertical-align: middle;
+}
+
+.emotion-16 {
+  margin-top: var(--chakra-space-2);
+  color: var(--chakra-colors-gray-500);
+  line-height: var(--chakra-lineHeights-normal);
+  font-size: var(--chakra-fontSizes-sm);
+}
+
+.emotion-19 {
+  width: 100%;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  position: relative;
+}
+
+.emotion-20 {
+  width: 100%;
+  min-width: 0px;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  position: relative;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  height: var(--chakra-sizes-10);
+  border-radius: 0px;
+  border: 1px solid;
+  border-color: inherit;
+  background: #E3EBEF;
+}
+
+.emotion-20:hover,
+.emotion-20[data-hover] {
+  border-color: var(--chakra-colors-gray-300);
+}
+
+.emotion-20[aria-readonly=true],
+.emotion-20[readonly],
+.emotion-20[data-readonly] {
+  box-shadow: none!important;
+  -webkit-user-select: all;
+  -moz-user-select: all;
+  -ms-user-select: all;
+  user-select: all;
+}
+
+.emotion-20[disabled],
+.emotion-20[aria-disabled=true],
+.emotion-20[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.emotion-20[aria-invalid=true],
+.emotion-20[data-invalid] {
+  border-color: #E53E3E;
+  box-shadow: 0 0 0 1px #E53E3E;
+}
+
+.emotion-20:focus,
+.emotion-20[data-focus] {
+  z-index: 1;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 1px #3182ce;
+}
+
+.emotion-22 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: start;
+  -webkit-box-align: start;
+  -ms-flex-align: start;
+  align-items: start;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  width: 100%;
+  padding-top: var(--chakra-space-5);
+  padding-bottom: var(--chakra-space-5);
+}
+
+.emotion-22>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-23 {
+  font-family: var(--chakra-fonts-heading);
+  font-weight: var(--chakra-fontWeights-bold);
+  font-size: var(--chakra-fontSizes-xl);
+  line-height: 1.2;
+}
+
+.emotion-25 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: 5px;
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: var(--chakra-sizes-10);
+  min-width: var(--chakra-sizes-10);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  background: var(--chakra-colors-gray-100);
+}
+
+.emotion-25:focus,
+.emotion-25[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-25[disabled],
+.emotion-25[aria-disabled=true],
+.emotion-25[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-25:hover,
+.emotion-25[data-hover] {
+  background: var(--chakra-colors-gray-200);
+}
+
+.emotion-25:hover[disabled],
+.emotion-25[data-hover][disabled],
+.emotion-25:hover[aria-disabled=true],
+.emotion-25[data-hover][aria-disabled=true],
+.emotion-25:hover[data-disabled],
+.emotion-25[data-hover][data-disabled] {
+  background: var(--chakra-colors-gray-100);
+}
+
+.emotion-25:active,
+.emotion-25[data-active] {
+  background: var(--chakra-colors-gray-300);
+}
+
+.emotion-26 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+.emotion-26>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-42 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: start;
+  -webkit-box-align: start;
+  -ms-flex-align: start;
+  align-items: start;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  padding-top: var(--chakra-space-5);
+}
+
+.emotion-42>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-61 {
+  width: 100%;
+  position: relative;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  gap: var(--chakra-space-2);
+}
+
+.emotion-62 {
+  display: inline-block;
+  position: relative;
+  vertical-align: middle;
+  line-height: 0;
+  --switch-track-diff: calc(var(--switch-track-width) - var(--switch-track-height));
+  --switch-thumb-x: var(--switch-track-diff);
+  --switch-track-width: 1.875rem;
+  --switch-track-height: 1rem;
+}
+
+[dir=rtl] .emotion-62,
+.emotion-62[dir=rtl] {
+  --switch-thumb-x: calc(var(--switch-track-diff) * -1);
+}
+
+.emotion-62 span.chakra-switch__track:is([data-checked]) {
+  background-color: #55ACD8;
+}
+
+.emotion-63 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-flex-shrink: 0;
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+  -webkit-box-pack: start;
+  -ms-flex-pack: start;
+  -webkit-justify-content: flex-start;
+  justify-content: flex-start;
+  box-sizing: content-box;
+  cursor: pointer;
+  border-radius: var(--chakra-radii-full);
+  padding: 2px;
+  width: var(--switch-track-width);
+  height: var(--switch-track-height);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-fast);
+  background: var(--chakra-colors-gray-300);
+}
+
+.emotion-63:focus,
+.emotion-63[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-63[disabled],
+.emotion-63[aria-disabled=true],
+.emotion-63[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.emotion-63[aria-checked=true],
+.emotion-63[data-checked] {
+  background: var(--chakra-colors-blue-500);
+}
+
+.emotion-64 {
+  background: var(--chakra-colors-white);
+  transition-property: transform;
+  transition-duration: var(--chakra-transition-duration-normal);
+  border-radius: inherit;
+  width: var(--switch-track-height);
+  height: var(--switch-track-height);
+}
+
+.emotion-64[aria-checked=true],
+.emotion-64[data-checked] {
+  -webkit-transform: translateX(var(--switch-thumb-x));
+  -moz-transform: translateX(var(--switch-thumb-x));
+  -ms-transform: translateX(var(--switch-thumb-x));
+  transform: translateX(var(--switch-thumb-x));
+}
+
+.emotion-65 {
+  display: block;
+  text-align: start;
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-margin-end: var(--chakra-space-3);
+  margin-inline-end: var(--chakra-space-3);
+  margin-bottom: 0px;
+  font-weight: var(--chakra-fontWeights-medium);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  opacity: 1;
+}
+
+.emotion-65[disabled],
+.emotion-65[aria-disabled=true],
+.emotion-65[data-disabled] {
+  opacity: 0.4;
+}
+
+.emotion-66 {
+  margin-top: var(--chakra-space-2);
+  color: var(--chakra-colors-gray-500);
+  line-height: var(--chakra-lineHeights-normal);
+  font-size: var(--chakra-fontSizes-sm);
+  position: absolute;
+  top: var(--chakra-space-4);
+}
+
+.emotion-67 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: start;
+  -webkit-box-align: start;
+  -ms-flex-align: start;
+  align-items: start;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+.emotion-67>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-75 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: start;
+  -webkit-box-align: start;
+  -ms-flex-align: start;
+  align-items: start;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  width: 100%;
+  padding-top: var(--chakra-space-5);
+}
+
+.emotion-75>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-77 {
+  font-size: var(--chakra-fontSizes-sm);
+}
+
+.emotion-78 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: start;
+  -webkit-box-align: start;
+  -ms-flex-align: start;
+  align-items: start;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  width: 100%;
+}
+
+.emotion-78>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-80 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: start;
+  -webkit-box-align: start;
+  -ms-flex-align: start;
+  align-items: start;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  width: 100%;
+  padding-top: var(--chakra-space-5);
+}
+
+.emotion-80>*:not(style)~*:not(style) {
+  margin-top: var(--chakra-space-4);
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-98 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-box-flex-wrap: wrap;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  width: 100%;
+  padding-top: var(--chakra-space-6);
+  padding-bottom: var(--chakra-space-6);
+  row-gap: var(--chakra-space-2);
+}
+
+.emotion-98>*:not(style)~*:not(style) {
+  margin-top: 0px;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: var(--chakra-space-8);
+  margin-inline-start: var(--chakra-space-8);
+}
+
+.emotion-99 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: var(--chakra-radii-md);
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: var(--chakra-sizes-10);
+  min-width: var(--chakra-sizes-10);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  background: var(--chakra-colors-gray-100);
+}
+
+.emotion-99:focus,
+.emotion-99[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-99[disabled],
+.emotion-99[aria-disabled=true],
+.emotion-99[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-99:hover,
+.emotion-99[data-hover] {
+  background: var(--chakra-colors-gray-200);
+}
+
+.emotion-99:hover[disabled],
+.emotion-99[data-hover][disabled],
+.emotion-99:hover[aria-disabled=true],
+.emotion-99[data-hover][aria-disabled=true],
+.emotion-99:hover[data-disabled],
+.emotion-99[data-hover][data-disabled] {
+  background: var(--chakra-colors-gray-100);
+}
+
+.emotion-99:active,
+.emotion-99[data-active] {
+  background: var(--chakra-colors-gray-300);
+}
+
+.emotion-100 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: var(--chakra-radii-md);
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: var(--chakra-sizes-10);
+  min-width: var(--chakra-sizes-10);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+}
+
+.emotion-100:focus,
+.emotion-100[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-100[disabled],
+.emotion-100[aria-disabled=true],
+.emotion-100[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-100:hover[disabled],
+.emotion-100[data-hover][disabled],
+.emotion-100:hover[aria-disabled=true],
+.emotion-100[data-hover][aria-disabled=true],
+.emotion-100:hover[data-disabled],
+.emotion-100[data-hover][data-disabled] {
+  background: initial;
+}
+
+<div>
+  <div
+    class="chakra-stack emotion-0"
+  >
+    <form
+      class="emotion-1"
+      data-testid="trixo-form"
+    >
+      <div
+        class="chakra-form-control emotion-2"
+        role="group"
+      >
+        <label
+          class="chakra-form__label emotion-3"
+          for="primaryNationalJuridiction"
+          id="field-1-label"
+        >
+          Primary National Jurisdiction
+        </label>
+        <div
+          class=" emotion-4"
+          id="primaryNationalJuridiction"
+        >
+          <span
+            class="emotion-5"
+            id="react-select-2-live-region"
+          />
+          <span
+            aria-atomic="false"
+            aria-live="polite"
+            aria-relevant="additions text"
+            class="emotion-5"
+          />
+          <div
+            class=" emotion-7"
+          >
+            <div
+              class=" emotion-8"
+            >
+              <div
+                class=" emotion-9"
+                id="react-select-2-placeholder"
+              >
+                Select...
+              </div>
+              <div
+                class=" emotion-10"
+                data-value=""
+              >
+                <input
+                  aria-autocomplete="list"
+                  aria-controls="react-select-2-listbox"
+                  aria-describedby="react-select-2-placeholder"
+                  aria-expanded="false"
+                  aria-haspopup="true"
+                  aria-owns="react-select-2-listbox"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  autocorrect="off"
+                  class=" emotion-11"
+                  id="field-1"
+                  role="combobox"
+                  spellcheck="false"
+                  tabindex="0"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class=" emotion-12"
+            >
+              <hr
+                aria-orientation="vertical"
+                class="chakra-divider emotion-13"
+              />
+              <div
+                aria-hidden="true"
+                class=" emotion-14"
+              >
+                <svg
+                  class="chakra-icon emotion-15"
+                  focusable="false"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <input
+            name="trixo.primary_national_jurisdiction"
+            type="hidden"
+            value=""
+          />
+        </div>
+        <div
+          class="chakra-form__helper-text emotion-16"
+          id="field-1-helptext"
+        />
+      </div>
+      <div
+        class="chakra-form-control emotion-2"
+        role="group"
+      >
+        <label
+          class="chakra-form__label emotion-3"
+          for="nameOfPrimaryRegulator"
+          id="field-2-label"
+        >
+          Name of Primary Regulator
+        </label>
+        <div
+          class="chakra-input__group emotion-19"
+        >
+          <input
+            aria-describedby="field-2-helptext"
+            class="chakra-input emotion-20"
+            id="nameOfPrimaryRegulator"
+            name="trixo.primary_regulator"
+            type="text"
+          />
+        </div>
+        <div
+          class="chakra-form__helper-text emotion-16"
+          id="field-2-helptext"
+        >
+          The name of primary regulator or supervisory authority for your national jurisdiction
+        </div>
+      </div>
+      <div
+        class="chakra-stack emotion-22"
+      >
+        <h2
+          class="chakra-heading emotion-23"
+        >
+          Other Jurisdictions
+        </h2>
+        <p
+          class="chakra-text emotion-1"
+        >
+          Please add any other regulatory jurisdictions your organization complies with.
+        </p>
+        <button
+          class="chakra-button emotion-25"
+          data-testid="trixo-add-jurisdictions-btn"
+          type="button"
+        >
+          Add Jurisdiction
+        </button>
+      </div>
+      <div
+        class="chakra-stack emotion-26"
+        data-testid="is-required-financial-transfers"
+      >
+        <div
+          class="chakra-form-control emotion-2"
+          role="group"
+        >
+          <label
+            class="chakra-form__label emotion-3"
+            for="financial_transfers_permitted"
+            id="field-3-label"
+          >
+            Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?
+          </label>
+          <div
+            class=" emotion-4"
+            id="financial_transfers_permitted"
+          >
+            <span
+              class="emotion-5"
+              id="react-select-3-live-region"
+            />
+            <span
+              aria-atomic="false"
+              aria-live="polite"
+              aria-relevant="additions text"
+              class="emotion-5"
+            />
+            <div
+              class=" emotion-7"
+            >
+              <div
+                class=" emotion-8"
+              >
+                <div
+                  class=" emotion-9"
+                  id="react-select-3-placeholder"
+                >
+                  Select...
+                </div>
+                <div
+                  class=" emotion-10"
+                  data-value=""
+                >
+                  <input
+                    aria-autocomplete="list"
+                    aria-controls="react-select-3-listbox"
+                    aria-describedby="react-select-3-placeholder"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                    aria-owns="react-select-3-listbox"
+                    autocapitalize="none"
+                    autocomplete="off"
+                    autocorrect="off"
+                    class=" emotion-11"
+                    id="field-3"
+                    role="combobox"
+                    spellcheck="false"
+                    tabindex="0"
+                    type="text"
+                    value=""
+                  />
+                </div>
+              </div>
+              <div
+                class=" emotion-12"
+              >
+                <hr
+                  aria-orientation="vertical"
+                  class="chakra-divider emotion-13"
+                />
+                <div
+                  aria-hidden="true"
+                  class=" emotion-14"
+                >
+                  <svg
+                    class="chakra-icon emotion-15"
+                    focusable="false"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <input
+              name="trixo.financial_transfers_permitted"
+              type="hidden"
+              value=""
+            />
+          </div>
+          <div
+            class="chakra-form__helper-text emotion-16"
+            id="field-3-helptext"
+          />
+        </div>
+      </div>
+      <div
+        class="chakra-stack emotion-42"
+        data-testid="trixo-rule-policies"
+      >
+        <h2
+          class="chakra-heading emotion-23"
+        >
+          CDD & Travel Rule Policies
+        </h2>
+        <div
+          class="chakra-form-control emotion-2"
+          role="group"
+        >
+          <label
+            class="chakra-form__label emotion-3"
+            for="has_required_regulatory_program"
+            id="field-4-label"
+          >
+            Does your organization have a programme that sets minimum Anti-Money
+Laundering (AML), Countering the Financing of Terrorism (CFT), Know your
+Counterparty/Customer Due Diligence (KYC/CDD) and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?
+          </label>
+          <div
+            class=" emotion-4"
+            id="has_required_regulatory_program"
+          >
+            <span
+              class="emotion-5"
+              id="react-select-4-live-region"
+            />
+            <span
+              aria-atomic="false"
+              aria-live="polite"
+              aria-relevant="additions text"
+              class="emotion-5"
+            />
+            <div
+              class=" emotion-7"
+            >
+              <div
+                class=" emotion-8"
+              >
+                <div
+                  class=" emotion-9"
+                  id="react-select-4-placeholder"
+                >
+                  Select...
+                </div>
+                <div
+                  class=" emotion-10"
+                  data-value=""
+                >
+                  <input
+                    aria-autocomplete="list"
+                    aria-controls="react-select-4-listbox"
+                    aria-describedby="react-select-4-placeholder"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                    aria-owns="react-select-4-listbox"
+                    autocapitalize="none"
+                    autocomplete="off"
+                    autocorrect="off"
+                    class=" emotion-11"
+                    id="field-4"
+                    role="combobox"
+                    spellcheck="false"
+                    tabindex="0"
+                    type="text"
+                    value=""
+                  />
+                </div>
+              </div>
+              <div
+                class=" emotion-12"
+              >
+                <hr
+                  aria-orientation="vertical"
+                  class="chakra-divider emotion-13"
+                />
+                <div
+                  aria-hidden="true"
+                  class=" emotion-14"
+                >
+                  <svg
+                    class="chakra-icon emotion-15"
+                    focusable="false"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <input
+              name="trixo.has_required_regulatory_program"
+              type="hidden"
+              value=""
+            />
+          </div>
+          <div
+            class="chakra-form__helper-text emotion-16"
+            id="field-4-helptext"
+          />
+        </div>
+        <div
+          class="chakra-stack emotion-26"
+          data-testid="trixo-kyc-before-virtual-asset-transfers"
+        >
+          <p
+            class="chakra-text emotion-1"
+          >
+            Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?
+          </p>
+          <div
+            class="chakra-form-control emotion-61"
+            role="group"
+          >
+            <label
+              class="chakra-switch emotion-62"
+            >
+              <input
+                aria-describedby="field-5-helptext"
+                aria-disabled="false"
+                aria-invalid="false"
+                class="chakra-switch__input"
+                id="conducts_customer_kyc"
+                name="trixo.conducts_customer_kyc"
+                style="border: 0px; clip: rect(0px, 0px, 0px, 0px); height: 1px; width: 1px; margin: -1px; padding: 0px; overflow: hidden; white-space: nowrap; position: absolute;"
+                type="checkbox"
+                value=""
+              />
+              <span
+                aria-hidden="true"
+                class="chakra-switch__track emotion-63"
+              >
+                <span
+                  class="chakra-switch__thumb emotion-64"
+                />
+              </span>
+            </label>
+            <label
+              class="chakra-form__label emotion-65"
+              for="conducts_customer_kyc"
+              id="field-5-label"
+            >
+              Conducts KYC before virtual asset transfers
+            </label>
+            <div
+              class="chakra-form__helper-text emotion-66"
+              id="field-5-helptext"
+            />
+          </div>
+        </div>
+      </div>
+      <div
+        class="chakra-stack emotion-67"
+        data-testid="trixo-must-comply-travel-rule"
+      >
+        <p
+          class="chakra-text emotion-1"
+        >
+          Is your organization required to comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered?
+        </p>
+        <div
+          class="chakra-form-control emotion-61"
+          role="group"
+        >
+          <label
+            class="chakra-switch emotion-62"
+          >
+            <input
+              aria-describedby="field-6-helptext"
+              aria-disabled="false"
+              aria-invalid="false"
+              class="chakra-switch__input"
+              id="trixo.must_comply_travel_rule"
+              name="trixo.must_comply_travel_rule"
+              style="border: 0px; clip: rect(0px, 0px, 0px, 0px); height: 1px; width: 1px; margin: -1px; padding: 0px; overflow: hidden; white-space: nowrap; position: absolute;"
+              type="checkbox"
+              value=""
+            />
+            <span
+              aria-hidden="true"
+              class="chakra-switch__track emotion-63"
+            >
+              <span
+                class="chakra-switch__thumb emotion-64"
+              />
+            </span>
+          </label>
+          <label
+            class="chakra-form__label emotion-65"
+            for="trixo.must_comply_travel_rule"
+            id="field-6-label"
+          >
+            Must comply with Travel Rule
+          </label>
+          <div
+            class="chakra-form__helper-text emotion-66"
+            id="field-6-helptext"
+          />
+        </div>
+      </div>
+      <div
+        class="chakra-stack emotion-75"
+      >
+        <h2
+          class="chakra-heading emotion-23"
+        >
+          Applicable Regulations
+        </h2>
+        <p
+          class="chakra-text emotion-77"
+        >
+          Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g."FATF Recommendation 16"
+        </p>
+        <div
+          class="chakra-stack emotion-78"
+        >
+          <button
+            class="chakra-button emotion-25"
+            type="button"
+          >
+            Add Regulation
+          </button>
+        </div>
+      </div>
+      <div
+        class="chakra-stack emotion-80"
+      >
+        <h2
+          class="chakra-heading emotion-23"
+        >
+          Data Protection Policies
+        </h2>
+        <div
+          class="chakra-stack emotion-78"
+        >
+          <p
+            class="chakra-text emotion-1"
+          >
+            Is your organization required by law to safeguard Personally Identifiable Information (PII)?
+          </p>
+          <div
+            class="chakra-form-control emotion-61"
+            role="group"
+          >
+            <label
+              class="chakra-switch emotion-62"
+            >
+              <input
+                aria-describedby="field-7-helptext"
+                aria-disabled="false"
+                aria-invalid="false"
+                class="chakra-switch__input"
+                id="must_safeguard_pii"
+                name="trixo.must_safeguard_pii"
+                style="border: 0px; clip: rect(0px, 0px, 0px, 0px); height: 1px; width: 1px; margin: -1px; padding: 0px; overflow: hidden; white-space: nowrap; position: absolute;"
+                type="checkbox"
+                value=""
+              />
+              <span
+                aria-hidden="true"
+                class="chakra-switch__track emotion-63"
+              >
+                <span
+                  class="chakra-switch__thumb emotion-64"
+                />
+              </span>
+            </label>
+            <label
+              class="chakra-form__label emotion-65"
+              for="must_safeguard_pii"
+              id="field-7-label"
+            >
+              Must safeguard PII
+            </label>
+            <div
+              class="chakra-form__helper-text emotion-66"
+              id="field-7-helptext"
+            />
+          </div>
+        </div>
+        <div
+          class="chakra-stack emotion-78"
+        >
+          <p
+            class="chakra-text emotion-1"
+          >
+            Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?
+          </p>
+          <div
+            class="chakra-form-control emotion-61"
+            role="group"
+          >
+            <label
+              class="chakra-switch emotion-62"
+            >
+              <input
+                aria-describedby="field-8-helptext"
+                aria-disabled="false"
+                aria-invalid="false"
+                class="chakra-switch__input"
+                id="safeguards_pii"
+                name="trixo.safeguards_pii"
+                style="border: 0px; clip: rect(0px, 0px, 0px, 0px); height: 1px; width: 1px; margin: -1px; padding: 0px; overflow: hidden; white-space: nowrap; position: absolute;"
+                type="checkbox"
+                value=""
+              />
+              <span
+                aria-hidden="true"
+                class="chakra-switch__track emotion-63"
+              >
+                <span
+                  class="chakra-switch__thumb emotion-64"
+                />
+              </span>
+            </label>
+            <label
+              class="chakra-form__label emotion-65"
+              for="safeguards_pii"
+              id="field-8-label"
+            >
+              Safeguards PII
+            </label>
+            <div
+              class="chakra-form__helper-text emotion-66"
+              id="field-8-helptext"
+            />
+          </div>
+        </div>
+      </div>
+      <div
+        class="chakra-stack emotion-98"
+        data-testid="step-buttons"
+      >
+        <button
+          class="chakra-button emotion-99"
+          type="button"
+        >
+          Save & Previous
+        </button>
+        <button
+          class="chakra-button emotion-100"
+          type="button"
+        >
+          Save & Next
+        </button>
+        <button
+          class="chakra-button emotion-99"
+          type="button"
+        >
+          Clear & Reset Section
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+`;

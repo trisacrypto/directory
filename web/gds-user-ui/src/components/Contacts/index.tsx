@@ -1,12 +1,11 @@
 import { Heading, HStack, Stack, Text } from '@chakra-ui/react';
-import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import { getCurrentStep, getSteps } from 'application/store/selectors/stepper';
-import ContactForm from 'components/ContactForm';
 import { SectionStatus } from 'components/SectionStatus';
 import FormLayout from 'layouts/FormLayout';
 import { useSelector } from 'react-redux';
 import { getStepStatus } from 'utils/utils';
+import ContactsForm from './ContactsForm';
 
 const Contacts: React.FC = () => {
   const steps = useSelector(getSteps);
@@ -30,26 +29,7 @@ const Contacts: React.FC = () => {
           </Trans>
         </Text>
       </FormLayout>
-      <ContactForm
-        name={`contacts.legal`}
-        title={t`Legal/ Compliance Contact (required)`}
-        description={t`Compliance officer or legal contact for requests about the compliance requirements and legal status of your organization. A business phone number is required to complete physical verification for MainNet registration. Please provide a phone number where the Legal/ Compliance contact can be contacted.`}
-      />
-      <ContactForm
-        name="contacts.technical"
-        title={t`Technical Contact (required)`}
-        description={t`Primary contact for handling technical queries about the operation and status of your service participating in the TRISA network. Can be a group or admin email.`}
-      />
-      <ContactForm
-        name="contacts.administrative"
-        title={t`Administrative Contact (optional)`}
-        description={t`Administrative or executive contact for your organization to field high-level requests or queries. (Strongly recommended)`}
-      />
-      <ContactForm
-        name="contacts.billing"
-        title={t`Billing Contact (optional)`}
-        description={t`Billing contact for your organization to handle account and invoice requests or queries relating to the operation of the TRISA network.`}
-      />
+      <ContactsForm />
     </Stack>
   );
 };

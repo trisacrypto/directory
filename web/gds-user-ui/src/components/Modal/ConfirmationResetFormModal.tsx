@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import {
   Box,
   Text,
@@ -12,52 +12,93 @@ import {
   useDisclosure,
   Button
 } from '@chakra-ui/react';
-import { getRegistrationDefaultValues } from 'modules/dashboard/certificate/lib';
-import { useNavigate } from 'react-router-dom';
+import { useDeleteCertificateStep } from 'hooks/useDeleteCertificateStep';
 import useCertificateStepper from 'hooks/useCertificateStepper';
-import { Trans } from '@lingui/react';
-
+// import { useNavigate } from 'react-router-dom';
+// import useCertificateStepper from 'hooks/useCertificateStepper';
+import { Trans } from '@lingui/macro';
+import { StepperType } from 'types/type';
+import { getStepNumber } from 'components/BasicDetailsForm/util';
+import { StepEnum } from 'types/enums';
 const ConfirmationResetForm = (props: any) => {
-  const navigate = useNavigate();
+  const { step } = props;
+  const { deleteCertificateStep, isDeletingCertificateStep, wasCertificateStepDeleted } =
+    useDeleteCertificateStep(step);
+  const { updateStepStatusState, clearStepperState } = useCertificateStepper();
+  // const navigate = useNavigate();
   const { onClose: onAlertClose } = useDisclosure();
-  const { resetForm } = useCertificateStepper();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  // const { resetForm } = useCertificateStepper();
+
   const handleOnClose = () => {
     props.onClose();
     onAlertClose();
-    props.onChangeState(false);
   };
+
+  const isResetAllType = props.step === StepEnum.ALL;
+
   const handleResetBtn = () => {
-    setIsLoading(true);
-    // props.onReset(loadDefaultValueFromLocalStorage);
-    resetForm();
-    props.onReset(getRegistrationDefaultValues());
-    props.onChangeResetState(true);
-    props.onChangeState(false);
-    setIsLoading(false);
-    props.onClose();
-    onAlertClose();
-    // props.onRefreshState();
-    navigate('/dashboard/certificate/registration');
+    deleteCertificateStep({
+      step: props.step as StepperType
+    });
+
+    // resetForm();
+    // props.onChangeResetState(true);
+    // props.onChangeState(false);
+
+    // navigate('/dashboard/certificate/registration');
   };
+
+  useEffect(() => {
+    if (wasCertificateStepDeleted) {
+      updateStepStatusState({
+        step: getStepNumber(props.step),
+        status: 'incomplete'
+      });
+      if (props.step === StepEnum.ALL) {
+        clearStepperState();
+      }
+      props.onClose();
+    }
+  }, [wasCertificateStepDeleted, props, updateStepStatusState, clearStepperState, props.step]);
+
   return (
     <>
       <Flex>
         <Box w="full">
-          <Modal closeOnOverlayClick={false} {...props}>
+          <Modal closeOnOverlayClick={false} {...props} isOpen={props.isOpen}>
             <ModalOverlay />
             <ModalContent width={'100%'}>
               <ModalHeader data-testid="confirmation-modal-header" textAlign={'center'}>
-                <Trans id="Clear & Reset Registration Form">Clear & Reset Registration Form</Trans>
+                {isResetAllType ? (
+                  <Trans>Clear & Reset Registration Form</Trans>
+                ) : (
+                  <Trans>Clear & Reset Section</Trans>
+                )}
               </ModalHeader>
 
               <ModalBody pb={5}>
                 <Text pb={2} fontSize={'sm'}>
-                  <Trans id="Click “Reset” to clear and reset the registration form. All data will be deleted and you will be re-directed to the beginning of the form and you will be required to restart the registration process">
-                    Click “Reset” to clear and reset the registration form. All data will be deleted
-                    and you will be re-directed to the beginning of the form and you will be
-                    required to restart the registration process
-                  </Trans>
+                  {isResetAllType ? (
+                    <Trans>
+                      Click "Reset" to clear and{' '}
+                      <Text as="span" fontWeight={'bold'}>
+                        reset the form.
+                      </Text>{' '}
+                      All data will be deleted and cleared from the registration form. You may want
+                      to export the data first. After clearing, you will be taken to the start of
+                      the form.
+                    </Trans>
+                  ) : (
+                    <Trans>
+                      Clear & Reset Section Click "Reset" to clear and reset{' '}
+                      <Text as="span" fontWeight={'bold'}>
+                        this section
+                      </Text>{' '}
+                      of the registration form. All data will be cleared from only this section of
+                      the registration form. Other sections of the registration form will not be
+                      cleared.
+                    </Trans>
+                  )}
                 </Text>
               </ModalBody>
 
@@ -65,20 +106,20 @@ const ConfirmationResetForm = (props: any) => {
                 <Button
                   mr={10}
                   onClick={handleResetBtn}
-                  isLoading={isLoading}
+                  isLoading={isDeletingCertificateStep}
                   bgColor="#23a7e0e8"
                   color="#fff"
                   _hover={{
                     bgColor: '#189fda'
                   }}>
-                  <Trans id="Reset">Reset</Trans>
+                  <Trans>Reset</Trans>
                 </Button>
                 <Button
                   onClick={handleOnClose}
                   bgColor="#555151"
                   color={'#fff'}
                   _hover={{ boxShadow: '#555151', bgColor: '#555151D4' }}>
-                  <Trans id="Cancel">Cancel</Trans>
+                  <Trans>Cancel</Trans>
                 </Button>
               </ModalFooter>
             </ModalContent>

@@ -17,10 +17,24 @@ export const enum USER_PERMISSION {
   READ_VASP = 'read:vasp',
   CREATE_VASP = 'create:vasp',
   UPDATE_VASP = 'update:vasp',
-  CREATE_ORGANIZATIONS = 'create:organizations',
+  CREATE_ORGANIZATIONS = 'create:organizations'
 }
 
 export const enum COLLABORATOR_STATUS {
   Pending = 'Pending',
-  Confirmed = 'Confirmed',
+  Confirmed = 'Confirmed'
+}
+
+export const enum NetworkType {
+  MAINNET = 'mainnet',
+  TESTNET = 'testnet'
+}
+
+export const enum StepEnum {
+  BASIC = 'basic',
+  LEGAL = 'legal',
+  CONTACTS = 'contacts',
+  TRISA = 'trisa',
+  TRIXO = 'trixo',
+  ALL = 'all'
 }

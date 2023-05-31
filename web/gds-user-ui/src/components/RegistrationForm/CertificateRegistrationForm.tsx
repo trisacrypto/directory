@@ -9,19 +9,26 @@ import Contacts from 'components/Contacts';
 import TrixoQuestionnaire from 'components/TrixoQuestionnaire';
 import TrisaImplementation from 'components/TrisaImplementation';
 import CertificateReview from 'components/CertificateReview';
-interface ProgressBarProps {
-  onSetRegistrationState?: any;
-  registrationState?: any;
-}
-const ProgressBar = ({ onSetRegistrationState }: ProgressBarProps) => {
+import { useDispatch, useSelector } from 'react-redux';
+import { setCurrentStep } from 'application/store/stepper.slice';
+import { getCurrentStep } from 'application/store/selectors/stepper';
+import { useEffect } from 'react';
+
+const CertificateRegistrationForm = () => {
+  const dispatch = useDispatch();
+  const currentStep: number = useSelector(getCurrentStep);
+  useEffect(() => {
+    // if currentStep is 0, then set it to 1
+    if (currentStep === 0 || !currentStep) {
+      dispatch(setCurrentStep({ currentStep: 1 }));
+    }
+  }, [currentStep, dispatch]);
+
   return (
     <>
       <CertificateSteps>
         <CertificateStepLabel />
-        <CertificateStepContainer
-          key="1"
-          component={<BasicDetails onChangeRegistrationState={onSetRegistrationState} />}
-        />
+        <CertificateStepContainer key="1" component={<BasicDetails />} />
         <CertificateStepContainer key="2" component={<LegalPerson />} />
         <CertificateStepContainer key="3" component={<Contacts />} />
         <CertificateStepContainer key="4" component={<TrisaImplementation />} />
@@ -32,4 +39,4 @@ const ProgressBar = ({ onSetRegistrationState }: ProgressBarProps) => {
   );
 };
 
-export default ProgressBar;
+export default CertificateRegistrationForm;

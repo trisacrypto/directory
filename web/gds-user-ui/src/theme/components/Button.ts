@@ -31,7 +31,10 @@ const Button: ComponentStyleConfig = {
       color: 'white',
       background: 'orange',
       _hover: {
-        background: '#c85d42'
+        background: '#c85d42',
+        _disabled: {
+          background: 'orange'
+        }
       }
     }
   },

@@ -1,76 +1,73 @@
-import React, { useState } from 'react';
-import { Box, Heading, Stack, HStack, useToast } from '@chakra-ui/react';
+import React from 'react';
+import { Box, Heading, Stack, HStack } from '@chakra-ui/react';
 import BasicDetailsForm from 'components/BasicDetailsForm';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { useSelector } from 'react-redux';
 import { getCurrentStep, getSteps } from 'application/store/selectors/stepper';
-import { getStepStatus, handleError, format2ShortDate } from 'utils/utils';
+import { getStepStatus } from 'utils/utils';
 import { SectionStatus } from 'components/SectionStatus';
 import { Trans } from '@lingui/react';
 import FileUploader from 'components/FileUpload';
+
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 import MinusLoader from 'components/Loader/MinusLoader';
-import { validationSchema } from 'modules/dashboard/certificate/lib';
-import { postRegistrationValue } from 'modules/dashboard/registration/utils';
-import { getRegistrationData } from 'modules/dashboard/registration/service';
+import { StepEnum } from 'types/enums';
+import Store from 'application/store';
+import useUploadFile from 'hooks/useUploadFile';
+import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
 
 interface BasicDetailProps {
   onChangeRegistrationState?: any;
 }
-const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState }) => {
+const BasicDetails: React.FC<BasicDetailProps> = () => {
   const steps = useSelector(getSteps);
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);
-  const toast = useToast();
-  const { updateStateFromFormValues, setRegistrationValue } = useCertificateStepper();
-  const [isLoadingDefaultValue, setIsLoadingDefaultValue] = useState(false);
-  const handleFileUploaded = (file: any) => {
-    // console.log('[handleFileUploaded]', file);
-    setIsLoadingDefaultValue(true);
-    const reader = new FileReader();
-    reader.onload = async (ev: any) => {
-      // if file is empty
-      // if (!ev.target.result) {
-      //   setIsLoadingDefaultValue(false);
-      //   return;
-      // }
 
-      const data = JSON.parse(ev.target.result);
-      try {
-        const validationData = await validationSchema[0].validate(data);
-        const updatedCertificate: any = await postRegistrationValue(validationData);
-        // console.log('[updatedCertificate]', updatedCertificate);
-        // console.log('[updatedCertificate Status]', updatedCertificate.status);
-        if (updatedCertificate.status === 200) {
-          const getValue = await getRegistrationData();
-          const values = {
-            ...getValue.data,
-            established_on: getValue?.data?.established_on
-              ? format2ShortDate(getValue?.data?.established_on)
-              : ''
-          };
-          onChangeRegistrationState(values);
-          setRegistrationValue(values);
-          updateStateFromFormValues(values.state);
-        }
-      } catch (e: any) {
-        if (e.name === 'ValidationError') {
-          toast({
-            title: 'Invalid file',
-            description: e.message || 'your json file is invalid',
-            status: 'error',
-            duration: 5000,
-            isClosable: true,
-            position: 'top-right'
-          });
-          handleError(e, `[Invalid file], it's missing some required fields : ${e.message}`);
-        }
-      } finally {
-        setIsLoadingDefaultValue(false);
-      }
-    };
+  const { setInitialState, currentState, nextStep, getIsDirtyStateByStep } =
+    useCertificateStepper();
+  const { isFetchingCertificateStep, certificateStep, wasCertificateStepFetched } =
+    useFetchCertificateStep({
+      key: StepEnum.BASIC
+    });
 
-    reader.readAsText(file);
+  const { updateCertificateStep, updatedCertificateStep, isUpdatingCertificateStep } =
+    useUpdateCertificateStep();
+
+  const { isFileLoading, handleFileUpload } = useUploadFile();
+
+  const isDirty = getIsDirtyStateByStep(StepEnum.BASIC);
+
+  if (wasCertificateStepFetched) {
+    const { stepper } = Store.getState();
+    if (!stepper?.steps) {
+      // init stepper
+      setInitialState(certificateStep?.form);
+    }
+  }
+
+  // if (wasCertificateStepUpdated) {
+  //   nextStep(updatedCertificateStep);
+  // }
+
+  const handleNextStepClick = (values: any) => {
+    console.log('[] isDirty', isDirty);
+    if (!isDirty) {
+      nextStep(certificateStep);
+    } else {
+      const payload = {
+        step: StepEnum.BASIC,
+        form: {
+          ...values,
+          state: currentState()
+        } as any
+      };
+      updateCertificateStep(payload);
+
+      nextStep(updatedCertificateStep);
+    }
   };
+
   return (
     <Stack spacing={7} mt="2rem">
       <HStack justifyContent={'space-between'}>
@@ -81,12 +78,20 @@ const BasicDetails: React.FC<BasicDetailProps> = ({ onChangeRegistrationState })
           {stepStatus ? <SectionStatus status={stepStatus} /> : null}
         </Box>
         <Box>
-          <FileUploader onReadFileUploaded={handleFileUploaded} />
+          <FileUploader onReadFileUploaded={handleFileUpload} />
         </Box>
       </HStack>
-      <Box w={{ base: '100%' }}>
-        {isLoadingDefaultValue ? <MinusLoader text={'Loading data ...'} /> : <BasicDetailsForm />}
-      </Box>
+      <Stack w={{ base: '100%' }}>
+        {isFileLoading || isFetchingCertificateStep || isUpdatingCertificateStep ? (
+          <MinusLoader text={'Loading data ...'} />
+        ) : (
+          <BasicDetailsForm
+            isLoading={isFetchingCertificateStep}
+            data={certificateStep?.form}
+            onNextStepClick={handleNextStepClick}
+          />
+        )}
+      </Stack>
     </Stack>
   );
 };
