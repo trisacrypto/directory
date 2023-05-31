@@ -13,8 +13,6 @@ import { basicDetailsValidationSchema } from 'modules/dashboard/certificate/lib/
 import StepButtons from 'components/StepsButtons';
 import { isProdEnv } from 'application/config';
 import { DevTool } from '@hookform/devtools';
-import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
-import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 // import { useDeleteCertificateStep } from 'hooks/useDeleteCertificateStep';
 import { StepEnum } from 'types/enums';
@@ -25,31 +23,22 @@ interface BasicDetailsFormProps {
   data?: any;
   isLoading?: boolean;
   onRefreshCertificate?: () => void;
+  onNextStepClick: (v: any) => void;
 }
-const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
+const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data, onNextStepClick }) => {
   const { isOpen, onClose, onOpen } = useDisclosure();
-  // const nextStepClick = useRef<boolean>(false);
-
-  const {
-    updateCertificateStep,
-    updatedCertificateStep
-    // reset,
-    // isUpdatingCertificateStep
-  } = useUpdateCertificateStep();
 
   const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const resolver = yupResolver(basicDetailsValidationSchema);
   const options = getBusinessCategoryOptions();
-  const { currentState, nextStep, updateIsDirty } = useCertificateStepper();
-  const { certificateStep } = useFetchCertificateStep({
-    key: StepEnum.BASIC
-  });
+  const { updateIsDirty } = useCertificateStepper();
+
   const [language] = useLanguageProvider();
 
   useEffect(() => {}, [language]);
 
   const methods = useForm({
-    defaultValues: certificateStep?.form ?? data,
+    defaultValues: data,
     resolver
   });
 
@@ -64,22 +53,11 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data }) => {
     onClose();
   };
 
-  // this is the function that is called when the user clicks on the next button
   const handleNextStepClick = () => {
-    if (!isDirty) {
-      nextStep(certificateStep ?? data);
-    } else {
-      const payload = {
-        step: StepEnum.BASIC,
-        form: {
-          ...methods.getValues(),
-          state: currentState()
-        } as any
-      };
-      updateCertificateStep(payload);
-      nextStep(updatedCertificateStep);
-    }
+    onNextStepClick(methods.getValues());
   };
+
+  // this is the function that is called when the user clicks on the next button
 
   const handleResetForm = () => {
     setShouldShowResetFormModal(true); // this will show the modal

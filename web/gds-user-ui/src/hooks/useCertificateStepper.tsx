@@ -190,6 +190,13 @@ const useCertificateStepper = () => {
     dispatch(clearStepper());
   };
 
+  const getIsDirtyStateByStep = (stepName: string) => {
+    const stepNumber = getStepNumber(stepName);
+    const steps = Store.getState().stepper.steps;
+    const found = steps.filter((s: TStep) => s.key === stepNumber && s.isDirty === true);
+    return found.length > 0;
+  };
+
   return {
     nextStep,
     previousStep,
@@ -211,7 +218,8 @@ const useCertificateStepper = () => {
     updateStepStatusToIncomplete,
     updateStepStatusState,
     updateCurrentStepState,
-    clearStepperState
+    clearStepperState,
+    getIsDirtyStateByStep
   };
 };
 

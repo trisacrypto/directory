@@ -21,3 +21,9 @@ export const clearCookies = () => {
     removeCookie(key);
   });
 };
+
+// clear all local storage
+
+export const clearLocalStorage = () => {
+  localStorage.clear();
+};

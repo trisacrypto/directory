@@ -4,6 +4,7 @@ import BasicDetailsForm from '.';
 
 type BasicDetailsFormProps = {
   data: any;
+  onNextStepClick: (v: any) => void;
 };
 
 export default {

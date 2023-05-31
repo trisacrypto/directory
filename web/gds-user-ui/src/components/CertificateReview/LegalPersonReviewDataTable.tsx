@@ -178,12 +178,12 @@ function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
                 </Tag>
               </Td>
             </Tr>
-            <Tr>
+            {/* <Tr>
               <Td>
-                <Trans id="Country of Registration">Country of Registration</Trans>
+                <Trans id="Country of Issue">Country of Issue</Trans>
               </Td>
-              <Td>{(COUNTRIES as any)[data?.country_of_registration] || 'N/A'}</Td>
-            </Tr>
+              <Td>{(COUNTRIES as any)[data?.national_identification?.country_of_issue] || 'N/A'}</Td>
+            </Tr> */}
             <Tr>
               <Td pt={0}>
                 <Trans id="Reg Authority">Reg Authority</Trans>

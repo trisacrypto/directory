@@ -5,7 +5,7 @@ import SelectFormControl from 'components/ui/SelectFormControl';
 import { getCountriesOptions } from 'constants/countries';
 import {
   getNationalIdentificationOptions,
-  disabledIdentifiers
+  disabledIdentifiers,
 } from 'constants/national-identification';
 import FormLayout from 'layouts/FormLayout';
 import { Controller, useFormContext } from 'react-hook-form';
@@ -91,26 +91,23 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
   // eslint-disable-next-line prefer-const
   let inputRegRef = useRef<any>();
 
-  useEffect(() => {
+useEffect(() => {
     if (NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX') {
-      setValue('entity.national_identification.registration_authority', 'RA777777');
+      setValue('entity.national_identification.registration_authority', 'N/A');
       clearErrors('entity.national_identification.registration_authority');
 
       inputRegRef?.current?.clear();
     }
     if (
-      NationalIdentificationType !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX' &&
-      !disabledIdentifiers.includes(NationalIdentificationType)
+      NationalIdentificationType !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX'
     ) {
       setValue('entity.national_identification.registration_authority', 'RA777777');
+      clearErrors('entity.national_identification.registration_authority');
+
+      inputRegRef?.current?.clear();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [NationalIdentificationType]);
-
-  useEffect(() => {
-    setValue('entity.national_identification.registration_authority', 'RA777777');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getCountryOfRegistration]);
 
   return (
     <FormLayout data-testid="legal-name-identification">

@@ -4,9 +4,12 @@ import useHashQuery from 'hooks/useHashQuery';
 import { getAuth0User, userSelector } from 'modules/auth/login/user.slice';
 import { useNavigate } from 'react-router-dom';
 import Loader from 'components/Loader';
+import useCertificateStepper from 'hooks/useCertificateStepper';
 import { useSelector, useDispatch } from 'react-redux';
 const CallbackPage: React.FC = () => {
   const [isLoading, setIsloading] = useState(true);
+
+  const { clearStepperState } = useCertificateStepper();
 
   const query = useHashQuery();
   const { access_token: accessToken, error: callbackError, error_description } = query as any;
@@ -18,6 +21,12 @@ const CallbackPage: React.FC = () => {
   useEffect(() => {
     dispatch(getAuth0User({ hasToken: accessToken }));
   }, [accessToken, dispatch]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      clearStepperState();
+    }
+  }, [isLoggedIn, clearStepperState]);
 
   useEffect(() => {
     if (callbackError || isError) {
