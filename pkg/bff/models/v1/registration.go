@@ -445,10 +445,13 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 
 	// Final validation just to check and make sure we didn't miss anything
 	if verr := r.Entity.Validate(); verr != nil {
-		err = append(err, &ValidationError{
-			Field: FieldEntity,
-			Err:   verr.Error(),
-		})
+		// C9 constraint errors are ignored because they are also ignored in GDS
+		if verr.Error() != ivms101.ErrCompleteNationalIdentifierLegalPerson.Error() {
+			err = append(err, &ValidationError{
+				Field: FieldEntity,
+				Err:   verr.Error(),
+			})
+		}
 	}
 
 	if len(err) == 0 {
@@ -574,8 +577,9 @@ func ValidateContact(contact *pb.Contact, fieldName string) error {
 		}
 	}
 
+	// Phone number is optional for technical contacts
 	phone := strings.TrimSpace(contact.Phone)
-	if phone == "" {
+	if phone == "" && fieldName != FieldContactsTechnical {
 		err = append(err, &ValidationError{Field: fieldName + ".phone", Err: ErrMissingField.Error()})
 	}
 
@@ -654,15 +658,6 @@ func (r *RegistrationForm) ValidateTRIXO() error {
 		if r.Trixo.OtherJurisdictions[i].RegulatorName == "" {
 			err = append(err, &ValidationError{
 				Field: FieldTRIXOOtherJurisdictionsRegulatorName,
-				Err:   ErrMissingField.Error(),
-				Index: i,
-			})
-		}
-
-		r.Trixo.OtherJurisdictions[i].LicenseNumber = strings.TrimSpace(juris.LicenseNumber)
-		if r.Trixo.OtherJurisdictions[i].LicenseNumber == "" {
-			err = append(err, &ValidationError{
-				Field: FieldTRIXOOtherJurisdictionsLicenseNumber,
 				Err:   ErrMissingField.Error(),
 				Index: i,
 			})
