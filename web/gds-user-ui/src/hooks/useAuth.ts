@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { userSelector, login, logout, isLoggedInSelector } from 'modules/auth/login/user.slice';
-import { getCookie, clearCookies } from 'utils/cookies';
+import { getCookie, clearCookies, clearLocalStorage } from 'utils/cookies';
 import useCustomAuth0 from './useCustomAuth0';
 import { persistor } from 'application/store';
 const useAuth = () => {
@@ -17,6 +17,7 @@ const useAuth = () => {
   const getExpiryTime: any = getCookie('expires_in') || '';
 
   const logoutUser = () => {
+    clearLocalStorage();
     persistor.purge();
     clearCookies();
     dispatch(logout());
@@ -27,6 +28,7 @@ const useAuth = () => {
         const userInfo: any = await auth0GetUser(getToken);
         if (userInfo) {
           clearCookies();
+          clearLocalStorage();
           persistor.purge();
           const u: TUser = {
             isLoggedIn: true,
@@ -56,7 +58,9 @@ const useAuth = () => {
 
       if (currentTime > +getExpiryTime) {
         // console.log('token expired');
+        clearLocalStorage();
         clearCookies();
+        persistor.purge();
         logoutUser();
         return false;
       } else {
