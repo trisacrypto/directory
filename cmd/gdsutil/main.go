@@ -35,10 +35,13 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/models/v1"
+	"github.com/trisacrypto/directory/pkg/store"
+	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli/v2"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v2"
@@ -354,6 +357,7 @@ func main() {
 			Usage:    "migrate all contacts on vasps into the model contacts namespace",
 			Category: "contact",
 			Action:   migrateContacts,
+			Before:   openTrtlDB,
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
 					Name:    "dryrun",
@@ -709,6 +713,41 @@ func isFile(path string) bool {
 		return !os.IsNotExist(err)
 	}
 	return fi.Mode().IsRegular()
+}
+
+//===========================================================================
+// TrtlDB Helper Functions
+//===========================================================================
+
+var trtl store.Store
+
+func openTrtlDB(c *cli.Context) (err error) {
+	// Suppress the zerolog output from the store
+	logger.Discard()
+
+	// Load the configuration from the environment
+	var conf config.Config
+	if conf, err = config.New(); err != nil {
+		return cli.Exit(err, 1)
+	}
+	conf.Database.ReindexOnBoot = false
+	conf.ConsoleLog = false
+
+	// Connect to the trtl server and create a store to access data directly like GDS
+	if trtl, err = store.Open(conf.Database); err != nil {
+		if serr, ok := status.FromError(err); ok {
+			return cli.Exit(fmt.Errorf("could not open store: %s", serr.Message()), 1)
+		}
+		return cli.Exit(err, 1)
+	}
+	return nil
+}
+
+func closeTrtlDB(c *cli.Context) (err error) {
+	if err = trtl.Close(); err != nil {
+		return cli.Exit(err, 2)
+	}
+	return nil
 }
 
 //===========================================================================
@@ -1258,23 +1297,25 @@ func generateTokenKey(c *cli.Context) (err error) {
 }
 
 func migrateContacts(c *cli.Context) (err error) {
+	defer closeTrtlDB(c)
+
 	// Create a list of vasp contacts and model contacts
 	modelContacts := make(map[string]*models.Contact)
 	var vaspContacts []*pb.Contact
 
 	// iterate through all vasps in the database
-	iter := ldb.NewIterator(util.BytesPrefix([]byte(wire.NamespaceVASPs)), nil)
-	for iter.Next() {
-		vasp := new(pb.VASP)
-		if err = proto.Unmarshal(iter.Value(), vasp); err != nil {
-			iter.Release()
+	vaspIter := trtl.ListVASPs(context.Background())
+	for vaspIter.Next() {
+		var vasp *pb.VASP
+		if vasp, err = vaspIter.VASP(); err != nil {
+			vaspIter.Release()
 			return cli.Exit(err, 1)
 		}
-		iter := models.NewContactIterator(vasp.Contacts, true, false)
+		contactIter := models.NewContactIterator(vasp.Contacts, true, false)
 
 		// Iterate through all contacts on the vasp
-		for iter.Next() {
-			vaspContact, _ := iter.Value()
+		for contactIter.Next() {
+			vaspContact, _ := contactIter.Value()
 			vaspContacts = append(vaspContacts, vaspContact)
 			modelContact, AlreadyExists := modelContacts[vaspContact.Email]
 
@@ -1289,7 +1330,7 @@ func migrateContacts(c *cli.Context) (err error) {
 			// If the model contact doesn't already exist create it,
 			// if it does update the email log and vasp list
 			if !AlreadyExists {
-				modelContact = &models.Contact{
+				modelContacts[vaspContact.Email] = &models.Contact{
 					Email:    vaspContact.Email,
 					Name:     vaspContact.Name,
 					Vasps:    []string{vasp.CommonName},
@@ -1313,26 +1354,49 @@ func migrateContacts(c *cli.Context) (err error) {
 	if c.Bool("dryrun") {
 		fmt.Println("existing vasp contacts:")
 		for _, contact := range vaspContacts {
-			fmt.Print(contact)
+			fmt.Println(contact.Email)
+			vaspContactExtra := &models.GDSContactExtraData{}
+			if contact.Extra != nil {
+				if err = contact.Extra.UnmarshalTo(vaspContactExtra); err != nil {
+					return fmt.Errorf("could not deserialize previous extra: %s", err)
+				}
+			}
+			fmt.Println("verified", vaspContactExtra.Verified)
+			fmt.Println("token", vaspContactExtra.Token)
+			fmt.Println("log", vaspContactExtra.EmailLog)
+			fmt.Println()
 		}
 		fmt.Println() // Print a new line for clarity
 		fmt.Println("created contacts:")
 		for _, contact := range modelContacts {
-			fmt.Print(contact)
+			fmt.Println(contact.Email)
+			fmt.Println("verified", contact.Verified)
+			fmt.Println("token", contact.Token)
+			fmt.Println("log", contact.EmailLog)
+			fmt.Println()
 		}
 		return nil
 	}
 
-	// Put all new model contacts into the leveldb database
+	// Put all new model contacts into the trtl database
 	for _, contact := range modelContacts {
-		var data []byte
-		key := []byte(wire.NamespaceContacts + "::" + contact.Email)
-		if data, err = proto.Marshal(contact); err != nil {
+		// Check if the contact already exists
+		if _, err = trtl.RetrieveContact(context.Background(), contact.Email); err == nil {
+			fmt.Printf("contact %s already exists\n\n", contact.Email)
+			continue
+		}
+
+		// Create if not exists
+		var email string
+		if email, err = trtl.CreateContact(context.Background(), contact); err != nil {
 			return cli.Exit(err, 1)
 		}
-		if err = ldb.Put(key, data, nil); err != nil {
-			return cli.Exit(err, 1)
-		}
+
+		fmt.Printf("created contact model for %s\n", email)
+		fmt.Println("verified", contact.Verified)
+		fmt.Println("token", contact.Token)
+		fmt.Println("log", contact.EmailLog)
+		fmt.Println()
 	}
 	return nil
 }
