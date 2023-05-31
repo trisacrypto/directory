@@ -80,7 +80,7 @@ const ConfirmationResetForm = (props: any) => {
                 <Text pb={2} fontSize={'sm'}>
                   {isResetAllType ? (
                     <Trans>
-                      Click “Reset” to clear and{' '}
+                      Click "Reset" to clear and{' '}
                       <Text as="span" fontWeight={'bold'}>
                         reset the form.
                       </Text>{' '}
@@ -90,7 +90,7 @@ const ConfirmationResetForm = (props: any) => {
                     </Trans>
                   ) : (
                     <Trans>
-                      Clear & Reset Section Click “Reset” to clear and reset
+                      Clear & Reset Section Click "Reset" to clear and reset{' '}
                       <Text as="span" fontWeight={'bold'}>
                         this section
                       </Text>{' '}
