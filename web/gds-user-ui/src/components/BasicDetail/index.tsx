@@ -14,6 +14,8 @@ import MinusLoader from 'components/Loader/MinusLoader';
 import { StepEnum } from 'types/enums';
 import Store from 'application/store';
 import useUploadFile from 'hooks/useUploadFile';
+import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
+
 interface BasicDetailProps {
   onChangeRegistrationState?: any;
 }
@@ -22,13 +24,19 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);
 
-  const { setInitialState } = useCertificateStepper();
+  const { setInitialState, currentState, nextStep, getIsDirtyStateByStep } =
+    useCertificateStepper();
   const { isFetchingCertificateStep, certificateStep, wasCertificateStepFetched } =
     useFetchCertificateStep({
       key: StepEnum.BASIC
     });
 
+  const { updateCertificateStep, updatedCertificateStep, isUpdatingCertificateStep } =
+    useUpdateCertificateStep();
+
   const { isFileLoading, handleFileUpload } = useUploadFile();
+
+  const isDirty = getIsDirtyStateByStep(StepEnum.BASIC);
 
   if (wasCertificateStepFetched) {
     const { stepper } = Store.getState();
@@ -37,6 +45,28 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
       setInitialState(certificateStep?.form);
     }
   }
+
+  // if (wasCertificateStepUpdated) {
+  //   nextStep(updatedCertificateStep);
+  // }
+
+  const handleNextStepClick = (values: any) => {
+    console.log('[] isDirty', isDirty);
+    if (!isDirty) {
+      nextStep(certificateStep);
+    } else {
+      const payload = {
+        step: StepEnum.BASIC,
+        form: {
+          ...values,
+          state: currentState()
+        } as any
+      };
+      updateCertificateStep(payload);
+
+      nextStep(updatedCertificateStep);
+    }
+  };
 
   return (
     <Stack spacing={7} mt="2rem">
@@ -52,10 +82,14 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
         </Box>
       </HStack>
       <Stack w={{ base: '100%' }}>
-        {isFileLoading || isFetchingCertificateStep ? (
+        {isFileLoading || isFetchingCertificateStep || isUpdatingCertificateStep ? (
           <MinusLoader text={'Loading data ...'} />
         ) : (
-          <BasicDetailsForm isLoading={isFetchingCertificateStep} data={certificateStep?.form} />
+          <BasicDetailsForm
+            isLoading={isFetchingCertificateStep}
+            data={certificateStep?.form}
+            onNextStepClick={handleNextStepClick}
+          />
         )}
       </Stack>
     </Stack>
