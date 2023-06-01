@@ -16,15 +16,10 @@ type InvalidFormPromptProps = {
   isOpen: boolean;
   onClose: () => void;
   handleContinueClick: () => void;
-  nextStepBtnContent: string;
+  nextStepBtnContent?: string;
 };
 
-function InvalidFormPrompt({
-  isOpen,
-  onClose,
-  handleContinueClick,
-  nextStepBtnContent
-}: InvalidFormPromptProps) {
+function InvalidFormPrompt({ isOpen, onClose, handleContinueClick }: InvalidFormPromptProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
@@ -42,16 +37,15 @@ function InvalidFormPrompt({
             </Text>
             <Box>
               {' '}
-              <Trans>
-                <Text>
+              <Text>
+                <Trans>
                   If you continue, your changes will be lost. To save your changes, click Cancel and
-                  then click on the{' '}
-                  <Text as="span" fontWeight={'bold'} whiteSpace={'break-spaces'}>
-                    {nextStepBtnContent}
-                  </Text>{' '}
-                  button.
-                </Text>
-              </Trans>
+                  then click on the
+                </Trans>
+              </Text>
+              <Text as="span" fontWeight="bold">
+                <Trans>"Save & Next" or "Save & Previous" button.</Trans>
+              </Text>
             </Box>
           </VStack>
         </ModalBody>
