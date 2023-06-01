@@ -204,7 +204,7 @@ func NewRegisterForm() *RegistrationForm {
 // response to ensure that we're able to submit valid forms and that validation only
 // occurs in one place in the code.
 func (r *RegistrationForm) ReadyToSubmit(network string) bool {
-	if r.VaspCategories == nil || r.Entity == nil || r.Contacts == nil || r.Trixo == nil {
+	if r.Entity == nil || r.Contacts == nil || r.Trixo == nil {
 		return false
 	}
 
