@@ -12,7 +12,6 @@ import {
   Box
 } from '@chakra-ui/react';
 import { Trans } from '@lingui/macro';
-import { useEffect, useState } from 'react';
 type InvalidFormPromptProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -26,16 +25,6 @@ function InvalidFormPrompt({
   handleContinueClick,
   isNextStep
 }: InvalidFormPromptProps) {
-  const [btnContent, setIsBtnContent] = useState("");
-
-  useEffect(() => {
-    if (isNextStep) {
-      setIsBtnContent("Save & Next");
-    } else {
-      setIsBtnContent("Save & Previous");
-    }
-  }, [isNextStep]);
-
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
@@ -55,11 +44,9 @@ function InvalidFormPrompt({
               <Text>
                 <Trans>
                   If you continue, your changes will be lost. To save your changes, click Cancel and
-                  then click on the
+                  then click on the{' '}
+                {isNextStep ? <Text as="span" fontWeight={700} whiteSpace={'break-spaces'}>Save & Next</Text> : <Text as="span" fontWeight={700} whiteSpace={'break-spaces'}>Save & Previous</Text>} button.
                 </Trans>
-              </Text>
-              <Text fontWeight={'bold'} as="span">
-                <Trans>{btnContent} button.</Trans>
               </Text>
             </Box>
           </VStack>
