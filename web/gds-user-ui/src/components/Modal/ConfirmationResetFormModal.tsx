@@ -54,6 +54,7 @@ const ConfirmationResetForm = (props: any) => {
         step: getStepNumber(props.step),
         status: 'incomplete'
       });
+
       if (props.step === StepEnum.ALL) {
         clearStepperState();
       }

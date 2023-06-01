@@ -18,6 +18,7 @@ type TPayload = {
   mainnetSubmitted?: boolean;
   status?: Record<TStatusKey, StepStatus>;
   data?: any;
+  deletedSteps?: [];
 };
 
 type StateFormType = {

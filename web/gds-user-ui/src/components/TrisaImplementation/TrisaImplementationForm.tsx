@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { chakra, useDisclosure } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
 import FormLayout from 'layouts/FormLayout';
@@ -22,8 +22,15 @@ const TrisaForm: React.FC = () => {
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
     key: StepEnum.TRISA
   });
-  const { updateCertificateStep, updatedCertificateStep } = useUpdateCertificateStep();
-
+  const {
+    updateCertificateStep,
+    updatedCertificateStep,
+    wasCertificateStepUpdated,
+    isUpdatingCertificateStep,
+    reset: resetMutation
+  } = useUpdateCertificateStep();
+  const previousStepRef = useRef<any>(false);
+  const nextStepRef = useRef<any>(false);
   const resolver = yupResolver(trisaImplementationValidationSchema);
   const methods = useForm({
     defaultValues: certificateStep?.form,
@@ -32,7 +39,8 @@ const TrisaForm: React.FC = () => {
   });
 
   const {
-    formState: { isDirty }
+    formState: { isDirty },
+    reset: resetForm
   } = methods;
 
   useEffect(() => {
@@ -46,6 +54,27 @@ const TrisaForm: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldShowResetFormModal]);
 
+  if (wasCertificateStepUpdated && nextStepRef.current) {
+    resetMutation();
+    // reset the form with the new values
+    resetForm(updatedCertificateStep?.form, {
+      keepValues: false
+    });
+    nextStep(updatedCertificateStep);
+    nextStepRef.current = false;
+  }
+
+  if (wasCertificateStepUpdated && previousStepRef.current && !isUpdatingCertificateStep) {
+    resetMutation();
+    // reset the form with the new values
+    resetForm(updatedCertificateStep?.form, {
+      keepValues: false
+    });
+    console.log('[] prev updatedCertificateStep', updatedCertificateStep);
+    previousStepRef.current = false;
+    previousStep(updatedCertificateStep);
+  }
+
   const handlePreviousStepClick = () => {
     if (isDirty) {
       const payload = {
@@ -56,7 +85,7 @@ const TrisaForm: React.FC = () => {
         } as any
       };
       updateCertificateStep(payload);
-      previousStep(updatedCertificateStep);
+      previousStepRef.current = true;
     }
     previousStep(certificateStep);
   };
@@ -72,11 +101,9 @@ const TrisaForm: React.FC = () => {
           state: currentState()
         } as any
       };
-      console.log('[] isDirty  payload', payload);
 
       updateCertificateStep(payload);
-      console.log('[] isDirty 3 (not)', updatedCertificateStep);
-      nextStep(updatedCertificateStep);
+      nextStepRef.current = true;
     }
   };
   const handleResetForm = () => {

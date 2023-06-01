@@ -1,3 +1,4 @@
+import { useEffect, useState, useRef } from 'react';
 import { Grid, GridItem, Heading, Text, VStack, chakra, useDisclosure } from '@chakra-ui/react';
 import OtherJuridictions from 'components/OtherJuridictions';
 import Regulations from 'components/Regulations';
@@ -8,7 +9,7 @@ import { getCountriesOptions } from 'constants/countries';
 import { getCurrenciesOptions, getFinancialTransfertsPermittedOptions } from 'constants/trixo';
 import FormLayout from 'layouts/FormLayout';
 import { Controller, useForm, FormProvider } from 'react-hook-form';
-import { useEffect, useState } from 'react';
+
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
@@ -41,8 +42,12 @@ const TrixoQuestionnaireForm: React.FC = () => {
     control,
     setValue,
     watch,
-    formState: { isDirty }
+    formState: { isDirty },
+    reset: resetForm
   } = methods;
+
+  const previousStepRef = useRef<any>(false);
+  const nextStepRef = useRef<any>(false);
   const countries = getCountriesOptions();
   const financialTransfertsOptions = getFinancialTransfertsPermittedOptions();
   const currencies = getCurrenciesOptions();
@@ -53,11 +58,39 @@ const TrixoQuestionnaireForm: React.FC = () => {
   const getComplianceThreshold = watch('trixo.compliance_threshold');
   const getKycThreshold = watch('trixo.kyc_threshold');
 
-  const { updateCertificateStep, updatedCertificateStep } = useUpdateCertificateStep();
+  const {
+    updateCertificateStep,
+    updatedCertificateStep,
+    isUpdatingCertificateStep,
+    wasCertificateStepUpdated,
+    reset: resetMutation
+  } = useUpdateCertificateStep();
   const onCloseModalHandler = () => {
     setShouldShowResetFormModal(false);
     onClose();
   };
+
+  if (wasCertificateStepUpdated && nextStepRef.current) {
+    resetMutation();
+    // reset the form with the new values
+    resetForm(updatedCertificateStep?.form, {
+      keepValues: false
+    });
+    nextStep(updatedCertificateStep);
+    nextStepRef.current = false;
+  }
+
+  if (wasCertificateStepUpdated && previousStepRef.current && !isUpdatingCertificateStep) {
+    resetMutation();
+    // reset the form with the new values
+    resetForm(updatedCertificateStep?.form, {
+      keepValues: false
+    });
+    console.log('[] prev updatedCertificateStep', updatedCertificateStep);
+    previousStepRef.current = false;
+    previousStep(updatedCertificateStep);
+  }
+
   const handleNextStepClick = () => {
     if (!isDirty) {
       nextStep(certificateStep);
@@ -71,7 +104,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
       };
 
       updateCertificateStep(payload);
-      nextStep(updatedCertificateStep);
+      nextStepRef.current = true;
     }
   };
 
@@ -87,28 +120,32 @@ const TrixoQuestionnaireForm: React.FC = () => {
       console.log('[] isDirty  payload Trixo', payload);
 
       updateCertificateStep(payload);
-      previousStep(updatedCertificateStep);
+      previousStepRef.current = true;
     }
     previousStep(certificateStep);
   };
 
-  useEffect(() => {
-    if (shouldShowResetFormModal) {
-      onOpen();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shouldShowResetFormModal]);
+  const handleResetForm = () => {
+    setShouldShowResetFormModal(true); // this will show the modal
+  };
+
+  const handleResetClick = () => {
+    setShouldShowResetFormModal(false); // this will close the modal
+  };
 
   useEffect(() => {
-    updateIsDirty(isDirty, StepsIndexes.TRIXO_QUESTIONNAIRE);
-  }, [isDirty, updateIsDirty]);
-
-  useEffect(() => {
-    if (getCountryFromLegalAddress) {
-      setValue(`trixo.primary_national_jurisdiction`, getCountryFromLegalAddress);
+    const regExp = /^0[0-9].*$/;
+    if (getComplianceThreshold !== 0) {
+      if (regExp.test(getComplianceThreshold)) {
+        setValue(`trixo.compliance_threshold`, getComplianceThreshold.replace(/^0+/, ''));
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getCountryFromLegalAddress]);
+    if (getKycThreshold !== 0) {
+      if (regExp.test(getKycThreshold)) {
+        setValue(`trixo.kyc_threshold`, getKycThreshold.replace(/^0+/, ''));
+      }
+    }
+  }, [getKycThreshold, getComplianceThreshold, setValue]);
 
   // set default value if getMustComplyRegulations or  is false
   useEffect(() => {
@@ -134,26 +171,22 @@ const TrixoQuestionnaireForm: React.FC = () => {
   ]);
 
   useEffect(() => {
-    const regExp = /^0[0-9].*$/;
-    if (getComplianceThreshold !== 0) {
-      if (regExp.test(getComplianceThreshold)) {
-        setValue(`trixo.compliance_threshold`, getComplianceThreshold.replace(/^0+/, ''));
-      }
+    if (shouldShowResetFormModal) {
+      onOpen();
     }
-    if (getKycThreshold !== 0) {
-      if (regExp.test(getKycThreshold)) {
-        setValue(`trixo.kyc_threshold`, getKycThreshold.replace(/^0+/, ''));
-      }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldShowResetFormModal]);
+
+  useEffect(() => {
+    updateIsDirty(isDirty, StepsIndexes.TRIXO_QUESTIONNAIRE);
+  }, [isDirty, updateIsDirty]);
+
+  useEffect(() => {
+    if (getCountryFromLegalAddress) {
+      setValue(`trixo.primary_national_jurisdiction`, getCountryFromLegalAddress);
     }
-  }, [getKycThreshold, getComplianceThreshold, setValue]);
-
-  const handleResetForm = () => {
-    setShouldShowResetFormModal(true); // this will show the modal
-  };
-
-  const handleResetClick = () => {
-    setShouldShowResetFormModal(false); // this will close the modal
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getCountryFromLegalAddress]);
 
   return (
     <FormLayout spacing={5}>
