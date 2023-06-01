@@ -64,7 +64,9 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
   }
   if (hasBeenUploaded || hasFileUploadedFail) {
     // reload the step
-    window.location.reload();
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
   }
 
   if (wasCertificateStepUpdated) {

@@ -46,6 +46,8 @@ const useUploadFile = () => {
           step: StepEnum.ALL,
           form: validationData?.form || validationData
         };
+        // we need to create a new payload that will be used to update the certificate step
+
         updateCertificateStep(payload);
       } catch (e: any) {
         console.log('[] error validationData', e);
