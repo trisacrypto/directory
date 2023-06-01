@@ -1,4 +1,0 @@
-{
-  "fixturesFolder": "cypress/fixtures",
-  "integrationFolder": "cypress/e2e"
-}

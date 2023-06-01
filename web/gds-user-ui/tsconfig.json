@@ -19,7 +19,6 @@
     "noUnusedLocals": false,
     "jsx": "react-jsx",
     "baseUrl": "./src",
-    "types": ["cypress"]
   },
   "include": ["src", "src/custom.d.ts", "integration/**/*.spec.ts"]
 }

@@ -44,11 +44,9 @@ function InvalidFormPrompt({
               <Text>
                 <Trans>
                   If you continue, your changes will be lost. To save your changes, click Cancel and
-                  then click on :
+                  then click on the{' '}
+                {isNextStep ? <Text as="span" fontWeight={'bold'} whiteSpace={'break-spaces'}>Save & Next</Text> : <Text as="span" fontWeight={'bold'} whiteSpace={'break-spaces'}>Save & Previous</Text>} button.
                 </Trans>
-              </Text>
-              <Text fontWeight={'bold'} as="span">
-                <Trans>{isNextStep ? 'Save & Next' : 'Save & Previous'} button.</Trans>
               </Text>
             </Box>
           </VStack>
