@@ -173,7 +173,15 @@ const stepperSlice: any = createSlice({
       state.mainnetSubmitted = false;
       state.hasReachReviewStep = false;
       state.data = {};
-      state.deletedSteps = [...state.deletedSteps];
+      state.deletedSteps =
+        state?.deletedSteps?.length > 0
+          ? [...state.deletedSteps]
+          : [
+              {
+                step: 'basic',
+                isDeleted: false
+              }
+            ];
     },
     // set testnet submission
     setTestnetSubmitted: (state: any, { payload }: any) => {
@@ -218,7 +226,7 @@ const stepperSlice: any = createSlice({
 
     // push deleted elements to the list
     setDeletedSteps: (state: any, { payload }: any) => {
-      const found = state.deletedSteps.filter((element: any) => element.step === payload.step);
+      const found = state?.deletedSteps?.filter((element: any) => element.step === payload.step);
       if (found.length === 0) {
         state.deletedSteps.push(payload);
       }
@@ -240,7 +248,7 @@ const stepperSlice: any = createSlice({
 
     // get the deleted elements by step name
     getDeletedElementByStep: (state: any, { payload }: any) => {
-      const found = state.deletedSteps.filter((element: any) => element.step === payload.step);
+      const found = state?.deletedSteps?.filter((element: any) => element.step === payload.step);
       if (found.length === 1) {
         return found[0];
       }
