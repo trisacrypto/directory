@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Heading, Stack, HStack } from '@chakra-ui/react';
 import BasicDetailsForm from 'components/BasicDetailsForm';
 import useCertificateStepper from 'hooks/useCertificateStepper';
@@ -23,13 +23,23 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
   const steps = useSelector(getSteps);
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);
-
-  const { setInitialState, currentState, nextStep, getIsDirtyStateByStep } =
-    useCertificateStepper();
-  const { isFetchingCertificateStep, certificateStep, wasCertificateStepFetched } =
-    useFetchCertificateStep({
-      key: StepEnum.BASIC
-    });
+  const [shouldResetForm, setShouldResetForm] = React.useState(false);
+  const {
+    setInitialState,
+    currentState,
+    nextStep,
+    getIsDirtyStateByStep,
+    isStepDeleted,
+    updateDeleteStepState
+  } = useCertificateStepper();
+  const {
+    isFetchingCertificateStep,
+    getCertificateStep,
+    certificateStep,
+    wasCertificateStepFetched
+  } = useFetchCertificateStep({
+    key: StepEnum.BASIC
+  });
 
   const {
     updateCertificateStep,
@@ -39,9 +49,11 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
     reset
   } = useUpdateCertificateStep();
 
-  const { isFileLoading, handleFileUpload } = useUploadFile();
+  const { isFileLoading, handleFileUpload, hasBeenUploaded, hasFileUploadedFail } = useUploadFile();
 
   const isDirty = getIsDirtyStateByStep(StepEnum.BASIC);
+  const isBasicStepDeleted = isStepDeleted(StepEnum.BASIC);
+  const isAllFormDeleted = isStepDeleted(StepEnum.ALL);
 
   if (wasCertificateStepFetched) {
     const { stepper } = Store.getState();
@@ -49,6 +61,12 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
       // init stepper
       setInitialState(certificateStep?.form);
     }
+  }
+  if (hasBeenUploaded || hasFileUploadedFail) {
+    // reload the step
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
   }
 
   if (wasCertificateStepUpdated) {
@@ -71,6 +89,32 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
     }
   };
 
+  useEffect(() => {
+    if (isBasicStepDeleted) {
+      console.log('isBasicStepDeleted');
+      const payload = {
+        step: StepEnum.BASIC,
+        isDeleted: false
+      };
+      updateDeleteStepState(payload);
+      getCertificateStep();
+      setShouldResetForm(true);
+    }
+
+    if (isAllFormDeleted) {
+      console.log('isAllFormDeleted');
+      const payload = {
+        step: StepEnum.ALL,
+        isDeleted: false
+      };
+      updateDeleteStepState(payload);
+      getCertificateStep();
+      setShouldResetForm(true);
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isStepDeleted, isAllFormDeleted, isBasicStepDeleted]);
+
   return (
     <Stack spacing={7} mt="2rem">
       <HStack justifyContent={'space-between'}>
@@ -92,6 +136,8 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
             isLoading={isFetchingCertificateStep}
             data={certificateStep?.form}
             onNextStepClick={handleNextStepClick}
+            shouldResetForm={shouldResetForm}
+            onResetFormState={setShouldResetForm}
           />
         )}
       </Stack>

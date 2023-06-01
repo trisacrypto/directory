@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Dispatch, SetStateAction } from 'react';
 import { Grid, GridItem, Heading, Text, VStack, chakra, useDisclosure } from '@chakra-ui/react';
 import OtherJuridictions from 'components/OtherJuridictions';
 import Regulations from 'components/Regulations';
@@ -13,26 +13,33 @@ import { Controller, useForm, FormProvider } from 'react-hook-form';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
-import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
+
 import StepButtons from 'components/StepsButtons';
 import { StepEnum } from 'types/enums';
-import { trisaImplementationValidationSchema } from 'modules/dashboard/certificate/lib/trisaImplementationValidationSchema';
+import { trixoQuestionnaireValidationSchema } from 'modules/dashboard/certificate/lib/trixoQuestionnaireValidationSchema';
 import { yupResolver } from '@hookform/resolvers/yup';
 import useCertificateStepper from 'hooks/useCertificateStepper';
-import MinusLoader from 'components/Loader/MinusLoader';
 import { StepsIndexes } from 'constants/steps';
 import { isProdEnv } from 'application/config';
 import { DevTool } from '@hookform/devtools';
-const TrixoQuestionnaireForm: React.FC = () => {
+interface TrixoFormProps {
+  data: any;
+  isLoading?: boolean;
+  shouldResetForm?: boolean;
+  onResetFormState?: Dispatch<SetStateAction<boolean>>;
+}
+const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
+  data,
+  shouldResetForm,
+  onResetFormState
+}) => {
   const { isOpen, onClose, onOpen } = useDisclosure();
   const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
-  const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
-    key: StepEnum.TRIXO
-  });
-  const resolver = yupResolver(trisaImplementationValidationSchema);
+
+  const resolver = yupResolver(trixoQuestionnaireValidationSchema);
   const methods = useForm({
-    defaultValues: certificateStep?.form,
+    defaultValues: data,
     resolver,
     mode: 'onChange'
   });
@@ -93,7 +100,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
 
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep(certificateStep);
+      nextStep(data);
     } else {
       const payload = {
         step: StepEnum.TRIXO,
@@ -122,7 +129,7 @@ const TrixoQuestionnaireForm: React.FC = () => {
       updateCertificateStep(payload);
       previousStepRef.current = true;
     }
-    previousStep(certificateStep);
+    previousStep(data);
   };
 
   const handleResetForm = () => {
@@ -188,265 +195,265 @@ const TrixoQuestionnaireForm: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getCountryFromLegalAddress]);
 
+  // reset the form from the parent component
+  useEffect(() => {
+    if (shouldResetForm && onResetFormState) {
+      resetForm(data);
+      onResetFormState(false);
+      window.location.reload();
+    }
+  }, [shouldResetForm, resetForm, data, onResetFormState]);
+
   return (
     <FormLayout spacing={5}>
-      {isFetchingCertificateStep ? (
-        <MinusLoader />
-      ) : (
-        <FormProvider {...methods}>
-          <chakra.form
-            onSubmit={methods.handleSubmit(handleNextStepClick)}
-            data-testid="trixo-form">
+      <FormProvider {...methods}>
+        <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)} data-testid="trixo-form">
+          <Controller
+            control={control}
+            name="trixo.primary_national_jurisdiction"
+            render={({ field }) => (
+              <SelectFormControl
+                options={countries}
+                controlId="primaryNationalJuridiction"
+                label={t`Primary National Jurisdiction`}
+                ref={field.ref}
+                name={field.name}
+                value={countries.find((option) => option.value === field.value)}
+                onChange={(newValue: any) => field.onChange(newValue.value)}
+              />
+            )}
+          />
+          <InputFormControl
+            controlId="nameOfPrimaryRegulator"
+            label={t`Name of Primary Regulator`}
+            formHelperText={t`The name of primary regulator or supervisory authority for your national jurisdiction`}
+            {...register('trixo.primary_regulator')}
+          />
+          <VStack align="start" w="100%" py={5}>
+            <Heading size="md">
+              <Trans id="Other Jurisdictions">Other Jurisdictions</Trans>
+            </Heading>
+            <Text>
+              <Trans id="Please add any other regulatory jurisdictions your organization complies with.">
+                Please add any other regulatory jurisdictions your organization complies with.
+              </Trans>
+            </Text>
+
+            <OtherJuridictions name={'trixo.other_jurisdictions'} />
+          </VStack>
+
+          <VStack data-testid="is-required-financial-transfers">
             <Controller
               control={control}
-              name="trixo.primary_national_jurisdiction"
+              name="trixo.financial_transfers_permitted"
               render={({ field }) => (
                 <SelectFormControl
-                  options={countries}
-                  controlId="primaryNationalJuridiction"
-                  label={t`Primary National Jurisdiction`}
                   ref={field.ref}
                   name={field.name}
-                  value={countries.find((option) => option.value === field.value)}
+                  data-testid="financial_transfers_permitted"
+                  options={financialTransfertsOptions}
+                  value={financialTransfertsOptions.find((option) => option.value === field.value)}
                   onChange={(newValue: any) => field.onChange(newValue.value)}
+                  label={t`Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?`}
+                  controlId="financial_transfers_permitted"
                 />
               )}
             />
-            <InputFormControl
-              controlId="nameOfPrimaryRegulator"
-              label={t`Name of Primary Regulator`}
-              formHelperText={t`The name of primary regulator or supervisory authority for your national jurisdiction`}
-              {...register('trixo.primary_regulator')}
-            />
-            <VStack align="start" w="100%" py={5}>
-              <Heading size="md">
-                <Trans id="Other Jurisdictions">Other Jurisdictions</Trans>
-              </Heading>
-              <Text>
-                <Trans id="Please add any other regulatory jurisdictions your organization complies with.">
-                  Please add any other regulatory jurisdictions your organization complies with.
-                </Trans>
-              </Text>
+          </VStack>
+          <VStack align="start" pt={5} data-testid="trixo-rule-policies">
+            <Heading size="md">
+              <Trans id="CDD & Travel Rule Policies">CDD & Travel Rule Policies</Trans>
+            </Heading>
 
-              <OtherJuridictions name={'trixo.other_jurisdictions'} />
-            </VStack>
-
-            <VStack data-testid="is-required-financial-transfers">
-              <Controller
-                control={control}
-                name="trixo.financial_transfers_permitted"
-                render={({ field }) => (
-                  <SelectFormControl
-                    ref={field.ref}
-                    name={field.name}
-                    data-testid="financial_transfers_permitted"
-                    options={financialTransfertsOptions}
-                    value={financialTransfertsOptions.find(
-                      (option) => option.value === field.value
-                    )}
-                    onChange={(newValue: any) => field.onChange(newValue.value)}
-                    label={t`Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?`}
-                    controlId="financial_transfers_permitted"
-                  />
-                )}
-              />
-            </VStack>
-            <VStack align="start" pt={5} data-testid="trixo-rule-policies">
-              <Heading size="md">
-                <Trans id="CDD & Travel Rule Policies">CDD & Travel Rule Policies</Trans>
-              </Heading>
-
-              <Controller
-                control={control}
-                name="trixo.has_required_regulatory_program"
-                render={({ field }) => (
-                  <SelectFormControl
-                    ref={field.ref}
-                    name={field.name}
-                    formatOptionLabel={(data: any) => {
-                      return data.value === 'partial' ? `${data.label} implemented` : data.label;
-                    }}
-                    options={financialTransfertsOptions}
-                    value={financialTransfertsOptions.find(
-                      (option) => option.value === field.value
-                    )}
-                    onChange={(newValue: any) => field.onChange(newValue.value)}
-                    label={t`Does your organization have a programme that sets minimum Anti-Money
+            <Controller
+              control={control}
+              name="trixo.has_required_regulatory_program"
+              render={({ field }) => (
+                <SelectFormControl
+                  ref={field.ref}
+                  name={field.name}
+                  // eslint-disable-next-line @typescript-eslint/no-shadow
+                  formatOptionLabel={(data: any) => {
+                    return data.value === 'partial' ? `${data.label} implemented` : data.label;
+                  }}
+                  options={financialTransfertsOptions}
+                  value={financialTransfertsOptions.find((option) => option.value === field.value)}
+                  onChange={(newValue: any) => field.onChange(newValue.value)}
+                  label={t`Does your organization have a programme that sets minimum Anti-Money
               Laundering (AML), Countering the Financing of Terrorism (CFT), Know your
               Counterparty/Customer Due Diligence (KYC/CDD) and Sanctions standards per the requirements of the jurisdiction(s) regulatory regimes where it is licensed/approved/registered?`}
-                    controlId="has_required_regulatory_program"
-                  />
-                )}
-              />
-
-              <VStack data-testid="trixo-kyc-before-virtual-asset-transfers">
-                <Text>
-                  <Trans id="Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?">
-                    Does your organization conduct KYC/CDD before permitting its customers to
-                    send/receive virtual asset transfers?
-                  </Trans>
-                </Text>
-                <SwitchFormControl
-                  label={t`Conducts KYC before virtual asset transfers`}
-                  controlId="conducts_customer_kyc"
-                  {...register('trixo.conducts_customer_kyc')}
+                  controlId="has_required_regulatory_program"
                 />
-              </VStack>
-            </VStack>
-            {getHasRequiredRegulatoryProgram && getHasRequiredRegulatoryProgram === 'yes' && (
-              <VStack align="start" w="100%">
-                <Text>
-                  <Trans id="At what threshold and currency does your organization conduct KYC checks?">
-                    At what threshold and currency does your organization conduct KYC checks?
-                  </Trans>
-                </Text>
-                <Grid templateColumns={{ base: '1fr 1fr', md: '2fr 1fr' }} gap={6} width="100%">
-                  <GridItem>
-                    <InputFormControl
-                      type="number"
-                      label=""
-                      controlId="kyc_threshold"
-                      {...register('trixo.kyc_threshold')}
-                    />
-                  </GridItem>
-                  <GridItem>
-                    <Controller
-                      control={control}
-                      name="trixo.kyc_threshold_currency"
-                      render={({ field }) => (
-                        <SelectFormControl
-                          ref={field.ref}
-                          name={field.name}
-                          options={currencies}
-                          value={currencies.find((option) => option.value === field.value)}
-                          onChange={(newValue: any) => field.onChange(newValue.value)}
-                          controlId="trixo.kyc_threshold_currency"
-                        />
-                      )}
-                    />
-                  </GridItem>
-                </Grid>
-                <Text fontSize="sm" color="gray.500" mt="0 !important">
-                  <Trans id="Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers">
-                    Threshold to conduct KYC before permitting the customer to send/receive virtual
-                    asset transfers
-                  </Trans>
-                </Text>
-              </VStack>
-            )}
+              )}
+            />
 
-            <VStack align="start" data-testid="trixo-must-comply-travel-rule">
+            <VStack data-testid="trixo-kyc-before-virtual-asset-transfers">
               <Text>
-                <Trans id="Is your organization required to comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered?">
-                  Is your organization required to comply with the application of the Travel Rule
-                  standards in the jurisdiction(s) where it is licensed/approved/registered?
+                <Trans id="Does your organization conduct KYC/CDD before permitting its customers to send/receive virtual asset transfers?">
+                  Does your organization conduct KYC/CDD before permitting its customers to
+                  send/receive virtual asset transfers?
                 </Trans>
               </Text>
               <SwitchFormControl
-                label={t`Must comply with Travel Rule`}
-                controlId="trixo.must_comply_travel_rule"
-                {...register('trixo.must_comply_travel_rule')}
+                label={t`Conducts KYC before virtual asset transfers`}
+                controlId="conducts_customer_kyc"
+                {...register('trixo.conducts_customer_kyc')}
               />
             </VStack>
-            {getMustComplyRegulations && (
-              <VStack align="start" w="100%" data-testid="tx-minimum-threshold">
-                <Text>
-                  <Trans id="What is the minimum threshold for Travel Rule compliance?">
-                    What is the minimum threshold for Travel Rule compliance?
-                  </Trans>
-                </Text>
-                <Grid templateColumns={{ base: '1fr 1fr', md: '2fr 1fr' }} gap={6} width="100%">
-                  <GridItem>
-                    <InputFormControl
-                      type="number"
-                      label=""
-                      controlId="compliance_threshold"
-                      {...register('trixo.compliance_threshold')}
-                    />
-                  </GridItem>
-                  <GridItem>
-                    <Controller
-                      control={control}
-                      name="trixo.compliance_threshold_currency"
-                      render={({ field }) => (
-                        <SelectFormControl
-                          ref={field.ref}
-                          name={field.name}
-                          options={currencies}
-                          value={currencies.find((option) => option.value === field.value)}
-                          onChange={(newValue: any) => field.onChange(newValue.value)}
-                          controlId="trixo.compliance_threshold_currency"
-                        />
-                      )}
-                    />
-                  </GridItem>
-                </Grid>
-                <Text fontSize="sm" mt="0 !important">
-                  <Trans id="The minimum threshold above which your organization is required to collect/send Travel Rule information.">
-                    The minimum threshold above which your organization is required to collect/send
-                    Travel Rule information.
-                  </Trans>
-                </Text>
-              </VStack>
-            )}
-            <VStack align="start" w="100%" pt={5}>
-              <Heading size="md">
-                <Trans id="Applicable Regulations">Applicable Regulations</Trans>
-              </Heading>
-              <Text fontSize="sm">
-                <Trans id='Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g."FATF Recommendation 16"'>
-                  Please specify the applicable regulation(s) for Travel Rule standards compliance,
-                  e.g. "FATF Recommendation 16"
+          </VStack>
+          {getHasRequiredRegulatoryProgram && getHasRequiredRegulatoryProgram === 'yes' && (
+            <VStack align="start" w="100%">
+              <Text>
+                <Trans id="At what threshold and currency does your organization conduct KYC checks?">
+                  At what threshold and currency does your organization conduct KYC checks?
                 </Trans>
               </Text>
-              <Regulations name={`trixo.applicable_regulations`} />
+              <Grid templateColumns={{ base: '1fr 1fr', md: '2fr 1fr' }} gap={6} width="100%">
+                <GridItem>
+                  <InputFormControl
+                    type="number"
+                    label=""
+                    controlId="kyc_threshold"
+                    {...register('trixo.kyc_threshold')}
+                  />
+                </GridItem>
+                <GridItem>
+                  <Controller
+                    control={control}
+                    name="trixo.kyc_threshold_currency"
+                    render={({ field }) => (
+                      <SelectFormControl
+                        ref={field.ref}
+                        name={field.name}
+                        options={currencies}
+                        value={currencies.find((option) => option.value === field.value)}
+                        onChange={(newValue: any) => field.onChange(newValue.value)}
+                        controlId="trixo.kyc_threshold_currency"
+                      />
+                    )}
+                  />
+                </GridItem>
+              </Grid>
+              <Text fontSize="sm" color="gray.500" mt="0 !important">
+                <Trans id="Threshold to conduct KYC before permitting the customer to send/receive virtual asset transfers">
+                  Threshold to conduct KYC before permitting the customer to send/receive virtual
+                  asset transfers
+                </Trans>
+              </Text>
             </VStack>
-            <VStack align="start" w="100%" spacing={4} pt={5}>
-              <Heading size="md">
-                <Trans id="Data Protection Policies">Data Protection Policies</Trans>
-              </Heading>
-              <VStack align="start" w="100%">
-                <Text>
-                  <Trans id="Is your organization required by law to safeguard Personally Identifiable Information (PII)?">
-                    Is your organization required by law to safeguard Personally Identifiable
-                    Information (PII)?
-                  </Trans>
-                </Text>
-                <SwitchFormControl
-                  label={t`Must safeguard PII`}
-                  controlId="must_safeguard_pii"
-                  {...register('trixo.must_safeguard_pii')}
-                />
-              </VStack>
-              <VStack align="start" w="100%">
-                <Text>
-                  <Trans id="Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?">
-                    Does your organization secure and protect PII, including PII received from other
-                    VASPs under the Travel Rule?
-                  </Trans>
-                </Text>
-                <SwitchFormControl
-                  label={t`Safeguards PII`}
-                  controlId="safeguards_pii"
-                  {...register('trixo.safeguards_pii')}
-                />
-              </VStack>
-            </VStack>
-            <StepButtons
-              handleNextStep={handleNextStepClick}
-              handlePreviousStep={handlePreviousStepClick}
-              onResetModalClose={handleResetClick}
-              isOpened={isOpen}
-              handleResetForm={handleResetForm}
-              resetFormType={StepEnum.TRIXO}
-              onClosed={onCloseModalHandler}
-              handleResetClick={handleResetClick}
-              shouldShowResetFormModal={shouldShowResetFormModal}
+          )}
+
+          <VStack align="start" data-testid="trixo-must-comply-travel-rule">
+            <Text>
+              <Trans id="Is your organization required to comply with the application of the Travel Rule standards in the jurisdiction(s) where it is licensed/approved/registered?">
+                Is your organization required to comply with the application of the Travel Rule
+                standards in the jurisdiction(s) where it is licensed/approved/registered?
+              </Trans>
+            </Text>
+            <SwitchFormControl
+              label={t`Must comply with Travel Rule`}
+              controlId="trixo.must_comply_travel_rule"
+              {...register('trixo.must_comply_travel_rule')}
             />
-          </chakra.form>
-          {!isProdEnv ? <DevTool control={methods.control} /> : null}
-        </FormProvider>
-      )}
+          </VStack>
+          {getMustComplyRegulations && (
+            <VStack align="start" w="100%" data-testid="tx-minimum-threshold">
+              <Text>
+                <Trans id="What is the minimum threshold for Travel Rule compliance?">
+                  What is the minimum threshold for Travel Rule compliance?
+                </Trans>
+              </Text>
+              <Grid templateColumns={{ base: '1fr 1fr', md: '2fr 1fr' }} gap={6} width="100%">
+                <GridItem>
+                  <InputFormControl
+                    type="number"
+                    label=""
+                    controlId="compliance_threshold"
+                    {...register('trixo.compliance_threshold')}
+                  />
+                </GridItem>
+                <GridItem>
+                  <Controller
+                    control={control}
+                    name="trixo.compliance_threshold_currency"
+                    render={({ field }) => (
+                      <SelectFormControl
+                        ref={field.ref}
+                        name={field.name}
+                        options={currencies}
+                        value={currencies.find((option) => option.value === field.value)}
+                        onChange={(newValue: any) => field.onChange(newValue.value)}
+                        controlId="trixo.compliance_threshold_currency"
+                      />
+                    )}
+                  />
+                </GridItem>
+              </Grid>
+              <Text fontSize="sm" mt="0 !important">
+                <Trans id="The minimum threshold above which your organization is required to collect/send Travel Rule information.">
+                  The minimum threshold above which your organization is required to collect/send
+                  Travel Rule information.
+                </Trans>
+              </Text>
+            </VStack>
+          )}
+          <VStack align="start" w="100%" pt={5}>
+            <Heading size="md">
+              <Trans id="Applicable Regulations">Applicable Regulations</Trans>
+            </Heading>
+            <Text fontSize="sm">
+              <Trans id='Please specify the applicable regulation(s) for Travel Rule standards compliance, e.g."FATF Recommendation 16"'>
+                Please specify the applicable regulation(s) for Travel Rule standards compliance,
+                e.g. "FATF Recommendation 16"
+              </Trans>
+            </Text>
+            <Regulations name={`trixo.applicable_regulations`} />
+          </VStack>
+          <VStack align="start" w="100%" spacing={4} pt={5}>
+            <Heading size="md">
+              <Trans id="Data Protection Policies">Data Protection Policies</Trans>
+            </Heading>
+            <VStack align="start" w="100%">
+              <Text>
+                <Trans id="Is your organization required by law to safeguard Personally Identifiable Information (PII)?">
+                  Is your organization required by law to safeguard Personally Identifiable
+                  Information (PII)?
+                </Trans>
+              </Text>
+              <SwitchFormControl
+                label={t`Must safeguard PII`}
+                controlId="must_safeguard_pii"
+                {...register('trixo.must_safeguard_pii')}
+              />
+            </VStack>
+            <VStack align="start" w="100%">
+              <Text>
+                <Trans id="Does your organization secure and protect PII, including PII received from other VASPs under the Travel Rule?">
+                  Does your organization secure and protect PII, including PII received from other
+                  VASPs under the Travel Rule?
+                </Trans>
+              </Text>
+              <SwitchFormControl
+                label={t`Safeguards PII`}
+                controlId="safeguards_pii"
+                {...register('trixo.safeguards_pii')}
+              />
+            </VStack>
+          </VStack>
+          <StepButtons
+            handleNextStep={handleNextStepClick}
+            handlePreviousStep={handlePreviousStepClick}
+            onResetModalClose={handleResetClick}
+            isOpened={isOpen}
+            handleResetForm={handleResetForm}
+            resetFormType={StepEnum.TRIXO}
+            onClosed={onCloseModalHandler}
+            handleResetClick={handleResetClick}
+            shouldShowResetFormModal={shouldShowResetFormModal}
+          />
+        </chakra.form>
+        {!isProdEnv ? <DevTool control={methods.control} /> : null}
+      </FormProvider>
     </FormLayout>
   );
 };

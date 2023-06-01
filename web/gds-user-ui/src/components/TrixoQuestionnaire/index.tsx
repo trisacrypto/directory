@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from 'react';
 import { Heading, HStack, Stack, Text } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import { getSteps, getCurrentStep } from 'application/store/selectors/stepper';
@@ -6,12 +7,39 @@ import TrixoQuestionnaireForm from 'components/TrixoQuestionnaireForm';
 import FormLayout from 'layouts/FormLayout';
 import { useSelector } from 'react-redux';
 import { getStepStatus } from 'utils/utils';
-
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
+import useCertificateStepper from 'hooks/useCertificateStepper';
+import { StepEnum } from 'types/enums';
+import MinusLoader from 'components/Loader/MinusLoader';
 const TrixoQuestionnaire: React.FC = () => {
   const steps = useSelector(getSteps);
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);
-
+  const [shouldResetForm, setShouldResetForm] = useState<boolean>(false);
+  const { isStepDeleted, updateDeleteStepState } = useCertificateStepper();
+  const isTrixoStepDeleted = isStepDeleted(StepEnum.LEGAL);
+  const { certificateStep, isFetchingCertificateStep, getCertificateStep } =
+    useFetchCertificateStep({
+      key: StepEnum.TRIXO
+    });
+  useEffect(() => {
+    if (isTrixoStepDeleted) {
+      console.log('[] isLegalStepDeleted', isTrixoStepDeleted);
+      const payload = {
+        step: StepEnum.TRIXO,
+        isDeleted: false
+      };
+      updateDeleteStepState(payload);
+      getCertificateStep();
+      setShouldResetForm(true);
+    }
+  }, [
+    isStepDeleted,
+    updateDeleteStepState,
+    getCertificateStep,
+    isTrixoStepDeleted,
+    shouldResetForm
+  ]);
   return (
     <Stack spacing={4} mt="2rem">
       <HStack>
@@ -30,7 +58,15 @@ const TrixoQuestionnaire: React.FC = () => {
           </Trans>
         </Text>
       </FormLayout>
-      <TrixoQuestionnaireForm />
+      {isFetchingCertificateStep ? (
+        <MinusLoader />
+      ) : (
+        <TrixoQuestionnaireForm
+          data={certificateStep?.form}
+          shouldResetForm={shouldResetForm}
+          onResetFormState={setShouldResetForm}
+        />
+      )}
     </Stack>
   );
 };

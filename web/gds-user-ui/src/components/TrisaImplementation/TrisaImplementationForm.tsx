@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, Dispatch, SetStateAction } from 'react';
 import { chakra, useDisclosure } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
 import FormLayout from 'layouts/FormLayout';
@@ -7,21 +7,22 @@ import { trisaImplementationValidationSchema } from 'modules/dashboard/certifica
 import { yupResolver } from '@hookform/resolvers/yup';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import StepButtons from 'components/StepsButtons';
-import MinusLoader from 'components/Loader/MinusLoader';
 import { StepEnum } from 'types/enums';
-import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
 import TrisaImplementationForm from './TrisaImplementationForm/index';
 import { StepsIndexes } from 'constants/steps';
 import { isProdEnv } from 'application/config';
 import { DevTool } from '@hookform/devtools';
-const TrisaForm: React.FC = () => {
+interface TrisaFormProps {
+  data?: any;
+  isLoading?: boolean;
+  shouldResetForm?: boolean;
+  onResetFormState?: Dispatch<SetStateAction<boolean>>;
+}
+const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFormState }) => {
   const { isOpen, onClose, onOpen } = useDisclosure();
   const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
-  const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
-    key: StepEnum.TRISA
-  });
   const {
     updateCertificateStep,
     updatedCertificateStep,
@@ -33,7 +34,7 @@ const TrisaForm: React.FC = () => {
   const nextStepRef = useRef<any>(false);
   const resolver = yupResolver(trisaImplementationValidationSchema);
   const methods = useForm({
-    defaultValues: certificateStep?.form,
+    defaultValues: data,
     resolver,
     mode: 'onChange'
   });
@@ -67,9 +68,7 @@ const TrisaForm: React.FC = () => {
   if (wasCertificateStepUpdated && previousStepRef.current && !isUpdatingCertificateStep) {
     resetMutation();
     // reset the form with the new values
-    resetForm(updatedCertificateStep?.form, {
-      keepValues: false
-    });
+    resetForm(updatedCertificateStep?.form);
     console.log('[] prev updatedCertificateStep', updatedCertificateStep);
     previousStepRef.current = false;
     previousStep(updatedCertificateStep);
@@ -87,12 +86,12 @@ const TrisaForm: React.FC = () => {
       updateCertificateStep(payload);
       previousStepRef.current = true;
     }
-    previousStep(certificateStep);
+    previousStep(data);
   };
 
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep(certificateStep);
+      nextStep(data);
     } else {
       const payload = {
         step: StepEnum.TRISA,
@@ -118,40 +117,45 @@ const TrisaForm: React.FC = () => {
     onClose();
   };
 
+  // reset the form from the parent component
+  useEffect(() => {
+    if (shouldResetForm && onResetFormState) {
+      resetForm(data);
+      onResetFormState(false);
+      window.location.reload();
+    }
+  }, [shouldResetForm, resetForm, data, onResetFormState]);
+
   return (
     <FormLayout>
-      {isFetchingCertificateStep ? (
-        <MinusLoader />
-      ) : (
-        <FormProvider {...methods}>
-          <chakra.form
-            onSubmit={methods.handleSubmit(handleNextStepClick)}
-            data-testid="trisa-implementation-form">
-            <TrisaImplementationForm
-              type="TestNet"
-              name="testnet"
-              headerText={t`TRISA Endpoint: TestNet`}
-            />
-            <TrisaImplementationForm
-              type="MainNet"
-              name="mainnet"
-              headerText={t`TRISA Endpoint: MainNet`}
-            />
-            <StepButtons
-              handlePreviousStep={handlePreviousStepClick}
-              handleNextStep={handleNextStepClick}
-              onResetModalClose={handleResetClick}
-              isOpened={isOpen}
-              handleResetForm={handleResetForm}
-              resetFormType={StepEnum.TRISA}
-              onClosed={onCloseModalHandler}
-              handleResetClick={handleResetClick}
-              shouldShowResetFormModal={shouldShowResetFormModal}
-            />
-          </chakra.form>
-          {!isProdEnv ? <DevTool control={methods.control} /> : null}
-        </FormProvider>
-      )}
+      <FormProvider {...methods}>
+        <chakra.form
+          onSubmit={methods.handleSubmit(handleNextStepClick)}
+          data-testid="trisa-implementation-form">
+          <TrisaImplementationForm
+            type="TestNet"
+            name="testnet"
+            headerText={t`TRISA Endpoint: TestNet`}
+          />
+          <TrisaImplementationForm
+            type="MainNet"
+            name="mainnet"
+            headerText={t`TRISA Endpoint: MainNet`}
+          />
+          <StepButtons
+            handlePreviousStep={handlePreviousStepClick}
+            handleNextStep={handleNextStepClick}
+            onResetModalClose={handleResetClick}
+            isOpened={isOpen}
+            handleResetForm={handleResetForm}
+            resetFormType={StepEnum.TRISA}
+            onClosed={onCloseModalHandler}
+            handleResetClick={handleResetClick}
+            shouldShowResetFormModal={shouldShowResetFormModal}
+          />
+        </chakra.form>
+        {!isProdEnv ? <DevTool control={methods.control} /> : null}
+      </FormProvider>
     </FormLayout>
   );
 };
