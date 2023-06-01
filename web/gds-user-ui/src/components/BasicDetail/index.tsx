@@ -49,7 +49,7 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
     reset
   } = useUpdateCertificateStep();
 
-  const { isFileLoading, handleFileUpload, hasBeenUploaded } = useUploadFile();
+  const { isFileLoading, handleFileUpload, hasBeenUploaded, hasFileUploadedFail } = useUploadFile();
 
   const isDirty = getIsDirtyStateByStep(StepEnum.BASIC);
   const isBasicStepDeleted = isStepDeleted(StepEnum.BASIC);
@@ -62,7 +62,7 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
       setInitialState(certificateStep?.form);
     }
   }
-  if (hasBeenUploaded) {
+  if (hasBeenUploaded || hasFileUploadedFail) {
     // reload the step
     window.location.reload();
   }

@@ -58,7 +58,12 @@ const useUploadFile = () => {
     reader.readAsText(file);
   };
 
-  return { isFileLoading, handleFileUpload, hasBeenUploaded: wasCertificateStepUpdated };
+  return {
+    isFileLoading,
+    handleFileUpload,
+    hasBeenUploaded: !!wasCertificateStepUpdated,
+    hasFileUploadedFail: !!error
+  };
 };
 
 export default useUploadFile;
