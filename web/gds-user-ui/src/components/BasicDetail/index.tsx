@@ -88,7 +88,7 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
   };
 
   useEffect(() => {
-    if (isBasicStepDeleted && !isAllFormDeleted) {
+    if (isBasicStepDeleted) {
       console.log('isBasicStepDeleted');
       const payload = {
         step: StepEnum.BASIC,
@@ -97,10 +97,9 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
       updateDeleteStepState(payload);
       getCertificateStep();
       setShouldResetForm(true);
-      window.location.reload();
     }
 
-    if (isAllFormDeleted && !isBasicStepDeleted) {
+    if (isAllFormDeleted) {
       console.log('isAllFormDeleted');
       const payload = {
         step: StepEnum.ALL,
@@ -109,7 +108,6 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
       updateDeleteStepState(payload);
       getCertificateStep();
       setShouldResetForm(true);
-      window.location.reload();
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps

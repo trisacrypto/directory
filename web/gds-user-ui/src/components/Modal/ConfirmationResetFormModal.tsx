@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+// import { useEffect } from 'react';
 import {
   Box,
   Text,
@@ -22,7 +22,7 @@ import { getStepNumber } from 'components/BasicDetailsForm/util';
 import { StepEnum } from 'types/enums';
 const ConfirmationResetForm = (props: any) => {
   const { step } = props;
-  const { deleteCertificateStep, isDeletingCertificateStep, wasCertificateStepDeleted } =
+  const { deleteCertificateStep, isDeletingCertificateStep, wasCertificateStepDeleted, reset } =
     useDeleteCertificateStep(step);
   const { updateStepStatusState, clearStepperState, updateDeleteStepState } =
     useCertificateStepper();
@@ -49,30 +49,22 @@ const ConfirmationResetForm = (props: any) => {
     // navigate('/dashboard/certificate/registration');
   };
 
-  useEffect(() => {
-    if (wasCertificateStepDeleted) {
-      updateStepStatusState({
-        step: getStepNumber(props.step),
-        status: 'progress'
-      });
-      updateDeleteStepState({
-        step: props.step,
-        isDeleted: true
-      });
+  if (wasCertificateStepDeleted) {
+    reset();
+    updateStepStatusState({
+      step: getStepNumber(props.step),
+      status: 'progress'
+    });
+    updateDeleteStepState({
+      step: props.step,
+      isDeleted: true
+    });
 
-      if (props.step === StepEnum.ALL) {
-        clearStepperState();
-      }
-      props.onClose();
+    if (props.step === StepEnum.ALL) {
+      clearStepperState();
     }
-  }, [
-    wasCertificateStepDeleted,
-    props,
-    updateStepStatusState,
-    clearStepperState,
-    props.step,
-    updateDeleteStepState
-  ]);
+    props.onClose();
+  }
 
   return (
     <>

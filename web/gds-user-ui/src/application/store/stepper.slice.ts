@@ -173,7 +173,7 @@ const stepperSlice: any = createSlice({
       state.mainnetSubmitted = false;
       state.hasReachReviewStep = false;
       state.data = {};
-      state.deletedSteps = [];
+      state.deletedSteps = [...state.deletedSteps];
     },
     // set testnet submission
     setTestnetSubmitted: (state: any, { payload }: any) => {

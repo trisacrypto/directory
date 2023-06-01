@@ -41,16 +41,17 @@ function InvalidFormPrompt({
               </Trans>
             </Text>
             <Box>
-              <Text>
-                <Trans>
+              {' '}
+              <Trans>
+                <Text>
                   If you continue, your changes will be lost. To save your changes, click Cancel and
                   then click on the{' '}
                   <Text as="span" fontWeight={'bold'} whiteSpace={'break-spaces'}>
                     {nextStepBtnContent}
                   </Text>{' '}
                   button.
-                </Trans>
-              </Text>
+                </Text>
+              </Trans>
             </Box>
           </VStack>
         </ModalBody>
