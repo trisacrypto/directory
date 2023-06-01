@@ -84,13 +84,6 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
   };
 
   useEffect(() => {
-    // now we can refresh the stepper data and even reload the page
-    if (isBasicStepDeleted && isAllFormDeleted) {
-      getCertificateStep();
-      getCertificateStep();
-      setShouldResetForm(true);
-      // window.location.reload();
-    }
     if (isBasicStepDeleted && !isAllFormDeleted) {
       const payload = {
         step: StepEnum.BASIC,
