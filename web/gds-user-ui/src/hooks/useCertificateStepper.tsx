@@ -230,8 +230,8 @@ const useCertificateStepper = () => {
   };
 
   const isStepDeleted = (step: string) => {
-    const elm = Store.getState().stepper.deletedSteps;
-    const found = elm.filter((s: TDeleteStep) => s.step === step && s.isDeleted === true);
+    const elm = Store.getState()?.stepper?.deletedSteps;
+    const found = elm?.filter((s: TDeleteStep) => s.step === step && s.isDeleted === true);
     return found.length > 0;
   };
 
