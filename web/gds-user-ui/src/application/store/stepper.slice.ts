@@ -24,7 +24,8 @@ export const initialValue: TPayload = {
     testnet: 'progress',
     mainnet: 'progress'
   },
-  data: {}
+  data: {},
+  deletedSteps: []
 };
 
 const stepperSlice: any = createSlice({

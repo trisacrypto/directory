@@ -748,6 +748,7 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
                 >
                   <button
                     class="chakra-button emotion-19"
+                    data-cy="nav-login-bttn"
                     type="button"
                   >
                     Login
