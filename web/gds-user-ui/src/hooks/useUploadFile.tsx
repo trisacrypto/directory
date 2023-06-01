@@ -6,10 +6,12 @@ import { validationSchema } from 'modules/dashboard/certificate/lib';
 import { handleError } from 'utils/utils';
 const useUploadFile = () => {
   console.log('[useUploadFile] init');
-  const { updateCertificateStep, wasCertificateStepUpdated, error } = useUpdateCertificateStep();
+  const { updateCertificateStep, wasCertificateStepUpdated, error, reset } =
+    useUpdateCertificateStep();
 
   const toast = useToast();
   if (wasCertificateStepUpdated) {
+    reset();
     toast({
       title: 'File uploaded',
       description: 'Your file has been uploaded successfully',
@@ -20,6 +22,7 @@ const useUploadFile = () => {
     });
   }
   if (error) {
+    reset();
     toast({
       title: 'Invalid file',
       description: error.message || 'your json file is invalid',

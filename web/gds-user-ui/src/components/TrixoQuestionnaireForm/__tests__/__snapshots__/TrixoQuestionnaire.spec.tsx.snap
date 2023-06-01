@@ -710,7 +710,113 @@ exports[`TrixoQuestionnaire should render 1`] = `
   margin-inline-start: 0px;
 }
 
-.emotion-80 {
+.emotion-79 {
+  display: grid;
+  grid-gap: var(--chakra-space-6);
+  grid-template-columns: 1fr auto;
+  width: 100%;
+}
+
+.emotion-86 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+}
+
+.emotion-87 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: 0px;
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: var(--chakra-sizes-10);
+  min-width: var(--chakra-sizes-10);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  color: inherit;
+  visibility: visible;
+}
+
+.emotion-87:focus,
+.emotion-87[data-focus] {
+  background: var(--chakra-colors-red-100);
+  color: var(--chakra-colors-red-500);
+}
+
+.emotion-87[disabled],
+.emotion-87[aria-disabled=true],
+.emotion-87[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-87:hover,
+.emotion-87[data-hover] {
+  background: var(--chakra-colors-red-100);
+  color: var(--chakra-colors-red-500);
+}
+
+.emotion-87:active,
+.emotion-87[data-active] {
+  background: var(--chakra-colors-gray-200);
+}
+
+.emotion-88 {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  line-height: 1em;
+  -webkit-flex-shrink: 0;
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+  color: currentColor;
+  vertical-align: middle;
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  line-height: 1em;
+  -webkit-flex-shrink: 0;
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.emotion-90 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -726,7 +832,7 @@ exports[`TrixoQuestionnaire should render 1`] = `
   padding-top: var(--chakra-space-5);
 }
 
-.emotion-80>*:not(style)~*:not(style) {
+.emotion-90>*:not(style)~*:not(style) {
   margin-top: var(--chakra-space-4);
   -webkit-margin-end: 0px;
   margin-inline-end: 0px;
@@ -735,7 +841,7 @@ exports[`TrixoQuestionnaire should render 1`] = `
   margin-inline-start: 0px;
 }
 
-.emotion-98 {
+.emotion-108 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -757,7 +863,7 @@ exports[`TrixoQuestionnaire should render 1`] = `
   row-gap: var(--chakra-space-2);
 }
 
-.emotion-98>*:not(style)~*:not(style) {
+.emotion-108>*:not(style)~*:not(style) {
   margin-top: 0px;
   -webkit-margin-end: 0px;
   margin-inline-end: 0px;
@@ -766,7 +872,7 @@ exports[`TrixoQuestionnaire should render 1`] = `
   margin-inline-start: var(--chakra-space-8);
 }
 
-.emotion-99 {
+.emotion-109 {
   display: -webkit-inline-box;
   display: -webkit-inline-flex;
   display: -ms-inline-flexbox;
@@ -808,39 +914,39 @@ exports[`TrixoQuestionnaire should render 1`] = `
   background: var(--chakra-colors-gray-100);
 }
 
-.emotion-99:focus,
-.emotion-99[data-focus] {
+.emotion-109:focus,
+.emotion-109[data-focus] {
   box-shadow: var(--chakra-shadows-outline);
 }
 
-.emotion-99[disabled],
-.emotion-99[aria-disabled=true],
-.emotion-99[data-disabled] {
+.emotion-109[disabled],
+.emotion-109[aria-disabled=true],
+.emotion-109[data-disabled] {
   opacity: 0.4;
   cursor: not-allowed;
   box-shadow: var(--chakra-shadows-none);
 }
 
-.emotion-99:hover,
-.emotion-99[data-hover] {
+.emotion-109:hover,
+.emotion-109[data-hover] {
   background: var(--chakra-colors-gray-200);
 }
 
-.emotion-99:hover[disabled],
-.emotion-99[data-hover][disabled],
-.emotion-99:hover[aria-disabled=true],
-.emotion-99[data-hover][aria-disabled=true],
-.emotion-99:hover[data-disabled],
-.emotion-99[data-hover][data-disabled] {
+.emotion-109:hover[disabled],
+.emotion-109[data-hover][disabled],
+.emotion-109:hover[aria-disabled=true],
+.emotion-109[data-hover][aria-disabled=true],
+.emotion-109:hover[data-disabled],
+.emotion-109[data-hover][data-disabled] {
   background: var(--chakra-colors-gray-100);
 }
 
-.emotion-99:active,
-.emotion-99[data-active] {
+.emotion-109:active,
+.emotion-109[data-active] {
   background: var(--chakra-colors-gray-300);
 }
 
-.emotion-100 {
+.emotion-110 {
   display: -webkit-inline-box;
   display: -webkit-inline-flex;
   display: -ms-inline-flexbox;
@@ -881,25 +987,25 @@ exports[`TrixoQuestionnaire should render 1`] = `
   padding-inline-end: var(--chakra-space-4);
 }
 
-.emotion-100:focus,
-.emotion-100[data-focus] {
+.emotion-110:focus,
+.emotion-110[data-focus] {
   box-shadow: var(--chakra-shadows-outline);
 }
 
-.emotion-100[disabled],
-.emotion-100[aria-disabled=true],
-.emotion-100[data-disabled] {
+.emotion-110[disabled],
+.emotion-110[aria-disabled=true],
+.emotion-110[data-disabled] {
   opacity: 0.4;
   cursor: not-allowed;
   box-shadow: var(--chakra-shadows-none);
 }
 
-.emotion-100:hover[disabled],
-.emotion-100[data-hover][disabled],
-.emotion-100:hover[aria-disabled=true],
-.emotion-100[data-hover][aria-disabled=true],
-.emotion-100:hover[data-disabled],
-.emotion-100[data-hover][data-disabled] {
+.emotion-110:hover[disabled],
+.emotion-110[data-hover][disabled],
+.emotion-110:hover[aria-disabled=true],
+.emotion-110[data-hover][aria-disabled=true],
+.emotion-110:hover[data-disabled],
+.emotion-110[data-hover][data-disabled] {
   background: initial;
 }
 
@@ -1380,6 +1486,61 @@ Counterparty/Customer Due Diligence (KYC/CDD) and Sanctions standards per the re
         <div
           class="chakra-stack emotion-78"
         >
+          <div
+            class="emotion-79"
+          >
+            <div
+              class="emotion-1"
+            >
+              <div
+                class="chakra-form-control emotion-2"
+                role="group"
+              >
+                <label
+                  class="chakra-form__label emotion-3"
+                  for="applicable_regulation"
+                  id="field-10-label"
+                />
+                <div
+                  class="chakra-input__group emotion-19"
+                >
+                  <input
+                    aria-describedby="field-10-helptext"
+                    class="chakra-input emotion-20"
+                    id="applicable_regulation"
+                    name="trixo.applicable_regulations[0]"
+                    type="text"
+                  />
+                </div>
+                <div
+                  class="chakra-form__helper-text emotion-16"
+                  id="field-10-helptext"
+                />
+              </div>
+            </div>
+            <div
+              class="emotion-86"
+            >
+              <button
+                class="chakra-button emotion-87"
+                type="button"
+              >
+                <svg
+                  class="chakra-icon chakra-icon emotion-88"
+                  focusable="false"
+                  viewBox="0 0 24 24"
+                >
+                  <g
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M19.452 7.5H4.547a.5.5 0 00-.5.545l1.287 14.136A2 2 0 007.326 24h9.347a2 2 0 001.992-1.819L19.95 8.045a.5.5 0 00-.129-.382.5.5 0 00-.369-.163zm-9.2 13a.75.75 0 01-1.5 0v-9a.75.75 0 011.5 0zm5 0a.75.75 0 01-1.5 0v-9a.75.75 0 011.5 0zM22 4h-4.75a.25.25 0 01-.25-.25V2.5A2.5 2.5 0 0014.5 0h-5A2.5 2.5 0 007 2.5v1.25a.25.25 0 01-.25.25H2a1 1 0 000 2h20a1 1 0 000-2zM9 3.75V2.5a.5.5 0 01.5-.5h5a.5.5 0 01.5.5v1.25a.25.25 0 01-.25.25h-5.5A.25.25 0 019 3.75z"
+                    />
+                  </g>
+                </svg>
+              </button>
+            </div>
+          </div>
           <button
             class="chakra-button emotion-25"
             type="button"
@@ -1389,7 +1550,7 @@ Counterparty/Customer Due Diligence (KYC/CDD) and Sanctions standards per the re
         </div>
       </div>
       <div
-        class="chakra-stack emotion-80"
+        class="chakra-stack emotion-90"
       >
         <h2
           class="chakra-heading emotion-23"
@@ -1494,23 +1655,23 @@ Counterparty/Customer Due Diligence (KYC/CDD) and Sanctions standards per the re
         </div>
       </div>
       <div
-        class="chakra-stack emotion-98"
+        class="chakra-stack emotion-108"
         data-testid="step-buttons"
       >
         <button
-          class="chakra-button emotion-99"
+          class="chakra-button emotion-109"
           type="button"
         >
           Save & Previous
         </button>
         <button
-          class="chakra-button emotion-100"
+          class="chakra-button emotion-110"
           type="button"
         >
           Save & Next
         </button>
         <button
-          class="chakra-button emotion-99"
+          class="chakra-button emotion-109"
           type="button"
         >
           Clear & Reset Section
