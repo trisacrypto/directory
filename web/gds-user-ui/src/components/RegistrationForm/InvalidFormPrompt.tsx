@@ -23,7 +23,6 @@ function InvalidFormPrompt({
   isOpen,
   onClose,
   handleContinueClick,
-  isNextStep
 }: InvalidFormPromptProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -44,8 +43,12 @@ function InvalidFormPrompt({
               <Text>
                 <Trans>
                   If you continue, your changes will be lost. To save your changes, click Cancel and
-                  then click on the{' '}
-                {isNextStep ? <Text as="span" fontWeight={'bold'} whiteSpace={'break-spaces'}>Save & Next</Text> : <Text as="span" fontWeight={'bold'} whiteSpace={'break-spaces'}>Save & Previous</Text>} button.
+                  then click on the
+                </Trans>
+              </Text>
+              <Text as="span" fontWeight="bold">
+                <Trans>
+                "Save & Next" or "Save & Previous" button.
                 </Trans>
               </Text>
             </Box>

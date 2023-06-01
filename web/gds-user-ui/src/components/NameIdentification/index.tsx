@@ -93,7 +93,7 @@ const NationalIdentification: React.FC<NationalIdentificationProps> = () => {
 
 useEffect(() => {
     if (NationalIdentificationType === 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX') {
-      setValue('entity.national_identification.registration_authority', 'N/A');
+      setValue('entity.national_identification.registration_authority', '');
       clearErrors('entity.national_identification.registration_authority');
 
       inputRegRef?.current?.clear();
