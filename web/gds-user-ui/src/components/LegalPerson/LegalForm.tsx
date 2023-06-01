@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, Dispatch, SetStateAction } from 'react';
 import { chakra, useDisclosure } from '@chakra-ui/react';
 import CountryOfRegistration from 'components/CountryOfRegistration';
 import FormLayout from 'layouts/FormLayout';
@@ -10,20 +10,24 @@ import StepButtons from 'components/StepsButtons';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { legalPersonValidationSchemam } from 'modules/dashboard/certificate/lib/legalPersonValidationSchema';
 import { yupResolver } from '@hookform/resolvers/yup';
-import MinusLoader from 'components/Loader/MinusLoader';
+
 import { StepEnum } from 'types/enums';
-import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
+
 import { useUpdateCertificateStep } from 'hooks/useUpdateCertificateStep';
 import { StepsIndexes } from 'constants/steps';
 import { isProdEnv } from 'application/config';
 import { DevTool } from '@hookform/devtools';
-const LegalForm: React.FC = () => {
+interface LegalFormProps {
+  data?: any;
+  isLoading?: boolean;
+  shouldResetForm?: boolean;
+  onResetFormState?: Dispatch<SetStateAction<boolean>>;
+}
+const LegalForm: React.FC<LegalFormProps> = ({ data, shouldResetForm, onResetFormState }) => {
   const { isOpen, onClose, onOpen } = useDisclosure();
   const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
-  const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
-    key: StepEnum.LEGAL
-  });
+
   const {
     updateCertificateStep,
     updatedCertificateStep,
@@ -35,7 +39,7 @@ const LegalForm: React.FC = () => {
   const nextStepRef = useRef<any>(false);
   const resolver = yupResolver(legalPersonValidationSchemam);
   const methods = useForm({
-    defaultValues: certificateStep?.form,
+    defaultValues: data,
     resolver,
     mode: 'onChange'
   });
@@ -73,7 +77,7 @@ const LegalForm: React.FC = () => {
 
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep(updatedCertificateStep ?? certificateStep);
+      nextStep(updatedCertificateStep ?? data);
     } else {
       const payload = {
         step: StepEnum.LEGAL,
@@ -104,7 +108,7 @@ const LegalForm: React.FC = () => {
       previousStepRef.current = true;
       // previousStep(updatedCertificateStep);
     }
-    previousStep(certificateStep);
+    previousStep(data);
   };
 
   const handleResetForm = () => {
@@ -126,32 +130,36 @@ const LegalForm: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldShowResetFormModal]);
 
+  // reset the form from the parent component
+  useEffect(() => {
+    if (shouldResetForm && onResetFormState) {
+      resetForm(data);
+      onResetFormState(false);
+    }
+  }, [shouldResetForm, resetForm, data, onResetFormState]);
+
   return (
     <FormLayout>
-      {isFetchingCertificateStep ? (
-        <MinusLoader />
-      ) : (
-        <FormProvider {...methods}>
-          <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
-            <NameIdentifiers />
-            <Address />
-            <CountryOfRegistration />
-            <NationalIdentification />
-            <StepButtons
-              handlePreviousStep={handlePreviousStepClick}
-              handleNextStep={handleNextStepClick}
-              onResetModalClose={handleResetClick}
-              isOpened={isOpen}
-              handleResetForm={handleResetForm}
-              resetFormType={StepEnum.LEGAL}
-              onClosed={onCloseModalHandler}
-              handleResetClick={handleResetClick}
-              shouldShowResetFormModal={shouldShowResetFormModal}
-            />
-          </chakra.form>
-          {!isProdEnv ? <DevTool control={methods.control} /> : null}
-        </FormProvider>
-      )}
+      <FormProvider {...methods}>
+        <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
+          <NameIdentifiers />
+          <Address />
+          <CountryOfRegistration />
+          <NationalIdentification />
+          <StepButtons
+            handlePreviousStep={handlePreviousStepClick}
+            handleNextStep={handleNextStepClick}
+            onResetModalClose={handleResetClick}
+            isOpened={isOpen}
+            handleResetForm={handleResetForm}
+            resetFormType={StepEnum.LEGAL}
+            onClosed={onCloseModalHandler}
+            handleResetClick={handleResetClick}
+            shouldShowResetFormModal={shouldShowResetFormModal}
+          />
+        </chakra.form>
+        {!isProdEnv ? <DevTool control={methods.control} /> : null}
+      </FormProvider>
     </FormLayout>
   );
 };

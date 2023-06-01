@@ -1,3 +1,4 @@
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { VStack, chakra, useDisclosure } from '@chakra-ui/react';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
@@ -5,7 +6,7 @@ import { getBusinessCategoryOptions, vaspCategories } from 'constants/basic-deta
 import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { t } from '@lingui/macro';
 import { useLanguageProvider } from 'contexts/LanguageContext';
-import { useEffect, useState } from 'react';
+
 import FormLayout from 'layouts/FormLayout';
 import formatDate from 'utils/formate-date';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -24,8 +25,15 @@ interface BasicDetailsFormProps {
   isLoading?: boolean;
   onRefreshCertificate?: () => void;
   onNextStepClick: (v: any) => void;
+  shouldResetForm?: boolean;
+  onResetFormState?: Dispatch<SetStateAction<boolean>>;
 }
-const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data, onNextStepClick }) => {
+const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({
+  data,
+  onNextStepClick,
+  shouldResetForm,
+  onResetFormState
+}) => {
   const { isOpen, onClose, onOpen } = useDisclosure();
 
   const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
@@ -45,7 +53,8 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data, onNextStepCli
   const {
     register,
     formState: { errors, isDirty },
-    control
+    control,
+    reset: resetForm
   } = methods;
 
   const onCloseModalHandler = () => {
@@ -78,6 +87,13 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ data, onNextStepCli
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldShowResetFormModal]);
+
+  useEffect(() => {
+    if (shouldResetForm && onResetFormState) {
+      resetForm(data);
+      onResetFormState(false);
+    }
+  }, [shouldResetForm, resetForm, data, onResetFormState]);
 
   return (
     <FormLayout spacing={5}>

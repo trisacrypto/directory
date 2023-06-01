@@ -24,7 +24,8 @@ const ConfirmationResetForm = (props: any) => {
   const { step } = props;
   const { deleteCertificateStep, isDeletingCertificateStep, wasCertificateStepDeleted } =
     useDeleteCertificateStep(step);
-  const { updateStepStatusState, clearStepperState } = useCertificateStepper();
+  const { updateStepStatusState, clearStepperState, updateDeleteStepState } =
+    useCertificateStepper();
   // const navigate = useNavigate();
   const { onClose: onAlertClose } = useDisclosure();
   // const { resetForm } = useCertificateStepper();
@@ -54,13 +55,24 @@ const ConfirmationResetForm = (props: any) => {
         step: getStepNumber(props.step),
         status: 'incomplete'
       });
+      updateDeleteStepState({
+        step: props.step,
+        isDeleted: true
+      });
 
       if (props.step === StepEnum.ALL) {
         clearStepperState();
       }
       props.onClose();
     }
-  }, [wasCertificateStepDeleted, props, updateStepStatusState, clearStepperState, props.step]);
+  }, [
+    wasCertificateStepDeleted,
+    props,
+    updateStepStatusState,
+    clearStepperState,
+    props.step,
+    updateDeleteStepState
+  ]);
 
   return (
     <>

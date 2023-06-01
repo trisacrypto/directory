@@ -6,8 +6,29 @@ import { validationSchema } from 'modules/dashboard/certificate/lib';
 import { handleError } from 'utils/utils';
 const useUploadFile = () => {
   console.log('[useUploadFile] init');
-  const { updateCertificateStep } = useUpdateCertificateStep();
+  const { updateCertificateStep, wasCertificateStepUpdated, error } = useUpdateCertificateStep();
+
   const toast = useToast();
+  if (wasCertificateStepUpdated) {
+    toast({
+      title: 'File uploaded',
+      description: 'Your file has been uploaded successfully',
+      status: 'success',
+      duration: 5000,
+      isClosable: true,
+      position: 'top-right'
+    });
+  }
+  if (error) {
+    toast({
+      title: 'Invalid file',
+      description: error.message || 'your json file is invalid',
+      status: 'error',
+      duration: 5000,
+      isClosable: true,
+      position: 'top-right'
+    });
+  }
   const [isFileLoading, setIsFileLoading] = useState<boolean>(false);
   const handleFileUpload = (file: any) => {
     console.log('[handleFileUpload] file', file);
@@ -23,25 +44,9 @@ const useUploadFile = () => {
           form: validationData?.form || validationData
         };
         updateCertificateStep(payload);
-        toast({
-          title: 'File uploaded',
-          description: 'Your file has been uploaded successfully',
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-          position: 'top-right'
-        });
       } catch (e: any) {
         console.log('[] error validationData', e);
 
-        toast({
-          title: 'Invalid file',
-          description: e.message || 'your json file is invalid',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-          position: 'top-right'
-        });
         handleError(e, `[Invalid file], it's missing some required fields : ${e.message}`);
       } finally {
         setIsFileLoading(false);

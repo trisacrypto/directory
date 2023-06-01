@@ -1,9 +1,9 @@
-import { Meta, Story } from "@storybook/react";
-import TrixoQuestionnaire from ".";
+import { Meta, Story } from '@storybook/react';
+import TrixoQuestionnaire from '.';
 
 export default {
-  title: "components/TrixoQuestionnaire",
-  component: TrixoQuestionnaire,
+  title: 'components/TrixoQuestionnaire',
+  component: TrixoQuestionnaire
 } as Meta;
 
 const Template: Story = (args) => <TrixoQuestionnaire {...args} />;

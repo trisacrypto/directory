@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from 'react';
 import { Heading, HStack, Stack, Text } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import { getSteps, getCurrentStep } from 'application/store/selectors/stepper';
@@ -7,39 +8,42 @@ import FormLayout from 'layouts/FormLayout';
 import { useSelector } from 'react-redux';
 import { getStepStatus } from 'utils/utils';
 import TrisaForm from 'components/TrisaImplementation/TrisaImplementationForm';
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
+import useCertificateStepper from 'hooks/useCertificateStepper';
+import { StepEnum } from 'types/enums';
+import MinusLoader from 'components/Loader/MinusLoader';
 
 const TrisaImplementation: React.FC = () => {
   const steps = useSelector(getSteps);
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);
 
-  // const toast = useToast();
-
-  // const testnetEndpoint = watch('testnet.endpoint');
-
-  // useEffect(() => {
-  //   register('tempField', {
-  //     shouldUnregister: true
-  //   });
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, []);
-
-  // useEffect(() => {
-  //   trigger(['testnet.endpoint', 'mainnet.endpoint']);
-  // }, [testnetEndpoint, trigger]);
-
-  // useEffect(() => {
-  //   if (errors?.tempField?.message) {
-  //     toast({
-  //       position: 'top-right',
-  //       title: errors?.tempField?.message as string,
-  //       status: 'error',
-  //       duration: 5000,
-  //       isClosable: true
-  //     });
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [errors?.tempField?.message]);
+  const { certificateStep, isFetchingCertificateStep, getCertificateStep } =
+    useFetchCertificateStep({
+      key: StepEnum.TRISA
+    });
+  const [shouldResetForm, setShouldResetForm] = useState<boolean>(false);
+  const { isStepDeleted, updateDeleteStepState } = useCertificateStepper();
+  const isTrisaStepDeleted = isStepDeleted(StepEnum.TRISA);
+  console.log('[] isTrisaStepDeleted render', isTrisaStepDeleted);
+  useEffect(() => {
+    if (isTrisaStepDeleted) {
+      console.log('[] isTrisaStepDeleted', isTrisaStepDeleted);
+      const payload = {
+        step: StepEnum.TRISA,
+        isDeleted: false
+      };
+      updateDeleteStepState(payload);
+      getCertificateStep();
+      setShouldResetForm(true);
+    }
+  }, [
+    isStepDeleted,
+    updateDeleteStepState,
+    getCertificateStep,
+    isTrisaStepDeleted,
+    shouldResetForm
+  ]);
 
   return (
     <Stack spacing={7} pt={8}>
@@ -59,7 +63,15 @@ const TrisaImplementation: React.FC = () => {
           </Trans>
         </Text>
       </FormLayout>
-      <TrisaForm />
+      {isFetchingCertificateStep ? (
+        <MinusLoader />
+      ) : (
+        <TrisaForm
+          data={certificateStep?.form}
+          shouldResetForm={shouldResetForm}
+          onResetFormState={setShouldResetForm}
+        />
+      )}
     </Stack>
   );
 };

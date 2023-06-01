@@ -25,7 +25,12 @@ export const initialValue: TPayload = {
     mainnet: 'progress'
   },
   data: {},
-  deletedSteps: []
+  deletedSteps: [
+    {
+      step: 'basic',
+      isDeleted: false
+    }
+  ]
 };
 
 const stepperSlice: any = createSlice({
@@ -168,6 +173,7 @@ const stepperSlice: any = createSlice({
       state.mainnetSubmitted = false;
       state.hasReachReviewStep = false;
       state.data = {};
+      state.deletedSteps = [];
     },
     // set testnet submission
     setTestnetSubmitted: (state: any, { payload }: any) => {
@@ -208,6 +214,36 @@ const stepperSlice: any = createSlice({
         return found[0].isDirty;
       }
       return null;
+    },
+
+    // push deleted elements to the list
+    setDeletedSteps: (state: any, { payload }: any) => {
+      const found = state.deletedSteps.filter((element: any) => element.step === payload.step);
+      if (found.length === 0) {
+        state.deletedSteps.push(payload);
+      }
+    },
+
+    // set the deleted step value
+    setDeletedStepValue: (state: any, { payload }: any) => {
+      state?.deletedSteps?.map((step: any) => {
+        if (step.step === payload.step) {
+          step.isDeleted = payload.isDeleted;
+        }
+      });
+    },
+
+    // get all the deleted elements
+    getDeletedSteps: (state: any) => {
+      return state.deletedSteps;
+    },
+
+    // get the deleted elements by step name
+    getDeletedElementByStep: (state: any, { payload }: any) => {
+      const found = state.deletedSteps.filter((element: any) => element.step === payload.step);
+      if (found.length === 1) {
+        return found[0];
+      }
     }
   }
 });
@@ -235,5 +271,9 @@ export const {
   setStepMissingFields,
   setIsDirty,
   getIsDirty,
-  setStepperSteps
+  setStepperSteps,
+  getDeletedSteps,
+  setDeletedStepValue,
+  getDeletedElementByStep,
+  setDeletedSteps
 } = stepperSlice.actions;

@@ -16,14 +16,14 @@ type InvalidFormPromptProps = {
   isOpen: boolean;
   onClose: () => void;
   handleContinueClick: () => void;
-  isNextStep: boolean;
+  nextStepBtnContent: string;
 };
 
 function InvalidFormPrompt({
   isOpen,
   onClose,
   handleContinueClick,
-  isNextStep
+  nextStepBtnContent
 }: InvalidFormPromptProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -45,7 +45,10 @@ function InvalidFormPrompt({
                 <Trans>
                   If you continue, your changes will be lost. To save your changes, click Cancel and
                   then click on the{' '}
-                {isNextStep ? <Text as="span" fontWeight={'bold'} whiteSpace={'break-spaces'}>Save & Next</Text> : <Text as="span" fontWeight={'bold'} whiteSpace={'break-spaces'}>Save & Previous</Text>} button.
+                  <Text as="span" fontWeight={'bold'} whiteSpace={'break-spaces'}>
+                    {nextStepBtnContent}
+                  </Text>{' '}
+                  button.
                 </Trans>
               </Text>
             </Box>

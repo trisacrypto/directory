@@ -14,7 +14,9 @@ import {
   incrementStep,
   decrementStep,
   setIsDirty,
-  addStep
+  addStep,
+  setDeletedSteps,
+  setDeletedStepValue
 } from 'application/store/stepper.slice';
 // import { getFieldNames } from 'utils/getFieldNames';
 import { setRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
@@ -109,7 +111,8 @@ const useCertificateStepper = () => {
       lastStep: 6,
       hasReachSubmitStep: value?.state?.ready_to_submit || false,
       testnetSubmitted: value?.state?.testnetSubmitted || false,
-      mainnetSubmitted: value?.state?.mainnetSubmitted || false
+      mainnetSubmitted: value?.state?.mainnetSubmitted || false,
+      deletedSteps: []
     };
     console.log('[setInitialState] state', state);
     dispatch(setInitialValue(state));
@@ -129,7 +132,8 @@ const useCertificateStepper = () => {
       lastStep: 6,
       hasReachSubmitStep: values.ready_to_submit,
       testnetSubmitted: false,
-      mainnetSubmitted: false
+      mainnetSubmitted: false,
+      deletedSteps: []
     };
     dispatch(setInitialValue(state));
   };
@@ -143,6 +147,12 @@ const useCertificateStepper = () => {
   };
 
   const updateIsDirty = (isDirty: boolean, step: number) => {
+    // check if the current step is added to the steps array
+    const steps = Store.getState().stepper.steps;
+    const found = steps.filter((s: TStep) => s.key === step);
+    if (!found.length) {
+      addDefaultStep(step);
+    }
     dispatch(setIsDirty({ step, isDirty: !!isDirty }));
     // if (isDirty) {
     //   // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -155,10 +165,10 @@ const useCertificateStepper = () => {
     return found.length > 0;
   };
 
-  const addDefaultStep = (step?: number) => {
+  const addDefaultStep = (step?: number, status?: string) => {
     const payload = {
       step: step || currentStep,
-      status: LSTATUS.PROGRESS
+      status: status || LSTATUS.PROGRESS
     };
     dispatch(addStep(payload));
   };
@@ -196,6 +206,35 @@ const useCertificateStepper = () => {
     return found.length > 0;
   };
 
+  const updateDeleteStepState = (values: TDeleteStep) => {
+    const { step, isDeleted } = values;
+    const elm = Store.getState().stepper.deletedSteps;
+    const found = elm.filter((s: TDeleteStep) => s.step === step);
+    if (!found.length) {
+      console.log('![updateDeleteStepState] add new step', values);
+      const payload = {
+        step,
+        isDeleted: true
+      };
+      dispatch(setDeletedSteps(payload));
+    } else {
+      console.log('[updateDeleteStepState] add new step', values);
+      // change the status to true
+      dispatch(setDeletedStepValue({ step, isDeleted }));
+    }
+  };
+  // get deleted step state
+  const getDeletedStepState = (step: string) => {
+    const elm = Store.getState().stepper.deletedSteps;
+    return elm.filter((s: TDeleteStep) => s.step === step) || [];
+  };
+
+  const isStepDeleted = (step: string) => {
+    const elm = Store.getState().stepper.deletedSteps;
+    const found = elm.filter((s: TDeleteStep) => s.step === step && s.isDeleted === true);
+    return found.length > 0;
+  };
+
   return {
     nextStep,
     previousStep,
@@ -218,7 +257,10 @@ const useCertificateStepper = () => {
     updateStepStatusState,
     updateCurrentStepState,
     clearStepperState,
-    getIsDirtyStateByStep
+    getIsDirtyStateByStep,
+    updateDeleteStepState,
+    getDeletedStepState,
+    isStepDeleted
   };
 };
 

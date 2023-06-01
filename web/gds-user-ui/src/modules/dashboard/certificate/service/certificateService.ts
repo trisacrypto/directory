@@ -19,11 +19,7 @@ export const postCertificateStepService = async (payload: any) => {
 };
 export const deleteCertificateStepService = async (payload: any) => {
   if (!payload) return;
-  const response = await axiosInstance('/register', {
-    method: 'DELETE',
-    data: {
-      ...payload
-    }
-  });
+  const url = payload?.step ? `/register?step=${payload?.step}` : '/register';
+  const response = await axiosInstance.delete(url);
   return response.data;
 };

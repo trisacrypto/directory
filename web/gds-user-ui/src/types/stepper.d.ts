@@ -6,6 +6,11 @@ type TStep = {
   missingFields?: any[];
   isDirty?: boolean;
 };
+type TDeleteStep = {
+  step: TStepType;
+  isDeleted: boolean;
+};
+type TStepType = 'basic' | 'legal' | 'contacts' | 'trisa' | 'trixo' | 'all';
 type TStepStatus = 'progress' | 'success' | 'error';
 type TStatusKey = 'testnet' | 'mainnet';
 type TPayload = {
@@ -18,7 +23,7 @@ type TPayload = {
   mainnetSubmitted?: boolean;
   status?: Record<TStatusKey, StepStatus>;
   data?: any;
-  deletedSteps?: [];
+  deletedSteps: TDeleteStep[];
 };
 
 type StateFormType = {

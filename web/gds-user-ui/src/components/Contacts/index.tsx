@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { Heading, HStack, Stack, Text } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import { getCurrentStep, getSteps } from 'application/store/selectors/stepper';
@@ -6,12 +7,40 @@ import FormLayout from 'layouts/FormLayout';
 import { useSelector } from 'react-redux';
 import { getStepStatus } from 'utils/utils';
 import ContactsForm from './ContactsForm';
-
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
+import useCertificateStepper from 'hooks/useCertificateStepper';
+import { StepEnum } from 'types/enums';
+import MinusLoader from 'components/Loader/MinusLoader';
 const Contacts: React.FC = () => {
   const steps = useSelector(getSteps);
   const currentStep = useSelector(getCurrentStep);
   const stepStatus = getStepStatus(steps, currentStep);
+  const { certificateStep, isFetchingCertificateStep, getCertificateStep } =
+    useFetchCertificateStep({
+      key: StepEnum.CONTACTS
+    });
+  const [shouldResetForm, setShouldResetForm] = React.useState(false);
+  const { isStepDeleted, updateDeleteStepState } = useCertificateStepper();
+  const isContactsStepDeleted = isStepDeleted(StepEnum.CONTACTS);
 
+  useEffect(() => {
+    if (isContactsStepDeleted) {
+      console.log('[] isContactsStepDeleted', isContactsStepDeleted);
+      const payload = {
+        step: StepEnum.LEGAL,
+        isDeleted: false
+      };
+      updateDeleteStepState(payload);
+      getCertificateStep();
+      setShouldResetForm(true);
+    }
+  }, [
+    isStepDeleted,
+    updateDeleteStepState,
+    getCertificateStep,
+    isContactsStepDeleted,
+    shouldResetForm
+  ]);
   return (
     <Stack spacing={13} mt="2rem">
       <HStack>
@@ -29,7 +58,15 @@ const Contacts: React.FC = () => {
           </Trans>
         </Text>
       </FormLayout>
-      <ContactsForm />
+      {isFetchingCertificateStep ? (
+        <MinusLoader />
+      ) : (
+        <ContactsForm
+          data={certificateStep?.form}
+          shouldResetForm={shouldResetForm}
+          onResetFormState={setShouldResetForm}
+        />
+      )}
     </Stack>
   );
 };

@@ -58,9 +58,7 @@ function StepButtons({
 
         <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
           {resetFormType !== StepEnum.ALL ? (
-            <Trans>
-              <Trans>Clear & Reset Section</Trans>
-            </Trans>
+            <Trans>Clear & Reset Section</Trans>
           ) : (
             <Trans>Clear & Reset Form</Trans>
           )}
