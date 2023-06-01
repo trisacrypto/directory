@@ -25,7 +25,7 @@ const useUploadFile = () => {
     reset();
     toast({
       title: 'Invalid file',
-      description: error.message || 'your json file is invalid',
+      description: error.message || 'Your json file is invalid',
       status: 'error',
       duration: 5000,
       isClosable: true,
@@ -58,7 +58,7 @@ const useUploadFile = () => {
     reader.readAsText(file);
   };
 
-  return { isFileLoading, handleFileUpload };
+  return { isFileLoading, handleFileUpload, hasBeenUploaded: wasCertificateStepUpdated };
 };
 
 export default useUploadFile;

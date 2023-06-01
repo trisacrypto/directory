@@ -122,6 +122,7 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
     if (shouldResetForm && onResetFormState) {
       resetForm(data);
       onResetFormState(false);
+      window.location.reload();
     }
   }, [shouldResetForm, resetForm, data, onResetFormState]);
 

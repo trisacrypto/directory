@@ -49,7 +49,7 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
     reset
   } = useUpdateCertificateStep();
 
-  const { isFileLoading, handleFileUpload } = useUploadFile();
+  const { isFileLoading, handleFileUpload, hasBeenUploaded } = useUploadFile();
 
   const isDirty = getIsDirtyStateByStep(StepEnum.BASIC);
   const isBasicStepDeleted = isStepDeleted(StepEnum.BASIC);
@@ -61,6 +61,10 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
       // init stepper
       setInitialState(certificateStep?.form);
     }
+  }
+  if (hasBeenUploaded) {
+    // reload the step
+    window.location.reload();
   }
 
   if (wasCertificateStepUpdated) {
@@ -85,6 +89,7 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
 
   useEffect(() => {
     if (isBasicStepDeleted && !isAllFormDeleted) {
+      console.log('isBasicStepDeleted');
       const payload = {
         step: StepEnum.BASIC,
         isDeleted: false
@@ -92,9 +97,11 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
       updateDeleteStepState(payload);
       getCertificateStep();
       setShouldResetForm(true);
+      window.location.reload();
     }
 
     if (isAllFormDeleted && !isBasicStepDeleted) {
+      console.log('isAllFormDeleted');
       const payload = {
         step: StepEnum.ALL,
         isDeleted: false
@@ -102,6 +109,7 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
       updateDeleteStepState(payload);
       getCertificateStep();
       setShouldResetForm(true);
+      window.location.reload();
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps

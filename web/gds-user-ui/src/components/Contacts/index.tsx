@@ -27,7 +27,7 @@ const Contacts: React.FC = () => {
     if (isContactsStepDeleted) {
       console.log('[] isContactsStepDeleted', isContactsStepDeleted);
       const payload = {
-        step: StepEnum.LEGAL,
+        step: StepEnum.CONTACTS,
         isDeleted: false
       };
       updateDeleteStepState(payload);

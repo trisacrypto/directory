@@ -200,6 +200,7 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
     if (shouldResetForm && onResetFormState) {
       resetForm(data);
       onResetFormState(false);
+      window.location.reload();
     }
   }, [shouldResetForm, resetForm, data, onResetFormState]);
 

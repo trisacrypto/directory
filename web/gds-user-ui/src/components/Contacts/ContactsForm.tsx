@@ -129,6 +129,7 @@ const ContactsForm: React.FC<ContactsFormProps> = ({ data, shouldResetForm, onRe
     if (shouldResetForm && onResetFormState) {
       resetForm(data);
       onResetFormState(false);
+      window.location.reload();
     }
   }, [shouldResetForm, resetForm, data, onResetFormState]);
 
