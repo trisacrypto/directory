@@ -53,7 +53,7 @@ const ConfirmationResetForm = (props: any) => {
     if (wasCertificateStepDeleted) {
       updateStepStatusState({
         step: getStepNumber(props.step),
-        status: 'incomplete'
+        status: 'progress'
       });
       updateDeleteStepState({
         step: props.step,
