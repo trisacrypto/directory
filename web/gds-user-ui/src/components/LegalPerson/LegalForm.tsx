@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { chakra, useDisclosure } from '@chakra-ui/react';
 import CountryOfRegistration from 'components/CountryOfRegistration';
 import FormLayout from 'layouts/FormLayout';
@@ -24,8 +24,15 @@ const LegalForm: React.FC = () => {
   const { certificateStep, isFetchingCertificateStep } = useFetchCertificateStep({
     key: StepEnum.LEGAL
   });
-  const { updateCertificateStep, updatedCertificateStep } = useUpdateCertificateStep();
-
+  const {
+    updateCertificateStep,
+    updatedCertificateStep,
+    reset: resetMutation,
+    wasCertificateStepUpdated,
+    isUpdatingCertificateStep
+  } = useUpdateCertificateStep();
+  const previousStepRef = useRef<any>(false);
+  const nextStepRef = useRef<any>(false);
   const resolver = yupResolver(legalPersonValidationSchemam);
   const methods = useForm({
     defaultValues: certificateStep?.form,
@@ -34,17 +41,35 @@ const LegalForm: React.FC = () => {
   });
 
   const {
-    formState: { isDirty }
+    formState: { isDirty },
+    reset: resetForm
   } = methods;
-
-  useEffect(() => {
-    updateIsDirty(isDirty, StepsIndexes.LEGAL_PERSON);
-  }, [isDirty, updateIsDirty]);
 
   const onCloseModalHandler = () => {
     setShouldShowResetFormModal(false);
     onClose();
   };
+
+  if (wasCertificateStepUpdated && nextStepRef.current) {
+    resetMutation();
+    // reset the form with the new values
+    resetForm(updatedCertificateStep?.form, {
+      keepValues: false
+    });
+    nextStep(updatedCertificateStep);
+    nextStepRef.current = false;
+  }
+
+  if (wasCertificateStepUpdated && previousStepRef.current && !isUpdatingCertificateStep) {
+    resetMutation();
+    // reset the form with the new values
+    resetForm(updatedCertificateStep?.form, {
+      keepValues: false
+    });
+    console.log('[] prev updatedCertificateStep', updatedCertificateStep);
+    previousStepRef.current = false;
+    previousStep(updatedCertificateStep);
+  }
 
   const handleNextStepClick = () => {
     if (!isDirty) {
@@ -59,15 +84,10 @@ const LegalForm: React.FC = () => {
       };
 
       updateCertificateStep(payload);
-      nextStep(updatedCertificateStep);
+      nextStepRef.current = true;
+      // nextStep(updatedCertificateStep);
     }
   };
-  useEffect(() => {
-    if (shouldShowResetFormModal) {
-      onOpen();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shouldShowResetFormModal]);
 
   const handlePreviousStepClick = () => {
     if (isDirty) {
@@ -81,7 +101,8 @@ const LegalForm: React.FC = () => {
       console.log('[] isDirty  payload', payload);
 
       updateCertificateStep(payload);
-      previousStep(updatedCertificateStep);
+      previousStepRef.current = true;
+      // previousStep(updatedCertificateStep);
     }
     previousStep(certificateStep);
   };
@@ -93,6 +114,17 @@ const LegalForm: React.FC = () => {
   const handleResetClick = () => {
     setShouldShowResetFormModal(false); // this will close the modal
   };
+
+  useEffect(() => {
+    updateIsDirty(isDirty, StepsIndexes.LEGAL_PERSON);
+  }, [isDirty, updateIsDirty]);
+
+  useEffect(() => {
+    if (shouldShowResetFormModal) {
+      onOpen();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldShowResetFormModal]);
 
   return (
     <FormLayout>

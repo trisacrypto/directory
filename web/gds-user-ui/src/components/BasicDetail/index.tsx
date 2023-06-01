@@ -31,8 +31,13 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
       key: StepEnum.BASIC
     });
 
-  const { updateCertificateStep, updatedCertificateStep, isUpdatingCertificateStep } =
-    useUpdateCertificateStep();
+  const {
+    updateCertificateStep,
+    updatedCertificateStep,
+    isUpdatingCertificateStep,
+    wasCertificateStepUpdated,
+    reset
+  } = useUpdateCertificateStep();
 
   const { isFileLoading, handleFileUpload } = useUploadFile();
 
@@ -46,12 +51,12 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
     }
   }
 
-  // if (wasCertificateStepUpdated) {
-  //   nextStep(updatedCertificateStep);
-  // }
+  if (wasCertificateStepUpdated) {
+    reset();
+    nextStep(updatedCertificateStep);
+  }
 
   const handleNextStepClick = (values: any) => {
-    console.log('[] isDirty', isDirty);
     if (!isDirty) {
       nextStep(certificateStep);
     } else {
@@ -63,8 +68,6 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
         } as any
       };
       updateCertificateStep(payload);
-
-      nextStep(updatedCertificateStep);
     }
   };
 

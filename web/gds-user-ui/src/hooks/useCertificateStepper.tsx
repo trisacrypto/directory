@@ -11,7 +11,6 @@ import {
   setTestnetSubmitted,
   setMainnetSubmitted,
   setCertificateValue,
-  setStepMissingFields,
   incrementStep,
   decrementStep,
   setIsDirty,
@@ -50,14 +49,14 @@ const useCertificateStepper = () => {
 
   const nextStep = (data?: any) => {
     const errorFields = data?.errors;
-
+    const stepNumber = getStepNumber(data?.step) || currentStep;
     console.log('[nextStep] errorFields', errorFields);
 
     if (data && errorFields && Object.keys(errorFields).length > 0) {
-      dispatch(setStepStatus({ step: currentStep, status: LSTATUS.ERROR }));
+      dispatch(setStepStatus({ step: stepNumber, status: LSTATUS.ERROR }));
     } else {
       // setInitialState(data?.form);
-      dispatch(setStepStatus({ step: currentStep, status: LSTATUS.COMPLETE }));
+      dispatch(setStepStatus({ step: stepNumber, status: LSTATUS.COMPLETE }));
     }
 
     dispatch(incrementStep());
@@ -65,12 +64,12 @@ const useCertificateStepper = () => {
 
   const previousStep = (data?: any) => {
     const errorFields = data?.errors;
-    if (data && errorFields) {
-      dispatch(setStepMissingFields({ step: currentStep, errors: errorFields }));
-      dispatch(setStepStatus({ step: currentStep, status: LSTATUS.ERROR }));
+    const stepNumber = getStepNumber(data?.step) || currentStep; // get step number from step name
+    if (data && errorFields && Object.keys(errorFields).length > 0) {
+      dispatch(setStepStatus({ step: stepNumber, status: LSTATUS.ERROR }));
     } else {
       // setInitialState(data?.form);
-      dispatch(setStepStatus({ step: currentStep, status: LSTATUS.COMPLETE }));
+      dispatch(setStepStatus({ step: stepNumber, status: LSTATUS.COMPLETE }));
     }
     dispatch(decrementStep());
   };

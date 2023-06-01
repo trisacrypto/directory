@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { t } from '@lingui/macro';
 import { chakra, useDisclosure } from '@chakra-ui/react';
@@ -23,8 +23,15 @@ const ContactsForm: React.FC = () => {
     key: StepEnum.CONTACTS
   });
 
-  const { updateCertificateStep, updatedCertificateStep } = useUpdateCertificateStep();
-
+  const {
+    updateCertificateStep,
+    updatedCertificateStep,
+    wasCertificateStepUpdated,
+    isUpdatingCertificateStep,
+    reset: resetMutation
+  } = useUpdateCertificateStep();
+  const previousStepRef = useRef<any>(false);
+  const nextStepRef = useRef<any>(false);
   const resolver = yupResolver(contactsValidationSchema);
 
   const methods = useForm({
@@ -34,12 +41,34 @@ const ContactsForm: React.FC = () => {
   });
 
   const {
-    formState: { isDirty }
+    formState: { isDirty },
+    reset: resetForm
   } = methods;
 
   useEffect(() => {
     updateIsDirty(isDirty, StepsIndexes.CONTACTS);
   }, [isDirty, updateIsDirty]);
+
+  if (wasCertificateStepUpdated && nextStepRef.current) {
+    resetMutation();
+    // reset the form with the new values
+    resetForm(updatedCertificateStep?.form, {
+      keepValues: false
+    });
+    nextStep(updatedCertificateStep);
+    nextStepRef.current = false;
+  }
+
+  if (wasCertificateStepUpdated && previousStepRef.current && !isUpdatingCertificateStep) {
+    resetMutation();
+    // reset the form with the new values
+    resetForm(updatedCertificateStep?.form, {
+      keepValues: false
+    });
+    console.log('[] prev updatedCertificateStep', updatedCertificateStep);
+    previousStepRef.current = false;
+    previousStep(updatedCertificateStep);
+  }
 
   const handlePreviousStepClick = () => {
     if (isDirty) {
@@ -51,7 +80,7 @@ const ContactsForm: React.FC = () => {
         } as any
       };
       updateCertificateStep(payload);
-      previousStep(updatedCertificateStep);
+      previousStepRef.current = true;
     }
     previousStep(certificateStep);
   };
@@ -81,7 +110,7 @@ const ContactsForm: React.FC = () => {
       };
 
       updateCertificateStep(payload);
-      nextStep(updatedCertificateStep);
+      nextStepRef.current = true;
     }
   };
   const handleResetForm = () => {
