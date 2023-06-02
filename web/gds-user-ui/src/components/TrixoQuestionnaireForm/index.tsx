@@ -162,7 +162,7 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
     if (
       !getHasRequiredRegulatoryProgram ||
       getHasRequiredRegulatoryProgram === 'no' ||
-      getHasRequiredRegulatoryProgram === 'partial'
+      getHasRequiredRegulatoryProgram === 'partially'
     ) {
       setValue(`trixo.kyc_threshold`, 0);
     }
@@ -274,7 +274,7 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
                   name={field.name}
                   // eslint-disable-next-line @typescript-eslint/no-shadow
                   formatOptionLabel={(data: any) => {
-                    return data.value === 'partial' ? `${data.label} implemented` : data.label;
+                    return data.value === 'partially' ? `${data.label} implemented` : data.label;
                   }}
                   options={financialTransfertsOptions}
                   value={financialTransfertsOptions.find((option) => option.value === field.value)}
