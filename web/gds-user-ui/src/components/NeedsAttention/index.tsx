@@ -34,7 +34,7 @@ const NeedsAttention = ({ buttonText, onClick }: NeedsAttentionProps) => {
           textAlign={'center'}
           pt={20}>{t`An error has occurred to load attention data`}</Text>
       }>
-      <Stack minHeight={67}>
+      <Stack minHeight={67} data-cy="needs-attention">
         {attentionResponse?.messages?.map((item: AttentionResponseType, key: any) => (
           <AttentionAlert
             key={key}

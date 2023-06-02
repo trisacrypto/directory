@@ -48,15 +48,15 @@ function StepButtons({
         wrap="wrap"
         data-testid="step-buttons"
         rowGap={2}>
-        <Button onClick={handlePreviousStep} isDisabled={isFirstStep}>
+        <Button onClick={handlePreviousStep} isDisabled={isFirstStep} data-cy="previous-bttn">
           {isCurrentStepLastStep ? t`Previous` : t`Save & Previous`}
         </Button>
 
-        <Button onClick={handleNextStep} variant="secondary" isDisabled={isNextButtonDisabled}>
+        <Button onClick={handleNextStep} variant="secondary" isDisabled={isNextButtonDisabled} data-cy="next-bttn">
           {t`Save & Next`}
         </Button>
 
-        <Button onClick={handleResetForm} isDisabled={isDefaultValue()}>
+        <Button onClick={handleResetForm} isDisabled={isDefaultValue()} data-cy="clear-reset-bttn">
           {resetFormType !== StepEnum.ALL ? (
             <Trans>Clear & Reset Section</Trans>
           ) : (

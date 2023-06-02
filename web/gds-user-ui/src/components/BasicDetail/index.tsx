@@ -119,7 +119,7 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
     <Stack spacing={7} mt="2rem">
       <HStack justifyContent={'space-between'}>
         <Box display={'flex'}>
-          <Heading size="md" pr={3} ml={2}>
+          <Heading size="md" pr={3} ml={2} data-cy="basic-details-form">
             <Trans id={'Section 1: Basic Details'}>Section 1: Basic Details</Trans>
           </Heading>{' '}
           {stepStatus ? <SectionStatus status={stepStatus} /> : null}

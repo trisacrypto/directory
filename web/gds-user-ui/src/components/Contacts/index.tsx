@@ -44,7 +44,7 @@ const Contacts: React.FC = () => {
   return (
     <Stack spacing={13} mt="2rem">
       <HStack>
-        <Heading size="md" pr={3} ml={2}>
+        <Heading size="md" pr={3} ml={2} data-cy="contacts-form">
           <Trans id="Section 3: Contacts">Section 3: Contacts</Trans>
         </Heading>
         {stepStatus ? <SectionStatus status={stepStatus} /> : null}
