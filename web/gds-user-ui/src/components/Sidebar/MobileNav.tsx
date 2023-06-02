@@ -19,7 +19,7 @@ import {
 import { FiMenu } from 'react-icons/fi';
 import LanguagesDropdown from 'components/LanguagesDropdown';
 import { useDispatch, useSelector } from 'react-redux';
-import { clearCookies } from 'utils/cookies';
+import { clearCookies, clearLocalStorage } from 'utils/cookies';
 import { Link, useNavigate } from 'react-router-dom';
 import DefaultAvatar from 'assets/default_avatar.svg';
 import { resetStore } from 'application/store';
@@ -40,6 +40,7 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
   const handleLogout = (e: any) => {
     e.preventDefault();
     clearCookies();
+    clearLocalStorage();
     localStorage.removeItem('persist:root');
     dispatch(logout());
     resetStore();
