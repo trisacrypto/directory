@@ -39,7 +39,7 @@ const MENU: Menu[] = [
         title: t`Certificate Inventory`,
         icon: FaRegMoneyBillAlt,
         path: '/dashboard/certificate/inventory',
-        activated: true
+        activated: !!(process.env.REACT_APP_ENABLE_CERT_MANAGEMENT_FEAT === 'true')
       }
     ]
   },
