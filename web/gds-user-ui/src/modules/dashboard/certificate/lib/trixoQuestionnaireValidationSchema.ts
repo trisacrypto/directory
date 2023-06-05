@@ -10,13 +10,14 @@ export const trixoQuestionnaireValidationSchema = yup.object().shape({
         regulator_name: yup.string()
       })
     ),
-    financial_transfers_permitted: yup.string().oneOf(['no', 'yes', 'partial']).default('no'),
-    has_required_regulatory_program: yup.string().oneOf(['no', 'yes', 'partial']).default('no'),
+    financial_transfers_permitted: yup.string().oneOf(['no', 'yes', 'partially']).default('no'),
+    has_required_regulatory_program: yup.string().oneOf(['no', 'yes']).default('no'),
     conducts_customer_kyc: yup.boolean().default(false),
     kyc_threshold: yup
       .number()
       .transform((value, originalValue) => {
         if (originalValue) {
+          console.log('[originalValue]', originalValue);
           const v = originalValue?.replace(/^0+/, '');
           return v?.length > 0 ? Number(v) : 0;
         }
@@ -49,3 +50,15 @@ export const trixoQuestionnaireValidationSchema = yup.object().shape({
     safeguards_pii: yup.boolean().default(false)
   })
 });
+
+export const isTrixoQuestionnaireValid = async (data: any) => {
+  try {
+    await trixoQuestionnaireValidationSchema.validate(data, {
+      abortEarly: false
+    });
+    return true;
+  } catch (error) {
+    console.log('[isTrixoQuestionnaireValid] error', error);
+    return false;
+  }
+};

@@ -186,6 +186,10 @@ const useCertificateStepper = () => {
     }
   };
 
+  const updateStepStatusToError = (step: number) => {
+    dispatch(setStepStatus({ step, status: LSTATUS.ERROR }));
+  };
+
   const updateStepStatusState = (payload: any) => {
     dispatch(setStepStatus(payload));
   };
@@ -261,7 +265,8 @@ const useCertificateStepper = () => {
     getIsDirtyStateByStep,
     updateDeleteStepState,
     getDeletedStepState,
-    isStepDeleted
+    isStepDeleted,
+    updateStepStatusToError
   };
 };
 
