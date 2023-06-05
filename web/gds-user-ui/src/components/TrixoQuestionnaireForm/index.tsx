@@ -278,10 +278,6 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
                 <SelectFormControl
                   ref={field.ref}
                   name={field.name}
-                  // eslint-disable-next-line @typescript-eslint/no-shadow
-                  // formatOptionLabel={(data: any) => {
-                  //   return data.value === 'partially' ? `${data.label} implemented` : data.label;
-                  // }}
                   options={financialTransfertsOptions.filter(
                     (option) => option.value !== 'partially'
                   )}

@@ -11,7 +11,7 @@ export const trixoQuestionnaireValidationSchema = yup.object().shape({
       })
     ),
     financial_transfers_permitted: yup.string().oneOf(['no', 'yes', 'partially']).default('no'),
-    has_required_regulatory_program: yup.string().oneOf(['no', 'yes', 'partially']).default('no'),
+    has_required_regulatory_program: yup.string().oneOf(['no', 'yes']).default('no'),
     conducts_customer_kyc: yup.boolean().default(false),
     kyc_threshold: yup
       .number()
