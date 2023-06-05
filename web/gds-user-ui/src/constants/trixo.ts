@@ -3,7 +3,7 @@ import currencies from 'utils/currencies.json';
 
 const FINANCIAL_TRANSFERTS_PERMITTED_OPTIONS = {
   yes: t`Yes`,
-  partial: t`Partially`,
+  partially: t`Partially`,
   no: t`No`
 };
 

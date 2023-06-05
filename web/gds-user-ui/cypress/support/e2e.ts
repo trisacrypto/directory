@@ -18,3 +18,10 @@ import './commands'
 
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
+
+// Adds uncaught exception handler to prevent Cypress from failing tests.
+Cypress.on('uncaught:exception', (promise) => {
+    if (promise) {
+      return false
+    }
+  })

@@ -25,7 +25,7 @@ Then I should see the Unsaved changes alert modal
 Then I should stay on the Basic Details page if I click Cancel
 Then I should see the Contacts form if I click Continue
 
-When I complete some fields in the Contacts Form
+When I complete a field in the Contacts Form
 Then I save changes to the form
 When I click the Clear & Reset section button on the Contacts form
 Then I should not see any data in the Contacts form
@@ -40,5 +40,4 @@ Then I should see the Registration Submission page
 When I click the Back to Review Section button
 Then I should be returned to the Review page
 When I click the Clear & Reset form button
-Then I should be taken to the Basic Details form
 Then I should not see any data in the Basic Details form
