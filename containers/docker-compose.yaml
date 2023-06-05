@@ -174,7 +174,7 @@ services:
       - GDS_BFF_SENTRY_TRACK_PERFORMANCE
       - GDS_BFF_AUTH0_TESTING
       - GDS_BFF_AUTH0_DOMAIN=dev-bu-hbv3o.us.auth0.com
-      - GDS_BFF_AUTH0_ISSUER=https://dev-bu-hbv3o.us.auth0.com/
+      - GDS_BFF_AUTH0_ISSUER=https://auth.vaspdirectory.dev/
       - GDS_BFF_AUTH0_AUDIENCE=https://bff.vaspdirectory.dev
       - GDS_BFF_AUTH0_CLIENT_ID
       - GDS_BFF_AUTH0_CLIENT_SECRET
@@ -199,7 +199,7 @@ services:
         REACT_APP_GIT_REVISION: ${REACT_APP_GIT_REVISION}
         REACT_APP_SENTRY_DSN: ${REACT_APP_SENTRY_DSN}
         REACT_APP_SENTRY_ENVIRONMENT: development
-        REACT_APP_AUTH0_DOMAIN: dev-bu-hbv3o.us.auth0.com
+        REACT_APP_AUTH0_DOMAIN: ${REACT_APP_AUTH0_DOMAIN}
         REACT_APP_AUTH0_CLIENT_ID: ${REACT_APP_AUTH0_CLIENT_ID}
         REACT_APP_AUTH0_REDIRECT_URI: http://localhost:3000/auth/callback
         REACT_APP_AUTH0_SCOPE: "openid profile email"
