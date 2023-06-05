@@ -34,7 +34,7 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
   onResetFormState
 }) => {
   const { isOpen, onClose, onOpen } = useDisclosure();
-  const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
+  const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState<boolean>(false);
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
 
   const resolver = yupResolver(trixoQuestionnaireValidationSchema);
@@ -99,6 +99,12 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
   }
 
   const handleNextStepClick = () => {
+    // const isValid = await isTrixoQuestionnaireValid(methods.getValues());
+    // console.log('[] isValid', isValid);
+    // if (!isValid) {
+    //   updateStepStatusToError(StepsIndexes.TRIXO_QUESTIONNAIRE);
+    // }
+    //
     if (!isDirty) {
       nextStep(data);
     } else {
@@ -273,10 +279,12 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
                   ref={field.ref}
                   name={field.name}
                   // eslint-disable-next-line @typescript-eslint/no-shadow
-                  formatOptionLabel={(data: any) => {
-                    return data.value === 'partially' ? `${data.label} implemented` : data.label;
-                  }}
-                  options={financialTransfertsOptions}
+                  // formatOptionLabel={(data: any) => {
+                  //   return data.value === 'partially' ? `${data.label} implemented` : data.label;
+                  // }}
+                  options={financialTransfertsOptions.filter(
+                    (option) => option.value !== 'partially'
+                  )}
                   value={financialTransfertsOptions.find((option) => option.value === field.value)}
                   onChange={(newValue: any) => field.onChange(newValue.value)}
                   label={t`Does your organization have a programme that sets minimum Anti-Money
