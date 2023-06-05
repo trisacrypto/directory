@@ -48,7 +48,7 @@ function StepButtons({
         wrap="wrap"
         data-testid="step-buttons"
         rowGap={2}>
-        <Button onClick={handlePreviousStep} isDisabled={isFirstStep} data-cy="previous-bttn">
+        <Button onClick={handlePreviousStep} isDisabled={isFirstStep} data-cy="prev-bttn">
           {isCurrentStepLastStep ? t`Previous` : t`Save & Previous`}
         </Button>
 
