@@ -101,18 +101,12 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
     previousStep(updatedCertificateStep);
   }
 
-  console.log('[] getMustComplyRegulations', getMustComplyRegulations);
-  console.log('[] getHasRequiredRegulatoryProgram', getHasRequiredRegulatoryProgram);
-
   const handleNextStepClick = () => {
-    // const isValid = await isTrixoQuestionnaireValid(methods.getValues());
-    // console.log('[] isValid', isValid);
-    // if (!isValid) {
-    //   updateStepStatusToError(StepsIndexes.TRIXO_QUESTIONNAIRE);
-    // }
-    //
-
-    if (!isDirty) {
+    if (
+      !isDirty ||
+      getMustComplyRegulationsFromData === getMustComplyRegulations ||
+      getHasRequiredRegulatoryProgramFromData === getHasRequiredRegulatoryProgram
+    ) {
       nextStep(data);
     } else {
       const payload = {
@@ -130,10 +124,11 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
   };
 
   const handlePreviousStepClick = () => {
+    // isDirty is not working for the checkbox so we need to compare the values
     if (
       isDirty ||
-      getMustComplyRegulationsFromData !== getMustComplyRegulations || // isDirty is not working for the checkbox so we need to compare the values
-      getHasRequiredRegulatoryProgramFromData !== getHasRequiredRegulatoryProgram // isDirty is not working for the checkbox so we need to compare the values
+      getMustComplyRegulationsFromData !== getMustComplyRegulations ||
+      getHasRequiredRegulatoryProgramFromData !== getHasRequiredRegulatoryProgram
     ) {
       const payload = {
         step: StepEnum.TRIXO,
