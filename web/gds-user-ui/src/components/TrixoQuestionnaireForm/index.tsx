@@ -103,12 +103,10 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
 
   const handleNextStepClick = () => {
     if (
-      !isDirty ||
-      getMustComplyRegulationsFromData === getMustComplyRegulations ||
-      getHasRequiredRegulatoryProgramFromData === getHasRequiredRegulatoryProgram
+      isDirty ||
+      getMustComplyRegulationsFromData !== getMustComplyRegulations ||
+      getHasRequiredRegulatoryProgramFromData !== getHasRequiredRegulatoryProgram
     ) {
-      nextStep(data);
-    } else {
       const payload = {
         step: StepEnum.TRIXO,
         form: {
@@ -120,6 +118,8 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
 
       updateCertificateStep(payload);
       nextStepRef.current = true;
+    } else {
+      nextStep(data);
     }
   };
 
