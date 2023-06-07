@@ -34,18 +34,7 @@ export const basicDetailsValidationSchema = yup.object().shape({
         ` ${dayjs(minDate).format(DATE_FORMAT)}.`
     )
     .max(new Date(), t`Date of incorporation / establishment must be earlier than current date.`)
-    .nullable()
-    .test('is-invalidate-date', _i18n._(t`Invalid date / year must be 4 digit`), (value) => {
-      if (value) {
-        const getYear = value.getFullYear();
-        if (getYear.toString().length !== 4) {
-          return false;
-        } else {
-          return true;
-        }
-      }
-      return false;
-    }),
+    .nullable(),
 
   organization_name: yup.string().trim(),
   // .required(_i18n._(t`Organization name is required.`)),
