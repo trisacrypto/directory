@@ -67,7 +67,7 @@ const MemberTable: React.FC = () => {
         <TableCaption placement="top" textAlign="end" p={0} m={0} mb={3} fontSize={20}>
           <HStack justify={'space-between'} mb={'10'}>
             <Heading size="md" color={'black'}>
-              Member List
+              <Trans>Member List</Trans>
             </Heading>
             <Button
               minW="100px"
