@@ -8,6 +8,7 @@
 # testing
 /coverage
 /cypress/reports
+/cypress/screenshots
 /mochawesome
 /mochawesome-report
 

@@ -82,7 +82,7 @@ const ReviewsSummary: React.FC = () => {
   return (
     <Stack spacing={7}>
       <HStack pt={10} justifyContent={'space-between'}>
-        <Heading size="md" data-testid="review">
+        <Heading size="md" data-testid="review" data-cy="review-page">
           <Trans id="Review">Review</Trans>
         </Heading>
         <Box>

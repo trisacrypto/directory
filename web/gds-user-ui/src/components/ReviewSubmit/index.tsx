@@ -307,6 +307,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
 
           <Box alignSelf={'flex-start'} textAlign="center" mx={'auto'}>
             <Button
+              data-cy="back-to-review-section"
               bgColor="#fff"
               color="#1026F0"
               onClick={handleJumpToLastStep}

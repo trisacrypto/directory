@@ -50,10 +50,10 @@ function InvalidFormPrompt({ isOpen, onClose, handleContinueClick }: InvalidForm
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" mr={3} onClick={onClose}>
+          <Button variant="ghost" mr={3} onClick={onClose} data-cy="cancel-bttn">
             Cancel
           </Button>
-          <Button colorScheme="blue" onClick={handleContinueClick}>
+          <Button colorScheme="blue" onClick={handleContinueClick} data-cy="continue-bttn">
             Continue
           </Button>
         </ModalFooter>
