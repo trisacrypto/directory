@@ -238,6 +238,16 @@ func (s *Server) MemberList(c *gin.Context) {
 		return
 	}
 
+	// Check that the requester is verified with the directory they're trying to access.
+	if verified, err := RequireVerification(c, params.Directory); err != nil {
+		log.Error().Err(err).Msg("could not require verification for members endpoint")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve members list"))
+		return
+	} else if !verified {
+		c.JSON(http.StatusUnavailableForLegalReasons, api.ErrorResponse("listing GDS members is only available to verified TRISA members"))
+		return
+	}
+
 	// Execute the members list request against the specified GDS
 	log.Debug().Str("registered_directory", params.Directory).Int32("page_size", params.PageSize).Str("page_token", params.PageToken).Msg("members list request")
 	req := &members.ListRequest{
@@ -323,6 +333,16 @@ func (s *Server) MemberDetail(c *gin.Context) {
 	params.Directory = strings.ToLower(params.Directory)
 	if !validRegisteredDirectory(params.Directory) {
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("unknown registered directory"))
+		return
+	}
+
+	// Check that the requester is verified with the directory they're trying to access.
+	if verified, err := RequireVerification(c, params.Directory); err != nil {
+		log.Error().Err(err).Msg("could not require verification for members endpoint")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve members list"))
+		return
+	} else if !verified {
+		c.JSON(http.StatusUnavailableForLegalReasons, api.ErrorResponse("listing GDS members is only available to verified TRISA members"))
 		return
 	}
 

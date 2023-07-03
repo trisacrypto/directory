@@ -10,6 +10,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
+	"github.com/trisacrypto/directory/pkg/bff/config"
 	"github.com/trisacrypto/directory/pkg/bff/mock"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
@@ -292,6 +293,39 @@ func (s *bffTestSuite) TestMemberList() {
 	_, err = s.client.MemberList(context.TODO(), req)
 	s.requireError(err, http.StatusBadRequest, "unknown registered directory", "expected invalid directory")
 
+	// Ensure that check verification middleware is required to access the specific directory
+	req.Directory = "trisatest.net"
+	_, err = s.client.MemberList(context.TODO(), req)
+	s.requireError(err, http.StatusUnavailableForLegalReasons, "listing GDS members is only available to verified TRISA members")
+
+	req.Directory = "vaspdirectory.net"
+	_, err = s.client.MemberList(context.TODO(), req)
+	s.requireError(err, http.StatusUnavailableForLegalReasons, "listing GDS members is only available to verified TRISA members")
+
+	// Enable verification mocks
+	s.mainnet.gds.OnVerification = verificationMock(config.MainNet)
+	s.testnet.gds.OnVerification = verificationMock(config.TestNet)
+
+	// Ensure that revoked or pending VASPs cannot access member list
+	// NOTE: these UUIDs are REJECTED/SUBMITTED states by default set by the verificationMock() function
+	claims.VASPs["mainnet"] = "fee76a8c-684b-4d79-bc2f-4439e42a597a"
+	claims.VASPs["testnet"] = "9cbcd158-9b37-4200-803a-17fbc188f677"
+	require.NoError(s.SetClientCredentials(claims), "could not create token with claims")
+
+	req.Directory = "trisatest.net"
+	_, err = s.client.MemberList(context.TODO(), req)
+	s.requireError(err, http.StatusUnavailableForLegalReasons, "listing GDS members is only available to verified TRISA members")
+
+	req.Directory = "vaspdirectory.net"
+	_, err = s.client.MemberList(context.TODO(), req)
+	s.requireError(err, http.StatusUnavailableForLegalReasons, "listing GDS members is only available to verified TRISA members")
+
+	// Add claims for verified VASPs for the remainder of the tests
+	// NOTE: these UUIDs are VERIFIED states by default set by the verificationMock() function
+	claims.VASPs["mainnet"] = "0846137c-fd14-474e-99b6-f4f33f7f3a86"
+	claims.VASPs["testnet"] = "a246f9ff-094a-4fa8-b151-1c8d76e02e86"
+	require.NoError(s.SetClientCredentials(claims), "could not create token with claims")
+
 	// Ensure errors are returned from the testnet and mainnet directory when the mocks
 	// are set to return unavailable errors.
 	req.Directory = "trisatest.net"
@@ -369,6 +403,39 @@ func (s *bffTestSuite) TestMemberDetail() {
 	req.Directory = "unrecognized.net"
 	_, err = s.client.MemberDetails(context.TODO(), req)
 	s.requireError(err, http.StatusBadRequest, "unknown registered directory", "expected error when directory is unrecognized")
+
+	// Ensure that check verification middleware is required to access the specific directory
+	req.Directory = "trisatest.net"
+	_, err = s.client.MemberDetails(context.TODO(), req)
+	s.requireError(err, http.StatusUnavailableForLegalReasons, "listing GDS members is only available to verified TRISA members")
+
+	req.Directory = "vaspdirectory.net"
+	_, err = s.client.MemberDetails(context.TODO(), req)
+	s.requireError(err, http.StatusUnavailableForLegalReasons, "listing GDS members is only available to verified TRISA members")
+
+	// Enable verification mocks
+	s.mainnet.gds.OnVerification = verificationMock(config.MainNet)
+	s.testnet.gds.OnVerification = verificationMock(config.TestNet)
+
+	// Ensure that revoked or pending VASPs cannot access member list
+	// NOTE: these UUIDs are REJECTED/SUBMITTED states by default set by the verificationMock() function
+	claims.VASPs["mainnet"] = "fee76a8c-684b-4d79-bc2f-4439e42a597a"
+	claims.VASPs["testnet"] = "9cbcd158-9b37-4200-803a-17fbc188f677"
+	require.NoError(s.SetClientCredentials(claims), "could not create token with claims")
+
+	req.Directory = "trisatest.net"
+	_, err = s.client.MemberDetails(context.TODO(), req)
+	s.requireError(err, http.StatusUnavailableForLegalReasons, "listing GDS members is only available to verified TRISA members")
+
+	req.Directory = "vaspdirectory.net"
+	_, err = s.client.MemberDetails(context.TODO(), req)
+	s.requireError(err, http.StatusUnavailableForLegalReasons, "listing GDS members is only available to verified TRISA members")
+
+	// Add claims for verified VASPs for the remainder of the tests
+	// NOTE: these UUIDs are VERIFIED states by default set by the verificationMock() function
+	claims.VASPs["mainnet"] = "0846137c-fd14-474e-99b6-f4f33f7f3a86"
+	claims.VASPs["testnet"] = "a246f9ff-094a-4fa8-b151-1c8d76e02e86"
+	require.NoError(s.SetClientCredentials(claims), "could not create token with claims")
 
 	// Test error is returned when VASP does not exist in the requested directory
 	require.NoError(s.testnet.members.UseError(mock.DetailsRPC, codes.NotFound, "member not found"))
