@@ -194,7 +194,7 @@ func (s *Server) Overview(c *gin.Context) {
 // read:vasp permission and is only available to organizations that have themselves been
 // verified through the TRISA directory that they are querying.
 //
-// @Summary List verified VASPs in the specified directory (MainNet by default).
+// @Summary List verified VASPs in the specified directory [read:vasp].
 // @Description Returns a list of verified VASPs in the specified directory so long as the organization is a verified member of that directory.
 // @Tags members
 // @Accept json
@@ -284,13 +284,14 @@ func (s *Server) MemberList(c *gin.Context) {
 	})
 }
 
-// MemberDetails endpoint is an authenticated endpoint that requires the read:vasp
-// permission and returns details about a VASP member.
-// TODO: convert to /members/:vaspID
-// TODO: ensure only verified VASPs can query this endpoint
+// MemberDetail endpoint is an authenticated endpoint that returns more detailed
+// information about a verified VASP member from the specified directory (either
+// TestNet or MainNet). This endpoint requires the read:vasp permission and is only
+// available to organizations that have themselves been verified through the TRISA
+// directory that they are querying.
 //
-// @Summary Get details for a VASP [read:vasp]
-// @Description Returns details for a VASP by ID and directory.
+// @Summary Get details for a VASP in the specified directory [read:vasp]
+// @Description Returns details for a VASP by ID and directory so long as the organization is a verified member of that directory.
 // @Tags members
 // @Accept json
 // @Produce json
@@ -300,8 +301,8 @@ func (s *Server) MemberList(c *gin.Context) {
 // @Failure 401 {object} api.Reply
 // @Failure 404 {object} api.Reply
 // @Failure 500 {object} api.Reply
-// @Router /details [get]
-func (s *Server) MemberDetails(c *gin.Context) {
+// @Router /members/{id} [get]
+func (s *Server) MemberDetail(c *gin.Context) {
 	// Bind the parameters associated with the MemberDetails request
 	params := &api.MemberDetailsParams{}
 	if err := c.ShouldBindQuery(params); err != nil {
@@ -310,10 +311,12 @@ func (s *Server) MemberDetails(c *gin.Context) {
 		return
 	}
 
-	// Check that the required parameters are present
-	if params.ID == "" || params.Directory == "" {
-		c.JSON(http.StatusBadRequest, api.ErrorResponse("must provide vaspID and registered_directory in query parameters"))
-		return
+	// Overwrite the params ID with the vaspID from the URL
+	params.ID = c.Param("vaspID")
+
+	// By default, query the mainnet if a directory is not specified
+	if params.Directory == "" {
+		params.Directory = DefaultMembersDirectory
 	}
 
 	// Validate the registered directory

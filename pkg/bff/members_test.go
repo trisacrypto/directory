@@ -325,8 +325,11 @@ func (s *bffTestSuite) TestMemberList() {
 	require.Equal(out, other, "expected default response to match mainnet")
 }
 
-func (s *bffTestSuite) TestMemberDetails() {
+func (s *bffTestSuite) TestMemberDetail() {
 	require := s.Require()
+
+	testnetID := "7a96ca2c-2818-4106-932e-1bcfd743b04c"
+	mainnetID := "9e069e01-8515-4d57-b9a5-e249f7ab4fca"
 
 	testnetDetails := &members.MemberDetails{}
 	mainnetDetails := &members.MemberDetails{}
@@ -348,7 +351,7 @@ func (s *bffTestSuite) TestMemberDetails() {
 	require.NoError(s.mainnet.members.UseError(mock.DetailsRPC, codes.Unavailable, "endpoint is unavailable"))
 
 	// Endpoint must be authenticated
-	req := &api.MemberDetailsParams{}
+	req := &api.MemberDetailsParams{ID: "foo"}
 	_, err := s.client.MemberDetails(context.TODO(), req)
 	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
@@ -360,19 +363,6 @@ func (s *bffTestSuite) TestMemberDetails() {
 	// Set valid permissions for the rest of the tests
 	claims.Permissions = []string{auth.ReadVASP}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
-
-	// Test that both ID and directory must be set
-	_, err = s.client.MemberDetails(context.TODO(), req)
-	s.requireError(err, http.StatusBadRequest, "must provide vaspID and registered_directory in query parameters", "expected error when ID and directory are not set")
-
-	req.ID = "b2c4f8f0-f8f8-4f8f-8f8f-8f8f8f8f8f8f"
-	_, err = s.client.MemberDetails(context.TODO(), req)
-	s.requireError(err, http.StatusBadRequest, "must provide vaspID and registered_directory in query parameters", "expected error when directory is not set")
-
-	req.ID = ""
-	req.Directory = "trisatest.net"
-	_, err = s.client.MemberDetails(context.TODO(), req)
-	s.requireError(err, http.StatusBadRequest, "must provide vaspID and registered_directory in query parameters", "expected error when ID is not set")
 
 	// Test with unrecognized directory
 	req.ID = "b2c4f8f0-f8f8-4f8f-8f8f-8f8f8f8f8f8f"
@@ -390,6 +380,8 @@ func (s *bffTestSuite) TestMemberDetails() {
 	actualPerson := &ivms101.LegalPerson{}
 	actualTrixo := &pb.TRIXOQuestionnaire{}
 	require.NoError(s.testnet.members.UseFixture(mock.DetailsRPC, testnetFixture))
+
+	req.ID = testnetID
 	reply, err := s.client.MemberDetails(context.TODO(), req)
 	require.NoError(err, "could not get member details")
 	require.Equal(testnetDetails.MemberSummary, reply.Summary, "response summary did not match")
@@ -403,6 +395,8 @@ func (s *bffTestSuite) TestMemberDetails() {
 	actualPerson = &ivms101.LegalPerson{}
 	actualTrixo = &pb.TRIXOQuestionnaire{}
 	require.NoError(s.mainnet.members.UseFixture(mock.DetailsRPC, mainnetFixture))
+
+	req.ID = mainnetID
 	reply, err = s.client.MemberDetails(context.TODO(), req)
 	require.NoError(err, "could not get member details")
 	require.Equal(mainnetDetails.MemberSummary, reply.Summary, "response summary did not match")

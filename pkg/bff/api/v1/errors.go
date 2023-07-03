@@ -22,6 +22,7 @@ var (
 	ErrExpiredCredentials = errors.New("auth0 credentials have expired")
 	ErrPathRequired       = errors.New("local credentials requires a path to the stored json credential")
 	ErrIDRequired         = errors.New("request requires a valid ID to determine the endpoint path")
+	ErrMissingMemberID    = errors.New("member ID is required to query member details")
 )
 
 // ErrorResponse constructs an new response from the error or returns a success: false.
