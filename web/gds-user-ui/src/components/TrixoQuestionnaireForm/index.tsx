@@ -22,6 +22,7 @@ import useCertificateStepper from 'hooks/useCertificateStepper';
 import { StepsIndexes } from 'constants/steps';
 import { isProdEnv } from 'application/config';
 import { DevTool } from '@hookform/devtools';
+
 interface TrixoFormProps {
   data: any;
   isLoading?: boolean;
@@ -64,6 +65,8 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
   const getCountryFromLegalAddress = watch('entity.country_of_registration');
   const getComplianceThreshold = watch('trixo.compliance_threshold');
   const getKycThreshold = watch('trixo.kyc_threshold');
+  const getMustComplyRegulationsFromData = data?.trixo?.must_comply_travel_rule;
+  const getHasRequiredRegulatoryProgramFromData = data?.trixo?.has_required_regulatory_program;
 
   const {
     updateCertificateStep,
@@ -93,21 +96,16 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
     resetForm(updatedCertificateStep?.form, {
       keepValues: false
     });
-    console.log('[] prev updatedCertificateStep', updatedCertificateStep);
     previousStepRef.current = false;
     previousStep(updatedCertificateStep);
   }
 
   const handleNextStepClick = () => {
-    // const isValid = await isTrixoQuestionnaireValid(methods.getValues());
-    // console.log('[] isValid', isValid);
-    // if (!isValid) {
-    //   updateStepStatusToError(StepsIndexes.TRIXO_QUESTIONNAIRE);
-    // }
-    //
-    if (!isDirty) {
-      nextStep(data);
-    } else {
+    if (
+      isDirty ||
+      getMustComplyRegulationsFromData !== getMustComplyRegulations ||
+      getHasRequiredRegulatoryProgramFromData !== getHasRequiredRegulatoryProgram
+    ) {
       const payload = {
         step: StepEnum.TRIXO,
         form: {
@@ -118,11 +116,18 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
 
       updateCertificateStep(payload);
       nextStepRef.current = true;
+    } else {
+      nextStep(data);
     }
   };
 
   const handlePreviousStepClick = () => {
-    if (isDirty) {
+    // isDirty is not working for the checkbox so we need to compare the values
+    if (
+      isDirty ||
+      getMustComplyRegulationsFromData !== getMustComplyRegulations ||
+      getHasRequiredRegulatoryProgramFromData !== getHasRequiredRegulatoryProgram
+    ) {
       const payload = {
         step: StepEnum.TRIXO,
         form: {

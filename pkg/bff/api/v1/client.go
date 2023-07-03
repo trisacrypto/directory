@@ -524,8 +524,8 @@ func (s *APIv1) Certificates(ctx context.Context) (out *CertificatesReply, err e
 	return out, nil
 }
 
-// Details returns the sensitive details for a VASP member.
-func (s *APIv1) MemberDetails(ctx context.Context, in *MemberDetailsParams) (out *MemberDetailsReply, err error) {
+// Returns a list of all verified VASPs in the specified directory.
+func (s *APIv1) MemberList(ctx context.Context, in *MemberPageInfo) (out *MemberListReply, err error) {
 	// Create the query params from the input
 	var params url.Values
 	if params, err = query.Values(in); err != nil {
@@ -534,7 +534,33 @@ func (s *APIv1) MemberDetails(ctx context.Context, in *MemberDetailsParams) (out
 
 	// Make the HTTP request
 	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/details", nil, &params); err != nil {
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/members", nil, &params); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &MemberListReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Details returns the sensitive details for a VASP member.
+func (s *APIv1) MemberDetails(ctx context.Context, in *MemberDetailsParams) (out *MemberDetailsReply, err error) {
+	if in.ID == "" {
+		return nil, ErrMissingMemberID
+	}
+
+	// Create the query params from the input
+	var params url.Values
+	if params, err = query.Values(in); err != nil {
+		return nil, fmt.Errorf("could not encode query params: %s", err)
+	}
+
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/members/"+in.ID, nil, &params); err != nil {
 		return nil, err
 	}
 

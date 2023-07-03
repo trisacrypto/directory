@@ -258,8 +258,78 @@ func (s *bffTestSuite) TestOverview() {
 	require.Equal(expected, reply, "overview reply did not match")
 }
 
-func (s *bffTestSuite) TestMemberDetails() {
+func (s *bffTestSuite) TestMemberList() {
 	require := s.Require()
+
+	// TODO: load fixtures
+
+	// Create initial claims
+	claims := &authtest.Claims{
+		Email:       "leopold.wentzel@gmail.com",
+		Permissions: []string{"read:nothing"},
+		OrgID:       "a2c4f8f0-f8f8-4f8f-8f8f-8f8f8f8f8f8f",
+		VASPs:       map[string]string{},
+	}
+
+	// Create members list params request
+	req := &api.MemberPageInfo{}
+
+	// Set initial RPC handlers to return an error
+	require.NoError(s.mainnet.members.UseError(mock.ListRPC, codes.Unavailable, "members list is mock unavailable"))
+	require.NoError(s.testnet.members.UseError(mock.ListRPC, codes.Unavailable, "members list is mock unavailable"))
+
+	// Ensure that the read:vasp permission is required
+	require.NoError(s.SetClientCredentials(claims), "could not create token with claims")
+	_, err := s.client.MemberList(context.TODO(), req)
+	s.requireError(err, http.StatusUnauthorized, "user does not have permission to perform this operation", "expected error with no permissions on claims")
+
+	// Set valid permissions for the rest of the tests
+	claims.Permissions = []string{auth.ReadVASP}
+	require.NoError(s.SetClientCredentials(claims), "could not create token with claims")
+
+	// Ensure a valid directory is required
+	req.Directory = "unrecognized.io"
+	_, err = s.client.MemberList(context.TODO(), req)
+	s.requireError(err, http.StatusBadRequest, "unknown registered directory", "expected invalid directory")
+
+	// Ensure errors are returned from the testnet and mainnet directory when the mocks
+	// are set to return unavailable errors.
+	req.Directory = "trisatest.net"
+	_, err = s.client.MemberList(context.TODO(), req)
+	s.requireError(err, http.StatusServiceUnavailable, "specified directory is currently unavailable, please try again later", "expected grpc pass through error")
+
+	req.Directory = "vaspdirectory.net"
+	_, err = s.client.MemberList(context.TODO(), req)
+	s.requireError(err, http.StatusServiceUnavailable, "specified directory is currently unavailable, please try again later", "expected grpc pass through error")
+
+	// Test the happy path with VASPs correctly returned from both TestNet and MainNet
+	s.testnet.members.UseFixture(mock.ListRPC, "testdata/testnet/list_reply.json")
+	s.mainnet.members.UseFixture(mock.ListRPC, "testdata/mainnet/list_reply.json")
+
+	req.Directory = "trisatest.net"
+	out, err := s.client.MemberList(context.TODO(), req)
+	require.NoError(err, "expected valid response from testnet")
+	require.Len(out.VASPs, 5)
+	require.Equal(out.NextPageToken, "mLB9CU8O8xQj2XEyjAtlfvTj9imoXnLv/1p8fTLchTg=")
+
+	req.Directory = "vaspdirectory.net"
+	out, err = s.client.MemberList(context.TODO(), req)
+	require.NoError(err, "expected valid response from mainnet")
+	require.Len(out.VASPs, 3)
+	require.Empty(out.NextPageToken, "expected mainnet next page token to be empty")
+
+	// Test default is the MainNet
+	req.Directory = ""
+	other, err := s.client.MemberList(context.TODO(), req)
+	require.NoError(err, "could not make request with no directory param")
+	require.Equal(out, other, "expected default response to match mainnet")
+}
+
+func (s *bffTestSuite) TestMemberDetail() {
+	require := s.Require()
+
+	testnetID := "7a96ca2c-2818-4106-932e-1bcfd743b04c"
+	mainnetID := "9e069e01-8515-4d57-b9a5-e249f7ab4fca"
 
 	testnetDetails := &members.MemberDetails{}
 	mainnetDetails := &members.MemberDetails{}
@@ -281,7 +351,7 @@ func (s *bffTestSuite) TestMemberDetails() {
 	require.NoError(s.mainnet.members.UseError(mock.DetailsRPC, codes.Unavailable, "endpoint is unavailable"))
 
 	// Endpoint must be authenticated
-	req := &api.MemberDetailsParams{}
+	req := &api.MemberDetailsParams{ID: "foo"}
 	_, err := s.client.MemberDetails(context.TODO(), req)
 	s.requireError(err, http.StatusUnauthorized, "this endpoint requires authentication", "expected error when user is not authenticated")
 
@@ -293,19 +363,6 @@ func (s *bffTestSuite) TestMemberDetails() {
 	// Set valid permissions for the rest of the tests
 	claims.Permissions = []string{auth.ReadVASP}
 	require.NoError(s.SetClientCredentials(claims), "could not create token with correct permissions")
-
-	// Test that both ID and directory must be set
-	_, err = s.client.MemberDetails(context.TODO(), req)
-	s.requireError(err, http.StatusBadRequest, "must provide vaspID and registered_directory in query parameters", "expected error when ID and directory are not set")
-
-	req.ID = "b2c4f8f0-f8f8-4f8f-8f8f-8f8f8f8f8f8f"
-	_, err = s.client.MemberDetails(context.TODO(), req)
-	s.requireError(err, http.StatusBadRequest, "must provide vaspID and registered_directory in query parameters", "expected error when directory is not set")
-
-	req.ID = ""
-	req.Directory = "trisatest.net"
-	_, err = s.client.MemberDetails(context.TODO(), req)
-	s.requireError(err, http.StatusBadRequest, "must provide vaspID and registered_directory in query parameters", "expected error when ID is not set")
 
 	// Test with unrecognized directory
 	req.ID = "b2c4f8f0-f8f8-4f8f-8f8f-8f8f8f8f8f8f"
@@ -323,6 +380,8 @@ func (s *bffTestSuite) TestMemberDetails() {
 	actualPerson := &ivms101.LegalPerson{}
 	actualTrixo := &pb.TRIXOQuestionnaire{}
 	require.NoError(s.testnet.members.UseFixture(mock.DetailsRPC, testnetFixture))
+
+	req.ID = testnetID
 	reply, err := s.client.MemberDetails(context.TODO(), req)
 	require.NoError(err, "could not get member details")
 	require.Equal(testnetDetails.MemberSummary, reply.Summary, "response summary did not match")
@@ -336,6 +395,8 @@ func (s *bffTestSuite) TestMemberDetails() {
 	actualPerson = &ivms101.LegalPerson{}
 	actualTrixo = &pb.TRIXOQuestionnaire{}
 	require.NoError(s.mainnet.members.UseFixture(mock.DetailsRPC, mainnetFixture))
+
+	req.ID = mainnetID
 	reply, err = s.client.MemberDetails(context.TODO(), req)
 	require.NoError(err, "could not get member details")
 	require.Equal(mainnetDetails.MemberSummary, reply.Summary, "response summary did not match")

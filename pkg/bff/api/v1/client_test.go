@@ -940,6 +940,51 @@ func TestCertificates(t *testing.T) {
 	require.Equal(t, fixture.MainNet, out.MainNet)
 }
 
+func TestMemberList(t *testing.T) {
+	fixture := &api.MemberListReply{
+		VASPs: []*members.VASPMember{
+			{
+				Id:                  "7b8e1638-cf44-4b72-a4ae-08ff0352563b",
+				RegisteredDirectory: "testnet",
+				CommonName:          "example.com",
+				Endpoint:            "trisa.example.com",
+			},
+			{
+				Id:                  "03f47724-4751-40d4-8dda-fa5468f3b4a7",
+				RegisteredDirectory: "testnet",
+				CommonName:          "foobear.io",
+				Endpoint:            "trisa-test.foobear.io.com",
+			},
+		},
+		NextPageToken: "thenextpage",
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/members", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	req := &api.MemberPageInfo{
+		Directory: "testnet",
+		PageSize:  100,
+		PageToken: "theprevpage",
+	}
+
+	out, err := client.MemberList(context.TODO(), req)
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
+}
+
 func TestMemberDetails(t *testing.T) {
 	fixture := &api.MemberDetailsReply{
 		Summary: &members.VASPMember{
@@ -967,7 +1012,9 @@ func TestMemberDetails(t *testing.T) {
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, http.MethodGet, r.Method)
-		require.Equal(t, "/v1/details", r.URL.Path)
+		require.Equal(t, "/v1/members/8b2e9e78-baca-4c34-a382-8b285503c901", r.URL.Path)
+		require.Contains(t, r.URL.Query(), "registered_directory")
+		require.Equal(t, "trisatest.net", r.URL.Query().Get("registered_directory"))
 
 		w.Header().Add("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
@@ -987,6 +1034,10 @@ func TestMemberDetails(t *testing.T) {
 	out, err := client.MemberDetails(context.TODO(), req)
 	require.NoError(t, err)
 	require.Equal(t, fixture, out)
+
+	// Ensure member ID is required
+	_, err = client.MemberDetails(context.TODO(), &api.MemberDetailsParams{})
+	require.ErrorIs(t, err, api.ErrMissingMemberID)
 }
 
 func TestAttention(t *testing.T) {

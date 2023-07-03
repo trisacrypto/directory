@@ -12,4 +12,5 @@ var (
 	ErrUserEmailNotFound   = errors.New("could not find user by email address")
 	ErrMultipleEmailUsers  = errors.New("multiple users found by email address")
 	ErrDomainAlreadyExists = errors.New("the specified domain already exists")
+	ErrNoVerficationStatus = errors.New("no verification status supplied in context")
 )
