@@ -941,7 +941,23 @@ func TestCertificates(t *testing.T) {
 }
 
 func TestMemberList(t *testing.T) {
-	fixture := &api.MemberListReply{}
+	fixture := &api.MemberListReply{
+		VASPs: []*members.VASPMember{
+			{
+				Id:                  "7b8e1638-cf44-4b72-a4ae-08ff0352563b",
+				RegisteredDirectory: "testnet",
+				CommonName:          "example.com",
+				Endpoint:            "trisa.example.com",
+			},
+			{
+				Id:                  "03f47724-4751-40d4-8dda-fa5468f3b4a7",
+				RegisteredDirectory: "testnet",
+				CommonName:          "foobear.io",
+				Endpoint:            "trisa-test.foobear.io.com",
+			},
+		},
+		NextPageToken: "thenextpage",
+	}
 
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -958,7 +974,11 @@ func TestMemberList(t *testing.T) {
 	client, err := api.New(ts.URL)
 	require.NoError(t, err)
 
-	req := &api.MemberPageInfo{}
+	req := &api.MemberPageInfo{
+		Directory: "testnet",
+		PageSize:  100,
+		PageToken: "theprevpage",
+	}
 
 	out, err := client.MemberList(context.TODO(), req)
 	require.NoError(t, err)
