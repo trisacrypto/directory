@@ -22,8 +22,9 @@ import (
 
 // The default query parameters against the TRISAMembers gRPC API
 const (
-	DefaultMembersTimeout  = 25 * time.Second
-	DefaultMembersPageSize = 200
+	DefaultMembersTimeout   = 25 * time.Second
+	DefaultMembersPageSize  = 200
+	DefaultMembersDirectory = "vaspdirectory.net"
 )
 
 // GetSummaries makes parallel calls to the members service to get the summary
@@ -227,7 +228,7 @@ func (s *Server) MemberList(c *gin.Context) {
 
 	// By default query the mainnet if a directory is not specified
 	if params.Directory == "" {
-		params.Directory = config.MainNet
+		params.Directory = DefaultMembersDirectory
 	}
 
 	// Validate the registered directory
@@ -262,6 +263,11 @@ func (s *Server) MemberList(c *gin.Context) {
 	if err != nil {
 		if serr, ok := status.FromError(err); ok {
 			log.Error().Err(err).Str("code", serr.Code().String()).Str("grpc_error", serr.Message()).Msg("members list rpc error")
+			if serr.Code() == codes.Unavailable {
+				c.JSON(http.StatusServiceUnavailable, api.ErrorResponse("specified directory is currently unavailable, please try again later"))
+				return
+			}
+
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member list"))
 			return
 		}
