@@ -262,8 +262,6 @@ func (s *bffTestSuite) TestOverview() {
 func (s *bffTestSuite) TestMemberList() {
 	require := s.Require()
 
-	// TODO: load fixtures
-
 	// Create initial claims
 	claims := &authtest.Claims{
 		Email:       "leopold.wentzel@gmail.com",
