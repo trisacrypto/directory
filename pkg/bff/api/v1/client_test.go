@@ -1012,7 +1012,9 @@ func TestMemberDetails(t *testing.T) {
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, http.MethodGet, r.Method)
-		require.Equal(t, "/v1/details", r.URL.Path)
+		require.Equal(t, "/v1/members/8b2e9e78-baca-4c34-a382-8b285503c901", r.URL.Path)
+		require.Contains(t, r.URL.Query(), "registered_directory")
+		require.Equal(t, "trisatest.net", r.URL.Query().Get("registered_directory"))
 
 		w.Header().Add("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
@@ -1032,6 +1034,10 @@ func TestMemberDetails(t *testing.T) {
 	out, err := client.MemberDetails(context.TODO(), req)
 	require.NoError(t, err)
 	require.Equal(t, fixture, out)
+
+	// Ensure member ID is required
+	_, err = client.MemberDetails(context.TODO(), &api.MemberDetailsParams{})
+	require.ErrorIs(t, err, api.ErrMissingMemberID)
 }
 
 func TestAttention(t *testing.T) {

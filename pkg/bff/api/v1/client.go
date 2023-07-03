@@ -548,6 +548,10 @@ func (s *APIv1) MemberList(ctx context.Context, in *MemberPageInfo) (out *Member
 
 // Details returns the sensitive details for a VASP member.
 func (s *APIv1) MemberDetails(ctx context.Context, in *MemberDetailsParams) (out *MemberDetailsReply, err error) {
+	if in.ID == "" {
+		return nil, ErrMissingMemberID
+	}
+
 	// Create the query params from the input
 	var params url.Values
 	if params, err = query.Values(in); err != nil {
@@ -556,7 +560,7 @@ func (s *APIv1) MemberDetails(ctx context.Context, in *MemberDetailsParams) (out
 
 	// Make the HTTP request
 	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/details", nil, &params); err != nil {
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/members/"+in.ID, nil, &params); err != nil {
 		return nil, err
 	}
 

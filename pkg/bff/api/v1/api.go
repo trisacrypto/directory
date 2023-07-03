@@ -352,10 +352,10 @@ type MemberListReply struct {
 	NextPageToken string                `json:"next_page_token,omitempty"`
 }
 
-// MemberDetailsParams contains details required to identify a VASP member for the
-// MembersDetails request.
+// MemberDetailsParams contains details required to identify a VASP member in a specific
+// registered directory (e.g. trisatest.net or vaspdirectory.net).
 type MemberDetailsParams struct {
-	ID        string `url:"vaspID,omitempty" form:"vaspID"`
+	ID        string `url:"-" form:"vaspID"`
 	Directory string `url:"registered_directory,omitempty" form:"registered_directory"`
 }
 

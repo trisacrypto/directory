@@ -412,7 +412,7 @@ func (s *Server) setupRoutes() (err error) {
 		members := v1.Group("/members")
 		{
 			members.GET("", auth.Authorize(auth.ReadVASP), s.MemberList)
-			members.GET("/:vaspID", auth.Authorize(auth.ReadVASP), s.MemberDetails)
+			members.GET("/:vaspID", auth.Authorize(auth.ReadVASP), s.MemberDetail)
 		}
 
 		// BUG: This is a duplicate of /members/:vaspID but we don't think that it is
