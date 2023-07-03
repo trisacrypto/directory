@@ -96,7 +96,6 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
     resetForm(updatedCertificateStep?.form, {
       keepValues: false
     });
-    console.log('[] prev updatedCertificateStep', updatedCertificateStep);
     previousStepRef.current = false;
     previousStep(updatedCertificateStep);
   }
@@ -114,7 +113,6 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
           state: currentState()
         } as any
       };
-      console.log('[] isDirty  payload Trixo', payload);
 
       updateCertificateStep(payload);
       nextStepRef.current = true;
