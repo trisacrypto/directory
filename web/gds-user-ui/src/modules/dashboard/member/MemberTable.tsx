@@ -5,15 +5,18 @@ import {
   Td,
   Th,
   Thead,
+  Heading,
   Tr,
   Button,
   HStack,
   chakra,
-  Tooltip
+  useColorModeValue
 } from '@chakra-ui/react';
+
 import FormLayout from 'layouts/FormLayout';
+
 import React from 'react';
-import { Trans, t } from '@lingui/macro';
+import { Trans } from '@lingui/macro';
 
 const TableRow: React.FC = () => {
   return (
@@ -62,11 +65,21 @@ const MemberTable: React.FC = () => {
     <FormLayout overflowX={'scroll'}>
       <Table variant="simple">
         <TableCaption placement="top" textAlign="end" p={0} m={0} mb={3} fontSize={20}>
-          <Tooltip label={t`you do not have permission to invite a collaborator`}>
-            <Button minW="170px" onClick={modalHandler} bg={'black'}>
+          <HStack justify={'space-between'} mb={'10'}>
+            <Heading size="md" color={'black'}>
+              Member List
+            </Heading>
+            <Button
+              minW="100px"
+              onClick={modalHandler}
+              bg={useColorModeValue('black', 'white')}
+              _hover={{
+                bg: useColorModeValue('black', 'white')
+              }}
+              color={useColorModeValue('white', 'black')}>
               <Trans>Export</Trans>
             </Button>
-          </Tooltip>
+          </HStack>
         </TableCaption>
         <Thead>
           <Tr>
@@ -80,7 +93,7 @@ const MemberTable: React.FC = () => {
               <Trans>Last Updated</Trans>
             </Th>
             <Th>
-              <Trans>Metwork</Trans>
+              <Trans>Network</Trans>
             </Th>
             <Th>
               <Trans>Status</Trans>
