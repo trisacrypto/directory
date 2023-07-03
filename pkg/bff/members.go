@@ -20,6 +20,13 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// The default query parameters against the TRISAMembers gRPC API
+const (
+	DefaultMembersTimeout   = 25 * time.Second
+	DefaultMembersPageSize  = 200
+	DefaultMembersDirectory = "vaspdirectory.net"
+)
+
 // GetSummaries makes parallel calls to the members service to get the summary
 // information for both testnet and mainnet. If an endpoint returned an error, then a
 // nil value is returned from this function for that endpoint instead of an error.
@@ -182,8 +189,105 @@ func (s *Server) Overview(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
+// MemberList is an authenticated endpoint that returns a list of all verified VASPs in
+// the requested directory (e.g. either TestNet or MainNet). This endpoint requires the
+// read:vasp permission and is only available to organizations that have themselves been
+// verified through the TRISA directory that they are querying.
+//
+// @Summary List verified VASPs in the specified directory (MainNet by default).
+// @Description Returns a list of verified VASPs in the specified directory so long as the organization is a verified member of that directory.
+// @Tags members
+// @Accept json
+// @Produce json
+// @Param params body api.MemberPageInfo true "Directory and Pagination"
+// @Success 200 {object} object "VASP List"
+// @Failure 400 {object} api.Reply "VASP ID and directory are required"
+// @Failure 401 {object} api.Reply
+// @Failure 404 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /members [get]
+func (s *Server) MemberList(c *gin.Context) {
+	var (
+		err    error
+		params *api.MemberPageInfo
+		rep    *members.ListReply
+	)
+
+	// Bind the query parameters and add reasonable defaults
+	params = &api.MemberPageInfo{}
+	if err = c.ShouldBindQuery(params); err != nil {
+		log.Warn().Err(err).Msg("could not bind request with query params")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
+
+	// Add reasonable defaults to the params if they do not exist
+	if params.PageSize <= 0 {
+		params.PageSize = DefaultMembersPageSize
+	}
+
+	// By default query the mainnet if a directory is not specified
+	if params.Directory == "" {
+		params.Directory = DefaultMembersDirectory
+	}
+
+	// Validate the registered directory
+	params.Directory = strings.ToLower(params.Directory)
+	if !validRegisteredDirectory(params.Directory) {
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("unknown registered directory"))
+		return
+	}
+
+	// Execute the members list request against the specified GDS
+	log.Debug().Str("registered_directory", params.Directory).Int32("page_size", params.PageSize).Str("page_token", params.PageToken).Msg("members list request")
+	req := &members.ListRequest{
+		PageSize:  params.PageSize,
+		PageToken: params.PageToken,
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), DefaultMembersTimeout)
+	defer cancel()
+
+	switch registeredDirectoryType(params.Directory) {
+	case config.TestNet:
+		rep, err = s.testnetGDS.List(ctx, req)
+	case config.MainNet:
+		rep, err = s.mainnetGDS.List(ctx, req)
+	default:
+		log.Error().Str("registered_directory", params.Directory).Msg("unhandled directory")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member list"))
+		return
+	}
+
+	// Handle gRPC errors
+	if err != nil {
+		if serr, ok := status.FromError(err); ok {
+			log.Error().Err(err).Str("code", serr.Code().String()).Str("grpc_error", serr.Message()).Msg("members list rpc error")
+			if serr.Code() == codes.Unavailable {
+				c.JSON(http.StatusServiceUnavailable, api.ErrorResponse("specified directory is currently unavailable, please try again later"))
+				return
+			}
+
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member list"))
+			return
+		}
+
+		log.Error().Err(err).Msg("unhandled error from gRPC service")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member list"))
+		return
+	}
+
+	// Create the list response
+	c.JSON(http.StatusOK, &api.MemberListReply{
+		VASPs:         rep.Vasps,
+		NextPageToken: rep.NextPageToken,
+	})
+}
+
 // MemberDetails endpoint is an authenticated endpoint that requires the read:vasp
 // permission and returns details about a VASP member.
+// TODO: convert to /members/:vaspID
+// TODO: ensure only verified VASPs can query this endpoint
 //
 // @Summary Get details for a VASP [read:vasp]
 // @Description Returns details for a VASP by ID and directory.
@@ -191,7 +295,7 @@ func (s *Server) Overview(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param params body api.MemberDetailsParams true "VASP ID and directory"
-// @Success 200 {object} object "VASP details"
+// @Success 200 {object} object "VASP Details"
 // @Failure 400 {object} api.Reply "VASP ID and directory are required"
 // @Failure 401 {object} api.Reply
 // @Failure 404 {object} api.Reply
@@ -224,7 +328,7 @@ func (s *Server) MemberDetails(c *gin.Context) {
 	req := &members.DetailsRequest{
 		MemberId: params.ID,
 	}
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 25*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), DefaultMembersTimeout)
 	defer cancel()
 
 	var (
