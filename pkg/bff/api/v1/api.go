@@ -40,6 +40,7 @@ type BFFClient interface {
 	UpdateCollaboratorRoles(_ context.Context, id string, request *UpdateRolesParams) (*models.Collaborator, error)
 	DeleteCollaborator(_ context.Context, id string) error
 
+	MemberList(context.Context, *MemberPageInfo) (*MemberListReply, error)
 	MemberDetails(context.Context, *MemberDetailsParams) (*MemberDetailsReply, error)
 
 	// Registration form
@@ -303,6 +304,10 @@ type NetworkOverview struct {
 	NewMembers         int           `json:"new_members"`
 	MemberDetails      MemberDetails `json:"member_details"`
 }
+
+type MemberPageInfo struct{}
+
+type MemberListReply struct{}
 
 // MemberDetails contains VASP-specific information.
 type MemberDetails struct {

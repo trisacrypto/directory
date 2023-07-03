@@ -182,8 +182,31 @@ func (s *Server) Overview(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
+// MemberList is an authenticated endpoint that returns a list of all verified VASPs in
+// the requested directory (e.g. either TestNet or MainNet). This endpoint requires the
+// read:vasp permission and is only available to organizations that have themselves been
+// verified through the TRISA directory that they are querying.
+//
+// @Summary
+// @Description
+// @Tags members
+// @Accept json
+// @Produce json
+// @Param params
+// @Success 200 {object} object "VASP List"
+// @Failure 400 {object} api.Reply "VASP ID and directory are required"
+// @Failure 401 {object} api.Reply
+// @Failure 404 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /members [get]
+func (s *Server) MemberList(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, api.ErrorResponse("endpoint not implemented yet"))
+}
+
 // MemberDetails endpoint is an authenticated endpoint that requires the read:vasp
 // permission and returns details about a VASP member.
+// TODO: convert to /members/:vaspID
+// TODO: ensure only verified VASPs can query this endpoint
 //
 // @Summary Get details for a VASP [read:vasp]
 // @Description Returns details for a VASP by ID and directory.

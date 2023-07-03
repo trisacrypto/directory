@@ -940,6 +940,31 @@ func TestCertificates(t *testing.T) {
 	require.Equal(t, fixture.MainNet, out.MainNet)
 }
 
+func TestMemberList(t *testing.T) {
+	fixture := &api.MemberListReply{}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/members", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	req := &api.MemberPageInfo{}
+
+	out, err := client.MemberList(context.TODO(), req)
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
+}
+
 func TestMemberDetails(t *testing.T) {
 	fixture := &api.MemberDetailsReply{
 		Summary: &members.VASPMember{
