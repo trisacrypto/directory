@@ -40,6 +40,7 @@ type BFFClient interface {
 	UpdateCollaboratorRoles(_ context.Context, id string, request *UpdateRolesParams) (*models.Collaborator, error)
 	DeleteCollaborator(_ context.Context, id string) error
 
+	MemberList(context.Context, *MemberPageInfo) (*MemberListReply, error)
 	MemberDetails(context.Context, *MemberDetailsParams) (*MemberDetailsReply, error)
 
 	// Registration form
@@ -336,6 +337,19 @@ type Certificate struct {
 	ExpiresAt    string                 `json:"expires_at"`
 	Revoked      bool                   `json:"revoked"`
 	Details      map[string]interface{} `json:"details"`
+}
+
+// MembersPageInfo enables paginated requests to the TRISAMembers/List RPC for the
+// specified directory. Pagination is not stateful and requires a token.
+type MemberPageInfo struct {
+	Directory string `url:"registered_directory,omitempty" form:"registered_directory"`
+	PageSize  int32  `url:"page_size,omitempty" form:"page_size"`
+	PageToken string `url:"page_token,omitempty" form:"page_token"`
+}
+
+type MemberListReply struct {
+	VASPs         []*members.VASPMember `json:"vasps"`
+	NextPageToken string                `json:"next_page_token,omitempty"`
 }
 
 // MemberDetailsParams contains details required to identify a VASP member for the

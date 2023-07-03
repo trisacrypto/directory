@@ -368,8 +368,11 @@ func (s *Server) setupRoutes() (err error) {
 		v1.GET("/users/roles", s.ListUserRoles)
 
 		// Authenticated routes
+		// Logged-in user queries and updates
 		v1.GET("/users/organization", auth.Authorize(auth.ReadOrganizations), s.UserOrganization)
 		v1.PATCH("/users", userinfo, s.UpdateUser)
+
+		// Organizations resource to manage user-ui teams
 		organizations := v1.Group("/organizations")
 		{
 			organizations.GET("", auth.Authorize(auth.ReadOrganizations), userinfo, s.ListOrganizations)
@@ -377,6 +380,8 @@ func (s *Server) setupRoutes() (err error) {
 			organizations.DELETE("/:orgID", auth.DoubleCookie(), auth.Authorize(auth.DeleteOrganizations), userinfo, s.DeleteOrganization)
 			organizations.PATCH("/:orgID", auth.DoubleCookie(), auth.Authorize(auth.UpdateOrganizations), userinfo, s.PatchOrganization)
 		}
+
+		// Collaborators resource to manage user-ui teams inside of organizations
 		collaborators := v1.Group("/collaborators")
 		{
 			collaborators.GET("", auth.Authorize(auth.ReadCollaborators), s.ListCollaborators)
@@ -384,6 +389,9 @@ func (s *Server) setupRoutes() (err error) {
 			collaborators.POST("/:collabID", auth.DoubleCookie(), auth.Authorize(auth.UpdateCollaborators), s.UpdateCollaboratorRoles)
 			collaborators.DELETE("/:collabID", auth.DoubleCookie(), auth.Authorize(auth.UpdateCollaborators), s.DeleteCollaborator)
 		}
+
+		// The register endpoint sends the VASP registration form to the GDS server to
+		// register the VASP as a GDS TestNet or MainNet member.
 		register := v1.Group("/register")
 		{
 			register.GET("", auth.Authorize(auth.ReadVASP), s.LoadRegisterForm)
@@ -391,12 +399,38 @@ func (s *Server) setupRoutes() (err error) {
 			register.DELETE("", auth.DoubleCookie(), auth.Authorize(auth.UpdateVASP), s.ResetRegisterForm)
 			register.POST("/:network", auth.DoubleCookie(), auth.Authorize(auth.UpdateVASP), userinfo, s.SubmitRegistration)
 		}
+
+		// Certificates is a resource to allow VASP members to perform certificate
+		// self-service and manage the certificates issued to them.
+		certificates := v1.Group("/certificates")
+		{
+			certificates.GET("", auth.Authorize(auth.ReadVASP), s.Certificates)
+		}
+
+		// The members resource describes verified VASPs and is only available to other
+		// verified VASPs (e.g. they cannot use this endpoint during registration).
+		members := v1.Group("/members")
+		{
+			members.GET("", auth.Authorize(auth.ReadVASP), s.MemberList)
+			members.GET("/:vaspID", auth.Authorize(auth.ReadVASP), s.MemberDetails)
+		}
+
+		// BUG: This is a duplicate of /members/:vaspID but we don't think that it is
+		// being used in the front-end code or anywhere else. Can we remove this
+		// endpoint in favor of the members REST resource?
+		v1.GET("/details", auth.Authorize(auth.ReadVASP), s.MemberDetails)
+
+		// Announcements allows TRISA admins to post announcements to logged in users.
+		announcements := v1.Group("/announcements")
+		{
+			announcements.GET("", auth.Authorize(auth.ReadVASP), s.Announcements)
+			announcements.POST("", auth.DoubleCookie(), auth.Authorize("create:announcements"), s.MakeAnnouncement)
+		}
+
+		// The following are one-off endpoints that provide information to front-end
+		// components at different stages in the VASP registration process.
 		v1.GET("/registration", auth.Authorize(auth.ReadVASP), s.RegistrationStatus)
 		v1.GET("/overview", auth.Authorize(auth.ReadVASP), s.Overview)
-		v1.GET("/announcements", auth.Authorize(auth.ReadVASP), s.Announcements)
-		v1.POST("/announcements", auth.DoubleCookie(), auth.Authorize("create:announcements"), s.MakeAnnouncement)
-		v1.GET("/certificates", auth.Authorize(auth.ReadVASP), s.Certificates)
-		v1.GET("/details", auth.Authorize(auth.ReadVASP), s.MemberDetails)
 		v1.GET("/attention", auth.Authorize(auth.ReadVASP), s.Attention)
 	}
 
