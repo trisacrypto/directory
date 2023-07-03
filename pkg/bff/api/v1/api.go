@@ -355,7 +355,7 @@ type MemberListReply struct {
 // MemberDetailsParams contains details required to identify a VASP member in a specific
 // registered directory (e.g. trisatest.net or vaspdirectory.net).
 type MemberDetailsParams struct {
-	ID        string `url:"-" form:"vaspID"`
+	ID        string `url:"-" form:"-"`
 	Directory string `url:"registered_directory,omitempty" form:"registered_directory"`
 }
 
