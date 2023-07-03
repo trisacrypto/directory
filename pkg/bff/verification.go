@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
+	"github.com/trisacrypto/directory/pkg/bff/config"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
@@ -31,6 +32,7 @@ func (s *Server) CheckVerification(c *gin.Context) {
 	if claims, err = auth.GetClaims(c); err != nil {
 		log.Error().Err(err).Msg("cannot check verification status on unauthenticated user")
 		c.AbortWithStatusJSON(http.StatusInternalServerError, api.ErrorResponse(auth.ErrNoAuthUser))
+		return
 	}
 
 	verification := &VerificationStatus{
@@ -43,10 +45,10 @@ func (s *Server) CheckVerification(c *gin.Context) {
 		// Create the request from the closure
 		req := &gds.VerificationRequest{}
 		switch network {
-		case testnetName:
+		case config.TestNet:
 			req.Id = claims.VASPs.TestNet
 			req.RegisteredDirectory = "trisatest.net"
-		case mainnetName:
+		case config.MainNet:
 			req.Id = claims.VASPs.MainNet
 			req.RegisteredDirectory = "vaspdirectory.net"
 		default:
