@@ -194,7 +194,7 @@ func (s *Server) Overview(c *gin.Context) {
 // read:vasp permission and is only available to organizations that have themselves been
 // verified through the TRISA directory that they are querying.
 //
-// @Summary List verified VASPs in the specified directory (MainNet by default).
+// @Summary List verified VASPs in the specified directory [read:vasp].
 // @Description Returns a list of verified VASPs in the specified directory so long as the organization is a verified member of that directory.
 // @Tags members
 // @Accept json
@@ -284,10 +284,122 @@ func (s *Server) MemberList(c *gin.Context) {
 	})
 }
 
+// MemberDetail endpoint is an authenticated endpoint that returns more detailed
+// information about a verified VASP member from the specified directory (either
+// TestNet or MainNet). This endpoint requires the read:vasp permission and is only
+// available to organizations that have themselves been verified through the TRISA
+// directory that they are querying.
+//
+// @Summary Get details for a VASP in the specified directory [read:vasp]
+// @Description Returns details for a VASP by ID and directory so long as the organization is a verified member of that directory.
+// @Tags members
+// @Accept json
+// @Produce json
+// @Param params body api.MemberDetailsParams true "VASP ID and directory"
+// @Success 200 {object} object "VASP Details"
+// @Failure 400 {object} api.Reply "VASP ID and directory are required"
+// @Failure 401 {object} api.Reply
+// @Failure 404 {object} api.Reply
+// @Failure 500 {object} api.Reply
+// @Router /members/{id} [get]
+func (s *Server) MemberDetail(c *gin.Context) {
+	// Bind the parameters associated with the MemberDetails request
+	params := &api.MemberDetailsParams{}
+	if err := c.ShouldBindQuery(params); err != nil {
+		log.Warn().Err(err).Msg("could not bind request with query params")
+		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+		return
+	}
+
+	// Overwrite the params ID with the vaspID from the URL
+	params.ID = c.Param("vaspID")
+
+	// By default, query the mainnet if a directory is not specified
+	if params.Directory == "" {
+		params.Directory = DefaultMembersDirectory
+	}
+
+	// Validate the registered directory
+	params.Directory = strings.ToLower(params.Directory)
+	if !validRegisteredDirectory(params.Directory) {
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("unknown registered directory"))
+		return
+	}
+
+	// Do the members request
+	log.Debug().Str("registered_directory", params.Directory).Msg("issuing members detail request")
+	req := &members.DetailsRequest{
+		MemberId: params.ID,
+	}
+	ctx, cancel := context.WithTimeout(c.Request.Context(), DefaultMembersTimeout)
+	defer cancel()
+
+	var (
+		err error
+		rep *members.MemberDetails
+	)
+
+	switch registeredDirectoryType(params.Directory) {
+	case config.TestNet:
+		rep, err = s.testnetGDS.Details(ctx, req)
+	case config.MainNet:
+		rep, err = s.mainnetGDS.Details(ctx, req)
+	default:
+		log.Error().Str("registered_directory", params.Directory).Msg("unknown directory")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member details"))
+		return
+	}
+
+	// Handle errors from the members endpoint
+	if err != nil {
+		serr, _ := status.FromError(err)
+		switch serr.Code() {
+		case codes.NotFound:
+			c.JSON(http.StatusNotFound, api.ErrorResponse(serr.Message()))
+		default:
+			log.Error().Err(err).Str("code", serr.Code().String()).Str("registered_directory", params.Directory).Msg("could not retrieve member details")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse(serr.Message()))
+		}
+		return
+	}
+
+	// Create the member details response
+	out := api.MemberDetailsReply{
+		Summary: rep.MemberSummary,
+	}
+
+	// Marshal the legal person details
+	if rep.LegalPerson == nil {
+		log.Error().Msg("did not receive legal person details from members detail RPC")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member details"))
+		return
+	}
+
+	if out.LegalPerson, err = wire.Rewire(rep.LegalPerson); err != nil {
+		log.Error().Err(err).Msg("could not serialize legal person details")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
+	}
+
+	// Marshal the Trixo form details
+	if rep.Trixo == nil {
+		log.Error().Msg("did not receive trixo form details from members detail RPC")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member details"))
+		return
+	}
+
+	if out.Trixo, err = wire.Rewire(rep.Trixo); err != nil {
+		log.Error().Err(err).Msg("could not serialize trixo form details")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, out)
+}
+
 // MemberDetails endpoint is an authenticated endpoint that requires the read:vasp
 // permission and returns details about a VASP member.
-// TODO: convert to /members/:vaspID
-// TODO: ensure only verified VASPs can query this endpoint
+// TODO: this is a duplicate endpoint, can it be deleted?
 //
 // @Summary Get details for a VASP [read:vasp]
 // @Description Returns details for a VASP by ID and directory.
