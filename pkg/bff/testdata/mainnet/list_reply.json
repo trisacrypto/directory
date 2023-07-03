@@ -1,0 +1,57 @@
+{
+  "vasps":  [
+    {
+      "id":  "fe29b582-20b3-4b75-acb2-4d014af25f28",
+      "registered_directory":  "vaspdirectory.net",
+      "common_name":  "mainnet.firecoinex.co",
+      "endpoint":  "mainnet.firecoinex.co:443",
+      "name":  "FireCoin Exchange",
+      "website":  "https://www.firecoinex.co/",
+      "country":  "SG",
+      "business_category":  "BUSINESS_ENTITY",
+      "vasp_categories":  [
+        "OTC"
+      ],
+      "verified_on":  "2022-04-20T10:45:33Z",
+      "status":  "VERIFIED",
+      "first_listed":  "2022-04-20T11:10:06Z",
+      "last_updated":  "2022-11-19T09:32:45Z"
+    },
+    {
+      "id":  "52842ac3-7d9d-4520-8bfb-e6083dbdc8aa",
+      "registered_directory":  "vaspdirectory.net",
+      "common_name":  "mainnet.testmachine.com",
+      "endpoint":  "mainnet.testmachine.com:443",
+      "name":  "Test Machine",
+      "website":  "https://testmachine.com",
+      "country":  "US",
+      "business_category":  "BUSINESS_ENTITY",
+      "vasp_categories":  [
+        "Exchange",
+        "Other"
+      ],
+      "verified_on":  "2023-03-22T03:55:00Z",
+      "status":  "VERIFIED",
+      "first_listed":  "2023-03-22T04:22:18Z",
+      "last_updated":  "2023-05-10T04:44:00Z"
+    },
+    {
+      "id":  "ec6f2056-726b-4e8c-a916-f7359f6f5581",
+      "registered_directory":  "vaspdirectory.net",
+      "common_name":  "mainnet.newcoinex.ai",
+      "endpoint":  "mainnet.newcoinex.ai:8221",
+      "name":  "New Coin Exchange",
+      "website":  "https://newcoinex.ai/",
+      "country":  "US",
+      "business_category":  "BUSINESS_ENTITY",
+      "vasp_categories":  [
+        "Other"
+      ],
+      "verified_on":  "2023-01-20T12:55:03Z",
+      "status":  "VERIFIED",
+      "first_listed":  "2023-01-20T14:10:26Z",
+      "last_updated":  "2023-06-18T10:30:01Z"
+    }
+  ],
+  "next_page_token":  ""
+}

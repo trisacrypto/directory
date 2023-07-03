@@ -940,6 +940,51 @@ func TestCertificates(t *testing.T) {
 	require.Equal(t, fixture.MainNet, out.MainNet)
 }
 
+func TestMemberList(t *testing.T) {
+	fixture := &api.MemberListReply{
+		VASPs: []*members.VASPMember{
+			{
+				Id:                  "7b8e1638-cf44-4b72-a4ae-08ff0352563b",
+				RegisteredDirectory: "testnet",
+				CommonName:          "example.com",
+				Endpoint:            "trisa.example.com",
+			},
+			{
+				Id:                  "03f47724-4751-40d4-8dda-fa5468f3b4a7",
+				RegisteredDirectory: "testnet",
+				CommonName:          "foobear.io",
+				Endpoint:            "trisa-test.foobear.io.com",
+			},
+		},
+		NextPageToken: "thenextpage",
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/members", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	req := &api.MemberPageInfo{
+		Directory: "testnet",
+		PageSize:  100,
+		PageToken: "theprevpage",
+	}
+
+	out, err := client.MemberList(context.TODO(), req)
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
+}
+
 func TestMemberDetails(t *testing.T) {
 	fixture := &api.MemberDetailsReply{
 		Summary: &members.VASPMember{
