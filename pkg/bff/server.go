@@ -415,11 +415,6 @@ func (s *Server) setupRoutes() (err error) {
 			members.GET("/:vaspID", auth.Authorize(auth.ReadVASP), s.MemberDetail)
 		}
 
-		// BUG: This is a duplicate of /members/:vaspID but we don't think that it is
-		// being used in the front-end code or anywhere else. Can we remove this
-		// endpoint in favor of the members REST resource?
-		v1.GET("/details", auth.Authorize(auth.ReadVASP), s.MemberDetails)
-
 		// Announcements allows TRISA admins to post announcements to logged in users.
 		announcements := v1.Group("/announcements")
 		{
