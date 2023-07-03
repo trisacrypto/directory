@@ -14,6 +14,7 @@ import MembershipGuide from 'components/Section/MembershipGuide';
 import IntegrateAndComply from 'components/Section/IntegrateAndComply';
 import CertificateManagement from 'components/CertificateManagement';
 import VerifyPage from 'modules/verify';
+import MemberPage from 'modules/dashboard/member';
 import Collaborators from 'modules/dashboard/collaborator';
 import Profile from 'modules/dashboard/profile';
 import SwitchOrganization from 'modules/dashboard/organization/SwitchOrganization';
@@ -123,6 +124,14 @@ const appRoutes = [
     component: Overview,
     layout: 'dashboard',
     route: '/overview'
+  },
+
+  {
+    path: '/dashboard/member',
+    route: '/member',
+    name: 'Member',
+    component: MemberPage,
+    layout: 'dashboard'
   },
   {
     path: '/dashboard/certificate/registration',

@@ -5,6 +5,7 @@ import { IconType } from 'react-icons';
 import { CheckCircleIcon } from '@chakra-ui/icons';
 import { ComponentWithAs, IconProps } from '@chakra-ui/react';
 import { HiUserGroup } from 'react-icons/hi';
+import { GoFileDirectory } from 'react-icons/go';
 import { t } from '@lingui/macro';
 // import CertificateManagementIcon from 'assets/certificate-management.svg';
 
@@ -48,6 +49,12 @@ const MENU: Menu[] = [
     activated: true,
     icon: HiUserGroup,
     path: '/dashboard/collaborators'
+  },
+  {
+    title: t`Member Directory`,
+    activated: true,
+    icon: GoFileDirectory,
+    path: '/dashboard/member'
   },
   {
     title: t`Technical Resources`,
