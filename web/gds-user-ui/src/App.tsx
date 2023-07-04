@@ -8,7 +8,7 @@ import Maintenance from 'components/Maintenance';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { isProdEnv } from 'application/config';
-import { queryClient } from 'utils/react-query';
+import { queryClient } from 'application/config/reactQuery';
 
 const App: React.FC = () => {
   return (

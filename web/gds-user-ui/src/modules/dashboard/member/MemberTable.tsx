@@ -18,6 +18,11 @@ import FormLayout from 'layouts/FormLayout';
 
 import React from 'react';
 import { Trans } from '@lingui/macro';
+import { BsEye } from 'react-icons/bs';
+
+interface MemberTableProps {
+  data: any;
+}
 
 const TableRow: React.FC = () => {
   return (
@@ -43,7 +48,9 @@ const TableRow: React.FC = () => {
             }}
             _focus={{
               bg: 'transparent'
-            }}></Button>
+            }}>
+            <BsEye fontSize="24px" />
+          </Button>
         </HStack>
       </Td>
     </Tr>
@@ -58,7 +65,8 @@ const TableRows: React.FC = () => {
   );
 };
 
-const MemberTable: React.FC = () => {
+const MemberTable: React.FC<MemberTableProps> = (data) => {
+  console.log('data', data);
   const modalHandler = () => {
     console.log('modalHandler');
   };

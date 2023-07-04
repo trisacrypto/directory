@@ -1,18 +1,20 @@
-import { Suspense } from 'react';
 import { Heading } from '@chakra-ui/react';
 import MemberTable from './MemberTable';
 import { Trans } from '@lingui/macro';
 import Loader from 'components/Loader';
+import { useFetchMembers } from './hook/useFetchMembers';
 const MemberPage: React.FC = () => {
+  const { members, isFetchingMembers, error } = useFetchMembers();
+
+  if (isFetchingMembers) return <Loader />;
+  console.log('members', members);
   return (
     <>
       <Heading marginBottom="69px">
         <Trans>TRISA Member Directory</Trans>
       </Heading>
-
-      <Suspense fallback={<Loader />}>
-        <MemberTable />
-      </Suspense>
+      {error && <p>error </p>}
+      {members && <MemberTable data={members} />}
     </>
   );
 };
