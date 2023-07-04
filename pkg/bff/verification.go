@@ -130,7 +130,7 @@ func RequireVerification(c *gin.Context, network string) (verified bool, err err
 		return false, fmt.Errorf("unhandled directory type %q", network)
 	}
 
-	return false, ErrNoVerficationStatus
+	return false, ErrNoVerificationStatus
 }
 
 // A helper function to quickly retrieve the verification status from the context;
@@ -139,7 +139,7 @@ func RequireVerification(c *gin.Context, network string) (verified bool, err err
 func GetVerificationStatus(c *gin.Context) (*VerificationStatus, error) {
 	status, exists := c.Get(ContextVerificationStatus)
 	if !exists {
-		return nil, ErrNoVerficationStatus
+		return nil, ErrNoVerificationStatus
 	}
 	val := status.(*VerificationStatus)
 	return val, nil
