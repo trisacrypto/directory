@@ -17,6 +17,7 @@ import FormLayout from 'layouts/FormLayout';
 
 import React from 'react';
 import { Trans } from '@lingui/macro';
+import { BiDetail } from 'react-icons/bi';
 
 const TableRow: React.FC = () => {
   return (
@@ -41,7 +42,9 @@ const TableRow: React.FC = () => {
             }}
             _focus={{
               bg: 'transparent'
-            }}></Button>
+            }}>
+            <BiDetail fontSize="24px" />
+          </Button>
         </HStack>
       </Td>
     </Tr>
