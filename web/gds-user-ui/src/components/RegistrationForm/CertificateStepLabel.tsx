@@ -204,7 +204,9 @@ const CertificateStepLabel: FC<StepLabelProps> = () => {
                   height="100%"
                   _hover={{ bg: 'transparent' }}
                   _disabled={{ opacity: 0.9, cursor: 'not-allowed' }}
-                  onClick={handleStepClick(stepIndex)}>
+                  onClick={handleStepClick(stepIndex)}
+                  data-cy={`step-${stepIndex}-bttn`}
+                  >
                   <Stack spacing={1} width="100%">
                     <Box
                       h="1"

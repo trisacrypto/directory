@@ -12,10 +12,21 @@ Cypress.Commands.add('loginWith', ({ email, password }) =>
       .get('[data-cy="login-btn"]').click()
 );
 
+Cypress.Commands.add('login', () => {
+  cy.visit('/')
+    .get('[data-cy="nav-login-bttn"]').click().location('pathname').should('eq', '/auth/login')
+    cy.fixture('user.json').then((user) => {
+      cy.get('[data-cy="email"]').type(user.email)
+      .get('[data-cy="password"]').type(user.password)
+      .get('[data-cy="login-btn"]').click()
+    });
+  });
+
 declare global {
     namespace Cypress {
       interface Chainable {
         loginWith({ email, password }): Chainable<JQuery<HTMLElement>>;
+        login(): Chainable<JQuery<HTMLElement>>;
       }
     }
   }
