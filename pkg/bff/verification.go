@@ -110,10 +110,36 @@ type VASPVerificationStatus struct {
 	Verified bool
 }
 
+// A helper function to require verification to the specified network.
+func RequireVerification(c *gin.Context, network string) (verified bool, err error) {
+	var status *VerificationStatus
+	if status, err = GetVerificationStatus(c); err != nil {
+		return false, err
+	}
+
+	switch registeredDirectoryType(network) {
+	case config.TestNet:
+		if status.TestNet != nil {
+			return status.TestNet.Verified, nil
+		}
+	case config.MainNet:
+		if status.MainNet != nil {
+			return status.MainNet.Verified, nil
+		}
+	default:
+		return false, fmt.Errorf("unhandled directory type %q", network)
+	}
+
+	return false, ErrNoVerificationStatus
+}
+
+// A helper function to quickly retrieve the verification status from the context;
+// return an error if the verification status does not exist. Panics if the status is
+// not the correct type, e.g. not set by the CheckVerification middleware.
 func GetVerificationStatus(c *gin.Context) (*VerificationStatus, error) {
 	status, exists := c.Get(ContextVerificationStatus)
 	if !exists {
-		return nil, ErrNoVerficationStatus
+		return nil, ErrNoVerificationStatus
 	}
 	val := status.(*VerificationStatus)
 	return val, nil
