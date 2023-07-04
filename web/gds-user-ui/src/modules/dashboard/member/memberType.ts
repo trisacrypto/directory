@@ -4,5 +4,7 @@ export interface membersQuery {
   hasMembersFailed: boolean;
   wasMembersFetched: boolean;
   isFetchingMembers: boolean;
-  errorMessage?: any;
+  error?: any;
 }
+
+export type DirectoryType = 'testnet' | 'mainnet';
