@@ -409,7 +409,7 @@ func (s *Server) setupRoutes() (err error) {
 
 		// The members resource describes verified VASPs and is only available to other
 		// verified VASPs (e.g. they cannot use this endpoint during registration).
-		members := v1.Group("/members")
+		members := v1.Group("/members", s.CheckVerification)
 		{
 			members.GET("", auth.Authorize(auth.ReadVASP), s.MemberList)
 			members.GET("/:vaspID", auth.Authorize(auth.ReadVASP), s.MemberDetail)
