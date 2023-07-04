@@ -24,7 +24,7 @@ func (s *bffTestSuite) TestCheckVerification() {
 	s.bff.CheckVerification(c)
 	require.Equal(http.StatusInternalServerError, r.Code)
 	_, err := bff.GetVerificationStatus(c)
-	require.ErrorIs(err, bff.ErrNoVerficationStatus)
+	require.ErrorIs(err, bff.ErrNoVerificationStatus)
 
 	// Create claims with no verification information
 	claims := &auth.Claims{
