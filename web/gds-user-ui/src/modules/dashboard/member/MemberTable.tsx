@@ -10,26 +10,40 @@ import {
   Button,
   HStack,
   chakra,
-  useColorModeValue
+  useColorModeValue,
+  Tag
 } from '@chakra-ui/react';
 
 import FormLayout from 'layouts/FormLayout';
 
 import React from 'react';
 import { Trans } from '@lingui/macro';
-import { BsEye } from 'react-icons/bs';
+import { mainnetMockData } from './__mocks__';
+import { formatIsoDate } from 'utils/formate-date';
+
+const { first_listed, last_updated, name, status } = mainnetMockData.data[0];
+
+// const data = mainnetMockData.data[0];
+
+
+// const isMainNet = (data.vasps[0].registered_directory === "vaspdirectory.net" || data.vasps[0].registered_directory === "vaspdirectory.dev");
+// const isTestNet = (data.vasps[0].registered_directory === "trisatest.net" || data.vasps[0].registered_directory === "trisatest.dev");
 
 const TableRow: React.FC = () => {
   return (
     <Tr>
       <Td>
-        <chakra.span display="block"></chakra.span>
-        <chakra.span display="block" fontSize="sm" color="gray.700"></chakra.span>
+        <chakra.span display="block">{name}</chakra.span>
       </Td>
-      <Td></Td>
-      <Td></Td>
-      <Td></Td>
-      <Td></Td>
+      <Td>{formatIsoDate(first_listed)}</Td>
+      <Td>{formatIsoDate(last_updated)}</Td>
+      <Td>
+        {/* {isMainNet && <span>MainNet</span>}
+        {isTestNet && <span>TestNet</span>} */}
+      </Td>
+      <Td>
+        <Tag bg="green.400" color="white">{status}</Tag>
+      </Td>
       <Td paddingY={0}>
         <HStack width="100%" justifyContent="center" alignItems="center">
           <Button
@@ -42,9 +56,7 @@ const TableRow: React.FC = () => {
             }}
             _focus={{
               bg: 'transparent'
-            }}>
-            <BsEye fontSize="24px" />
-          </Button>
+            }}></Button>
         </HStack>
       </Td>
     </Tr>
