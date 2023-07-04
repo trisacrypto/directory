@@ -7,7 +7,7 @@ export function useFetchMembers(directory?: DirectoryType): membersQuery {
   const query = useQuery(['fetch-members'], () => getMembersService(directory));
   return {
     getMembers: query.refetch,
-    members: query.data?.data?.members,
+    members: query.data?.data,
     hasMembersFailed: query.isError,
     wasMembersFetched: query.isSuccess,
     isFetchingMembers: query.isLoading,

@@ -7,7 +7,7 @@ const MemberPage: React.FC = () => {
   const { members, isFetchingMembers, error } = useFetchMembers();
 
   if (isFetchingMembers) return <Loader />;
-
+  console.log('members', members);
   return (
     <>
       <Heading marginBottom="69px">

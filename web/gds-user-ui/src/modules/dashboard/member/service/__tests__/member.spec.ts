@@ -1,7 +1,7 @@
 import axios from 'axios';
-import mockedAxios from 'jest-mock-axios';
-// import MockAdapter from "axios-mock-adapter";
-import axiosInstance from 'utils/axios';
+// import mockedAxios from 'jest-mock-axios';
+// // import MockAdapter from "axios-mock-adapter";
+// import axiosInstance from 'utils/axios';
 
 import { getMembersService } from '..';
 import { mainnetMembersMockValue, testnetMembersMockValue } from '../../__mocks__';
