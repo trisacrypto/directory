@@ -11,7 +11,6 @@ import {
   HStack,
   chakra,
   useColorModeValue,
-  Select
 } from '@chakra-ui/react';
 
 import FormLayout from 'layouts/FormLayout';
@@ -19,6 +18,7 @@ import FormLayout from 'layouts/FormLayout';
 import React from 'react';
 import { Trans } from '@lingui/macro';
 import { BsEye } from 'react-icons/bs';
+import MemberSelectNetwork from './memberNetworkSelect';
 
 const TableRow: React.FC = () => {
   return (
@@ -84,12 +84,8 @@ const MemberTable: React.FC = () => {
               <Trans>Export</Trans>
             </Button>
           </HStack>
+          <MemberSelectNetwork />
         </TableCaption>
-        <label htmlFor="network">Select Network</label>
-        <Select name="network">
-          <option value="mainnet">MainNet</option>
-          <option value="testnet">TestNet</option>
-        </Select>
         <Thead>
           <Tr>
             <Th>
