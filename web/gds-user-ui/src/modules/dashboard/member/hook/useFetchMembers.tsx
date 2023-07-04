@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getMembersService } from '../service';
-import type { membersQuery, DirectoryType } from '../memberType';
+import type { MembersQuery, DirectoryType } from '../memberType';
 
-export function useFetchMembers(directory?: DirectoryType): membersQuery {
-  const query = useQuery(['fetch-members'], () => getMembersService(directory));
+export function useFetchMembers(directory?: DirectoryType): MembersQuery {
+  const query = useQuery(['fetch-members'], () => getMembersService(directory), {
+    retry: 0
+  });
   return {
     getMembers: query.refetch,
     members: query.data?.data,
