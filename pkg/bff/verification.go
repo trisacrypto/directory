@@ -133,7 +133,7 @@ func RequireVerification(c *gin.Context, network string) (verified bool, err err
 	return false, ErrNoVerficationStatus
 }
 
-// A helper function to quickly retrieve the verficiation status from the context;
+// A helper function to quickly retrieve the verification status from the context;
 // return an error if the verification status does not exist. Panics if the status is
 // not the correct type, e.g. not set by the CheckVerification middleware.
 func GetVerificationStatus(c *gin.Context) (*VerificationStatus, error) {
