@@ -10,7 +10,7 @@ import {
   Button,
   HStack,
   chakra,
-  useColorModeValue
+  useColorModeValue,
 } from '@chakra-ui/react';
 
 import FormLayout from 'layouts/FormLayout';
@@ -18,6 +18,7 @@ import FormLayout from 'layouts/FormLayout';
 import React from 'react';
 import { Trans } from '@lingui/macro';
 import { BsEye } from 'react-icons/bs';
+import MemberSelectNetwork from './memberNetworkSelect';
 
 interface MemberTableProps {
   data: any;
@@ -88,6 +89,7 @@ const MemberTable: React.FC<MemberTableProps> = (data) => {
               <Trans>Export</Trans>
             </Button>
           </HStack>
+          <MemberSelectNetwork />
         </TableCaption>
         <Thead>
           <Tr>
