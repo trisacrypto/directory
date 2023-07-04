@@ -12,7 +12,7 @@ import {
   chakra,
   useColorModeValue
 } from '@chakra-ui/react';
-
+import UnverifiedMember from './UnverifiedMember';
 import FormLayout from 'layouts/FormLayout';
 
 import React from 'react';
@@ -23,42 +23,58 @@ interface MemberTableProps {
   data: any;
 }
 
-const TableRow: React.FC = () => {
+interface TableRowsProps {
+  rows: any;
+}
+
+interface TableRowProps {
+  row: any;
+}
+
+const TableRow: React.FC<TableRowProps> = (row: any) => {
   return (
     <Tr>
-      <Td>
-        <chakra.span display="block"></chakra.span>
-        <chakra.span display="block" fontSize="sm" color="gray.700"></chakra.span>
-      </Td>
-      <Td></Td>
-      <Td></Td>
-      <Td></Td>
-      <Td></Td>
-      <Td paddingY={0}>
-        <HStack width="100%" justifyContent="center" alignItems="center">
-          <Button
-            color="blue"
-            as={'a'}
-            href={``}
-            bg={'transparent'}
-            _hover={{
-              bg: 'transparent'
-            }}
-            _focus={{
-              bg: 'transparent'
-            }}>
-            <BsEye fontSize="24px" />
-          </Button>
-        </HStack>
-      </Td>
+      {row.length > 0 ? (
+        <>
+          <Td>
+            <chakra.span display="block"></chakra.span>
+            <chakra.span display="block" fontSize="sm" color="gray.700"></chakra.span>
+          </Td>
+          <Td></Td>
+          <Td></Td>
+          <Td></Td>
+          <Td></Td>
+          <Td paddingY={0}>
+            <HStack width="100%" justifyContent="center" alignItems="center">
+              <Button
+                color="blue"
+                as={'a'}
+                href={``}
+                bg={'transparent'}
+                _hover={{
+                  bg: 'transparent'
+                }}
+                _focus={{
+                  bg: 'transparent'
+                }}>
+                <BsEye fontSize="24px" />
+              </Button>
+            </HStack>
+          </Td>
+        </>
+      ) : (
+        <Td colSpan={6}>
+          <UnverifiedMember />
+        </Td>
+      )}
     </Tr>
   );
 };
 
-const TableRows: React.FC = () => {
+const TableRows: React.FC<TableRowsProps> = (data) => {
   return (
     <>
-      <TableRow />
+      <TableRow row={data} />
     </>
   );
 };
@@ -112,7 +128,7 @@ const MemberTable: React.FC<MemberTableProps> = (data) => {
           </Tr>
         </Thead>
         <Tbody>
-          <TableRows />
+          <TableRows rows={data} />
         </Tbody>
       </Table>
     </FormLayout>
