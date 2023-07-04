@@ -10,7 +10,8 @@ import {
   Button,
   HStack,
   chakra,
-  useColorModeValue
+  useColorModeValue,
+  Select
 } from '@chakra-ui/react';
 
 import FormLayout from 'layouts/FormLayout';
@@ -81,6 +82,11 @@ const MemberTable: React.FC = () => {
             </Button>
           </HStack>
         </TableCaption>
+        <label htmlFor="network">Select Network</label>
+        <Select name="network">
+          <option value="mainnet">MainNet</option>
+          <option value="testnet">TestNet</option>
+        </Select>
         <Thead>
           <Tr>
             <Th>
