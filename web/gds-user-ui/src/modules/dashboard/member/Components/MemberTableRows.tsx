@@ -1,7 +1,6 @@
 import { Td, Tr, Button, HStack, chakra, Tag } from '@chakra-ui/react';
-
-import UnverifiedMember from '../UnverifiedMember';
 import { BsEye } from 'react-icons/bs';
+import { formatIsoDate } from 'utils/formate-date';
 import { VaspDirectoryEnum } from '../memberType';
 
 interface MemberTableRowsProps {
@@ -9,20 +8,18 @@ interface MemberTableRowsProps {
 }
 
 const MemberTableRows: React.FC<MemberTableRowsProps> = (rows: any) => {
-  const isMainnet = rows.registered_directory === VaspDirectoryEnum.MAINNET;
   // for now we are just displaying the unverified member component
   // with the status check story we will check if the member is verified or not and display the appropriate component
   return (
-    <Tr>
-      {rows.length > 0 ? (
-        rows.rows.data.map((row: any) => (
-          <>
-          <Td key={row.id}>
+    rows.rows.data.map((row: any) => (
+      <Tr key={row.id}>
+          <Td>
             <chakra.span display="block">{row.name}</chakra.span>
           </Td>
-          <Td>{row.first_listed}</Td>
-          <Td>{row.last_updated}</Td>
-          <Td>{isMainnet ? <span>MainNet</span> : <span>TestNet</span>}</Td>
+          <Td>{formatIsoDate(row.first_listed)}</Td>
+          <Td>{formatIsoDate(row.last_updated)}</Td>
+          {(row.registered_directory === VaspDirectoryEnum.MAINNET || row.registered_directory === VaspDirectoryEnum.MAINNETDEV) 
+          ? <Td data-testid="member-network">MainNet</Td> : <Td data-testid="member-network">TestNet</Td>}
           <Td>
             <Tag bg="green.400" color="white">{row.status}</Tag>
             </Td>
@@ -43,14 +40,8 @@ const MemberTableRows: React.FC<MemberTableRowsProps> = (rows: any) => {
               </Button>
             </HStack>
           </Td>
-        </>
-        ))
-      ) : (
-        <Td colSpan={6}>
-          <UnverifiedMember />
-        </Td>
-      )}
-    </Tr>
+        </Tr>
+    ))
   );
 };
 
