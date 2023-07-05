@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getMemberService } from '../service';
-import type { MemberQuery } from '../memberType';
+import type { MemberQuery, MemberDto } from '../memberType';
 
-export function useFetchMembers(vaspID: string): MemberQuery {
-  const query = useQuery(['fetch-member', vaspID], () => getMemberService, {
+export function useFetchMember(payload: MemberDto): MemberQuery {
+  const query = useQuery(['fetch-member', payload.vaspId], () => getMemberService, {
     retry: 0,
-    enabled: !!vaspID
+    enabled: !!payload.vaspId
   });
   return {
     getMember: query.refetch,
