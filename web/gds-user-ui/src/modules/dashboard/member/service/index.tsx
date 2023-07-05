@@ -8,3 +8,9 @@ export const getMembersService = async (directory = 'mainnet') => {
   );
   return response;
 };
+
+export const getMemberService = async (vapsId: string) => {
+  const response = await axiosInstance.get(`/members/${vapsId}`);
+
+  return response;
+};
