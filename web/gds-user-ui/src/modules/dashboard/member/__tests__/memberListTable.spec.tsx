@@ -34,8 +34,8 @@ describe('MemberTable', () => {
             expect(status).toBeInTheDocument();
             expect(actions).toBeInTheDocument();
         });
-
-     /*    it('should render the mainnet data in the table rows', () => {
+        
+        it('should render the mainnet data in the table rows', () => {
           renderComponent();
           const memberName1 = screen.getByText('FireCoin Exchange');
           const joined1 = screen.getByText('Apr 20, 2022');
@@ -55,5 +55,5 @@ describe('MemberTable', () => {
           expect(memberName3).toBeInTheDocument();
           expect(joined3).toBeInTheDocument();
           expect(lastUpdated3).toBeInTheDocument();
-        }) */
+        });
 });
