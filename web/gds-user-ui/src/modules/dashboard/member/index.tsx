@@ -6,21 +6,18 @@ import { useFetchMembers } from './hook/useFetchMembers';
 import { mainnetMembersMockValue } from './__mocks__';
 
 const MemberPage: React.FC = () => {
-  const { /* members,*/ isFetchingMembers, /* error */ } = useFetchMembers();
-
-  const vasps = mainnetMembersMockValue.vasps;
-  console.log('vasps', vasps);
+  const { members, isFetchingMembers, error } = useFetchMembers();
 
   if (isFetchingMembers) return <Loader />;
-  // console.log('members', members);
+  console.log('members', members);
   return (
     <>
       <Heading marginBottom="69px">
         <Trans>TRISA Member Directory</Trans>
       </Heading>
 
-      {/* {error && <p>error </p>} */}
-      {/* members &&  */<MemberTable data={vasps} />}
+      {error && <p>error </p>}
+      {members && <MemberTable data={members} />}
     </>
   );
 };

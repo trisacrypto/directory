@@ -653,7 +653,6 @@ exports[`MemberTable should render 1`] = `
           </td>
           <td
             class="emotion-21"
-            data-testid="member-network"
             role="gridcell"
           >
             MainNet
@@ -728,7 +727,6 @@ exports[`MemberTable should render 1`] = `
           </td>
           <td
             class="emotion-21"
-            data-testid="member-network"
             role="gridcell"
           >
             MainNet
@@ -803,7 +801,6 @@ exports[`MemberTable should render 1`] = `
           </td>
           <td
             class="emotion-21"
-            data-testid="member-network"
             role="gridcell"
           >
             MainNet

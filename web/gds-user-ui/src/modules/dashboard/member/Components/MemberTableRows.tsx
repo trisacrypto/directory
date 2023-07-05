@@ -19,7 +19,7 @@ const MemberTableRows: React.FC<MemberTableRowsProps> = (rows: any) => {
           <Td>{formatIsoDate(row.first_listed)}</Td>
           <Td>{formatIsoDate(row.last_updated)}</Td>
           {(row.registered_directory === VaspDirectoryEnum.MAINNET || row.registered_directory === VaspDirectoryEnum.MAINNETDEV) 
-          ? <Td data-testid="member-network">MainNet</Td> : <Td data-testid="member-network">TestNet</Td>}
+          ? <Td>MainNet</Td> : <Td>TestNet</Td>}
           <Td>
             <Tag bg="green.400" color="white">{row.status}</Tag>
             </Td>
