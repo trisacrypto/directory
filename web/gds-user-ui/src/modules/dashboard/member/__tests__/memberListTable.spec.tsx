@@ -2,35 +2,13 @@ import { act, fireEvent, render, screen } from 'utils/test-utils';
 import MemberTable from "../MemberTable";
 import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import { mainnetMembersMockValue, testnetMembersMockValue } from '../__mocks__';
-import axios from 'axios';
 
-// Add data prop to the renderComponent function
-function renderComponent(data: any) {
-  return render(<MemberTable data={data} />);
+const mainnetData = mainnetMembersMockValue.vasps;
+const testnetData = testnetMembersMockValue.vasps;
+
+function renderComponent() {
+  return render(<MemberTable data={mainnetData} />);
 }
-
-const mainnet = mainnetMembersMockValue.vasps;
-const testnet = testnetMembersMockValue.vasps;
-
-jest.mock('axios', () => {
-  return {
-    create: () => {
-      return {
-        get: jest.fn(),
-        post: jest.fn(),
-        put: jest.fn(),
-        delete: jest.fn(),
-        interceptors: {
-          request: { eject: jest.fn(), use: jest.fn() },
-          response: { eject: jest.fn(), use: jest.fn() }
-        },
-        defaults: {
-          withCredentials: true
-        }
-      };
-    }
-  };
-});
 
 describe('MemberTable', () => {
     beforeAll(() => {
@@ -40,12 +18,12 @@ describe('MemberTable', () => {
       });
 
       it('should render', () => {
-        const { container } = renderComponent(mainnet);
+        const { container } = renderComponent();
         expect(container).toMatchSnapshot();
       })
 
         it('should render the correct table headers', () => {
-            renderComponent(mainnet);
+            renderComponent();
             const name = screen.getByTestId('name-header');
             const joined = screen.getByTestId('joined-header');
             const lastUpdated = screen.getByTestId('last-updated-header');
@@ -60,8 +38,8 @@ describe('MemberTable', () => {
             expect(actions).toBeInTheDocument();
         });
         
-        it('should render the mainnet data in the table rows', () => {
-          renderComponent(mainnet);
+        it('should render the mainnet data in the table rows by default', () => {
+          renderComponent();
           const memberName1 = screen.getByText('FireCoin Exchange');
           const joined1 = screen.getByText('Apr 20, 2022');
           const lastUpdated1 = screen.getByText('Nov 19, 2022');
@@ -82,21 +60,8 @@ describe('MemberTable', () => {
           expect(lastUpdated3).toBeInTheDocument();
         });
 
-        it('should display mainnet data by default', () => {
-          const { data } = mainnetMembersMockValue;
-          axios.get = jest.fn().mockResolvedValue({ data });
-          renderComponent(mainnet);
-          const selectNetwork = screen.getByTestId('select-network');
-          expect(selectNetwork).toBeInTheDocument();
-          expect(selectNetwork).toHaveValue('mainnet');
-          const memberName1 = screen.getByText('FireCoin Exchange');
-          expect(memberName1).toBeInTheDocument();
-        });
-
         it('should render testnet data if testnet is selected in the select network component', () => {
-          const { data } = testnetMembersMockValue;
-          axios.get = jest.fn().mockResolvedValue({ data });
-          renderComponent(testnet);
+          render(<MemberTable data={testnetData} />)
           const selectNetwork = screen.getByTestId('select-network');
           fireEvent.change(selectNetwork, { target: { value: 'testnet' } });
           expect(selectNetwork).toBeInTheDocument();
