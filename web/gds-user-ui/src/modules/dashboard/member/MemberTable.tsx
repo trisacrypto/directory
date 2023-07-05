@@ -14,7 +14,7 @@ import FormLayout from 'layouts/FormLayout';
 
 import React from 'react';
 import { Trans } from '@lingui/macro';
-import { MemberTableRows } from './Components/MemberTableRows';
+import { MemberTableRows } from './components/MemberTableRows';
 
 import MemberSelectNetwork from './Components/MemberNetworkSelect';
 

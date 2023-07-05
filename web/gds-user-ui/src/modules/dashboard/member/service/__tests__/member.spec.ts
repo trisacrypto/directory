@@ -3,7 +3,7 @@ import axios from 'axios';
 // // import MockAdapter from "axios-mock-adapter";
 // import axiosInstance from 'utils/axios';
 
-import { getMembersService } from '..';
+import { getMembersService, getMemberService } from '..';
 import { mainnetMembersMockValue, testnetMembersMockValue } from '../../__mocks__';
 // const mock = new MockAdapter(axios);
 // mock.onGet('/members').reply(200, mainnetMembersMockValue);
@@ -27,7 +27,7 @@ jest.mock('axios', () => {
   };
 });
 
-describe(' get members lists ', () => {
+describe('get members lists ', () => {
   it('should return default members list with mainnet as default', async () => {
     // membersservice should be called with mainnet url
     const { data } = mainnetMembersMockValue;
@@ -39,5 +39,15 @@ describe(' get members lists ', () => {
     const { data } = testnetMembersMockValue;
     axios.get = jest.fn().mockResolvedValue({ data });
     await expect(getMembersService('testnet')).resolves.toEqual(testnetMembersMockValue.data);
+  });
+});
+
+describe('get member details ', () => {
+  it('should return the member detail', async () => {
+    const { data } = testnetMembersMockValue;
+    const member = data?.vasps[0];
+    const vapsId = data?.vasps[0].id;
+    axios.get = jest.fn().mockResolvedValue({ data: member });
+    await expect(getMemberService(vapsId)).resolves.toEqual(member);
   });
 });
