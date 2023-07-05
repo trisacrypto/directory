@@ -4,7 +4,13 @@ import { Trans } from '@lingui/macro';
 
 const UnverifiedMember = () => {
   return (
-    <Box width={'100%'} bg={'#F7F8FC'} p="8" mx={'auto'} textAlign={'center'}>
+    <Box
+      width={'100%'}
+      bg={'#F7F8FC'}
+      p="8"
+      mx={'auto'}
+      textAlign={'center'}
+      data-testid="unverified-member">
       <Text fontSize="md" mb={2}>
         <Trans>
           Network directory member list not available because you are not a verified contact for

@@ -1,22 +1,14 @@
 import React from 'react';
-import { MemberTableRows } from './MemberTableRows';
+import MemberTableRows from './MemberTableRows';
 import { useFetchMembers } from '../hook/useFetchMembers';
-import UnverifiedMember from '../UnverifiedMember';
-import { Td, Tr } from '@chakra-ui/react';
 
 const MemberTableList = () => {
-  const { error, members } = useFetchMembers();
-  if (error && error?.response?.status === 451) {
-    return (
-      <Tr>
-        <Td colSpan={6}>
-          <UnverifiedMember />
-        </Td>
-      </Tr>
-    );
-  }
+  const { error, members, isFetchingMembers } = useFetchMembers();
+  const isUnverified = error && error?.response?.status === 451;
 
-  return <MemberTableRows rows={members?.vasps} />;
+  return (
+    <MemberTableRows rows={members?.vasps} hasError={isUnverified} isLoading={isFetchingMembers} />
+  );
 };
 
 export default MemberTableList;
