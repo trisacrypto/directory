@@ -7,6 +7,15 @@ export interface MembersQuery {
   error?: any;
 }
 
+export interface MemberQuery {
+  getMember(): void;
+  member: any;
+  hasMemberFailed: boolean;
+  wasMemberFetched: boolean;
+  isFetchingMember: boolean;
+  error?: any;
+}
+
 export type DirectoryType = 'testnet' | 'mainnet';
 export enum DirectoryTypeEnum {
   TESTNET = 'testnet',

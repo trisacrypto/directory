@@ -2,7 +2,7 @@ import { Heading } from '@chakra-ui/react';
 import MemberTable from './MemberTable';
 import { Trans } from '@lingui/macro';
 import Loader from 'components/Loader';
-import { useFetchMembers } from './hook/useFetchMembers';
+import { useFetchMembers } from './hooks/useFetchMembers';
 
 const MemberPage: React.FC = () => {
   const { members, isFetchingMembers, error } = useFetchMembers();
