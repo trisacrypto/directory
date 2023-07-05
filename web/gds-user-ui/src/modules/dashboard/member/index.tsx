@@ -3,7 +3,6 @@ import MemberTable from './MemberTable';
 import { Trans } from '@lingui/macro';
 import Loader from 'components/Loader';
 import { useFetchMembers } from './hook/useFetchMembers';
-import { mainnetMembersMockValue } from './__mocks__';
 
 const MemberPage: React.FC = () => {
   const { members, isFetchingMembers, error } = useFetchMembers();
