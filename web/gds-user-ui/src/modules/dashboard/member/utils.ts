@@ -7,10 +7,10 @@ export const getVaspDirectory = (dir: DirectoryType) => {
 export const getVapsNetwork = (dir: any) => {
   switch (dir) {
     case (VaspDirectoryEnum.TESTNET, VaspDirectoryEnum.TESTNET_DEV):
-      return VaspDirectoryEnum.TESTNET;
+      return 'TestNet';
     case (VaspDirectoryEnum.MAINNET, VaspDirectoryEnum.MAINNET_DEV):
-      return VaspDirectoryEnum.MAINNET;
+      return 'MainNet';
     default:
-      return VaspDirectoryEnum.TESTNET;
+      return 'MainNet';
   }
 };

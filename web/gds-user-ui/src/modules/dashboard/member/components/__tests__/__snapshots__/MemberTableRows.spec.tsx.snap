@@ -209,7 +209,7 @@ exports[`MemberTable should render 1`] = `
           class="emotion-3"
           role="gridcell"
         >
-          testnet.net
+          MainNet
         </td>
         <td
           class="emotion-3"
@@ -283,7 +283,7 @@ exports[`MemberTable should render 1`] = `
           class="emotion-3"
           role="gridcell"
         >
-          testnet.net
+          MainNet
         </td>
         <td
           class="emotion-3"
@@ -357,7 +357,7 @@ exports[`MemberTable should render 1`] = `
           class="emotion-3"
           role="gridcell"
         >
-          testnet.net
+          MainNet
         </td>
         <td
           class="emotion-3"
