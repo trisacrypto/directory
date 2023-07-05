@@ -544,6 +544,7 @@ exports[`MemberTable should render 1`] = `
           >
             <select
               class="chakra-select emotion-9"
+              data-testid="select-network"
               id="field-1"
             >
               <option

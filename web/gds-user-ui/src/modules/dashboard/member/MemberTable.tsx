@@ -16,7 +16,7 @@ import React from 'react';
 import { Trans } from '@lingui/macro';
 import { MemberTableRows } from './Components/MemberTableRows';
 
-import MemberSelectNetwork from './memberNetworkSelect';
+import MemberSelectNetwork from './Components/MemberNetworkSelect';
 
 interface MemberTableProps {
   data: any;

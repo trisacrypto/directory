@@ -79,7 +79,7 @@ export const testnetMembersMockValue: any = {
       verified_on: '2021-12-07T20:22:00Z',
       status: 'VERIFIED',
       first_listed: '2021-12-01T23:22:18Z',
-      last_updated: '2023-01-23T19:19:43Z'
+      last_updated: '2023-02-23T19:19:43Z'
     },
     {
       id: '688059d6-9d14-4b49-8435-f641ba1dec3a',
@@ -94,7 +94,7 @@ export const testnetMembersMockValue: any = {
       verified_on: '2021-07-29T19:11:03Z',
       status: 'VERIFIED',
       first_listed: '2021-07-23T17:10:26Z',
-      last_updated: '2022-12-27T18:59:01Z'
+      last_updated: '2022-11-27T18:59:01Z'
     },
     {
       id: '62291255-1ea2-4932-8248-22af4abde298',
