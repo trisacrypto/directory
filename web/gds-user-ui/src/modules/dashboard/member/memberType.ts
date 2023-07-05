@@ -1,11 +1,18 @@
-import { t } from '@lingui/macro';
-
 export interface MembersQuery {
   getMembers(): void;
   members: any;
   hasMembersFailed: boolean;
   wasMembersFetched: boolean;
   isFetchingMembers: boolean;
+  error?: any;
+}
+
+export interface MemberQuery {
+  getMember(): void;
+  member: any;
+  hasMemberFailed: boolean;
+  wasMemberFetched: boolean;
+  isFetchingMember: boolean;
   error?: any;
 }
 

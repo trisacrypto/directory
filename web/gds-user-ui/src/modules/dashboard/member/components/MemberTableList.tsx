@@ -1,6 +1,6 @@
 import React from 'react';
 import MemberTableRows from './MemberTableRows';
-import { useFetchMembers } from '../hook/useFetchMembers';
+import { useFetchMembers } from '../hooks/useFetchMembers';
 
 const MemberTableList = () => {
   const { error, members, isFetchingMembers } = useFetchMembers();
