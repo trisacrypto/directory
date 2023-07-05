@@ -19,41 +19,50 @@ import FormLayout from 'layouts/FormLayout';
 import React from 'react';
 import { Trans } from '@lingui/macro';
 import { BsEye } from 'react-icons/bs';
+import { mainnetMembersMockValue } from './__mocks__';
+import { formatIsoDate } from 'utils/formate-date';
 
 interface MemberTableProps {
   data: any;
 }
 
+const vasps = mainnetMembersMockValue.vasps;
+
 const TableRow: React.FC = () => {
   return (
-    <Tr>
-      <Td>
-        <chakra.span display="block"></chakra.span>
-      </Td>
-      <Td></Td>
-      <Td></Td>
-      <Td></Td>
-      <Td>
-        <Tag bg="green.400" color="white"></Tag>
-      </Td>
-      <Td paddingY={0}>
-        <HStack width="100%" justifyContent="center" alignItems="center">
-          <Button
-            color="blue"
-            as={'a'}
-            href={``}
-            bg={'transparent'}
-            _hover={{
-              bg: 'transparent'
-            }}
-            _focus={{
-              bg: 'transparent'
-            }}>
-            <BsEye fontSize="24px" />
-          </Button>
-        </HStack>
-      </Td>
-    </Tr>
+    vasps.map((member: any) => (
+      <Tr key={member.id}>
+        <Td>
+          <chakra.span display="block">{member.name}</chakra.span>
+        </Td>
+        <Td>{formatIsoDate(member.first_listed)}</Td>
+        <Td>{formatIsoDate(member.last_updated)}</Td>
+        <Td>
+          {member.registered_directory === 'vaspdirectory.net' && <span>MainNet</span>}
+          {member.registered_directory === 'trisatest.net' && <span>TestNet</span>}
+        </Td>
+        <Td>
+          <Tag bg="green.400" color="white">{member.status}</Tag>
+        </Td>
+        <Td paddingY={0}>
+          <HStack width="100%" justifyContent="center" alignItems="center">
+            <Button
+              color="blue"
+              as={'a'}
+              href={``}
+              bg={'transparent'}
+              _hover={{
+                bg: 'transparent'
+              }}
+              _focus={{
+                bg: 'transparent'
+              }}>
+              <BsEye fontSize="24px" />
+            </Button>
+          </HStack>
+        </Td>
+      </Tr>
+    ))
   );
 };
 
