@@ -5,7 +5,13 @@ import { DirectoryTypeEnum } from "../memberType";
 import { getMembersService } from "../service";
 
 const MemberSelectNetwork = () => {
-  const [selectNetwork, setSelectNetwork] = useState("mainnet");
+  const [selectNetwork, setSelectNetwork] = useState("");
+
+  const handleSelectNetwork = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+    return setSelectNetwork(e.target.value);
+  };
+
   getMembersService(selectNetwork as any);
 
     return (
@@ -15,7 +21,7 @@ const MemberSelectNetwork = () => {
       </FormLabel>
       <Select
         data-testid="select-network"
-        onChange={(e) => setSelectNetwork((e.target.value))}
+        onChange={handleSelectNetwork}
       >
         <option value={DirectoryTypeEnum.MAINNET}>MainNet</option>
         <option value={DirectoryTypeEnum.TESTNET}>TestNet</option>
