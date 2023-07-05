@@ -3,7 +3,7 @@ import { Table, TableCaption, Tbody, Th, Thead, Tr } from '@chakra-ui/react';
 import React from 'react';
 import { Trans } from '@lingui/macro';
 
-import MemberTableList from './components/MemberTableList';
+import MemberTableList from './MemberTableList';
 
 // interface MemberTableProps {
 //   data: any;

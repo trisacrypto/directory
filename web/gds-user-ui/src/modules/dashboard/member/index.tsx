@@ -1,24 +1,26 @@
 import { Heading } from '@chakra-ui/react';
-import MemberTable from './MemberTable';
+import { Suspense } from 'react';
+import MemberTable from './components/MemberTable';
 import { Trans } from '@lingui/macro';
 import Loader from 'components/Loader';
-import { useFetchMembers } from './hooks/useFetchMembers';
 import DirectoryNotification from './components/DirectoryNotification';
-
+import FormLayout from 'layouts/FormLayout';
+import MemberSelectNetwork from './components/memberNetworkSelect';
+import MemberHeader from './components/MemberHeader';
 const MemberPage: React.FC = () => {
-  const { members, isFetchingMembers, error } = useFetchMembers();
-
-  if (isFetchingMembers) return <Loader />;
-  console.log('members', members);
   return (
     <>
       <Heading marginBottom="69px">
         <Trans>TRISA Member Directory</Trans>
       </Heading>
-      <DirectoryNotification />
-
-      {error && <p>error </p>}
-      {members && <MemberTable data={members} />}
+      <Suspense fallback={<Loader />}>
+        <DirectoryNotification />
+        <FormLayout overflowX={'scroll'}>
+          <MemberHeader />
+          <MemberSelectNetwork />
+          <MemberTable />
+        </FormLayout>
+      </Suspense>
     </>
   );
 };
