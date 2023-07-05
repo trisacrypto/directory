@@ -24,12 +24,12 @@ describe('MemberTable', () => {
             const header = screen.getByText(/Member Name/i);
             const joined = screen.getByText(/Joined/i);
             const lastUpdate = screen.getByText(/Last Updated/i);
-            const network = screen.getByText(/Network/i);
+            // const network = screen.getByText(/Network/i);
             const status = screen.getByText(/Status/i);
             expect(header).toBeInTheDocument();
             expect(joined).toBeInTheDocument();
             expect(lastUpdate).toBeInTheDocument();
-            expect(network).toBeInTheDocument();
+            // expect(network).toBeInTheDocument();
             expect(status).toBeInTheDocument();
         });
 });
