@@ -32,18 +32,4 @@ describe('MemberTable', () => {
             expect(network).toBeInTheDocument();
             expect(status).toBeInTheDocument();
         });
-
-      /*   it('should render the correct table rows', () => {
-            renderComponent();
-            const memberName = screen.getByText(/member1/i);
-            const joined = screen.getByText(/2021-08-10/i);
-            const lastUpdate = screen.getByText(/2021-08-10/i);
-            const network = screen.getByText(/Mainnet/i);
-            const status = screen.getByText(/Active/i);
-            expect(memberName).toBeInTheDocument();
-            expect(joined).toBeInTheDocument();
-            expect(lastUpdate).toBeInTheDocument();
-            expect(network).toBeInTheDocument();
-            expect(status).toBeInTheDocument();
-        }); */
 });
