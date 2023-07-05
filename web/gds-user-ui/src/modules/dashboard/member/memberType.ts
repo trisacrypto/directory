@@ -14,5 +14,6 @@ export enum DirectoryTypeEnum {
 }
 export enum VaspDirectoryEnum {
   TESTNET = 'testnet.net',
-  MAINNET = 'vaspdirectory.net'
+  MAINNET = 'vaspdirectory.net',
+  MAINNETDEV = 'vaspdirectory.dev'
 }

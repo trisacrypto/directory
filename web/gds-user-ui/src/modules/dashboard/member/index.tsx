@@ -3,6 +3,7 @@ import MemberTable from './MemberTable';
 import { Trans } from '@lingui/macro';
 import Loader from 'components/Loader';
 import { useFetchMembers } from './hook/useFetchMembers';
+import DirectoryNotification from './Components/DirectoryNotification';
 
 const MemberPage: React.FC = () => {
   const { members, isFetchingMembers, error } = useFetchMembers();
@@ -14,6 +15,7 @@ const MemberPage: React.FC = () => {
       <Heading marginBottom="69px">
         <Trans>TRISA Member Directory</Trans>
       </Heading>
+      <DirectoryNotification />
 
       {error && <p>error </p>}
       {members && <MemberTable data={members} />}

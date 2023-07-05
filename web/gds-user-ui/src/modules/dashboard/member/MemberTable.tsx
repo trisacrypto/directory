@@ -15,6 +15,9 @@ import FormLayout from 'layouts/FormLayout';
 import React from 'react';
 import { Trans } from '@lingui/macro';
 import { MemberTableRows } from './Components/MemberTableRows';
+
+import MemberSelectNetwork from './memberNetworkSelect';
+
 interface MemberTableProps {
   data: any;
 }
@@ -44,25 +47,26 @@ const MemberTable: React.FC<MemberTableProps> = (data) => {
               <Trans>Export</Trans>
             </Button>
           </HStack>
+          <MemberSelectNetwork />
         </TableCaption>
         <Thead>
           <Tr>
-            <Th>
+            <Th data-testid="name-header">
               <Trans>Member Name</Trans>
             </Th>
-            <Th>
+            <Th data-testid="joined-header">
               <Trans>Joined</Trans>
             </Th>
-            <Th>
+            <Th data-testid="last-updated-header">
               <Trans>Last Updated</Trans>
             </Th>
-            <Th>
+            <Th data-testid="network-header">
               <Trans>Network</Trans>
             </Th>
-            <Th>
+            <Th data-testid="status-header">
               <Trans>Status</Trans>
             </Th>
-            <Th textAlign="center">
+            <Th textAlign="center" data-testid="actions-header">
               <Trans>Actions</Trans>
             </Th>
           </Tr>
