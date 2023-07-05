@@ -2,67 +2,25 @@ import {
   Table,
   TableCaption,
   Tbody,
-  Td,
   Th,
   Thead,
   Heading,
   Tr,
   Button,
   HStack,
-  chakra,
-  useColorModeValue,
+  useColorModeValue
 } from '@chakra-ui/react';
-
 import FormLayout from 'layouts/FormLayout';
 
 import React from 'react';
 import { Trans } from '@lingui/macro';
-import { BsEye } from 'react-icons/bs';
+import { MemberTableRows } from './Components/MemberTableRows';
+
 import MemberSelectNetwork from './memberNetworkSelect';
 
 interface MemberTableProps {
   data: any;
 }
-
-const TableRow: React.FC = () => {
-  return (
-    <Tr>
-      <Td>
-        <chakra.span display="block"></chakra.span>
-        <chakra.span display="block" fontSize="sm" color="gray.700"></chakra.span>
-      </Td>
-      <Td></Td>
-      <Td></Td>
-      <Td></Td>
-      <Td></Td>
-      <Td paddingY={0}>
-        <HStack width="100%" justifyContent="center" alignItems="center">
-          <Button
-            color="blue"
-            as={'a'}
-            href={``}
-            bg={'transparent'}
-            _hover={{
-              bg: 'transparent'
-            }}
-            _focus={{
-              bg: 'transparent'
-            }}>
-            <BsEye fontSize="24px" />
-          </Button>
-        </HStack>
-      </Td>
-    </Tr>
-  );
-};
-
-const TableRows: React.FC = () => {
-  return (
-    <>
-      <TableRow />
-    </>
-  );
-};
 
 const MemberTable: React.FC<MemberTableProps> = (data) => {
   console.log('data', data);
@@ -114,7 +72,7 @@ const MemberTable: React.FC<MemberTableProps> = (data) => {
           </Tr>
         </Thead>
         <Tbody>
-          <TableRows />
+          <MemberTableRows rows={data} />
         </Tbody>
       </Table>
     </FormLayout>
