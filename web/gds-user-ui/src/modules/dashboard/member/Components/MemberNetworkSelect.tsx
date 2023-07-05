@@ -1,7 +1,7 @@
 import { FormControl, FormLabel, Select } from "@chakra-ui/react";
 import { Trans } from "@lingui/macro";
 import { useState } from "react";
-import { DirectoryTypeEnum } from "../memberType";
+import { DirectoryType, DirectoryTypeEnum } from "../memberType";
 import { getMembersService } from "../service";
 
 const MemberSelectNetwork = () => {
@@ -12,7 +12,7 @@ const MemberSelectNetwork = () => {
     return setSelectNetwork(e.target.value);
   };
 
-  getMembersService(selectNetwork as any);
+  getMembersService(selectNetwork as DirectoryType);
 
     return (
     <FormControl>
