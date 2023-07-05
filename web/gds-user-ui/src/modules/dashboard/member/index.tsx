@@ -6,7 +6,7 @@ import Loader from 'components/Loader';
 import DirectoryNotification from './components/DirectoryNotification';
 import FormLayout from 'layouts/FormLayout';
 import MemberSelectNetwork from './components/memberNetworkSelect';
-import MemberTableHeader from './components/MemberTableHeader';
+import MemberHeader from './components/MemberHeader';
 const MemberPage: React.FC = () => {
   return (
     <>
@@ -16,7 +16,7 @@ const MemberPage: React.FC = () => {
       <Suspense fallback={<Loader />}>
         <DirectoryNotification />
         <FormLayout overflowX={'scroll'}>
-          <MemberTableHeader />
+          <MemberHeader />
           <MemberSelectNetwork />
           <MemberTable />
         </FormLayout>

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`MemberTable should render 1`] = `
+exports[`Member Table Rows should render 1`] = `
 .emotion-0 {
   font-variant-numeric: lining-nums tabular-nums;
   border-collapse: collapse;

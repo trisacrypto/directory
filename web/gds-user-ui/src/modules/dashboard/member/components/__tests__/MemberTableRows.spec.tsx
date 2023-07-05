@@ -21,7 +21,7 @@ function renderComponent(rowProps?: MemberTableRowsProps) {
   );
 }
 
-describe('MemberTable', () => {
+describe('Member Table Rows', () => {
   beforeAll(() => {
     act(() => {
       dynamicActivate('en');

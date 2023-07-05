@@ -1,6 +1,6 @@
 import { Heading, HStack, useColorModeValue, Button, Stack } from '@chakra-ui/react';
 import { Trans } from '@lingui/macro';
-const MemberTableHeader = () => {
+const MemberHeader = () => {
   const exportHandler = () => {
     console.log('modalHandler');
   };
@@ -25,4 +25,4 @@ const MemberTableHeader = () => {
   );
 };
 
-export default MemberTableHeader;
+export default MemberHeader;
