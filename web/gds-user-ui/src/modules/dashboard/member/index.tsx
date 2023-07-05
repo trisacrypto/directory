@@ -20,7 +20,7 @@ const MemberPage: React.FC = () => {
       </Heading>
 
       {error && <p>error </p>}
-      { members && <MemberTable data={members} />}
+      {members && <MemberTable data={members} />}
     </>
   );
 };
