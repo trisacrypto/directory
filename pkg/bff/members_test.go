@@ -443,6 +443,7 @@ func (s *bffTestSuite) TestMemberDetail() {
 
 	// Test successful response from testnet
 	actualPerson := &ivms101.LegalPerson{}
+	actualContacts := &pb.Contacts{}
 	actualTrixo := &pb.TRIXOQuestionnaire{}
 	require.NoError(s.testnet.members.UseFixture(mock.DetailsRPC, testnetFixture))
 
@@ -452,12 +453,15 @@ func (s *bffTestSuite) TestMemberDetail() {
 	require.Equal(testnetDetails.MemberSummary, reply.Summary, "response summary did not match")
 	require.NoError(wire.Unwire(reply.LegalPerson, actualPerson), "could not unmarshal legal person in response")
 	require.Equal(testnetDetails.LegalPerson, actualPerson, "response legal person did not match")
+	require.NoError(wire.Unwire(reply.Contacts, actualContacts), "could not unmarshal contacts in response")
+	require.Equal(testnetDetails.Contacts, actualContacts, "response contacts did not match")
 	require.NoError(wire.Unwire(reply.Trixo, actualTrixo), "could not unmarshal trixo in response")
 	require.Equal(testnetDetails.Trixo, actualTrixo, "response trixo did not match")
 
 	// Test successful response from mainnet and mixed case directory
 	req.Directory = "VASPdirectory.net"
 	actualPerson = &ivms101.LegalPerson{}
+	actualContacts = &pb.Contacts{}
 	actualTrixo = &pb.TRIXOQuestionnaire{}
 	require.NoError(s.mainnet.members.UseFixture(mock.DetailsRPC, mainnetFixture))
 
@@ -467,6 +471,8 @@ func (s *bffTestSuite) TestMemberDetail() {
 	require.Equal(mainnetDetails.MemberSummary, reply.Summary, "response summary did not match")
 	require.NoError(wire.Unwire(reply.LegalPerson, actualPerson), "could not unmarshal legal person in response")
 	require.Equal(mainnetDetails.LegalPerson, actualPerson, "response legal person did not match")
+	require.NoError(wire.Unwire(reply.Contacts, actualContacts), "could not unmarshal contacts in response")
+	require.Equal(mainnetDetails.Contacts, actualContacts, "response contacts did not match")
 	require.NoError(wire.Unwire(reply.Trixo, actualTrixo), "could not unmarshal trixo in response")
 	require.Equal(mainnetDetails.Trixo, actualTrixo, "response trixo did not match")
 }

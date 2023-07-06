@@ -401,6 +401,19 @@ func (s *Server) MemberDetail(c *gin.Context) {
 		return
 	}
 
+	// Marshal the contacts details
+	if rep.Contacts == nil {
+		log.Error().Msg("did not receive contacts details from members detail RPC")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member details"))
+		return
+	}
+
+	if out.Contacts, err = wire.Rewire(rep.Contacts); err != nil {
+		log.Error().Err(err).Msg("could not serialize contacts details")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
+	}
+
 	// Marshal the Trixo form details
 	if rep.Trixo == nil {
 		log.Error().Msg("did not receive trixo form details from members detail RPC")
