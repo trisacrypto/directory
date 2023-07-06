@@ -54,7 +54,7 @@ const MemberDetail = ({ member }: MemberDetailProps) => {
                 {' '}
                 <Trans>
                   {contact === 'legal'
-                    ? `Compliance / ${contact.charAt(0).toUpperCase() + contact.slice(1)}`
+                    ? `Compliance / ${contact.charAt(0).toUpperCase() + contact.slice(1)} Contact`
                     : contact.charAt(0).toUpperCase() + contact.slice(1) + ' Contact'}
                 </Trans>
               </ListItem>
