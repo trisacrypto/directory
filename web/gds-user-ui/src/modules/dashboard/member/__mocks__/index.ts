@@ -188,6 +188,23 @@ export const memberDetailMock = {
     },
     country_of_registration: 'GB'
   },
+  contacts: {
+    technical: {
+      name: 'Naz Hill',
+      email: 'nhill@testing.net',
+      phone: '000-123-4567'
+    },
+    legal: {
+      name: 'Candy Parker',
+      email: 'cparker@testing.net',
+      phone: '000-111-2233'
+    },
+    administrative: {
+      name: '',
+      email: '',
+      phone: ''
+    }
+  },
   trixo: {
     primary_national_jurisdiction: 'GB',
     primary_regulator: 'Financial Conduct Authority',

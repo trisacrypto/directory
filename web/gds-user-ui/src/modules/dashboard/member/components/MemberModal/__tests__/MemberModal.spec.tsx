@@ -1,6 +1,5 @@
 import { act, render, screen, fireEvent, waitFor } from 'utils/test-utils';
 import ShowMemberModal from '../';
-
 import { dynamicActivate } from 'utils/i18nLoaderHelper';
 import { memberDetailMock } from '../../../__mocks__';
 
@@ -18,17 +17,23 @@ jest.mock('@chakra-ui/react', () => {
     }))
   };
 });
+
 function renderComponent(memberId?: string) {
   const props = memberId || memberDetailMock.summary.id;
 
   return render(<ShowMemberModal memberId={props} />);
 }
 
-describe(' Member Modal', () => {
+describe('Member Modal', () => {
   beforeAll(() => {
     act(() => {
       dynamicActivate('en');
     });
+  });
+
+  it('should render', () => {
+    const { container } = renderComponent();
+    expect(container).toMatchSnapshot();
   });
 
   it('should render the modal', async () => {
@@ -42,7 +47,7 @@ describe(' Member Modal', () => {
     });
   });
 
-  it('should render the member details in the modal', async () => {
+  it('should render the member details in the modal', () => {
     const { getByTestId } = renderComponent();
     const modalBtn = getByTestId('member-modal-button');
 

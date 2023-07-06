@@ -40,7 +40,7 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
                 <ModalHeader data-testid="confirmation-modal-header" textAlign={'center'}>
                   {member?.name}
                 </ModalHeader>
-                <ModalCloseButton />
+                <ModalCloseButton data-testid="close-btn-icon" />
 
                 <ModalBody pb={6}>
                   <MemberModalContent member={member} />
@@ -48,7 +48,7 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
 
                 <ModalFooter>
                   <HStack width="100%" justifyContent="center" alignItems="center">
-                    <Button bg={'black'} onClick={onClose}>
+                    <Button bg={'black'} onClick={onClose} data-testid="modal-close-button">
                       <Trans>Close</Trans>
                     </Button>
                     <Button bg={'#FF7A59'} color={'white'}>
