@@ -7,6 +7,7 @@ interface ShowMemberModalProps {
 }
 const ShowMemberModal: React.FC<ShowMemberModalProps> = ({ memberId }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+
   return (
     <>
       <HStack width="100%" justifyContent="center" alignItems="center">
@@ -14,8 +15,6 @@ const ShowMemberModal: React.FC<ShowMemberModalProps> = ({ memberId }) => {
           data-testid="member-modal-button"
           onClick={onOpen}
           color="blue"
-          as={'a'}
-          href={``}
           bg={'transparent'}
           _hover={{
             bg: 'transparent'

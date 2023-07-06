@@ -38,7 +38,7 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
               <ModalOverlay />
               <ModalContent width={'100%'}>
                 <ModalHeader data-testid="confirmation-modal-header" textAlign={'center'}>
-                  {member?.name}
+                  {member?.summary?.name}
                 </ModalHeader>
                 <ModalCloseButton data-testid="close-btn-icon" />
 

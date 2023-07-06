@@ -194,10 +194,10 @@ exports[`Member Modal should render 1`] = `
   <div
     class="chakra-stack emotion-0"
   >
-    <a
+    <button
       class="chakra-button emotion-1"
       data-testid="member-modal-button"
-      href=""
+      type="button"
     >
       <svg
         fill="currentColor"
@@ -216,7 +216,7 @@ exports[`Member Modal should render 1`] = `
           d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"
         />
       </svg>
-    </a>
+    </button>
   </div>
   <div
     class="emotion-2"
