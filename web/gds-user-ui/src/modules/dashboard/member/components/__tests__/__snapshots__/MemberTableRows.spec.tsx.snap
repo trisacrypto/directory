@@ -325,6 +325,7 @@ exports[`Member Table Rows should render 1`] = `
           >
             <a
               class="chakra-button emotion-12"
+              data-testid="member-modal-button"
               href=""
             >
               <svg
@@ -429,6 +430,7 @@ exports[`Member Table Rows should render 1`] = `
           >
             <a
               class="chakra-button emotion-12"
+              data-testid="member-modal-button"
               href=""
             >
               <svg
@@ -533,6 +535,7 @@ exports[`Member Table Rows should render 1`] = `
           >
             <a
               class="chakra-button emotion-12"
+              data-testid="member-modal-button"
               href=""
             >
               <svg

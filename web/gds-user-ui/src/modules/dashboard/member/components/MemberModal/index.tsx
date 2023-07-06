@@ -11,6 +11,7 @@ const ShowMemberModal: React.FC<ShowMemberModalProps> = ({ memberId }) => {
     <>
       <HStack width="100%" justifyContent="center" alignItems="center">
         <Button
+          data-testid="member-modal-button"
           onClick={onOpen}
           color="blue"
           as={'a'}

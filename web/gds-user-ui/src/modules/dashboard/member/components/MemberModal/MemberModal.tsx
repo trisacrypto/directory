@@ -16,6 +16,7 @@ import {
 import Loader from 'components/Loader';
 import MemberModalContent from './MemberModalContent';
 import { useFetchMember } from '../../hooks/useFetchMember';
+import { Trans } from '@lingui/macro';
 interface MemberModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -29,7 +30,11 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
         <Box w="full">
           {isFetchingMember && <Loader />}
           {member && (
-            <Modal closeOnOverlayClick={false} isOpen={isOpen} onClose={onClose}>
+            <Modal
+              closeOnOverlayClick={false}
+              isOpen={isOpen}
+              onClose={onClose}
+              data-testid="member-modal">
               <ModalOverlay />
               <ModalContent width={'100%'}>
                 <ModalHeader data-testid="confirmation-modal-header" textAlign={'center'}>
@@ -43,8 +48,12 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
 
                 <ModalFooter>
                   <HStack width="100%" justifyContent="center" alignItems="center">
-                    <Button onClick={onClose}>Close</Button>
-                    <Button>Copy</Button>
+                    <Button bg={'black'} onClick={onClose}>
+                      <Trans>Close</Trans>
+                    </Button>
+                    <Button bg={'#FF7A59'} color={'white'}>
+                      <Trans>Copy</Trans>
+                    </Button>
                   </HStack>
                 </ModalFooter>
               </ModalContent>
