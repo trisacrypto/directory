@@ -101,4 +101,7 @@ message MemberDetails {
 
     // The TRIXO questionnaire used to register the VASP
     trisa.gds.models.v1beta1.TRIXOQuestionnaire trixo = 3;
+
+    // The Contacts for a registered VASP
+    trisa.gds.models.v1beta1.Contacts contacts = 4;
 }

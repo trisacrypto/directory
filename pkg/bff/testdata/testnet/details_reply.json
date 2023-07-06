@@ -62,6 +62,18 @@
         },
         "country_of_registration": "US"
       },
+      "contacts": {
+        "technical": {
+          "name": "Ry Howard",
+          "email": "rhoward@testing.net",
+          "phone": "000-123-4567"
+        },
+        "legal": {
+          "name": "Al Gray",
+          "email": "agray@testing.net",
+          "phone": "000-111-2233"
+        }
+      },
       "trixo": {
         "primary_national_jurisdiction": "US",
         "primary_regulator": "FinCEN",

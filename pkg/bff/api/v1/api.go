@@ -363,6 +363,7 @@ type MemberDetailsParams struct {
 type MemberDetailsReply struct {
 	Summary     *members.VASPMember    `json:"summary"`
 	LegalPerson map[string]interface{} `json:"legal_person"`
+	Contacts    map[string]interface{} `json:"contacts"`
 	Trixo       map[string]interface{} `json:"trixo"`
 }
 
