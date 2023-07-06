@@ -59,3 +59,7 @@ export type Member = {
   trixo: any;
   contacts: any;
 };
+
+export type MemberNetworkType = {
+  network: DirectoryType;
+};

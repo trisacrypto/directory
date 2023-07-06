@@ -76,6 +76,18 @@ const MemberDetail = ({ member }: MemberDetailProps) => {
                     </ListItem>
                   </List>
                 ))}
+                <List>
+                  <ListItem fontWeight={'bold'}>
+                    <Trans>TRISA Endpoint</Trans>
+                  </ListItem>
+                  <ListItem>{'N/A'}</ListItem>
+                </List>
+                <List>
+                  <ListItem fontWeight={'bold'}>
+                    <Trans>Common Name</Trans>
+                  </ListItem>
+                  <ListItem>{'N/A'}</ListItem>
+                </List>
               </SimpleGrid>
             </Box>
           </Stack>
