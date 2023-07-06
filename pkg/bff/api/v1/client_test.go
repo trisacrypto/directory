@@ -1002,6 +1002,13 @@ func TestMemberDetails(t *testing.T) {
 			"country_of_registration": "US",
 			"customer_number":         "123456789",
 		},
+		Contacts: map[string]interface{}{
+			"technical": map[string]interface{}{
+				"name":  "Rhyne Howard",
+				"email": "rhoward@testing.net",
+				"phone": "000-123-4567",
+			},
+		},
 		Trixo: map[string]interface{}{
 			"compliance_threshold":          0.0,
 			"compliance_threshold_currency": "USD",
