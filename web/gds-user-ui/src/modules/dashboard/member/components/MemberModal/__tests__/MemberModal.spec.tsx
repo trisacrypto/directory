@@ -59,6 +59,12 @@ describe('Member Modal', () => {
       expect(screen.getByText(`${memberDetailMock.summary.country}`)).toBeInTheDocument();
       expect(screen.getByText(`${memberDetailMock.summary.endpoint}`)).toBeInTheDocument();
       expect(screen.getByText(`${memberDetailMock.summary.common_name}`)).toBeInTheDocument();
+      expect(screen.getByText(`${memberDetailMock.contacts.legal.name}`)).toBeInTheDocument();
+      expect(screen.getByText(`${memberDetailMock.contacts.legal.email}`)).toBeInTheDocument();
+      expect(screen.getByText(`${memberDetailMock.contacts.legal.phone}`)).toBeInTheDocument();
+      expect(screen.getByText(`${memberDetailMock.contacts.technical.name}`)).toBeInTheDocument();
+      expect(screen.getByText(`${memberDetailMock.contacts.technical.email}`)).toBeInTheDocument();
+      expect(screen.getByText(`${memberDetailMock.contacts.technical.phone}`)).toBeInTheDocument();
     });
   });
 });

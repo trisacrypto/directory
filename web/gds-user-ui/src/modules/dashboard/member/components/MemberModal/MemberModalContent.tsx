@@ -1,7 +1,7 @@
 import { Tag, Text, Stack, SimpleGrid, List, ListItem } from '@chakra-ui/react';
 import { Trans } from '@lingui/macro';
 import { Member } from '../../memberType';
-import { getBusinessCategiryLabel } from 'constants/basic-details';
+import { BUSINESS_CATEGORY, getBusinessCategiryLabel } from 'constants/basic-details';
 import { hasValue } from 'utils/utils';
 interface MemberDetailProps {
   member: Member;
@@ -22,7 +22,9 @@ const MemberDetail = ({ member }: MemberDetailProps) => {
             <ListItem fontWeight={'bold'}>
               <Trans>Business Category</Trans>
             </ListItem>
-            <ListItem>{member?.summary?.business_category || 'N/A'}</ListItem>
+            <ListItem>
+              {(BUSINESS_CATEGORY as any)[member?.summary?.business_category] || 'N/A'}
+            </ListItem>
           </List>
           <List>
             <ListItem fontWeight={'bold'}>
@@ -50,9 +52,11 @@ const MemberDetail = ({ member }: MemberDetailProps) => {
             <List key={index}>
               <ListItem fontWeight={'bold'}>
                 {' '}
-                {contact === 'legal'
-                  ? `Compliance / ${contact.charAt(0).toUpperCase() + contact.slice(1)}`
-                  : contact.charAt(0).toUpperCase() + contact.slice(1)}
+                <Trans>
+                  {contact === 'legal'
+                    ? `Compliance / ${contact.charAt(0).toUpperCase() + contact.slice(1)}`
+                    : contact.charAt(0).toUpperCase() + contact.slice(1) + ' Contact'}
+                </Trans>
               </ListItem>
               <ListItem>
                 {hasValue(member?.contacts?.[contact]) ? (
