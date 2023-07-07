@@ -255,18 +255,27 @@ export const setUserCookies = (
   if (expiresIn) setCookie('expires_in', expiresIn);
 };
 
-export const convertToCvs = (data: any, headers: any) => {
-  const replacer = (key: any, value: any) => (value === null ? '' : value);
-  const header = Object.keys(data[0]);
-  let csv = data.map((row: any) =>
-    header
-      .map((fieldName) => JSON.stringify(row[fieldName], replacer))
-      .join(',')
-      .replace(/(^\[)|(\]$)/gm, '')
-  );
-  csv.unshift(headers.join(','));
-  csv = csv.join('\r\n');
-  return csv;
+export const convertToCvs = (jsonData: any, headers: any) => {
+  const csvRows = [];
+
+  // Create the header row
+  csvRows.push(headers.join(','));
+
+  // Process each data row
+  jsonData?.forEach((data: any) => {
+    const values = headers.map((header: any) => {
+      const fieldValue = data[header] !== undefined ? data[header] : '';
+      const escapedValue = fieldValue.toString().replace(/"/g, '""');
+      return `"${escapedValue}"`;
+    });
+    csvRows.push(values.join(','));
+  });
+
+  // Join rows with line breaks
+  const csvContent = csvRows.join('\n');
+
+  // Return the CSV content
+  return csvContent;
 };
 
 export const downloadCSV = (data: any, filename = '') => {
