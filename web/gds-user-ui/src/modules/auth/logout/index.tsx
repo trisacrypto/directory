@@ -11,17 +11,13 @@ const Logout: React.FC = () => {
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  console.log('logout');
   useEffect(() => {
-    console.log('[Logout] useEffect');
     setTimeout(() => {
-      console.log('[Logout] useeffect timeout');
       dispatch(logout());
       dispatch(setDefaultMemberNetwork());
       removeCookie('access_token');
       localStorage.removeItem('trs_stepper');
       localStorage.removeItem('persist:root');
-      // clear the store
       Store.dispatch({ type: 'RESET' });
       setIsLoading(false);
       navigate('/');
