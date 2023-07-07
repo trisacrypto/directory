@@ -4,6 +4,7 @@ import { Dispatch } from '@reduxjs/toolkit';
 import React from 'react';
 import { useDispatch } from 'react-redux';
 import { setMemberNetwork } from '../member.slice';
+import Store from 'application/store';
 
 const MemberSelectNetwork = () => {
   const dispatch: Dispatch = useDispatch();
@@ -11,12 +12,15 @@ const MemberSelectNetwork = () => {
   dispatch(setMemberNetwork(event.target.value));
 };
 
+// Set the default value of the network to the value in the store.
+const { network } = Store.getState().members;
+
   return (
     <FormControl>
       <FormLabel>
         <Trans>Select Network</Trans>
       </FormLabel>
-      <Select data-testid="select-network" onChange={handleChange}>
+      <Select defaultValue={network} onChange={handleChange} data-testid="select-network">
         <option value="mainnet">MainNet</option>
         <option value="testnet">TestNet</option>
       </Select>

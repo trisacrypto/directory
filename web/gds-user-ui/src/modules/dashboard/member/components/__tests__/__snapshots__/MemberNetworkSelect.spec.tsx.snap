@@ -153,6 +153,7 @@ exports[`MemberSelectNetwork should render 1`] = `
         id="field-1"
       >
         <option
+          selected=""
           value="mainnet"
         >
           MainNet
