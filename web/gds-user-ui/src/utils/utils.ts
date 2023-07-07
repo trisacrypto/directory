@@ -254,3 +254,39 @@ export const setUserCookies = (
   if (userLocale) setCookie('user_locale', userLocale);
   if (expiresIn) setCookie('expires_in', expiresIn);
 };
+
+export const convertToCVS = (jsonData: any, headers: any) => {
+  const csvRows = [];
+
+  // Create the header row
+  csvRows.push(headers.join(','));
+
+  // Process each data row
+  jsonData?.forEach((data: any) => {
+    const values = headers.map((header: any) => {
+      const fieldValue = data[header] !== undefined ? data[header] : '';
+      const escapedValue = fieldValue.toString().replace(/"/g, '""');
+      return `"${escapedValue}"`;
+    });
+    csvRows.push(values.join(','));
+  });
+
+  // Join rows with line breaks
+  const csvContent = csvRows.join('\n');
+
+  // Return the CSV content
+  return csvContent;
+};
+
+export const downloadCSV = (data: any, filename = '') => {
+  const fileName = filename.length > 0 ? `${filename}.csv` : 'export.csv';
+  const blob = new Blob([data], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.setAttribute('hidden', '');
+  a.setAttribute('href', url);
+  a.setAttribute('download', fileName);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+};
