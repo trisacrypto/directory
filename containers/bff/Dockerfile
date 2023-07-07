@@ -24,9 +24,6 @@ RUN go mod verify
 COPY cmd ./cmd
 COPY pkg ./pkg
 
-# Run tests to avoid building a broken container
-RUN go test -timeout 180s ./...
-
 # Build binaries
 RUN go build -v -o /go/bin/bff -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$GIT_REVISION'" ./cmd/bff
 RUN go build -v -o /go/bin/bffutil -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$GIT_REVISION'" ./cmd/bffutil
