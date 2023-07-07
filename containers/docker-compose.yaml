@@ -44,8 +44,8 @@ services:
       - GDS_DATABASE_CERT_PATH
       - GDS_DATABASE_POOL_PATH
       - SECTIGO_TESTING=true
-      - SECTIGO_USERNAME
-      - SECTIGO_PASSWORD
+      - SECTIGO_USERNAME=cathyadmin
+      - SECTIGO_PASSWORD=supersecretsquirrel
       - SECTIGO_PROFILE
       - GDS_SERVICE_EMAIL
       - GDS_ADMIN_EMAIL
@@ -311,9 +311,9 @@ services:
       - GDS_DATABASE_INSECURE=true
       - GDS_DATABASE_CERT_PATH
       - GDS_DATABASE_POOL_PATH
-      - SECTIGO_TESTING
-      - SECTIGO_USERNAME
-      - SECTIGO_PASSWORD
+      - SECTIGO_TESTING=true
+      - SECTIGO_USERNAME=cathyadmin
+      - SECTIGO_PASSWORD=supersecretsquirrel
       - SECTIGO_PROFILE
       - GDS_SERVICE_EMAIL
       - GDS_ADMIN_EMAIL
@@ -417,3 +417,30 @@ services:
       - api
       - testnet
       - auth0
+
+  cathy:
+    build:
+      context: ../
+      dockerfile: ./containers/cathy/Dockerfile
+      args:
+        GIT_REVISION: ${GIT_REVISION}
+    image: trisa/cathy
+    init: true
+    ports:
+      - 8831:8831
+    volumes:
+      - ../fixtures:/data
+    environment:
+      - SIAS_BIND_ADDR=:8831
+      - SIAS_MODE=release
+      - SIAS_LOG_LEVEL=debug
+      - SIAS_CONSOLE_LOG=true
+      - SIAS_AUTH_USERNAME=cathyadmin
+      - SIAS_AUTH_PASSWORD=supersecretsquirrel
+    profiles:
+      - gds
+      - api
+      - testnet
+      - mainnet
+      - cathy
+      - all
