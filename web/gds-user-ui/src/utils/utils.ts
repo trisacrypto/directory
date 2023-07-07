@@ -255,7 +255,7 @@ export const setUserCookies = (
   if (expiresIn) setCookie('expires_in', expiresIn);
 };
 
-export const convertToCvs = (jsonData: any, headers: any) => {
+export const convertToCVS = (jsonData: any, headers: any) => {
   const csvRows = [];
 
   // Create the header row
