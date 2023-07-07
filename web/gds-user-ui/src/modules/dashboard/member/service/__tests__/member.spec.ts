@@ -48,6 +48,11 @@ describe('get member details ', () => {
     const member = data?.vasps[0];
     const vapsId = data?.vasps[0].id;
     axios.get = jest.fn().mockResolvedValue({ data: member });
-    await expect(getMemberService(vapsId)).resolves.toEqual(member);
+    await expect(
+      getMemberService({
+        vaspId: vapsId,
+        network: 'testnet'
+      })
+    ).resolves.toEqual(member);
   });
 });

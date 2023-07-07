@@ -43,3 +43,23 @@ export type VaspType = {
   first_listed: string;
   last_updated: string;
 };
+
+export type MemberDto = {
+  vaspId: string;
+  network: string;
+};
+
+export type MemberSummary = VaspType;
+
+export type MemberLegalPerson = {};
+
+export type Member = {
+  summary: VaspType;
+  legal_person: any;
+  trixo: any;
+  contacts: any;
+};
+
+export type MemberNetworkType = {
+  network: DirectoryType;
+};

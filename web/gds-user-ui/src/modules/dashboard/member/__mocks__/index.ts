@@ -130,6 +130,102 @@ export const testnetMembersMockValue: any = {
   next_page_token: 'mLB9CU8O8xQj2XEyjAtlfvTj9imoXnLv/1p8fTLchTg='
 };
 
+export const memberDetailMock = {
+  summary: {
+    id: '9e069e01-8515-4d57-b9a5-e249f7ab4fca',
+    registered_directory: 'trisatest.net',
+    common_name: 'api.bob.vaspbot.net',
+    endpoint: 'api.bob.vaspbot.net:443',
+    name: 'BobVASP',
+    website: 'https://bob.vaspbot.net/',
+    country: 'GB',
+    business_category: 'PRIVATE_ORGANIZATION',
+    vasp_categories: ['Exchange'],
+    verified_on: '',
+    status: 'VERIFIED'
+  },
+  legal_person: {
+    name: {
+      name_identifiers: [
+        {
+          legal_person_name: "Bob's Discount VASP, PLC",
+          legal_person_name_identifier_type: 'LEGAL_PERSON_NAME_TYPE_CODE_LEGL'
+        },
+        {
+          legal_person_name: 'BobVASP',
+          legal_person_name_identifier_type: 'LEGAL_PERSON_NAME_TYPE_CODE_SHRT'
+        }
+      ],
+      local_name_identifiers: [],
+      phonetic_name_identifiers: []
+    },
+    geographic_addresses: [
+      {
+        address_type: 'ADDRESS_TYPE_CODE_BIZZ',
+        department: '',
+        sub_department: '',
+        street_name: 'Grimsby Road',
+        building_number: '762',
+        building_name: '',
+        floor: '',
+        post_box: '',
+        room: '',
+        post_code: 'OX8 U89',
+        town_name: 'Oxford',
+        town_location_name: '',
+        district_name: '',
+        country_sub_division: '',
+        address_line: [],
+        country: 'GB'
+      }
+    ],
+    customer_number: '',
+    national_identification: {
+      national_identifier: '213800AQUAUP6I215N33',
+      national_identifier_type: 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX',
+      country_of_issue: 'GB',
+      registration_authority: 'RA000589'
+    },
+    country_of_registration: 'GB'
+  },
+  contacts: {
+    technical: {
+      name: 'Naz Hill',
+      email: 'nhill@testing.net',
+      phone: '000-123-4567'
+    },
+    legal: {
+      name: 'Candy Parker',
+      email: 'cparker@testing.net',
+      phone: '000-111-2233'
+    },
+    administrative: {
+      name: '',
+      email: '',
+      phone: ''
+    }
+  },
+  trixo: {
+    primary_national_jurisdiction: 'GB',
+    primary_regulator: 'Financial Conduct Authority',
+    financial_transfers_permitted: 'yes',
+    other_jurisdictions: [],
+    has_required_regulatory_program: 'yes',
+    conducts_customer_kyc: true,
+    kyc_threshold: 100,
+    kyc_threshold_currency: 'USD',
+    must_comply_travel_rule: false,
+    applicable_regulations: [
+      'Legal statement on cryptoassets and smart contracts',
+      'FCA Cryptoassets: AML / CTF regime'
+    ],
+    compliance_threshold: 10000,
+    compliance_threshold_currency: 'USD',
+    must_safeguard_pii: true,
+    safeguards_pii: true
+  }
+};
+
 export const getMockValue = (network: string): any => {
   switch (network) {
     case 'mainnet':

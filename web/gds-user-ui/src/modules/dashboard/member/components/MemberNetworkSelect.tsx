@@ -1,8 +1,15 @@
 import { FormControl, FormLabel, Select } from '@chakra-ui/react';
 import { Trans } from '@lingui/macro';
+// import { Dispatch } from '@reduxjs/toolkit';
+import React from 'react';
+// import { setMemberNetwork } from '../member.slice';
 
 const MemberSelectNetwork = () => {
-  // this is only responsible for the select network dropdown and set the value to the state
+  // const dispatch: Dispatch = useDispatch();
+  //  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  //    dispatch(setMemberNetwork(event.target.value));
+  //  };
+
   return (
     <FormControl>
       <FormLabel>

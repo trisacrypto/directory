@@ -1,0 +1,252 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Member Modal should render 1`] = `
+@keyframes animation-0 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+
+  100% {
+    -webkit-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+
+.emotion-0 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  width: 100%;
+}
+
+.emotion-0>*:not(style)~*:not(style) {
+  margin-top: 0px;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0.5rem;
+  margin-inline-start: 0.5rem;
+}
+
+.emotion-1 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: var(--chakra-radii-md);
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: var(--chakra-sizes-10);
+  min-width: var(--chakra-sizes-10);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  background: var(--chakra-colors-transparent);
+  color: blue;
+}
+
+.emotion-1:focus,
+.emotion-1[data-focus] {
+  background: var(--chakra-colors-transparent);
+}
+
+.emotion-1[disabled],
+.emotion-1[aria-disabled=true],
+.emotion-1[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-1:hover,
+.emotion-1[data-hover] {
+  background: var(--chakra-colors-transparent);
+}
+
+.emotion-1:active,
+.emotion-1[data-active] {
+  background: var(--chakra-colors-gray-300);
+}
+
+.emotion-2 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.emotion-3 {
+  width: var(--chakra-sizes-full);
+}
+
+.emotion-4 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+}
+
+.emotion-5 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+.emotion-5>*:not(style)~*:not(style) {
+  margin-top: var(--chakra-space-4);
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-6 {
+  display: inline-block;
+  border-color: currentColor;
+  border-style: solid;
+  border-radius: 99999px;
+  border-width: 2px;
+  border-bottom-color: var(--chakra-colors-transparent);
+  border-left-color: var(--chakra-colors-transparent);
+  -webkit-animation: animation-0 0.45s linear infinite;
+  animation: animation-0 0.45s linear infinite;
+  width: var(--spinner-size);
+  height: var(--spinner-size);
+  --spinner-size: 3rem;
+  color: var(--chakra-colors-blue-500);
+}
+
+.emotion-7 {
+  border: 0px;
+  clip: rect(0px, 0px, 0px, 0px);
+  height: 1px;
+  width: 1px;
+  margin: -1px;
+  padding: 0px;
+  overflow: hidden;
+  white-space: nowrap;
+  position: absolute;
+}
+
+<div>
+  <div
+    class="chakra-stack emotion-0"
+  >
+    <button
+      class="chakra-button emotion-1"
+      data-testid="member-modal-button"
+      type="button"
+    >
+      <svg
+        fill="currentColor"
+        font-size="24px"
+        height="1em"
+        stroke="currentColor"
+        stroke-width="0"
+        viewBox="0 0 16 16"
+        width="1em"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"
+        />
+        <path
+          d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"
+        />
+      </svg>
+    </button>
+  </div>
+  <div
+    class="emotion-2"
+  >
+    <div
+      class="emotion-3"
+    >
+      <div
+        class="emotion-4"
+      >
+        <div
+          class="chakra-stack emotion-5"
+        >
+          <div
+            class="chakra-spinner emotion-6"
+          >
+            <span
+              class="emotion-7"
+            >
+              Loading...
+            </span>
+          </div>
+          <p
+            class="chakra-text emotion-8"
+          >
+            Loading...
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

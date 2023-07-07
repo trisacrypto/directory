@@ -5,7 +5,7 @@ import { Trans } from '@lingui/macro';
 import Loader from 'components/Loader';
 import DirectoryNotification from './components/DirectoryNotification';
 import FormLayout from 'layouts/FormLayout';
-import MemberSelectNetwork from './components/memberNetworkSelect';
+import MemberSelectNetwork from './components/MemberNetworkSelect';
 import MemberHeader from './components/MemberHeader';
 const MemberPage: React.FC = () => {
   return (
