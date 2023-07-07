@@ -26,9 +26,6 @@ COPY cmd ./cmd
 COPY pkg ./pkg
 COPY proto ./proto
 
-# Run tests to avoid building a broken container
-RUN go test -timeout 180s ./...
-
 # Build binaries
 RUN go build -v -o /go/bin/trtl -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$GIT_REVISION'" ./cmd/trtl
 RUN go build -v -o /go/bin/gdsutil -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$GIT_REVISION'" ./cmd/gdsutil

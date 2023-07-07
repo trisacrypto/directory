@@ -63,7 +63,7 @@ if [[ $# -eq 1 ]]; then
         docker system prune --all
         exit 0
     elif [[ $1 == "build" ]]; then
-        docker compose -p gds -f $DIR/docker-compose.yaml --profile=$PROFILE build
+        COMPOSE_PROFILES=$PROFILE docker compose -p gds -f $DIR/docker-compose.yaml build
         exit 0
     elif [[ $1 == "up" ]]; then
         echo "starting docker compose services"
@@ -74,4 +74,4 @@ if [[ $# -eq 1 ]]; then
 fi
 
 # By default just bring docker compose up
-docker compose -p gds -f $DIR/docker-compose.yaml --profile=$PROFILE up
+COMPOSE_PROFILES=$PROFILE docker compose -p gds -f $DIR/docker-compose.yaml up
