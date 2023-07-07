@@ -29,11 +29,14 @@ import { t } from '@lingui/macro';
 import { colors } from 'utils/theme';
 import { APP_PATH } from 'utils/constants';
 import { canCreateOrganization } from 'utils/permission';
+import useMemberState from 'modules/dashboard/member/hooks/useMemberState';
+
 interface MobileProps extends FlexProps {
   onOpen: () => void;
   isLoading?: boolean;
 }
 const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
+  const { setDefaultNetwork } = useMemberState();
   const dispatch = useDispatch();
   const { user } = useSelector(userSelector);
   const navigate = useNavigate();
@@ -42,6 +45,9 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
     clearCookies();
     clearLocalStorage();
     localStorage.removeItem('persist:root');
+    // reset store
+
+    setDefaultNetwork();
     dispatch(logout());
     resetStore();
     navigate('/');

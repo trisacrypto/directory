@@ -15,10 +15,14 @@ const MemberSlice: any = createSlice({
     // set the current network
     setMemberNetwork: (state: any, { payload }: any) => {
       state.network = payload;
+    },
+    // clear the current network
+    setDefaultMemberNetwork: (state: any, {}: any) => {
+      state.network = 'mainnet';
     }
   }
 });
 
-export const { getMemberNetwork, setMemberNetwork } = MemberSlice.actions;
+export const { getMemberNetwork, setMemberNetwork, setDefaultMemberNetwork } = MemberSlice.actions;
 export const memberReducer = MemberSlice.reducer;
 export const memberSelector = (state: any) => state;
