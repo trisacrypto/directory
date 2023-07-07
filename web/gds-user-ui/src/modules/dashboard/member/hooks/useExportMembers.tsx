@@ -2,20 +2,19 @@ import { useState } from 'react';
 import { useFetchMembers } from '../hooks/useFetchMembers';
 import { useSelector } from 'react-redux';
 import { memberSelector } from '../member.slice';
-import { downloadCSV, convertToCVS } from 'utils/utils';
-import { memberTableHeader } from '../utils';
+
+import { downloadMembers2CVS } from '../utils';
 const useExportMembers = () => {
   const { network } = useSelector(memberSelector);
   const { members } = useFetchMembers(network);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const LOADING_TIMEOUT = 500;
   const exportHandler = () => {
-    const data = convertToCVS(members?.vasps, memberTableHeader);
     try {
       setIsLoading(true);
       setTimeout(() => {
-        downloadCSV(data, 'members');
-
+        // simulate loading time for user experience
+        downloadMembers2CVS(members?.vasps);
         setIsLoading(false);
       }, LOADING_TIMEOUT);
     } catch (error) {
