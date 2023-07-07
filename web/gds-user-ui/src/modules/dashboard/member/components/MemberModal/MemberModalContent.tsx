@@ -28,7 +28,7 @@ const MemberDetail = ({ member }: MemberDetailProps) => {
           </List>
           <List>
             <ListItem fontWeight={'bold'}>
-              <Trans>Vasp Category</Trans>
+              <Trans>VASP Category</Trans>
             </ListItem>
             <ListItem>
               {member?.summary?.vasp_categories && member?.summary?.vasp_categories.length > 0
