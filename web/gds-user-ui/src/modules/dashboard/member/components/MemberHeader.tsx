@@ -1,9 +1,11 @@
 import { Heading, HStack, useColorModeValue, Button, Stack } from '@chakra-ui/react';
+
 import { Trans } from '@lingui/macro';
+import { useExportMembers } from '../hooks/useExportMembers';
+
 const MemberHeader = () => {
-  const exportHandler = () => {
-    console.log('modalHandler');
-  };
+  const { isLoading, exportHandler } = useExportMembers();
+
   return (
     <Stack width={'100%'}>
       <HStack justify={'space-between'} mb={'10'}>
@@ -11,6 +13,7 @@ const MemberHeader = () => {
           <Trans>Member List</Trans>
         </Heading>
         <Button
+          isLoading={isLoading}
           minW="100px"
           onClick={exportHandler}
           bg={useColorModeValue('black', 'white')}

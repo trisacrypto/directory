@@ -1,5 +1,14 @@
 import { DirectoryType, VaspDirectoryEnum, DirectoryTypeEnum } from './memberType';
+import { convertToCvs, downloadCSV } from 'utils/utils';
+import { t } from '@lingui/macro';
 
+export const memberTableHeader = [
+  t`Member Name`,
+  t`Joined`,
+  t`Last Updated`,
+  t`Network`,
+  t`Status`
+];
 export const getVaspDirectory = (dir: DirectoryType) => {
   return dir === DirectoryTypeEnum.TESTNET ? VaspDirectoryEnum.TESTNET : VaspDirectoryEnum.MAINNET;
 };
@@ -13,4 +22,9 @@ export const getVapsNetwork = (dir: any) => {
     default:
       return 'MainNet';
   }
+};
+
+export const memberToCsv = (member: any) => {
+  const memberCsv = convertToCvs(member, memberTableHeader);
+  downloadCSV(memberCsv, 'member.csv');
 };
