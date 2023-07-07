@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Flex,
@@ -11,25 +11,30 @@ import {
   ModalCloseButton,
   Modal,
   HStack,
-  Button
+  Button,
 } from '@chakra-ui/react';
 import Loader from 'components/Loader';
 import MemberModalContent from './MemberModalContent';
 import { useFetchMember } from '../../hooks/useFetchMember';
 import { Trans } from '@lingui/macro';
+import { memberDetailMock } from '../../__mocks__';
+import Copy from './Copy';
 interface MemberModalProps {
   isOpen: boolean;
   onClose: () => void;
   member: any;
 }
 const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) => {
-  const { member, isFetchingMember } = useFetchMember(memberId);
+  const { /* member, */ /* isFetchingMember */ } = useFetchMember(memberId);
+  const mock = memberDetailMock;
+
+
   return (
     <>
       <Flex>
         <Box w="full">
-          {isFetchingMember && <Loader />}
-          {member && (
+          {/* {isFetchingMember && <Loader />} */}
+          {mock && (
             <Modal
               closeOnOverlayClick={false}
               isOpen={isOpen}
@@ -38,12 +43,12 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
               <ModalOverlay />
               <ModalContent width={'100%'}>
                 <ModalHeader data-testid="confirmation-modal-header" textAlign={'center'}>
-                  {member?.summary?.name}
+                  {mock?.summary?.name}
                 </ModalHeader>
                 <ModalCloseButton data-testid="close-btn-icon" />
 
                 <ModalBody pb={6}>
-                  <MemberModalContent member={member} />
+                  <MemberModalContent member={mock} />
                 </ModalBody>
 
                 <ModalFooter>
@@ -52,7 +57,7 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
                       <Trans>Close</Trans>
                     </Button>
                     <Button bg={'#FF7A59'} color={'white'}>
-                      <Trans>Copy</Trans>
+                      <Trans>Export</Trans>
                     </Button>
                   </HStack>
                 </ModalFooter>
