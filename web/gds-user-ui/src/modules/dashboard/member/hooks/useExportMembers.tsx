@@ -18,7 +18,7 @@ const useExportMembers = () => {
         setIsLoading(false);
       }, LOADING_TIMEOUT);
     } catch (error) {
-      console.log(error);
+      console.log('[useExportMembers] error: ', error);
     }
   };
 
