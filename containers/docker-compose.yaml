@@ -318,7 +318,7 @@ services:
       - SECTIGO_PASSWORD=supersecretsquirrel
       - SECTIGO_PROFILE=85
       - SECTIGO_ENVIRONMENT=docker
-      - SECTIGO_ENDPOINT=https://cathy:8831
+      - SECTIGO_ENDPOINT=http://cathy:8831
       - GDS_SERVICE_EMAIL
       - GDS_ADMIN_EMAIL
       - SENDGRID_API_KEY
