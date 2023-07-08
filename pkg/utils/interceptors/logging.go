@@ -41,9 +41,9 @@ func UnaryLogging() grpc.UnaryServerInterceptor {
 			logctx.Info().Msg(info.FullMethod)
 		case codes.Unknown:
 			logctx.Error().Err(err).Msgf("unknown error handling %s", info.FullMethod)
-		case codes.Canceled, codes.InvalidArgument, codes.NotFound, codes.AlreadyExists, codes.Unauthenticated:
+		case codes.DeadlineExceeded, codes.Canceled, codes.Aborted, codes.InvalidArgument, codes.NotFound, codes.AlreadyExists, codes.Unauthenticated:
 			logctx.Info().Err(err).Msg(info.FullMethod)
-		case codes.DeadlineExceeded, codes.PermissionDenied, codes.ResourceExhausted, codes.FailedPrecondition, codes.Aborted, codes.OutOfRange, codes.Unavailable:
+		case codes.PermissionDenied, codes.ResourceExhausted, codes.FailedPrecondition, codes.OutOfRange, codes.Unavailable:
 			logctx.Warn().Err(err).Msg(info.FullMethod)
 		case codes.Unimplemented, codes.Internal, codes.DataLoss:
 			logctx.Error().Err(err).Str("full_method", info.FullMethod).Msg(err.Error())

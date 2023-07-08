@@ -48,9 +48,9 @@ func main() {
 			Usage:   "Specify the profile to use for certificate requests",
 			EnvVars: []string{sectigo.ProfileEnv},
 		},
-		&cli.BoolFlag{
+		&cli.StringFlag{
 			Name:    "environment",
-			Aliases: []string{"e"},
+			Aliases: []string{"E", "env"},
 			Usage:   "Specify the environment that the Sectigo/cathy server is running in",
 			EnvVars: []string{sectigo.EnvironmentEnv},
 		},
