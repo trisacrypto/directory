@@ -95,10 +95,10 @@ func AllProfiles() []string {
 // credentials.
 type Sectigo struct {
 	sync.RWMutex
-	client  http.Client
-	creds   *Credentials
-	profile string
-	testing bool
+	client      http.Client
+	creds       *Credentials
+	profile     string
+	environment string
 }
 
 // New creates a Sectigo client ready to make HTTP requests, but unauthenticated. The
@@ -107,16 +107,20 @@ type Sectigo struct {
 // not stored in the environment, as long as valid access credentials are cached the
 // credentials will be loaded.
 func New(conf Config) (client *Sectigo, err error) {
+	if err = conf.Validate(); err != nil {
+		return nil, err
+	}
+
 	client = &Sectigo{
 		creds: &Credentials{},
 		client: http.Client{
 			CheckRedirect: certificateAuthRedirectPolicy,
 		},
-		profile: conf.Profile,
-		testing: conf.Testing,
+		profile:     conf.Profile,
+		environment: conf.GetEnvironment(),
 	}
 
-	if conf.Testing {
+	if conf.Testing() {
 		// Add mock credentials to the client if we're in testing mode
 		if conf.Username == "" {
 			conf.Username = MockUsername
@@ -125,16 +129,18 @@ func New(conf Config) (client *Sectigo, err error) {
 		if conf.Password == "" {
 			conf.Password = MockPassword
 		}
-
-		if conf.Endpoint != "" {
-			var u *url.URL
-			if u, err = url.Parse(conf.Endpoint); err != nil {
-				return nil, fmt.Errorf("could not parse sectigo endpoint: %w", err)
-			}
-			SetBaseURL(u)
-		}
 	}
 
+	// Set the endpoint if it's specified, otherwise keep the default endpoint.
+	if conf.Endpoint != "" {
+		var u *url.URL
+		if u, err = url.Parse(conf.Endpoint); err != nil {
+			return nil, fmt.Errorf("could not parse sectigo endpoint: %w", err)
+		}
+		SetBaseURL(u)
+	}
+
+	// Load credentials from the configuration
 	if err = client.creds.Load(conf.Username, conf.Password); err != nil {
 		return nil, err
 	}
@@ -901,9 +907,28 @@ func (s *Sectigo) preflight() (err error) {
 	return nil
 }
 
-// Do performs a sectigo client request and returns the response.
+// Do performs a Sectigo client request and returns the response.
 func (s *Sectigo) Do(req *http.Request) (*http.Response, error) {
-	if s.testing {
+	// Because the baseURL can be set dynamically, a pre-flight check needs to happen
+	// to ensure we're connecting to the right server in the right environment.
+	switch s.environment {
+	case envProduction:
+		// If we're in production, make sure we're using TLS and connecting to Sectigo
+		if baseURL.Scheme != "https" {
+			return nil, fmt.Errorf("must use https in production, not %s", baseURL.Scheme)
+		}
+
+		host := baseURL.Hostname()
+		if host != "iot.sectigo.com" {
+			return nil, fmt.Errorf("cannot connect to %s in production", host)
+		}
+	case envStaging:
+		// If we're in staging, ensure we're not connecting to Sectigo
+		host := baseURL.Hostname()
+		if host == "iot.sectigo.com" {
+			return nil, fmt.Errorf("cannot connect to %s in staging", host)
+		}
+	case envTesting:
 		// Ensure that we're sending the requests to a test server
 		host := baseURL.Hostname()
 		if host != "localhost" && host != "127.0.0.1" {

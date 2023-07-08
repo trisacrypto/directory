@@ -13,11 +13,11 @@ import (
 
 // Environment variables that are loaded into credentials.
 const (
-	UsernameEnv = "SECTIGO_USERNAME"
-	PasswordEnv = "SECTIGO_PASSWORD"
-	ProfileEnv  = "SECTIGO_PROFILE"
-	EndpointEnv = "SECTIGO_ENDPOINT"
-	TestingEnv  = "SECTIGO_TESTING"
+	UsernameEnv    = "SECTIGO_USERNAME"
+	PasswordEnv    = "SECTIGO_PASSWORD"
+	ProfileEnv     = "SECTIGO_PROFILE"
+	EndpointEnv    = "SECTIGO_ENDPOINT"
+	EnvironmentEnv = "SECTIGO_ENVIRONMENT"
 )
 
 // Cache directory configuration

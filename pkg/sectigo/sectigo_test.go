@@ -32,8 +32,8 @@ func (s *SectigoTestSuite) BeforeTest(suiteName, testName string) {
 	// Note: the username and password will be set to sectigo.MockUsername and
 	// sectigo.MockPassword because config.Testing==true.
 	conf := Config{
-		Profile: "CipherTrace EE",
-		Testing: true,
+		Profile:     "CipherTrace EE",
+		Environment: "testing",
 	}
 	require.NoError(mock.Start(conf.Profile))
 	s.api, err = New(conf)
@@ -245,9 +245,10 @@ func (s *SectigoTestSuite) TestAuthenticateInvalidCreds() {
 	})
 
 	conf := Config{
-		Username: "invalid",
-		Password: "invalid",
-		Testing:  true,
+		Username:    "invalid",
+		Password:    "invalid",
+		Profile:     ProfileCipherTraceEE,
+		Environment: "testing",
 	}
 	var err error
 	s.api, err = New(conf)
