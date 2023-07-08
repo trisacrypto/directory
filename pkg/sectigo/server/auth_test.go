@@ -12,11 +12,11 @@ func (s *serverTestSuite) TestLogin() {
 	// Create a new client to ensure the client is not logged in
 	require := s.Require()
 	profile := sectigo.Config{
-		Username: "badusername",
-		Password: "incorrectpassword",
-		Profile:  sectigo.ProfileCipherTraceEE,
-		Testing:  true,
-		Endpoint: s.srv.URL(),
+		Username:    "badusername",
+		Password:    "incorrectpassword",
+		Profile:     sectigo.ProfileCipherTraceEE,
+		Endpoint:    s.srv.URL(),
+		Environment: "testing",
 	}
 	client, err := sectigo.New(profile)
 	require.NoError(err)

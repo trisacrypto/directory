@@ -46,11 +46,11 @@ func (s *serverTestSuite) SetupSuite() {
 	time.Sleep(500 * time.Millisecond)
 
 	s.profile = sectigo.Config{
-		Username: sectigo.MockUsername,
-		Password: sectigo.MockPassword,
-		Profile:  sectigo.ProfileCipherTraceEE,
-		Testing:  true,
-		Endpoint: s.srv.URL(),
+		Username:    sectigo.MockUsername,
+		Password:    sectigo.MockPassword,
+		Profile:     sectigo.ProfileCipherTraceEE,
+		Endpoint:    s.srv.URL(),
+		Environment: "testing",
 	}
 	s.client, err = sectigo.New(s.profile)
 	require.NoError(err, "could not create sectigo client")

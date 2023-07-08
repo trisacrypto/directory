@@ -57,6 +57,16 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 export GIT_REVISION=$(git rev-parse --short HEAD)
 export REACT_APP_GIT_REVISION=$GIT_REVISION
 
+# Compute "development" version from latest tag
+VERSION="$(git describe --abbrev=0)"
+VERSION_MAJOR="${VERSION%%\.*}"
+VERSION_MINOR="${VERSION#*.}"
+VERSION_MINOR="${VERSION_MINOR%.*}"
+VERSION_PATCH="${VERSION##*.}"
+VERSION_PATCH=$((VERSION_PATCH+1))
+
+export REACT_APP_VERSION_NUMBER="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}-dev"
+
 # Check if the build or clean arguments are specified
 if [[ $# -eq 1 ]]; then
     if [[ $1 == "clean" ]]; then

@@ -50,7 +50,7 @@ func New(conf config.CertManConfig, db store.Store, secret *secrets.SecretManage
 		return nil, errors.New("secret manager is required for cert manager")
 	}
 
-	if conf.Sectigo.Testing {
+	if conf.Sectigo.Testing() {
 		if err = mock.Start(conf.Sectigo.Profile); err != nil {
 			return nil, err
 		}
