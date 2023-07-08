@@ -9,14 +9,9 @@ import (
 const (
 	envProduction = "production"
 	envStaging    = "staging"
+	envDocker     = "docker"
 	envTesting    = "testing"
 )
-
-var environments = map[string]struct{}{
-	envProduction: {},
-	envStaging:    {},
-	envTesting:    {},
-}
 
 type Config struct {
 	Username    string `envconfig:"SECTIGO_USERNAME" required:"false"`
@@ -44,30 +39,10 @@ func (c Config) Validate() error {
 			return fmt.Errorf("could not parse endpoint as url: %w", err)
 		}
 
-		switch c.GetEnvironment() {
-		case envProduction:
-			// If we're in production, make sure we're using TLS and connecting to Sectgio
-			if ep.Scheme != "https" {
-				return fmt.Errorf("must use https in production, not %s", ep.Scheme)
-			}
-
-			host := ep.Hostname()
-			if host != "iot.sectigo.com" {
-				return fmt.Errorf("cannot connect to %s in production", host)
-			}
-		case envStaging:
-			// If we're in staging mode, ensure we're not connecting to Sectigo
-			host := ep.Hostname()
-			if strings.HasSuffix(host, "sectigo.com") {
-				return fmt.Errorf("cannot connect to %s in staging", host)
-			}
-		case envTesting:
-			// If we're in testing mode, ensure we're connecting to localhost.
-			host := ep.Hostname()
-			if host != "localhost" && host != "127.0.0.1" {
-				return fmt.Errorf("sectigo hostname must be set to localhost in testing mode")
-			}
+		if err := checkEnvironment(ep, c.GetEnvironment()); err != nil {
+			return err
 		}
+
 	}
 	return nil
 }
@@ -78,4 +53,41 @@ func (c Config) GetEnvironment() string {
 
 func (c Config) Testing() bool {
 	return c.GetEnvironment() == envTesting
+}
+
+var environments = map[string]struct{}{
+	envProduction: {},
+	envStaging:    {},
+	envDocker:     {},
+	envTesting:    {},
+}
+
+func checkEnvironment(url *url.URL, env string) error {
+	switch env {
+	case envProduction:
+		// If we're in production, make sure we're using TLS and connecting to Sectgio
+		if url.Scheme != "https" {
+			return fmt.Errorf("must use https in production, not %s", url.Scheme)
+		}
+
+		host := url.Hostname()
+		if host != "iot.sectigo.com" {
+			return fmt.Errorf("cannot connect to %s in production", host)
+		}
+	case envStaging, envDocker:
+		// If we're in staging mode, ensure we're not connecting to Sectigo
+		host := url.Hostname()
+		if strings.HasSuffix(host, "sectigo.com") {
+			return fmt.Errorf("cannot connect to %s in staging", host)
+		}
+	case envTesting:
+		// If we're in testing mode, ensure we're connecting to localhost.
+		host := url.Hostname()
+		if host != "localhost" && host != "127.0.0.1" {
+			return fmt.Errorf("sectigo hostname must be set to localhost in testing mode")
+		}
+	default:
+		return fmt.Errorf("unknown environment %q", env)
+	}
+	return nil
 }

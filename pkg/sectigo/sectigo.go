@@ -911,29 +911,8 @@ func (s *Sectigo) preflight() (err error) {
 func (s *Sectigo) Do(req *http.Request) (*http.Response, error) {
 	// Because the baseURL can be set dynamically, a pre-flight check needs to happen
 	// to ensure we're connecting to the right server in the right environment.
-	switch s.environment {
-	case envProduction:
-		// If we're in production, make sure we're using TLS and connecting to Sectigo
-		if baseURL.Scheme != "https" {
-			return nil, fmt.Errorf("must use https in production, not %s", baseURL.Scheme)
-		}
-
-		host := baseURL.Hostname()
-		if host != "iot.sectigo.com" {
-			return nil, fmt.Errorf("cannot connect to %s in production", host)
-		}
-	case envStaging:
-		// If we're in staging, ensure we're not connecting to Sectigo
-		host := baseURL.Hostname()
-		if host == "iot.sectigo.com" {
-			return nil, fmt.Errorf("cannot connect to %s in staging", host)
-		}
-	case envTesting:
-		// Ensure that we're sending the requests to a test server
-		host := baseURL.Hostname()
-		if host != "localhost" && host != "127.0.0.1" {
-			return nil, fmt.Errorf("sectigo hostname must be set to localhost in testing mode, is %s", host)
-		}
+	if err := checkEnvironment(baseURL, s.environment); err != nil {
+		return nil, err
 	}
 	return s.client.Do(req)
 }
