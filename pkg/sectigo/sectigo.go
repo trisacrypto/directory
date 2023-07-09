@@ -927,20 +927,27 @@ func (s *Sectigo) checkStatus(rep *http.Response) (err error) {
 		return nil
 	}
 
-	// Try to unmarshall the error from the response
-	var e *APIError
-	if err = json.NewDecoder(rep.Body).Decode(&e); err != nil {
-		switch rep.StatusCode {
-		case http.StatusUnauthorized:
-			return ErrNotAuthenticated
-		case http.StatusForbidden:
-			return ErrNotAuthorized
-		}
+	ctype := rep.Header.Get("Content-Type")
+	e := &APIError{
+		Status:  rep.StatusCode,
+		Message: fmt.Sprintf("%s (%s)", rep.Status, ctype),
+	}
 
-		// Return a simple error since the JSON could not be decoded.
-		e = &APIError{
-			Status:  rep.StatusCode,
-			Message: rep.Status,
+	if ctype == contentType {
+		if err = json.NewDecoder(rep.Body).Decode(&e); err != nil {
+			switch rep.StatusCode {
+			case http.StatusUnauthorized:
+				return ErrNotAuthenticated
+			case http.StatusForbidden:
+				return ErrNotAuthorized
+			}
+		}
+	}
+
+	if ctype == "text/plain" {
+		var sb strings.Builder
+		if _, err = io.Copy(&sb, rep.Body); err == nil {
+			e.Message = sb.String()
 		}
 	}
 	return e
