@@ -505,7 +505,7 @@ func (s *Admin) Summary(c *gin.Context) {
 		out.VASPsCount++
 
 		// Count contacts
-		iter := models.NewContactIterator(vasp.Contacts, true, false)
+		iter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail())
 		for iter.Next() {
 			out.ContactsCount++
 			contact, kind := iter.Value()
@@ -1043,7 +1043,7 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 	// Must be done after verified contacts is computed
 	// WARNING: This is safe because nothing is saved back to the database!
 	vasp.Extra = nil
-	iter := models.NewContactIterator(vasp.Contacts, false, false)
+	iter := models.NewContactIterator(vasp.Contacts)
 	for iter.Next() {
 		contact, _ := iter.Value()
 		contact.Extra = nil
