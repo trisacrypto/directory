@@ -18,22 +18,21 @@ import MemberModalContent from './MemberModalContent';
 import { useFetchMember } from '../../hooks/useFetchMember';
 import { Trans } from '@lingui/macro';
 import { memberDetailMock } from '../../__mocks__';
+import useExportMember from '../../hooks/useExportMember';
 interface MemberModalProps {
   isOpen: boolean;
   onClose: () => void;
   member: any;
 }
 const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) => {
-  const { /* member, */ /* isFetchingMember */ } = useFetchMember(memberId);
-  const mock = memberDetailMock;
-
-
+  const { member, isFetchingMember } = useFetchMember(memberId);
+ const { isLoading, exportHandler } = useExportMember(member);
   return (
     <>
       <Flex>
         <Box w="full">
-          {/* {isFetchingMember && <Loader />} */}
-          {mock && (
+          {isFetchingMember && <Loader />}
+          {member && (
             <Modal
               closeOnOverlayClick={false}
               isOpen={isOpen}
@@ -42,12 +41,12 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
               <ModalOverlay />
               <ModalContent width={'100%'}>
                 <ModalHeader data-testid="confirmation-modal-header" textAlign={'center'}>
-                  {mock?.summary?.name}
+                  {member?.summary?.name}
                 </ModalHeader>
                 <ModalCloseButton data-testid="close-btn-icon" />
 
                 <ModalBody pb={6}>
-                  <MemberModalContent member={mock} />
+                  <MemberModalContent member={member} />
                 </ModalBody>
 
                 <ModalFooter>
@@ -55,7 +54,7 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
                     <Button bg={'black'} onClick={onClose} data-testid="modal-close-button">
                       <Trans>Close</Trans>
                     </Button>
-                    <Button bg={'#FF7A59'} color={'white'}>
+                    <Button bg={'#FF7A59'} color={'white'} isLoading={isLoading} onClick={exportHandler}>
                       <Trans>Export</Trans>
                     </Button>
                   </HStack>

@@ -42,7 +42,26 @@ const memberModalHeader = [
   t`Common Name`
 ];
 
+export const convertMemberToCSV = (jsonData: any, headers: any) => {
+  console.log('jsonData', jsonData);
+  const contentRows = [];
+
+  // Create the header row.
+  contentRows.push(headers.join(','));
+
+  // Loop over the member data and create a row for the content displayed in the member summary modal.
+  for(let i = 0; i < jsonData.length; i++) {
+    const values = headers.map((header: any) => {
+      const fieldValue = jsonData[i][header] !== undefined ? jsonData[i][header] : '';
+      const escapedValue = fieldValue.toString().replace(/"/g, '""');
+      return `"${escapedValue}"`;
+    });
+    contentRows.push(values.join(','));
+  }
+  return contentRows.join('\n');
+};
+
 export const downloadMemberToCSV = (member: any) => {
-  const memberSummary = convertToCVS(member, memberModalHeader);
+  const memberSummary = convertMemberToCSV(member, memberModalHeader);
   downloadCSV(memberSummary, 'member');
 };

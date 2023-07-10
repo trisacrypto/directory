@@ -3,14 +3,10 @@ import MemberTableRows from './MemberTableRows';
 import { useFetchMembers } from '../hooks/useFetchMembers';
 import { memberSelector } from '../member.slice';
 import { useSelector } from 'react-redux';
-import { mainnetMembersMockValue } from '../__mocks__';
-// import { mainnetMembersMockValue } from '../__mocks__';
 const MemberTableList = () => {
   const { network } = useSelector(memberSelector);
 
-  const mainnet = mainnetMembersMockValue;
-
-  const { error, /* members, */ isFetchingMembers, getMembers } = useFetchMembers(network);
+  const { error, members, isFetchingMembers, getMembers } = useFetchMembers(network);
   const isUnverified = error && error?.response?.status === 200;
 
   // if network changes, we need to refetch members
@@ -19,7 +15,7 @@ const MemberTableList = () => {
   }, [network, getMembers]);
 
   return (
-    <MemberTableRows rows={mainnet?.vasps} hasError={isUnverified} isLoading={isFetchingMembers} />
+    <MemberTableRows rows={members?.vasps} hasError={isUnverified} isLoading={isFetchingMembers} />
   );
 };
 
