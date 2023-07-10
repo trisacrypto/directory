@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
-import type { MemberNetworkType } from './memberType';
+import { DirectoryTypeEnum, type MemberNetworkType } from './memberType';
 export const initialValue: MemberNetworkType = {
-  network: 'mainnet'
+  network: DirectoryTypeEnum.MAINNET
 };
 
 const MemberSlice: any = createSlice({
@@ -15,10 +15,14 @@ const MemberSlice: any = createSlice({
     // set the current network
     setMemberNetwork: (state: any, { payload }: any) => {
       state.network = payload;
+    },
+    // set the default current network
+    setDefaultMemberNetwork: (state: any, {}: any) => {
+      state.network = 'mainnet';
     }
   }
 });
 
-export const { getMemberNetwork, setMemberNetwork } = MemberSlice.actions;
+export const { getMemberNetwork, setMemberNetwork, setDefaultMemberNetwork } = MemberSlice.actions;
 export const memberReducer = MemberSlice.reducer;
 export const memberSelector = (state: any) => state;

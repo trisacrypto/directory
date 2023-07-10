@@ -20,6 +20,8 @@
 # Local configuration
 fixtures/
 .env
+.env.*
+!.env.template
 .secrets
 .idea
 .vscode

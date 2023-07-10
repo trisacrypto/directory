@@ -116,7 +116,7 @@ func InitCA(commonName string) (cert *x509.Certificate, priv crypto.PrivateKey, 
 		Subject: pkix.Name{
 			CommonName:   commonName,
 			Organization: []string{"TRISA", "Rotational"},
-			Country:      []string{"USA"},
+			Country:      []string{"US"},
 			Province:     []string{"MD"},
 			Locality:     []string{"Queenstown"},
 		},

@@ -212,7 +212,7 @@ func initCA(c *cli.Context) (err error) {
 		Subject: pkix.Name{
 			CommonName:    "trisa.dev",
 			Organization:  []string{"TRISA", "Rotational Labs"},
-			Country:       []string{"USA"},
+			Country:       []string{"US"},
 			Province:      []string{"MD"},
 			Locality:      []string{"Queenstown"},
 			StreetAddress: []string{"215 Alynn Way"},

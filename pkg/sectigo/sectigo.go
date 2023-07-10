@@ -95,10 +95,10 @@ func AllProfiles() []string {
 // credentials.
 type Sectigo struct {
 	sync.RWMutex
-	client  http.Client
-	creds   *Credentials
-	profile string
-	testing bool
+	client      http.Client
+	creds       *Credentials
+	profile     string
+	environment string
 }
 
 // New creates a Sectigo client ready to make HTTP requests, but unauthenticated. The
@@ -107,16 +107,20 @@ type Sectigo struct {
 // not stored in the environment, as long as valid access credentials are cached the
 // credentials will be loaded.
 func New(conf Config) (client *Sectigo, err error) {
+	if err = conf.Validate(); err != nil {
+		return nil, err
+	}
+
 	client = &Sectigo{
 		creds: &Credentials{},
 		client: http.Client{
 			CheckRedirect: certificateAuthRedirectPolicy,
 		},
-		profile: conf.Profile,
-		testing: conf.Testing,
+		profile:     conf.Profile,
+		environment: conf.GetEnvironment(),
 	}
 
-	if conf.Testing {
+	if conf.Testing() {
 		// Add mock credentials to the client if we're in testing mode
 		if conf.Username == "" {
 			conf.Username = MockUsername
@@ -125,16 +129,18 @@ func New(conf Config) (client *Sectigo, err error) {
 		if conf.Password == "" {
 			conf.Password = MockPassword
 		}
-
-		if conf.Endpoint != "" {
-			var u *url.URL
-			if u, err = url.Parse(conf.Endpoint); err != nil {
-				return nil, fmt.Errorf("could not parse sectigo endpoint: %w", err)
-			}
-			SetBaseURL(u)
-		}
 	}
 
+	// Set the endpoint if it's specified, otherwise keep the default endpoint.
+	if conf.Endpoint != "" {
+		var u *url.URL
+		if u, err = url.Parse(conf.Endpoint); err != nil {
+			return nil, fmt.Errorf("could not parse sectigo endpoint: %w", err)
+		}
+		SetBaseURL(u)
+	}
+
+	// Load credentials from the configuration
 	if err = client.creds.Load(conf.Username, conf.Password); err != nil {
 		return nil, err
 	}
@@ -901,14 +907,12 @@ func (s *Sectigo) preflight() (err error) {
 	return nil
 }
 
-// Do performs a sectigo client request and returns the response.
+// Do performs a Sectigo client request and returns the response.
 func (s *Sectigo) Do(req *http.Request) (*http.Response, error) {
-	if s.testing {
-		// Ensure that we're sending the requests to a test server
-		host := baseURL.Hostname()
-		if host != "localhost" && host != "127.0.0.1" {
-			return nil, fmt.Errorf("sectigo hostname must be set to localhost in testing mode, is %s", host)
-		}
+	// Because the baseURL can be set dynamically, a pre-flight check needs to happen
+	// to ensure we're connecting to the right server in the right environment.
+	if err := checkEnvironment(baseURL, s.environment); err != nil {
+		return nil, err
 	}
 	return s.client.Do(req)
 }
@@ -923,20 +927,27 @@ func (s *Sectigo) checkStatus(rep *http.Response) (err error) {
 		return nil
 	}
 
-	// Try to unmarshall the error from the response
-	var e *APIError
-	if err = json.NewDecoder(rep.Body).Decode(&e); err != nil {
-		switch rep.StatusCode {
-		case http.StatusUnauthorized:
-			return ErrNotAuthenticated
-		case http.StatusForbidden:
-			return ErrNotAuthorized
-		}
+	ctype := rep.Header.Get("Content-Type")
+	e := &APIError{
+		Status:  rep.StatusCode,
+		Message: fmt.Sprintf("%s (%s)", rep.Status, ctype),
+	}
 
-		// Return a simple error since the JSON could not be decoded.
-		e = &APIError{
-			Status:  rep.StatusCode,
-			Message: rep.Status,
+	if ctype == contentType {
+		if err = json.NewDecoder(rep.Body).Decode(&e); err != nil {
+			switch rep.StatusCode {
+			case http.StatusUnauthorized:
+				return ErrNotAuthenticated
+			case http.StatusForbidden:
+				return ErrNotAuthorized
+			}
+		}
+	}
+
+	if ctype == "text/plain" {
+		var sb strings.Builder
+		if _, err = io.Copy(&sb, rep.Body); err == nil {
+			e.Message = sb.String()
 		}
 	}
 	return e

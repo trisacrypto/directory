@@ -25,9 +25,9 @@ func (s *Server) CreateSingleCertBatch(c *gin.Context) {
 	// Determine the profile from the authority
 	var profile string
 	switch info.AuthorityID {
-	case 23:
+	case 423:
 		profile = sectigo.ProfileCipherTraceEE
-	case 85:
+	case 489:
 		profile = sectigo.ProfileCipherTraceEndEntityCertificate
 	default:
 		c.JSON(http.StatusBadRequest, Err("unknown profile"))
@@ -209,11 +209,33 @@ func (s *Server) LicensesUsed(c *gin.Context) {
 }
 
 func (s *Server) UserAuthorities(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, Err("not implemented yet"))
+	out := []*sectigo.AuthorityResponse{
+		{
+			ID:                  489,
+			EcosystemID:         EcosystemID,
+			SignerCertificateID: 0,
+			EcosystemName:       "Staging",
+			Balance:             0,
+			Enabled:             true,
+			ProfileID:           489,
+			ProfileName:         "CipherTrace End Entity Certificate_#85",
+		},
+		{
+			ID:                  423,
+			EcosystemID:         EcosystemID,
+			SignerCertificateID: 0,
+			EcosystemName:       "Staging",
+			Balance:             100,
+			Enabled:             true,
+			ProfileID:           423,
+			ProfileName:         "CipherTrace EE_#17",
+		},
+	}
+	c.JSON(http.StatusOK, out)
 }
 
 func (s *Server) AuthorityAvailableBalance(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, Err("not implemented yet"))
+	c.JSON(http.StatusOK, 100)
 }
 
 func (s *Server) Profiles(c *gin.Context) {

@@ -48,16 +48,16 @@ func main() {
 			Usage:   "Specify the profile to use for certificate requests",
 			EnvVars: []string{sectigo.ProfileEnv},
 		},
-		&cli.BoolFlag{
-			Name:    "testing",
-			Aliases: []string{"t"},
-			Usage:   "Use Sectigo in testing mode to hit a staging server",
-			EnvVars: []string{sectigo.TestingEnv},
+		&cli.StringFlag{
+			Name:    "environment",
+			Aliases: []string{"E", "env"},
+			Usage:   "Specify the environment that the Sectigo/cathy server is running in",
+			EnvVars: []string{sectigo.EnvironmentEnv},
 		},
 		&cli.StringFlag{
 			Name:    "endpoint",
 			Aliases: []string{"e", "url"},
-			Usage:   "Specify endpoint to connect to Sectigo on (testing only)",
+			Usage:   "Specify endpoint to connect to Sectigo on",
 			EnvVars: []string{sectigo.EndpointEnv},
 		},
 	}
@@ -278,11 +278,11 @@ func main() {
 
 func initAPI(c *cli.Context) (err error) {
 	conf := sectigo.Config{
-		Username: c.String("username"),
-		Password: c.String("password"),
-		Profile:  c.String("profile"),
-		Testing:  c.Bool("testing"),
-		Endpoint: c.String("endpoint"),
+		Username:    c.String("username"),
+		Password:    c.String("password"),
+		Profile:     c.String("profile"),
+		Endpoint:    c.String("endpoint"),
+		Environment: c.String("environment"),
 	}
 	if api, err = sectigo.New(conf); err != nil {
 		return cli.Exit(err, 1)

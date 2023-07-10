@@ -1,6 +1,9 @@
 package sectigo
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 // Standard errors issued by the Sectigo client.
 var (
@@ -27,5 +30,5 @@ type APIError struct {
 
 // Error implements the error interface.
 func (e *APIError) Error() string {
-	return e.Message
+	return fmt.Sprintf("%d %s %d %d", e.Status, e.Message, e.ErrorCode, e.Timestamp)
 }

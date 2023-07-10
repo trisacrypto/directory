@@ -136,10 +136,10 @@ func MockConfig() config.Config {
 			ReissuanceInterval: 24 * time.Hour,
 			Storage:            "testdata/certs",
 			Sectigo: sectigo.Config{
-				Username: "foo",
-				Password: "supersecretsquirrel",
-				Profile:  "CipherTrace EE",
-				Testing:  true,
+				Username:    "foo",
+				Password:    "supersecretsquirrel",
+				Profile:     "CipherTrace EE",
+				Environment: "testing",
 			},
 		},
 		Backup: config.BackupConfig{
