@@ -6,14 +6,14 @@ import { downloadMemberToCSV } from "../utils";
 
 const useExportMember = () => {
     // Fetch the member's vasp id from the redux store
-    const { member } = useFetchMember()
+    // const { member } = useFetchMember()
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const LOADING_TIMEOUT = 500;
     const exportHandler = () => {
         try{
             setIsLoading(true);
             setTimeout(() => {
-                downloadMemberToCSV(member);
+                // downloadMemberToCSV(member);
                 setIsLoading(false);
         }, LOADING_TIMEOUT);
         } catch (error) {
