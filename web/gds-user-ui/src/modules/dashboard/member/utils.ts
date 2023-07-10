@@ -28,3 +28,21 @@ export const downloadMembers2CVS = (member: any) => {
   const memberCsv = convertToCVS(member, memberTableHeader);
   downloadCSV(memberCsv, 'members');
 };
+
+const memberModalHeader = [
+  t`Member Name`,
+  t`Website`,
+  t`Business Category`,
+  t`VASP Category`,
+  t` Country of Registration`,
+  t`Technical Contact`,
+  t`Compliance / Legal Contact`,
+  t`Administrative Contact`,
+  t`TRISA Endpoint`,
+  t`Common Name`
+];
+
+export const downloadMemberToCSV = (member: any) => {
+  const memberSummary = convertToCVS(member, memberModalHeader);
+  downloadCSV(memberSummary, 'member');
+};
