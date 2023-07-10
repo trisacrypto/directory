@@ -43,7 +43,6 @@ const memberModalHeader = [
 ];
 
 export const convertMemberToCSV = (jsonData: any, headers: any) => {
-  console.log('jsonData', jsonData);
   const contentRows = [];
 
   // Create the header row.
