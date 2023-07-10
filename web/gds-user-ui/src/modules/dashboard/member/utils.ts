@@ -30,7 +30,7 @@ export const downloadMembers2CVS = (member: any) => {
 };
 
 const memberModalHeader = [
-  t`Member Name`,
+  t`Name`,
   t`Website`,
   t`Business Category`,
   t`VASP Category`,
