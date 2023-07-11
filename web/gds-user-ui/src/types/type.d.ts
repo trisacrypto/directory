@@ -60,6 +60,10 @@ type Certificate = {
     version: string;
   };
 };
+interface ITableHeader {
+  key: string;
+  label: string;
+}
 
 declare global {
   interface Navigator {
