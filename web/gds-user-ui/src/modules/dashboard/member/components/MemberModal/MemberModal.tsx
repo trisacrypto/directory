@@ -17,7 +17,6 @@ import Loader from 'components/Loader';
 import MemberModalContent from './MemberModalContent';
 import { useFetchMember } from '../../hooks/useFetchMember';
 import { Trans } from '@lingui/macro';
-import { memberDetailMock } from '../../__mocks__';
 interface MemberModalProps {
   isOpen: boolean;
   onClose: () => void;
