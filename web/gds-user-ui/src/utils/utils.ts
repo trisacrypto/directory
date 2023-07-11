@@ -255,16 +255,17 @@ export const setUserCookies = (
   if (expiresIn) setCookie('expires_in', expiresIn);
 };
 
-export const convertToCVS = (jsonData: any, headers: any) => {
+export const convertToCVS = (jsonData: any, headers: ITableHeader[]) => {
   const csvRows = [];
 
   // Create the header row
-  csvRows.push(headers.join(','));
+  const headersRow = headers.map((header: ITableHeader) => header.label);
+  csvRows.push(headersRow.join(','));
 
   // Process each data row
   jsonData?.forEach((data: any) => {
-    const values = headers.map((header: any) => {
-      const fieldValue = data[header] !== undefined ? data[header] : '';
+    const values = headers.map((header: ITableHeader) => {
+      const fieldValue = data[header.key] !== undefined ? data[header.key] : '';
       const escapedValue = fieldValue.toString().replace(/"/g, '""');
       return `"${escapedValue}"`;
     });

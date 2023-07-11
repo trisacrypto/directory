@@ -3,11 +3,26 @@ import { convertToCVS, downloadCSV } from 'utils/utils';
 import { t } from '@lingui/macro';
 
 export const memberTableHeader = [
-  t`Member Name`,
-  t`Joined`,
-  t`Last Updated`,
-  t`Network`,
-  t`Status`
+  {
+    key: 'name',
+    label: t`Member Name`
+  },
+  {
+    key: 'first_listed',
+    label: t`Joined`
+  },
+  {
+    key: 'last_updated',
+    label: t`Last Updated`
+  },
+  {
+    key: 'registered_directory',
+    label: t`Network`
+  },
+  {
+    key: 'status',
+    label: t`Status`
+  }
 ];
 export const getVaspDirectory = (dir: DirectoryType) => {
   return dir === DirectoryTypeEnum.TESTNET ? VaspDirectoryEnum.TESTNET : VaspDirectoryEnum.MAINNET;
@@ -25,6 +40,12 @@ export const getVapsNetwork = (dir: any) => {
 };
 
 export const downloadMembers2CVS = (member: any) => {
-  const memberCsv = convertToCVS(member, memberTableHeader);
+  const m = member.map((item: any) => {
+    return {
+      ...item,
+      registered_directory: getVapsNetwork(item.registered_directory)
+    };
+  });
+  const memberCsv = convertToCVS(m, memberTableHeader as ITableHeader[]);
   downloadCSV(memberCsv, 'members');
 };
