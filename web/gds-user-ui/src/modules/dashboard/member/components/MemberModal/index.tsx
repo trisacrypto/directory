@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import MemberModal from './MemberModal';
 import { useDisclosure, Button, HStack } from '@chakra-ui/react';
 import { BsEye } from 'react-icons/bs';
-import { useFetchMember } from '../../hooks/useFetchMember';
 interface ShowMemberModalProps {
   memberId: any;
 }
