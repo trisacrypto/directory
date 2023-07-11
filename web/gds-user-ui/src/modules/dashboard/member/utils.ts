@@ -49,3 +49,26 @@ export const downloadMembers2CVS = (member: any) => {
   const memberCsv = convertToCVS(m, memberTableHeader as ITableHeader[]);
   downloadCSV(memberCsv, 'members');
 };
+
+export const getVaspStatus = (status: string) => {
+  switch (status) {
+    case '1':
+      return 'NO VERIFICATION';
+    case '2':
+      return 'SUBMITTED';
+    case '3':
+      return 'EMAIL VERIFIED';
+    case '4':
+      return 'PENDING REVIEW';
+    case '5':
+      return 'REVIEWED';
+    case '6':
+      return 'VERIFIED';
+    case '7':
+      return 'REJECTED';
+    case '8':
+      return 'APPEALED';
+    case '9':
+      return 'ERRORED';
+  }
+};

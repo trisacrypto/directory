@@ -1,7 +1,7 @@
 import { Td, Tr, chakra, Tag } from '@chakra-ui/react';
 
 import { formatIsoDate } from 'utils/formate-date';
-import { getVapsNetwork } from '../utils';
+import { getVapsNetwork, getVaspStatus } from '../utils';
 import { VaspType } from '../memberType';
 import ShowMemberModal from '../components/MemberModal';
 
@@ -16,7 +16,7 @@ const MemberTableRow: React.FC<{ row: VaspType }> = ({ row }) => {
       <Td>{getVapsNetwork(row?.registered_directory)}</Td>
       <Td>
         <Tag bg="green.400" color="white">
-          {row?.status}
+          {getVaspStatus(row?.status)}
         </Tag>
       </Td>
       <Td paddingY={0}>
