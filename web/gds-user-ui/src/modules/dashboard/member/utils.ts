@@ -28,7 +28,7 @@ export const getVaspDirectory = (dir: DirectoryType) => {
   return dir === DirectoryTypeEnum.TESTNET ? VaspDirectoryEnum.TESTNET : VaspDirectoryEnum.MAINNET;
 };
 
-export const getVapsNetwork = (dir: any) => {
+export const getVaspNetwork = (dir: any) => {
   switch (dir) {
     case (VaspDirectoryEnum.TESTNET, VaspDirectoryEnum.TESTNET_DEV):
       return 'TestNet';
@@ -43,7 +43,8 @@ export const downloadMembers2CVS = (member: any) => {
   const m = member.map((item: any) => {
     return {
       ...item,
-      registered_directory: getVapsNetwork(item.registered_directory)
+      status : getVaspStatus(item.status),
+      registered_directory: getVaspNetwork(item.registered_directory)
     };
   });
   const memberCsv = convertToCVS(m, memberTableHeader as ITableHeader[]);
