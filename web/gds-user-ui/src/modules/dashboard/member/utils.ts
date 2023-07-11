@@ -57,11 +57,12 @@ export const downloadMembers2CVS = (member: any) => {
 
 export async function copyToClipboard(data: any) {
   try {
-    const text = JSON.stringify(data);
-    // Delete "label" and "value" from the text
-    console.log('text', text);
-      await navigator.clipboard.writeText(text);
-      // Get the data and return
+    const values = data.map((item: any) => {
+      item.value = item.value ? item.value : 'N/A';
+      return ` ${item.label} \n ${item.value} \n`;
+    }).join('\n');
+    console.log('text', values);
+      await navigator.clipboard.writeText(values);
   } catch (err) {
       console.error('[copyToClipboard]', err);
   }

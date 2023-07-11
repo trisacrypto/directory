@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { copyToClipboard } from "../../utils";
 import { Button } from "@chakra-ui/react";
 import { Trans, t } from "@lingui/macro";
+import { getBusinessCategoryValue, getVaspCategoryValue } from "constants/basic-details";
 
 type CopyProps = {
     data: any;
@@ -19,31 +20,55 @@ const memberDetailTableHeader = [
   },
   {
     label: t`Business Category`,
-    value: data.summary.business_category
+    value: getBusinessCategoryValue(data.summary.business_category)
   },
   {
     label: t`VASP Category`,
-    value: data.summary.vasp_categories
+    value: getVaspCategoryValue(data.summary.vasp_categories)
   },
   {
     label: t`Country of Registration`,
     value: data.legal_person.country_of_registration
   },
   {
-    label: t`Technical Contact`,
-    value: data.contacts.technical
+    label: t`Technical Contact Name`,
+    value: data.contacts.technical.name
   },
   {
-    label: t`Compliance / Legal Contact`,
-    value: data.contacts.legal
+    label: t`Technical Contact Email`,
+    value: data.contacts.technical.email
   },
   {
-    label: t`Administrative Contact`,
-    value: data.contacts.administrative
+    label: t`Technical Contact Phone`,
+    value: data.contacts.technical.phone
+  },
+  {
+    label: t`Compliance / Legal Contact Name`,
+    value: data.contacts.legal.email
+  },
+  {
+    label: t`Compliance / Legal Contact Email`,
+    value: data.contacts.legal.email
+  },
+  {
+    label: t`Compliance / Legal Contact Phone`,
+    value: data.contacts.legal.phone
+  },
+  {
+    label: t`Administrative Contact Name`,
+    value: data.contacts.administrative.name
+  },
+  {
+    label: t`Administrative Contact Email`,
+    value: data.contacts.administrative.email
+  },
+  {
+    label: t`Administrative Contact Phone`,
+    value: data.contacts.administrative.phone
   },
   {
     label: t`TRISA Endpoint`,
-    value: data.summary.trisa_endpoint
+    value: data.summary.endpoint
   },
   {
     label: t`Common Name`,
@@ -53,18 +78,16 @@ const memberDetailTableHeader = [
     const [copied, setCopied] = useState(false);
 
     useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            setCopied(false);
-        }, 2000);
+        if (copied) {
+            const timeout = setTimeout(() => {
+                setCopied(false);
+            }, 2000);
+            return () => clearTimeout(timeout);
+        }
+    }, [copied]);
 
-        return () => {
-            clearTimeout(timeoutId);
-        };
-    }
-    , []);
 
     const handleCopy = async () => {
-        // Remove label from the memberDetailTableHeader array
         await copyToClipboard(memberDetailTableHeader as any);
         setCopied(true);
     };

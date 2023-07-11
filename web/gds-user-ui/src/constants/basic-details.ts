@@ -68,3 +68,27 @@ export const getBusinessCategoryOptions = () => {
 export const getBusinessCategiryLabel = (category: string) => {
   return vaspCategories.find((c) => c.value === category)?.label;
 };
+
+export const getBusinessCategoryValue = (category: string) => {
+  switch (category) {
+    case 'UNKNOWN_ENTITY':
+      return BUSINESS_CATEGORY.UNKNOWN_ENTITY;
+    case 'PRIVATE_ORGANIZATION':
+      return BUSINESS_CATEGORY.PRIVATE_ORGANIZATION;
+    case 'GOVERNMENT_ENTITY':
+      return BUSINESS_CATEGORY.GOVERNMENT_ENTITY;
+    case 'BUSINESS_ENTITY':
+      return BUSINESS_CATEGORY.BUSINESS_ENTITY;
+    case 'NON_COMMERCIAL_ENTITY':
+      return BUSINESS_CATEGORY.NON_COMMERCIAL_ENTITY;
+    default:
+      return category;
+  }
+};
+
+export const getVaspCategoryValue = (category: string[]) => {
+  return category.map((c) => {
+    const foundCategory = vaspCategories.find((cat) => cat.value === c);
+    return foundCategory ? foundCategory.label : c;
+  });
+};
