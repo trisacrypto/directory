@@ -1,22 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Member Modal should render 1`] = `
-@keyframes animation-0 {
-  0% {
-    -webkit-transform: rotate(0deg);
-    -moz-transform: rotate(0deg);
-    -ms-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-
-  100% {
-    -webkit-transform: rotate(360deg);
-    -moz-transform: rotate(360deg);
-    -ms-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
-}
-
 .emotion-0 {
   display: -webkit-box;
   display: -webkit-flex;
@@ -111,85 +95,6 @@ exports[`Member Modal should render 1`] = `
   background: var(--chakra-colors-gray-300);
 }
 
-.emotion-2 {
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex;
-}
-
-.emotion-3 {
-  width: var(--chakra-sizes-full);
-}
-
-.emotion-4 {
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-align-items: center;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  -webkit-box-pack: center;
-  -ms-flex-pack: center;
-  -webkit-justify-content: center;
-  justify-content: center;
-  height: 100vh;
-  text-align: center;
-}
-
-.emotion-5 {
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-align-items: center;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  -webkit-flex-direction: column;
-  -ms-flex-direction: column;
-  flex-direction: column;
-}
-
-.emotion-5>*:not(style)~*:not(style) {
-  margin-top: var(--chakra-space-4);
-  -webkit-margin-end: 0px;
-  margin-inline-end: 0px;
-  margin-bottom: 0px;
-  -webkit-margin-start: 0px;
-  margin-inline-start: 0px;
-}
-
-.emotion-6 {
-  display: inline-block;
-  border-color: currentColor;
-  border-style: solid;
-  border-radius: 99999px;
-  border-width: 2px;
-  border-bottom-color: var(--chakra-colors-transparent);
-  border-left-color: var(--chakra-colors-transparent);
-  -webkit-animation: animation-0 0.45s linear infinite;
-  animation: animation-0 0.45s linear infinite;
-  width: var(--spinner-size);
-  height: var(--spinner-size);
-  --spinner-size: 3rem;
-  color: var(--chakra-colors-blue-500);
-}
-
-.emotion-7 {
-  border: 0px;
-  clip: rect(0px, 0px, 0px, 0px);
-  height: 1px;
-  width: 1px;
-  margin: -1px;
-  padding: 0px;
-  overflow: hidden;
-  white-space: nowrap;
-  position: absolute;
-}
-
 <div>
   <div
     class="chakra-stack emotion-0"
@@ -217,36 +122,6 @@ exports[`Member Modal should render 1`] = `
         />
       </svg>
     </button>
-  </div>
-  <div
-    class="emotion-2"
-  >
-    <div
-      class="emotion-3"
-    >
-      <div
-        class="emotion-4"
-      >
-        <div
-          class="chakra-stack emotion-5"
-        >
-          <div
-            class="chakra-spinner emotion-6"
-          >
-            <span
-              class="emotion-7"
-            >
-              Loading...
-            </span>
-          </div>
-          <p
-            class="chakra-text emotion-8"
-          >
-            Loading...
-          </p>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 `;

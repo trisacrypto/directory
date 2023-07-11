@@ -53,22 +53,24 @@ export const downloadMembers2CVS = (member: any) => {
 export const getVaspStatus = (status: string) => {
   switch (status) {
     case '1':
-      return 'NO VERIFICATION';
+      return t`NO VERIFICATION`;
     case '2':
-      return 'SUBMITTED';
+      return t`SUBMITTED`;
     case '3':
-      return 'EMAIL VERIFIED';
+      return t`EMAIL VERIFIED`;
     case '4':
-      return 'PENDING REVIEW';
+      return t`PENDING REVIEW`;
     case '5':
-      return 'REVIEWED';
+      return t`REVIEWED`;
     case '6':
-      return 'VERIFIED';
+      return t`VERIFIED`;
     case '7':
-      return 'REJECTED';
+      return t`REJECTED`;
     case '8':
-      return 'APPEALED';
+      return t`APPEALED`;
     case '9':
-      return 'ERRORED';
+      return t`ERRORED`;
+    default:
+      return t`NO VERIFICATION`;
   }
 };
