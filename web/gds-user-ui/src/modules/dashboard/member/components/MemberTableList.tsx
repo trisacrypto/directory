@@ -6,7 +6,6 @@ import { useSelector } from 'react-redux';
 // import { mainnetMembersMockValue } from '../__mocks__';
 const MemberTableList = () => {
   const network = useSelector(memberSelector).members.network;
-  console.log('[MemberTableList] network', network);
 
   const { error, members, isFetchingMembers, getMembers } = useFetchMembers(network);
   const isUnverified = error && error?.response?.status === 451;

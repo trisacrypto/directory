@@ -24,7 +24,7 @@ const useExportMembers = () => {
 
   useEffect(() => {
     if (isLoading) {
-      console.log(' user clicked export button, refresh members');
+      console.log('[ExportButton]');
       getMembers();
     }
   }, [isLoading, getMembers]);

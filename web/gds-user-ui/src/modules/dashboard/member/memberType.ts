@@ -25,7 +25,7 @@ export enum VaspDirectoryEnum {
   TESTNET = 'trisatest.net',
   MAINNET = 'vaspdirectory.net',
   MAINNET_DEV = 'vaspdirectory.dev',
-  TESTNET_DEV = 'trisatest.net.dev'
+  TESTNET_DEV = 'trisatest.dev'
 }
 
 export type VaspType = {
