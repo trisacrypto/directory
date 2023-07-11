@@ -8,7 +8,7 @@ export const memberTableHeader = [
     label: t`Member Name`
   },
   {
-    key: 'joined',
+    key: 'first_listed',
     label: t`Joined`
   },
   {
@@ -16,7 +16,7 @@ export const memberTableHeader = [
     label: t`Last Updated`
   },
   {
-    key: 'network',
+    key: 'registered_directory',
     label: t`Network`
   },
   {
@@ -40,6 +40,12 @@ export const getVapsNetwork = (dir: any) => {
 };
 
 export const downloadMembers2CVS = (member: any) => {
-  const memberCsv = convertToCVS(member, memberTableHeader as ITableHeader[]);
+  const m = member.map((item: any) => {
+    return {
+      ...item,
+      registered_directory: getVapsNetwork(item.registered_directory)
+    };
+  });
+  const memberCsv = convertToCVS(m, memberTableHeader as ITableHeader[]);
   downloadCSV(memberCsv, 'members');
 };
