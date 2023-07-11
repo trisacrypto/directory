@@ -2,9 +2,9 @@ import axiosInstance from 'utils/axios';
 import { DirectoryType, MemberDto } from '../memberType';
 import { getVaspDirectory } from '../utils';
 
-export const getMembersService = async (directory = 'mainnet') => {
+export const getMembersService = async (directory: DirectoryType) => {
   const response = await axiosInstance.get(
-    `/members?registered_directory=${getVaspDirectory(directory as DirectoryType)}`
+    `/members?registered_directory=${getVaspDirectory(directory)}`
   );
   return response;
 };

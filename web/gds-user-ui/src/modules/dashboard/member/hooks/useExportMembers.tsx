@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFetchMembers } from '../hooks/useFetchMembers';
 import { useSelector } from 'react-redux';
 import { memberSelector } from '../member.slice';
 
 import { downloadMembers2CVS } from '../utils';
 const useExportMembers = () => {
-  const { network } = useSelector(memberSelector);
-  const { members } = useFetchMembers(network);
+  const network = useSelector(memberSelector).members.network;
+  const { members, getMembers } = useFetchMembers(network);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const LOADING_TIMEOUT = 500;
   const exportHandler = () => {
@@ -21,6 +21,13 @@ const useExportMembers = () => {
       console.log('[useExportMembers] error: ', error);
     }
   };
+
+  useEffect(() => {
+    if (isLoading) {
+      console.log(' user clicked export button, refresh members');
+      getMembers();
+    }
+  }, [isLoading, getMembers]);
 
   return {
     exportHandler,
