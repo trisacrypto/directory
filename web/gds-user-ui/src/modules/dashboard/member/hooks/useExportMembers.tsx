@@ -9,6 +9,11 @@ const useExportMembers = () => {
   const { members, getMembers, error } = useFetchMembers(network);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const LOADING_TIMEOUT = 500;
+
+  const isUnverified = error && error?.response?.status === 451;
+  const isMemberEmpty = !members?.vasps?.length;
+  const hasError = !isUnverified && error; // if error is not 451, then it's a real error
+
   const exportHandler = () => {
     try {
       setIsLoading(true);
@@ -38,7 +43,8 @@ const useExportMembers = () => {
 
   return {
     exportHandler,
-    isLoading
+    isLoading,
+    isDisabled: isUnverified || isMemberEmpty || hasError
   };
 };
 
