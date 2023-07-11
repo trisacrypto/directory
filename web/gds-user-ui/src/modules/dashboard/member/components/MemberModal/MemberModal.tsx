@@ -17,18 +17,18 @@ import Loader from 'components/Loader';
 import MemberModalContent from './MemberModalContent';
 import { useFetchMember } from '../../hooks/useFetchMember';
 import { Trans } from '@lingui/macro';
+import { memberDetailMock } from '../../__mocks__';
 interface MemberModalProps {
   isOpen: boolean;
   onClose: () => void;
   member: any;
 }
 const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) => {
-  const { member, isFetchingMember } = useFetchMember(memberId);
+  const { member } = useFetchMember(memberId);
   return (
     <>
       <Flex>
         <Box w="full">
-          {isFetchingMember && <Loader />}
           {member && (
             <Modal
               closeOnOverlayClick={false}

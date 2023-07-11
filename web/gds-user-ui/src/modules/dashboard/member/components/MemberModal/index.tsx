@@ -2,16 +2,19 @@ import React from 'react';
 import MemberModal from './MemberModal';
 import { useDisclosure, Button, HStack } from '@chakra-ui/react';
 import { BsEye } from 'react-icons/bs';
+import { useFetchMember } from '../../hooks/useFetchMember';
 interface ShowMemberModalProps {
-  memberId: string;
+  memberId: any;
 }
 const ShowMemberModal: React.FC<ShowMemberModalProps> = ({ memberId }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isFetchingMember } = useFetchMember(memberId);
 
   return (
     <>
       <HStack width="100%" justifyContent="center" alignItems="center">
         <Button
+          isLoading={isFetchingMember}       
           data-testid="member-modal-button"
           onClick={onOpen}
           color="blue"
