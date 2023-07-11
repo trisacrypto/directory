@@ -8,7 +8,6 @@ interface ShowMemberModalProps {
 }
 const ShowMemberModal: React.FC<ShowMemberModalProps> = ({ memberId }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { isFetchingMember } = useFetchMember(memberId);
   const [shouldOpenModal, setShouldOpenModal] = useState(false);
 
   const handleOpenModal = () => {
@@ -30,7 +29,6 @@ const ShowMemberModal: React.FC<ShowMemberModalProps> = ({ memberId }) => {
     <>
       <HStack width="100%" justifyContent="center" alignItems="center">
         <Button
-          isLoading={isFetchingMember}
           data-testid="member-modal-button"
           onClick={handleOpenModal}
           color="blue"
