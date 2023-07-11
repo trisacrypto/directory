@@ -441,6 +441,11 @@ services:
       - SIAS_CONSOLE_LOG=true
       - SIAS_AUTH_USERNAME=cathyadmin
       - SIAS_AUTH_PASSWORD=supersecretsquirrel
+      - SECTIGO_USERNAME=cathyadmin
+      - SECTIGO_PASSWORD=supersecretsquirrel
+      - SECTIGO_PROFILE=17
+      - SECTIGO_ENVIRONMENT=testing
+      - SECTIGO_ENDPOINT=http://localhost:8831
     profiles:
       - gds
       - api

@@ -4,7 +4,7 @@ import { Trans } from '@lingui/macro';
 import { useExportMembers } from '../hooks/useExportMembers';
 
 const MemberHeader = () => {
-  const { isLoading, exportHandler } = useExportMembers();
+  const { isLoading, exportHandler, isDisabled } = useExportMembers();
 
   return (
     <Stack width={'100%'}>
@@ -14,6 +14,7 @@ const MemberHeader = () => {
         </Heading>
         <Button
           isLoading={isLoading}
+          disabled={isDisabled}
           minW="100px"
           onClick={exportHandler}
           bg={useColorModeValue('black', 'white')}

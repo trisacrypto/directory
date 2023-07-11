@@ -4,13 +4,13 @@ import { getMemberService } from '../service';
 import type { MemberQuery, MemberDto } from '../memberType';
 
 export function useFetchMember(payload: MemberDto): MemberQuery {
-  const query = useQuery(['fetch-member', payload], () => getMemberService, {
+  const query = useQuery(['fetch-member', payload.network], () => getMemberService(payload), {
     retry: 0,
-    enabled: !!payload.vaspId
+    enabled: !!payload.network && !!payload.vaspId
   });
   return {
     getMember: query.refetch,
-    member: query.data,
+    member: query.data as any,
     hasMemberFailed: query.isError,
     wasMemberFetched: query.isSuccess,
     isFetchingMember: query.isLoading,

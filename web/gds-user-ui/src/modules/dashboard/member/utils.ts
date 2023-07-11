@@ -2,11 +2,6 @@ import { DirectoryType, VaspDirectoryEnum, DirectoryTypeEnum } from './memberTyp
 import { convertToCVS, downloadCSV } from 'utils/utils';
 import { t } from '@lingui/macro';
 
-/* export interface CopyTable {
-  label: string;
-  value: string;
-} */
-
 export const memberTableHeader = [
   {
     key: 'name',
@@ -33,7 +28,7 @@ export const getVaspDirectory = (dir: DirectoryType) => {
   return dir === DirectoryTypeEnum.TESTNET ? VaspDirectoryEnum.TESTNET : VaspDirectoryEnum.MAINNET;
 };
 
-export const getVapsNetwork = (dir: any) => {
+export const getVaspNetwork = (dir: any) => {
   switch (dir) {
     case (VaspDirectoryEnum.TESTNET, VaspDirectoryEnum.TESTNET_DEV):
       return 'TestNet';
@@ -44,11 +39,37 @@ export const getVapsNetwork = (dir: any) => {
   }
 };
 
+export const getVaspStatus = (status: string) => {
+  switch (status) {
+    case '1':
+      return t`NO VERIFICATION`;
+    case '2':
+      return t`SUBMITTED`;
+    case '3':
+      return t`EMAIL VERIFIED`;
+    case '4':
+      return t`PENDING REVIEW`;
+    case '5':
+      return t`REVIEWED`;
+    case '6':
+      return t`VERIFIED`;
+    case '7':
+      return t`REJECTED`;
+    case '8':
+      return t`APPEALED`;
+    case '9':
+      return t`ERRORED`;
+    default:
+      return t`NO VERIFICATION`;
+  }
+};
+
 export const downloadMembers2CVS = (member: any) => {
   const m = member.map((item: any) => {
     return {
       ...item,
-      registered_directory: getVapsNetwork(item.registered_directory)
+      status: getVaspStatus(item.status),
+      registered_directory: getVaspNetwork(item.registered_directory)
     };
   });
   const memberCsv = convertToCVS(m, memberTableHeader as ITableHeader[]);
