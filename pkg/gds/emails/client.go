@@ -89,7 +89,7 @@ func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP) (sent int, err error) {
 	// Attempt at least one delivery, don't give up just because one email failed
 	// Track how many emails and errors occurred during delivery.
 	var nErrors int
-	iter := models.NewContactIterator(vasp.Contacts, true, false)
+	iter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail(), models.SkipDuplicates())
 	for iter.Next() {
 		contact, kind := iter.Value()
 
@@ -197,7 +197,7 @@ func (m *EmailManager) SendReviewRequest(vasp *pb.VASP) (sent int, err error) {
 	clone := proto.Clone(vasp).(*pb.VASP)
 	models.SetAdminVerificationToken(clone, "[REDACTED]")
 
-	iter := models.NewContactIterator(clone.Contacts, false, false)
+	iter := models.NewContactIterator(clone.Contacts)
 	for iter.Next() {
 		contact, _ := iter.Value()
 		_, verified, _ := models.GetContactVerification(contact)
@@ -263,7 +263,7 @@ func (m *EmailManager) SendRejectRegistration(vasp *pb.VASP, reason string) (sen
 
 	// Attempt at least one delivery, don't give up just because one email failed
 	// Track how many emails and errors occurred during delivery.
-	iter := models.NewContactIterator(vasp.Contacts, true, true)
+	iter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail(), models.SkipUnverified(), models.SkipDuplicates())
 	for iter.Next() {
 		var contact *pb.Contact
 		var kind string
@@ -326,7 +326,7 @@ func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent
 	// Attempt at least one delivery, don't give up just because one email failed
 	// Track how many emails and errors occurred during delivery.
 	// Note: new contact iterator provides the contact email prioritization order.
-	iter := models.NewContactIterator(vasp.Contacts, true, true)
+	iter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail(), models.SkipUnverified(), models.SkipDuplicates())
 	for iter.Next() {
 		var contact *pb.Contact
 		var kind string
@@ -561,7 +561,7 @@ func (m *EmailManager) SendReissuanceReminder(vasp *pb.VASP, reissueDate time.Ti
 
 	// Attempt at least one delivery, don't give up just because one email failed.
 	// Track how many emails and errors occurred during delivery.
-	iter := models.NewContactIterator(vasp.Contacts, true, true)
+	iter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail(), models.SkipUnverified(), models.SkipDuplicates())
 	for iter.Next() {
 		contact, kind := iter.Value()
 		ctx.Name = contact.Name
@@ -622,7 +622,7 @@ func (m *EmailManager) SendReissuanceStarted(vasp *pb.VASP, whisperLink string) 
 	// Attempt at least one delivery, don't give up just because one email failed.
 	// Track how many emails and errors are occurring during delivery.
 	// Note: new contact iterator provides the contact email prioritization order.
-	iter := models.NewContactIterator(vasp.Contacts, true, true)
+	iter := models.NewContactIterator(vasp.Contacts, models.SkipDuplicates(), models.SkipUnverified(), models.SkipDuplicates())
 	for iter.Next() {
 		contact, kind := iter.Value()
 		ctx.Name = contact.Name
