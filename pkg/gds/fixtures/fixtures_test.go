@@ -28,8 +28,8 @@ func TestFixtures(t *testing.T) {
 
 	expected := map[fixtures.FixtureType]map[string]int{
 		fixtures.Empty: {},
-		fixtures.Small: {wire.NamespaceVASPs: 3},
-		fixtures.Full:  {wire.NamespaceVASPs: 14, wire.NamespaceCerts: 3, wire.NamespaceCertReqs: 10},
+		fixtures.Small: {wire.NamespaceContacts: 2, wire.NamespaceVASPs: 3},
+		fixtures.Full:  {wire.NamespaceContacts: 2, wire.NamespaceVASPs: 14, wire.NamespaceCerts: 3, wire.NamespaceCertReqs: 10},
 	}
 
 	// Load the leveldb fixtures and verify everything was loaded correctly
@@ -50,10 +50,12 @@ func TestFixtures(t *testing.T) {
 func verifyFixtures(t *testing.T, lib *fixtures.Library, expected map[fixtures.FixtureType]map[string]int) {
 	// Test the reference fixtures
 	refs := lib.Fixtures()
-	require.Len(t, refs, 3)
+	require.Len(t, refs, 4, "unexpected number of namespaces in fixtures")
+	require.Contains(t, refs, wire.NamespaceContacts)
 	require.Contains(t, refs, wire.NamespaceVASPs)
 	require.Contains(t, refs, wire.NamespaceCerts)
 	require.Contains(t, refs, wire.NamespaceCertReqs)
+	require.Len(t, refs[wire.NamespaceContacts], expected[fixtures.Full][wire.NamespaceContacts])
 	require.Len(t, refs[wire.NamespaceVASPs], expected[fixtures.Full][wire.NamespaceVASPs])
 	require.Len(t, refs[wire.NamespaceCerts], expected[fixtures.Full][wire.NamespaceCerts])
 	require.Len(t, refs[wire.NamespaceCertReqs], expected[fixtures.Full][wire.NamespaceCertReqs])
@@ -105,6 +107,10 @@ func countLevelDBFixtures(t *testing.T, lib *fixtures.Library) (counts map[strin
 		// Ensure we can unmarshal the fixture
 		var obj interface{}
 		switch prefix := key[0]; prefix {
+		case wire.NamespaceContacts:
+			contact := &models.Contact{}
+			require.NoError(t, proto.Unmarshal(iter.Value(), contact))
+			obj = contact
 		case wire.NamespaceVASPs:
 			vasp := &pb.VASP{}
 			require.NoError(t, proto.Unmarshal(iter.Value(), vasp))
@@ -148,7 +154,16 @@ func countHonuFixtures(t *testing.T, lib *fixtures.Library) (counts map[string]i
 
 	counts = make(map[string]int)
 
-	iter, err := db.Iter(nil, options.WithNamespace(wire.NamespaceVASPs))
+	iter, err := db.Iter(nil, options.WithNamespace(wire.NamespaceContacts))
+	require.NoError(t, err, "could not create Honu contacts iterator")
+	for iter.Next() {
+		contact := &models.Contact{}
+		require.NoError(t, proto.Unmarshal(iter.Value(), contact))
+		counts[wire.NamespaceContacts]++
+		lib.CompareFixture(wire.NamespaceContacts, string(iter.Key()), contact, false, false)
+	}
+
+	iter, err = db.Iter(nil, options.WithNamespace(wire.NamespaceVASPs))
 	require.NoError(t, err, "could not create Honu vasp iterator")
 	for iter.Next() {
 		vasp := &pb.VASP{}
