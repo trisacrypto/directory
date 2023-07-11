@@ -39,18 +39,6 @@ export const getVaspNetwork = (dir: any) => {
   }
 };
 
-export const downloadMembers2CVS = (member: any) => {
-  const m = member.map((item: any) => {
-    return {
-      ...item,
-      status : getVaspStatus(item.status),
-      registered_directory: getVaspNetwork(item.registered_directory)
-    };
-  });
-  const memberCsv = convertToCVS(m, memberTableHeader as ITableHeader[]);
-  downloadCSV(memberCsv, 'members');
-};
-
 export const getVaspStatus = (status: string) => {
   switch (status) {
     case '1':
@@ -75,3 +63,16 @@ export const getVaspStatus = (status: string) => {
       return t`NO VERIFICATION`;
   }
 };
+
+export const downloadMembers2CVS = (member: any) => {
+  const m = member.map((item: any) => {
+    return {
+      ...item,
+      status: getVaspStatus(item.status),
+      registered_directory: getVaspNetwork(item.registered_directory)
+    };
+  });
+  const memberCsv = convertToCVS(m, memberTableHeader as ITableHeader[]);
+  downloadCSV(memberCsv, 'members');
+};
+
