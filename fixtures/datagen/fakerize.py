@@ -46,6 +46,10 @@ VASP_CATEGORIES = [
     "Individual",
     "Other",
 ]
+FAKE_CONTACTS = {
+    "adam@example.com": False,
+    "bruce@example.com": True,
+}
 FAKE_VASPS = {
     "CharlieBank": "SUBMITTED",
     "Delta Assets": "APPEALED",
@@ -445,6 +449,39 @@ def replace_fixtures():
     with tarfile.open("fakes.tgz", "w:gz") as tar:
         tar.add(OUTPUT_DIRECTORY, arcname="synthetic")
     shutil.move("fakes.tgz", os.path.join("pkg", "gds", "testdata", "fakes.tgz"))
+
+##########################################################################
+# Contact Creation Functions
+##########################################################################
+
+def make_contact(email, verified):
+    """
+    Create a fake contact model from an email address.
+    """
+    contact = {
+        "email": email,
+        "name": email.split("@")[0],
+        "verified": verified,
+    }
+
+    dates = make_dates()
+    contact["created"] = dates[0]
+    contact["modified"] = dates[1]
+    if verified:
+        contact["verified_on"] = dates[1]
+
+    return contact
+
+def augment_contacts(fake_contacts=FAKE_CONTACTS):
+    """
+    Make fake contacts for the contacts store.
+    """
+    contacts = {}
+    for email, verified in fake_contacts.items():
+        contact = make_contact(email, verified)
+        contacts[contact["email"]] = contact
+
+    return contacts
 
 ##########################################################################
 # VASP Creation Functions
@@ -936,10 +973,12 @@ if __name__ == "__main__":
     if os.path.exists(OUTPUT_DIRECTORY):
         shutil.rmtree(OUTPUT_DIRECTORY)
 
+    fake_contacts = augment_contacts()
     fake_vasps = augment_vasps()
     fake_certreqs, fake_certs = augment_certs()
     add_vasp_cert_relationships(fake_vasps, fake_certreqs, fake_certs)
 
+    store(fake_contacts, kind="contacts")
     store(fake_vasps, kind="vasps")
     store(fake_certreqs, kind="certreqs")
     store(fake_certs, kind="certs")

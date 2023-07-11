@@ -45,7 +45,6 @@ func (s *Server) Refresh(c *gin.Context) {
 	}
 
 	if _, err = s.tokens.Verify(string(token)); err != nil {
-		fmt.Println(err)
 		c.JSON(http.StatusUnauthorized, Err(err))
 		return
 	}

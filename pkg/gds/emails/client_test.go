@@ -14,6 +14,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/models/v1"
+	"github.com/trisacrypto/directory/pkg/utils/emails/mock"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
@@ -23,16 +24,28 @@ func TestClientSendEmails(t *testing.T) {
 	// will be read, making it simpler to run tests and set environment variables.
 	godotenv.Load()
 
-	if os.Getenv("GDS_TEST_SENDING_CLIENT_EMAILS") == "" {
-		t.Skip("skip client send emails test")
-	}
-
 	// This test uses the environment to send rendered emails with context specific
 	// emails - this is to test the rendering of the emails with data only; it does not
-	// go through any of the server workflow for generating tokens, etc.
+	// go through any of the server workflow for generating tokens, etc. If the
+	// GDS_TEST_SENDING_CLIENT_EMAILS environment variable is not specified, then a
+	// mock email client is used instead which will not send any real emails but will
+	// still exercise the logic in the client methods.
 	var conf config.EmailConfig
-	err := envconfig.Process("gds", &conf)
-	require.NoError(t, err)
+	if os.Getenv("GDS_TEST_SENDING_CLIENT_EMAILS") != "" {
+		require.NoError(t, envconfig.Process("gds", &conf), "failed to load environment variables for email client tests")
+	} else {
+		conf = config.EmailConfig{
+			ServiceEmail:         "GDS <service@gds.dev>",
+			AdminEmail:           "GDS Admin <admin@gds.dev>",
+			SendGridAPIKey:       "notarealsendgridapikey",
+			DirectoryID:          "gds.dev",
+			VerifyContactBaseURL: "https://gds.dev/verify",
+			AdminReviewBaseURL:   "https://admin.gds.dev/vasps/",
+			Testing:              true,
+		}
+
+		defer mock.PurgeEmails()
+	}
 
 	// This test sends emails from the serviceEmail using SendGrid to the adminsEmail
 	email, err := emails.New(conf)
@@ -77,7 +90,7 @@ func TestClientSendEmails(t *testing.T) {
 
 	err = models.SetAdminVerificationToken(vasp, "12345token1234")
 	require.NoError(t, err)
-	err = models.SetContactVerification(vasp.Contacts.Technical, "", true)
+	err = models.SetContactVerification(vasp.Contacts.Technical, "12345token1234", false)
 	require.NoError(t, err)
 	err = models.SetContactVerification(vasp.Contacts.Administrative, "", true)
 	require.NoError(t, err)
@@ -99,8 +112,8 @@ func TestClientSendEmails(t *testing.T) {
 
 	token, verified, err := models.GetContactVerification(vasp.Contacts.Technical)
 	require.NoError(t, err)
-	require.True(t, verified)
-	require.Equal(t, "", token)
+	require.False(t, verified)
+	require.Equal(t, "12345token1234", token)
 
 	token, verified, err = models.GetContactVerification(vasp.Contacts.Administrative)
 	require.NoError(t, err)
@@ -119,7 +132,7 @@ func TestClientSendEmails(t *testing.T) {
 
 	sent, err = email.SendRejectRegistration(vasp, "this is a test rejection from the test runner")
 	require.NoError(t, err)
-	require.Equal(t, 2, sent)
+	require.Equal(t, 1, sent)
 
 	sent, err = email.SendDeliverCertificates(vasp, "testdata/foo.zip")
 	require.NoError(t, err)
@@ -136,7 +149,7 @@ func TestClientSendEmails(t *testing.T) {
 
 	sent, err = email.SendReissuanceReminder(vasp, reissueDate)
 	require.NoError(t, err)
-	require.Equal(t, 2, sent)
+	require.Equal(t, 1, sent)
 
 	sent, err = email.SendReissuanceStarted(vasp, "https://whisper.dev/supersecret")
 	require.NoError(t, err)
@@ -159,9 +172,16 @@ func TestClientSendEmails(t *testing.T) {
 	require.Equal(t, string(admin.ReissuanceStarted), log[1].Reason)
 	require.Equal(t, emails.ReissuanceAdminNotificationRE, log[1].Subject)
 
-	// Technical is verified and first so should get Rejection and DeliverCerts emails
-	// It should also receive the reissuance started email after the reminder.
+	// Technical is not verified so it should get the VerifyContact email
 	emailLog, err := models.GetEmailLog(vasp.Contacts.Technical)
+	require.NoError(t, err)
+	require.Len(t, emailLog, 1)
+	require.Equal(t, string(admin.ResendVerifyContact), emailLog[0].Reason)
+	require.Equal(t, emails.VerifyContactRE, emailLog[0].Subject)
+
+	// Administrative is the first verified contact so it should get Rejection, Deliver
+	// Certs, Reissue Reminder, and Reissuance Started after the reminder
+	emailLog, err = models.GetEmailLog(vasp.Contacts.Administrative)
 	require.NoError(t, err)
 	require.Len(t, emailLog, 4)
 	require.Equal(t, string(admin.ResendRejection), emailLog[0].Reason)
@@ -173,21 +193,11 @@ func TestClientSendEmails(t *testing.T) {
 	require.Equal(t, string(admin.ReissuanceStarted), emailLog[3].Reason)
 	require.Equal(t, emails.ReissuanceStartedRE, emailLog[3].Subject)
 
-	// Administrative is verified so should get Rejection and Reissue Reminder emails
-	emailLog, err = models.GetEmailLog(vasp.Contacts.Administrative)
-	require.NoError(t, err)
-	require.Len(t, emailLog, 2)
-	require.Equal(t, string(admin.ResendRejection), emailLog[0].Reason)
-	require.Equal(t, emails.RejectRegistrationRE, emailLog[0].Subject)
-	require.Equal(t, string(admin.ReissuanceReminder), emailLog[1].Reason)
-	require.Equal(t, emails.ReissuanceReminderRE, emailLog[1].Subject)
-
-	// Legal is not verified so should get VerifyContact email
+	// Legal is not verified and it has the same email as Administrative so it should
+	// not get any emails
 	emailLog, err = models.GetEmailLog(vasp.Contacts.Legal)
 	require.NoError(t, err)
-	require.Len(t, emailLog, 1)
-	require.Equal(t, string(admin.ResendVerifyContact), emailLog[0].Reason)
-	require.Equal(t, emails.VerifyContactRE, emailLog[0].Subject)
+	require.Len(t, emailLog, 0)
 
 	// Billing doesn't have an associated email so shouldn't get anything
 	emailLog, err = models.GetEmailLog(vasp.Contacts.Billing)

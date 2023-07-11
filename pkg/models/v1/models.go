@@ -182,7 +182,7 @@ func GetVASPEmailLog(vasp *pb.VASP) (emails []*EmailLogEntry, err error) {
 	emails = make([]*EmailLogEntry, 0)
 
 	// Iterate over all the contacts on the VASP, this skips any nil contacts.
-	iter := NewContactIterator(vasp.Contacts, false, false)
+	iter := NewContactIterator(vasp.Contacts)
 	for iter.Next() {
 		contact, _ := iter.Value()
 		var contactLog []*EmailLogEntry

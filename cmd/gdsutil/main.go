@@ -1311,7 +1311,7 @@ func migrateContacts(c *cli.Context) (err error) {
 			vaspIter.Release()
 			return cli.Exit(err, 1)
 		}
-		contactIter := models.NewContactIterator(vasp.Contacts, true, false)
+		contactIter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail())
 
 		// Iterate through all contacts on the vasp
 		for contactIter.Next() {

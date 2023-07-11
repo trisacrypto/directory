@@ -56,6 +56,10 @@ var (
 			"delta":       {},
 			"hotel":       {},
 		},
+		wire.NamespaceContacts: {
+			"adam@example.com":  {},
+			"bruce@example.com": {},
+		},
 	}
 )
 
@@ -91,6 +95,15 @@ type Library struct {
 
 func (lib *Library) Fixtures() map[string]map[string]interface{} {
 	return lib.fixtures
+}
+
+func (lib *Library) GetContact(name string) (contact *models.Contact, err error) {
+	var ok bool
+	if contact, ok = lib.fixtures[wire.NamespaceContacts][name].(*models.Contact); !ok {
+		return nil, fmt.Errorf("could not retrieve contact %s from fixtures", name)
+	}
+
+	return contact, nil
 }
 
 func (lib *Library) GetVASP(name string) (vasp *pb.VASP, err error) {
@@ -254,7 +267,7 @@ func (lib *Library) LoadReferenceFixtures() (err error) {
 
 	// Create the reference fixtures map
 	lib.fixtures = make(map[string]map[string]interface{})
-	for _, namespace := range []string{wire.NamespaceVASPs, wire.NamespaceCerts, wire.NamespaceCertReqs} {
+	for _, namespace := range []string{wire.NamespaceContacts, wire.NamespaceVASPs, wire.NamespaceCerts, wire.NamespaceCertReqs} {
 		lib.fixtures[namespace] = make(map[string]interface{})
 	}
 
@@ -280,6 +293,12 @@ func (lib *Library) LoadReferenceFixtures() (err error) {
 		}
 
 		switch prefix {
+		case wire.NamespaceContacts:
+			contact := &models.Contact{}
+			if err = protojson.Unmarshal(data, contact); err != nil {
+				return err
+			}
+			lib.fixtures[wire.NamespaceContacts][key] = contact
 		case wire.NamespaceVASPs:
 			vasp := &pb.VASP{}
 			if err = protojson.Unmarshal(data, vasp); err != nil {
@@ -368,6 +387,10 @@ func (lib *Library) GenerateDB(ftype FixtureType) (err error) {
 
 			// Add the fixture to the database, updating indices
 			switch namespace {
+			case wire.NamespaceContacts:
+				if err = db.UpdateContact(context.Background(), item.(*models.Contact)); err != nil {
+					return err
+				}
 			case wire.NamespaceVASPs:
 				vasp := item.(*pb.VASP)
 				var id string
@@ -410,6 +433,31 @@ func (lib *Library) CompareFixture(namespace, key string, obj interface{}, remov
 
 	// Reset any time fields for the comparison and compare directly
 	switch namespace {
+	case wire.NamespaceContacts:
+		var a *models.Contact
+		for _, f := range lib.fixtures[namespace] {
+			ref := f.(*models.Contact)
+			if ref.Email == key {
+				a = ref
+				break
+			}
+		}
+		if a == nil {
+			return false, fmt.Errorf("unknown contact fixture %s", key)
+		}
+
+		var b *models.Contact
+		if b, ok = obj.(*models.Contact); !ok {
+			return false, errors.New("obj is not a Contact object")
+		}
+
+		// Remove time fields for comparison
+		a.Created, b.Created = "", ""
+		a.Modified, b.Modified = "", ""
+		a.VerifiedOn, b.VerifiedOn = "", ""
+
+		return proto.Equal(a, b), nil
+
 	case wire.NamespaceVASPs:
 		var a *pb.VASP
 		for _, f := range lib.fixtures[namespace] {
@@ -433,13 +481,13 @@ func (lib *Library) CompareFixture(namespace, key string, obj interface{}, remov
 
 		if removeExtra {
 			a.Extra, b.Extra = nil, nil
-			iter := models.NewContactIterator(a.Contacts, false, false)
+			iter := models.NewContactIterator(a.Contacts)
 			for iter.Next() {
 				contact, _ := iter.Value()
 				contact.Extra = nil
 			}
 
-			iter = models.NewContactIterator(b.Contacts, false, false)
+			iter = models.NewContactIterator(b.Contacts)
 			for iter.Next() {
 				contact, _ := iter.Value()
 				contact.Extra = nil
@@ -520,6 +568,12 @@ func RemarshalProto(namespace string, obj map[string]interface{}) (_ protoreflec
 	}
 
 	switch namespace {
+	case wire.NamespaceContacts:
+		contact := &models.Contact{}
+		if err = jsonpb.Unmarshal(data, contact); err != nil {
+			return nil, err
+		}
+		return contact, nil
 	case wire.NamespaceVASPs:
 		vasp := &pb.VASP{}
 		if err = jsonpb.Unmarshal(data, vasp); err != nil {
@@ -548,7 +602,7 @@ func RemarshalProto(namespace string, obj map[string]interface{}) (_ protoreflec
 // that the logs are empty before reaching the test point.
 func ClearContactEmailLogs(vasp *pb.VASP) (err error) {
 	contacts := vasp.Contacts
-	iter := models.NewContactIterator(contacts, false, false)
+	iter := models.NewContactIterator(contacts)
 	for iter.Next() {
 		contact, _ := iter.Value()
 		extra := &models.GDSContactExtraData{}

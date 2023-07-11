@@ -202,17 +202,11 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 	// Begin verification process by sending emails to all contacts in the VASP record.
 	// TODO: add to processing queue to return sooner/parallelize work
 	// Create the verification tokens and save the VASP back to the database
+	contacts := make(map[string]*models.Contact)
 	sent := 0
-	iter := models.NewContactIterator(vasp.Contacts, true, false)
+	iter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail())
 	for iter.Next() {
 		vaspContact, kind := iter.Value()
-
-		// Add the secret token to the vasp contact
-		token := secrets.CreateToken(48)
-		if err = models.SetContactVerification(vaspContact, token, false); err != nil {
-			log.Error().Err(err).Str("contact", kind).Str("vasp", vasp.Id).Msg("could not set contact verification token")
-			return nil, status.Error(codes.Aborted, "could not send contact verification emails")
-		}
 
 		// If there does not exist a model contact associated with the vasp contact's email then create one.
 		var contact *models.Contact
@@ -223,7 +217,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 					Email: vaspContact.Email,
 					Name:  vaspContact.Name,
 					Vasps: []string{vasp.CommonName},
-					Token: token,
+					Token: secrets.CreateToken(48),
 				}
 				if _, err = s.db.CreateContact(ctx, contact); err != nil {
 					log.Error().Err(err).Str("contact", vaspContact.Email).Str("vasp", vasp.Id).Msg("could not create contact")
@@ -233,6 +227,20 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 				log.Warn().Err(err).Msg("could not register contact in database")
 				return nil, status.Error(codes.AlreadyExists, "could not complete registration")
 			}
+		}
+
+		// Sync contact verification on the VASP model
+		// TODO: Is this necessary anymore?
+		if err = models.SetContactVerification(vaspContact, contact.Token, contact.Verified); err != nil {
+			log.Error().Err(err).Str("contact", kind).Str("vasp", vasp.Id).Msg("could not set contact verification token")
+			return nil, status.Error(codes.Aborted, "could not send contact verification emails")
+		}
+
+		// Prevent sending duplicate verification emails, e.g. if the same email is
+		// specified on multiple contacts in the register request.
+		if _, ok := contacts[contact.Email]; ok {
+			log.Debug().Str("email", contact.Email).Str("kind", kind).Msg("ignoring duplicate email on VASP")
+			continue
 		}
 
 		if !contact.Verified {
@@ -254,31 +262,19 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 				}
 				models.AppendEmailLog(vaspContact, string(admin.ResendVerifyContact), "verify_contact")
 			}
-		} else {
-			// If the model contact is verified make sure that the vasp contact is verified as well
-			if err = models.SetContactVerification(vaspContact, token, true); err != nil {
-				log.Error().Err(err).Str("contact", kind).Str("vasp", vasp.Id).Msg("could not set contact verification token")
-				return nil, status.Error(codes.Aborted, "could not send contact verification emails")
-			}
-			if err = s.db.UpdateVASP(ctx, vasp); err != nil {
-				log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not update contact verification on vasp")
-				return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
-			}
-
+		} else if vasp.VerificationStatus == pb.VerificationState_SUBMITTED {
+			// If one of the contacts is already verified then short circuit the
+			// verification step and begin the review step by sending a review email to
+			// TRISA admins. This should only be done once for this VASP to avoid
+			// sending the admins duplicate emails.
 			if err = s.beginReview(ctx, vasp, contact.Email); err != nil {
 				log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not begin registration for contact with verified email")
 				return nil, err
 			}
-
-			out = &api.RegisterReply{
-				Id:                  vasp.Id,
-				RegisteredDirectory: vasp.RegisteredDirectory,
-				CommonName:          vasp.CommonName,
-				Status:              vasp.VerificationStatus,
-				Message:             "email successfully verified and verification review sent to TRISA admins",
-			}
-			return out, nil
 		}
+
+		// Avoid double processing this contact
+		contacts[contact.Email] = contact
 	}
 
 	// Create PKCS12 password along with certificate request.
@@ -305,7 +301,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
 	}
 
-	// Create certificate request
+	// Create certificate request in the database.
 	if err = s.db.UpdateCertReq(ctx, certRequest); err != nil {
 		log.Error().Err(err).Str("vasp", vasp.Id).Msg("could not save certificate request")
 		return nil, status.Error(codes.Internal, "internal error with registration, please contact admins")
@@ -567,7 +563,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 	contactEmail := ""
 
 	// Search through the contacts to determine the contacts verified by the supplied token.
-	iter := models.NewContactIterator(vasp.Contacts, false, false)
+	iter := models.NewContactIterator(vasp.Contacts)
 	for iter.Next() {
 		vaspContact, kind := iter.Value()
 		var contact *models.Contact
@@ -693,7 +689,7 @@ func (s *GDS) Status(ctx context.Context, in *api.HealthCheck) (out *api.Service
 
 // Get a valid email address and name from the contacts on a VASP.
 func GetContactEmail(vasp *pb.VASP) string {
-	iter := models.NewContactIterator(vasp.Contacts, true, false)
+	iter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail())
 	for iter.Next() {
 		contact, _ := iter.Value()
 		return contact.Email
