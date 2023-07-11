@@ -50,17 +50,47 @@ export const downloadMembers2CVS = (member: any) => {
   downloadCSV(memberCsv, 'members');
 };
 
-const memberModalHeader = [
-  t`Name`,
-  t`Website`,
-  t`Business Category`,
-  t`VASP Category`,
-  t` Country of Registration`,
-  t`Technical Contact`,
-  t`Compliance / Legal Contact`,
-  t`Administrative Contact`,
-  t`TRISA Endpoint`,
-  t`Common Name`
+const memberDetailTableHeader = [
+  {
+    key: 'name',
+    label: t`Name`,
+  },
+  {
+    key: 'website',
+    label: t`Website`,
+  },
+  {
+    key: 'business_category',
+    label:  t`Business Category`,
+  },
+  {
+    key: 'vasp_categories',
+    label: t`VASP Category`,
+  },
+  {
+    key:'country_of_registration',
+    label: t`Country of Registration`,
+  },
+  {
+    key: 'technical_contact',
+    label:  t`Technical Contact`,
+  },
+  {
+    key: 'legal_contact',
+    label:  t`Compliance / Legal Contact`,
+  },
+  {
+    key: 'administrative_contact',
+    label: t`Administrative Contact`,
+  },
+  {
+    key: 'trisa_endpoint',
+    label: t`TRISA Endpoint`,
+  },
+  {
+    key: 'common_name',
+    label: t`Common Name`,
+  },
 ];
 
 export const convertMemberToCSV = (jsonData: any, headers: any) => {
@@ -82,6 +112,6 @@ export const convertMemberToCSV = (jsonData: any, headers: any) => {
 };
 
 export const downloadMemberToCSV = (member: any) => {
-  const memberSummary = convertMemberToCSV(member, memberModalHeader);
+  const memberSummary = convertMemberToCSV(member, memberDetailTableHeader);
   downloadCSV(memberSummary, 'member');
 };
