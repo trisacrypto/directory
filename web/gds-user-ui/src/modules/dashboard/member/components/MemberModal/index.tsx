@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import MemberModal from './MemberModal';
 import { useDisclosure, Button, HStack } from '@chakra-ui/react';
 import { BsEye } from 'react-icons/bs';
@@ -9,14 +9,30 @@ interface ShowMemberModalProps {
 const ShowMemberModal: React.FC<ShowMemberModalProps> = ({ memberId }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isFetchingMember } = useFetchMember(memberId);
+  const [shouldOpenModal, setShouldOpenModal] = useState(false);
+
+  const handleOpenModal = () => {
+    setShouldOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShouldOpenModal(false);
+    onClose();
+  };
+
+  useEffect(() => {
+    if (shouldOpenModal) {
+      onOpen();
+    }
+  }, [shouldOpenModal, onOpen]);
 
   return (
     <>
       <HStack width="100%" justifyContent="center" alignItems="center">
         <Button
-          isLoading={isFetchingMember}       
+          isLoading={isFetchingMember}
           data-testid="member-modal-button"
-          onClick={onOpen}
+          onClick={handleOpenModal}
           color="blue"
           bg={'transparent'}
           _hover={{
@@ -28,7 +44,7 @@ const ShowMemberModal: React.FC<ShowMemberModalProps> = ({ memberId }) => {
           <BsEye fontSize="24px" />
         </Button>
       </HStack>
-      <MemberModal isOpen={isOpen} onClose={onClose} member={memberId} />
+      {shouldOpenModal && (<MemberModal isOpen={isOpen} onClose={handleCloseModal} member={memberId} />)}
     </>
   );
 };
