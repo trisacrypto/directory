@@ -19,6 +19,7 @@ import { useFetchMember } from '../../hooks/useFetchMember';
 import { Trans } from '@lingui/macro';
 import { useSelector } from 'react-redux';
 import { memberSelector } from '../../member.slice';
+// import useToast from 'hooks/useToast';
 interface MemberModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -26,7 +27,11 @@ interface MemberModalProps {
 }
 const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) => {
   const network = useSelector(memberSelector).members.network;
-  const { member, isFetchingMember, error } = useFetchMember({ vaspId: memberId, network });
+  const { member, isFetchingMember, error, wasMemberFetched } = useFetchMember({
+    vaspId: memberId,
+    network
+  });
+
   if (error) {
     // close the modal for now , later we need to show a toast message
     onClose();
@@ -41,9 +46,7 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
           data-testid="member-modal">
           <ModalOverlay />
           <ModalContent width={'100%'}>
-            {isFetchingMember ? (
-              <Loader />
-            ) : (
+            {wasMemberFetched && !isFetchingMember && !error && (
               <>
                 <ModalHeader data-testid="confirmation-modal-header" textAlign={'center'}>
                   {member?.summary?.name}
@@ -65,6 +68,12 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
                   </HStack>
                 </ModalFooter>
               </>
+            )}
+
+            {isFetchingMember && (
+              <ModalBody pb={6}>
+                <Loader />
+              </ModalBody>
             )}
           </ModalContent>
         </Modal>
