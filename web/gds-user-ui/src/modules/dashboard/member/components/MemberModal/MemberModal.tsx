@@ -20,7 +20,6 @@ import { Trans } from '@lingui/macro';
 import { useSelector } from 'react-redux';
 import { memberSelector } from '../../member.slice';
 import Copy from './Copy';
-import { memberDetailMock } from '../../__mocks__';
 interface MemberModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -28,8 +27,7 @@ interface MemberModalProps {
 }
 const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) => {
   const network = useSelector(memberSelector).members.network;
-  const { /* member, */ isFetchingMember } = useFetchMember({ vaspId: memberId, network });
-  const member = memberDetailMock;
+  const { member, isFetchingMember } = useFetchMember({ vaspId: memberId, network });
   return (
     <>
       <Flex>
