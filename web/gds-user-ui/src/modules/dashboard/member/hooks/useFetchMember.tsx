@@ -4,7 +4,7 @@ import { getMemberService } from '../service';
 import type { MemberQuery, MemberDto } from '../memberType';
 
 export function useFetchMember(payload: MemberDto): MemberQuery {
-  const query = useQuery(['fetch-member', payload.vaspId], () => getMemberService, {
+  const query = useQuery(['fetch-member', payload], () => getMemberService, {
     retry: 0,
     enabled: !!payload.vaspId
   });

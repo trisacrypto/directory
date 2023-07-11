@@ -17,19 +17,23 @@ import Loader from 'components/Loader';
 import MemberModalContent from './MemberModalContent';
 import { useFetchMember } from '../../hooks/useFetchMember';
 import { Trans } from '@lingui/macro';
+import { useSelector } from 'react-redux';
+import { memberSelector } from '../../member.slice';
 interface MemberModalProps {
   isOpen: boolean;
   onClose: () => void;
   member: any;
 }
 const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) => {
-  const { member, isFetchingMember } = useFetchMember(memberId);
+  const network = useSelector(memberSelector).members.network;
+  const { member, isFetchingMember } = useFetchMember({ vaspId: memberId, network });
   return (
     <>
       <Flex>
         <Box w="full">
-          {isFetchingMember && <Loader />}
-          {member && (
+          {isFetchingMember ? (
+            <Loader />
+          ) : (
             <Modal
               closeOnOverlayClick={false}
               isOpen={isOpen}
