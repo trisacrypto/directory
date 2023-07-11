@@ -1,5 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { logUserInBff, getUserRoles, getUserCurrentOrganizationService } from 'modules/auth/login/auth.service';
+import {
+  logUserInBff,
+  getUserRoles,
+  getUserCurrentOrganizationService
+} from 'modules/auth/login/auth.service';
 import { t } from '@lingui/macro';
 import {
   auth0SignIn,
@@ -63,7 +67,7 @@ export const getAuth0User: any = createAsyncThunk(
 
       if (getUserInfo && getUserInfo?.idTokenPayload?.email_verified) {
         const hasOrgId = localStorage.getItem('orgId') as any;
-        const getUser = await logUserInBff(hasOrgId ? { orgid: hasOrgId } : {}) as any;
+        const getUser = (await logUserInBff(hasOrgId ? { orgid: hasOrgId } : {})) as any;
         if (getUser && hasOrgId) {
           localStorage.removeItem('orgId');
         }
@@ -73,9 +77,16 @@ export const getAuth0User: any = createAsyncThunk(
           if (!newUserPayload?.idTokenPayload?.permissions) {
             newUserPayload = await refreshAndSetPermission();
           }
-          const expiresIn = getUserExpiresTime(newUserPayload?.idTokenPayload?.updated_at, getUserInfo.expiresIn);
-          setUserCookies(newUserPayload?.accessToken, expiresIn, newUserPayload?.idTokenPayload?.locale || 'en');
-          const getRoles = await getUserRoles() as any;
+          const expiresIn = getUserExpiresTime(
+            newUserPayload?.idTokenPayload?.updated_at,
+            getUserInfo.expiresIn
+          );
+          setUserCookies(
+            newUserPayload?.accessToken,
+            expiresIn,
+            newUserPayload?.idTokenPayload?.locale || 'en'
+          );
+          const getRoles = (await getUserRoles()) as any;
           const getUserOrgInfo: any = await getUserCurrentOrganizationService();
 
           const userInfo: TUser = {
@@ -89,20 +100,24 @@ export const getAuth0User: any = createAsyncThunk(
         }
         // return;
         if (getUser.status === 204) {
-          const expiresIn = getUserExpiresTime(getUserInfo?.idTokenPayload?.updated_at, getUserInfo.expiresIn);
-          setUserCookies(getUserInfo?.accessToken, expiresIn, getUserInfo?.idTokenPayload?.locale || 'en');
-          const getRoles = await getUserRoles() as any;
+          const expiresIn = getUserExpiresTime(
+            getUserInfo?.idTokenPayload?.updated_at,
+            getUserInfo.expiresIn
+          );
+          setUserCookies(
+            getUserInfo?.accessToken,
+            expiresIn,
+            getUserInfo?.idTokenPayload?.locale || 'en'
+          );
+          const getRoles = (await getUserRoles()) as any;
           const getUserOrgInfo: any = await getUserCurrentOrganizationService();
 
           const userInfo: TUser = {
             isLoggedIn: true,
-            user: setUserPayload(getUserInfo?.idTokenPayload,
-              {
-                roles: getRoles?.data,
-                vasp: getUserOrgInfo?.data
-
-              }) as IUserState
-
+            user: setUserPayload(getUserInfo?.idTokenPayload, {
+              roles: getRoles?.data,
+              vasp: getUserOrgInfo?.data
+            }) as IUserState
           };
           return userInfo;
         } else {
@@ -149,7 +164,7 @@ const userSlice: any = createSlice({
     },
     setUserName(state: any, { payload }: any) {
       state.user.name = payload;
-    },
+    }
 
     // isloading: (state: any, { payload }: any) => {
   },
