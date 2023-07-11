@@ -39,25 +39,25 @@ export const getVaspNetwork = (dir: any) => {
   }
 };
 
-export const getVaspStatus = (status: string) => {
+export const getVaspStatus = (status: number) => {
   switch (status) {
-    case '1':
+    case 1:
       return t`NO VERIFICATION`;
-    case '2':
+    case 2:
       return t`SUBMITTED`;
-    case '3':
+    case 3:
       return t`EMAIL VERIFIED`;
-    case '4':
+    case 4:
       return t`PENDING REVIEW`;
-    case '5':
+    case 5:
       return t`REVIEWED`;
-    case '6':
+    case 6:
       return t`VERIFIED`;
-    case '7':
+    case 7:
       return t`REJECTED`;
-    case '8':
+    case 8:
       return t`APPEALED`;
-    case '9':
+    case 9:
       return t`ERRORED`;
     default:
       return t`NO VERIFICATION`;
