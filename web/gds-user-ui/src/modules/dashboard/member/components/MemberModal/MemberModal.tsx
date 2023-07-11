@@ -33,6 +33,7 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
   });
 
   if (error) {
+    console.log('[] error', error?.response?.data);
     // close the modal for now , later we need to show a toast message
     onClose();
   }
