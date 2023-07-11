@@ -42,7 +42,7 @@ func TestIterContacts(t *testing.T) {
 	actualKinds := []string{}
 
 	// Should iterate over all contacts.
-	iter := models.NewContactIterator(contacts, false, false)
+	iter := models.NewContactIterator(contacts)
 	for iter.Next() {
 		contact, kind := iter.Value()
 		actualContacts = append(actualContacts, contact)
@@ -64,7 +64,7 @@ func TestIterContacts(t *testing.T) {
 		models.AdministrativeContact,
 		models.LegalContact,
 	}
-	iter = models.NewContactIterator(contacts, true, false)
+	iter = models.NewContactIterator(contacts, models.SkipNoEmail())
 	for iter.Next() {
 		contact, kind := iter.Value()
 		actualContacts = append(actualContacts, contact)
@@ -80,7 +80,7 @@ func TestIterContacts(t *testing.T) {
 	// Should skip nil contacts.
 	contacts.Technical = nil
 	contacts.Billing = nil
-	iter = models.NewContactIterator(contacts, false, false)
+	iter = models.NewContactIterator(contacts)
 	for iter.Next() {
 		contact, kind := iter.Value()
 		actualContacts = append(actualContacts, contact)
@@ -111,7 +111,7 @@ func TestIterVerifiedContacts(t *testing.T) {
 	actualKinds := []string{}
 
 	// No contacts are verified.
-	iter := models.NewContactIterator(contacts, false, true)
+	iter := models.NewContactIterator(contacts, models.SkipUnverified())
 	for iter.Next() {
 		contact, kind := iter.Value()
 		actualContacts = append(actualContacts, contact)
@@ -135,12 +135,83 @@ func TestIterVerifiedContacts(t *testing.T) {
 		models.TechnicalContact,
 		models.LegalContact,
 	}
-	iter = models.NewContactIterator(contacts, false, true)
+	iter = models.NewContactIterator(contacts, models.SkipUnverified())
 	for iter.Next() {
 		contact, kind := iter.Value()
 		actualContacts = append(actualContacts, contact)
 		actualKinds = append(actualKinds, kind)
 	}
+	require.NoError(t, iter.Error())
+	require.Equal(t, expectedContacts, actualContacts)
+	require.Equal(t, expectedKinds, actualKinds)
+}
+
+func TestIterDuplicates(t *testing.T) {
+	contacts := &pb.Contacts{
+		Technical: &pb.Contact{
+			Email: "data@enterprised.com",
+		},
+		Administrative: &pb.Contact{
+			Email: "picard@enterpised.com",
+		},
+		Legal: &pb.Contact{
+			Email: "troi@enterprised.com",
+		},
+		Billing: &pb.Contact{
+			Email: "riker@enterprised.com",
+		},
+	}
+
+	actualContacts := []*pb.Contact{}
+	actualKinds := []string{}
+
+	// Should iterate over all contacts if there are no duplicates.
+	expectedContacts := []*pb.Contact{
+		contacts.Technical,
+		contacts.Administrative,
+		contacts.Legal,
+		contacts.Billing,
+	}
+	expectedKinds := []string{
+		models.TechnicalContact,
+		models.AdministrativeContact,
+		models.LegalContact,
+		models.BillingContact,
+	}
+
+	iter := models.NewContactIterator(contacts, models.SkipDuplicates())
+	for iter.Next() {
+		contact, kind := iter.Value()
+		actualContacts = append(actualContacts, contact)
+		actualKinds = append(actualKinds, kind)
+	}
+
+	require.NoError(t, iter.Error())
+	require.Equal(t, expectedContacts, actualContacts)
+	require.Equal(t, expectedKinds, actualKinds)
+
+	// Should skip duplicate contacts.
+	actualContacts = []*pb.Contact{}
+	actualKinds = []string{}
+	contacts.Legal.Email = "riker@enterprised.com"
+	expectedContacts = []*pb.Contact{
+		contacts.Technical,
+		contacts.Administrative,
+		contacts.Legal,
+	}
+	expectedKinds = []string{
+		models.TechnicalContact,
+		models.AdministrativeContact,
+		models.LegalContact,
+	}
+
+	iter = models.NewContactIterator(contacts, models.SkipDuplicates())
+	for iter.Next() {
+		contact, kind := iter.Value()
+		actualContacts = append(actualContacts, contact)
+		actualKinds = append(actualKinds, kind)
+	}
+
 	require.NoError(t, iter.Error())
 	require.Equal(t, expectedContacts, actualContacts)
 	require.Equal(t, expectedKinds, actualKinds)

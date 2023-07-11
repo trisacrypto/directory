@@ -500,7 +500,7 @@ func (r *RegistrationForm) ValidateContacts() error {
 
 	// Validate each non-zero contact
 	contacts := 0
-	iter := models.NewContactIterator(r.Contacts, false, false)
+	iter := models.NewContactIterator(r.Contacts)
 	for iter.Next() {
 		contacts++
 		contact, field := iter.Value()

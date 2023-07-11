@@ -114,21 +114,56 @@ func contactOrder(contacts *pb.Contacts) []*contactType {
 }
 
 type ContactIterator struct {
-	email    bool
-	verified bool
-	index    int
-	contacts []*contactType
+	skipNoEmail    bool
+	skipUnverified bool
+	skipDuplicates bool
+	index          int
+	contacts       []*contactType
+	emails         map[string]struct{}
+}
+
+// ContactIterOptions are used to configure iterator behavior
+type ContactIterOption func(c *ContactIterator)
+
+// Skip contacts with no email address
+func SkipNoEmail() ContactIterOption {
+	return func(c *ContactIterator) {
+		c.skipNoEmail = true
+	}
+}
+
+// Skip contacts that are not verified
+func SkipUnverified() ContactIterOption {
+	return func(c *ContactIterator) {
+		c.skipUnverified = true
+	}
+}
+
+// Skip contacts with duplicate email addresses, e.g. if the technical contact is the
+// same as the administrative contact then only the technical contact will be returned
+// in the iteration.
+func SkipDuplicates() ContactIterOption {
+	return func(c *ContactIterator) {
+		c.skipDuplicates = true
+	}
 }
 
 // Returns a new ContactIterator which has Next() and Value() methods that can be used
-// to iterate over contacts in a Contacts object.
-func NewContactIterator(contacts *pb.Contacts, requireEmail bool, requireVerified bool) *ContactIterator {
-	return &ContactIterator{
-		email:    requireEmail,
-		verified: requireVerified,
+// to iterate over contacts in a Contacts object. By default, the iterator will return
+// each contact which is non-zero. SkipNoEmail(), SkipUnverified(), and
+// SkipDuplicates() can be used to filter contacts returned by the iterator.
+func NewContactIterator(contacts *pb.Contacts, opts ...ContactIterOption) *ContactIterator {
+	c := &ContactIterator{
 		index:    -1,
 		contacts: contactOrder(contacts),
+		emails:   make(map[string]struct{}),
 	}
+
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	return c
 }
 
 // Moves the ContactIterator to the next existing contact and returns true if there is
@@ -149,12 +184,18 @@ func (i *ContactIterator) Next() bool {
 	}
 
 	// Filter if email required
-	if i.email && !ContactHasEmail(current.contact) {
+	if i.skipNoEmail && !ContactHasEmail(current.contact) {
+		return i.Next()
+	}
+
+	// Filter if this is a duplicate
+	_, ok := i.emails[current.contact.Email]
+	if i.skipDuplicates && ok {
 		return i.Next()
 	}
 
 	// Filter if verified is required
-	if i.verified {
+	if i.skipUnverified {
 		if verified, err := ContactIsVerified(current.contact); err != nil || !verified {
 			// Even in an error we're skipping the contact, errors have to be
 			// fetched as a multi-error after the iteration is complete.
@@ -164,6 +205,9 @@ func (i *ContactIterator) Next() bool {
 			return i.Next()
 		}
 	}
+
+	// Keep track of unique emails
+	i.emails[current.contact.Email] = struct{}{}
 
 	return true
 }
@@ -230,7 +274,7 @@ func SetContactVerification(contact *pb.Contact, token string, verified bool) (e
 // contacts, omitting any contacts that are not verified or do not exist.
 func VerifiedContacts(vasp *pb.VASP) (contacts map[string]string) {
 	contacts = make(map[string]string)
-	iter := NewContactIterator(vasp.Contacts, false, true)
+	iter := NewContactIterator(vasp.Contacts, SkipUnverified())
 	for iter.Next() {
 		contact, kind := iter.Value()
 		contacts[kind] = contact.Email
@@ -242,7 +286,7 @@ func VerifiedContacts(vasp *pb.VASP) (contacts map[string]string) {
 // contacts that do not exist.
 func ContactVerifications(vasp *pb.VASP) (contacts map[string]bool, errs *multierror.Error) {
 	contacts = make(map[string]bool)
-	iter := NewContactIterator(vasp.Contacts, false, false)
+	iter := NewContactIterator(vasp.Contacts)
 	for iter.Next() {
 		contact, kind := iter.Value()
 		if verified, err := ContactIsVerified(contact); err != nil {
