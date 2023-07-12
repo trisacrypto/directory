@@ -40,8 +40,8 @@ export type VaspType = {
   vasp_categories: string[];
   verified_on: string;
   status: string;
-  first_listed?: string;
-  last_updated?: string;
+  first_listed: string;
+  last_updated: string;
 };
 
 export type MemberDto = {

@@ -8,7 +8,6 @@ interface MemberDetailProps {
 }
 
 const MemberDetail = ({ member }: MemberDetailProps) => {
-  console.log('member', member);
   return (
     <>
       <Stack w="full" pb={5}>
