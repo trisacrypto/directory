@@ -60,7 +60,7 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
             {wasMemberFetched && !isFetchingMember && !error && (
               <>
                 <ModalHeader data-testid="confirmation-modal-header" textAlign={'center'}>
-                  {member?.summary?.name}
+                  {member?.data?.summary?.name}
                 </ModalHeader>
                 <ModalCloseButton data-testid="close-btn-icon" />
 
