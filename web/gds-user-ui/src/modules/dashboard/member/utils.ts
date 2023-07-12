@@ -82,7 +82,6 @@ export async function copyToClipboard(data: any) {
       item.value = item.value ? item.value : 'N/A';
       return ` ${item.label} \n ${item.value} \n`;
     }).join('\n');
-    console.log('text', values);
       await navigator.clipboard.writeText(values);
   } catch (err) {
       console.error('[copyToClipboard]', err);

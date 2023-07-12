@@ -4,6 +4,11 @@ import { Button } from "@chakra-ui/react";
 import { Trans, t } from "@lingui/macro";
 import { getBusinessCategoryValue, getVaspCategoryValue } from "constants/basic-details";
 
+interface MemberDetailTableHeader {
+  label: string;
+  value: string;
+}
+
 type CopyProps = {
     data: any;
 };
@@ -88,7 +93,7 @@ const memberDetailTableHeader = [
 
 
     const handleCopy = async () => {
-        await copyToClipboard(memberDetailTableHeader as any);
+        await copyToClipboard(memberDetailTableHeader as MemberDetailTableHeader[]);
         setCopied(true);
     };
     return copied ? (
