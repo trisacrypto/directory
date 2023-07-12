@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Box,
   Flex,
@@ -11,15 +11,15 @@ import {
   ModalCloseButton,
   Modal,
   HStack,
-  Button
+  Button,
+  useToast
 } from '@chakra-ui/react';
 import Loader from 'components/Loader';
 import MemberModalContent from './MemberModalContent';
 import { useFetchMember } from '../../hooks/useFetchMember';
-import { Trans } from '@lingui/macro';
+import { Trans, t } from '@lingui/macro';
 import { useSelector } from 'react-redux';
 import { memberSelector } from '../../member.slice';
-// import useToast from 'hooks/useToast';
 interface MemberModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -31,12 +31,21 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
     vaspId: memberId,
     network
   });
+  const toast = useToast();
 
-  if (error) {
-    console.log('[] error', error?.response?.data);
-    // close the modal for now , later we need to show a toast message
+  useEffect(() => {
     onClose();
-  }
+    if (error && error?.response?.status !== 451) {
+      toast({
+        description: error?.response?.data?.error,
+        status: 'error',
+        duration: 5000,
+        position: 'top-right',
+        isClosable: true
+      });
+    }
+  }, [error, toast, onClose]);
+
   return (
     <Flex>
       <Box w="full">
