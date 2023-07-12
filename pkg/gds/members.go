@@ -328,18 +328,55 @@ func (s *Members) Details(ctx context.Context, in *api.DetailsRequest) (out *api
 
 	// Add the IVMS101 legal person to the response
 	if vasp.Entity == nil {
-		log.Error().Str("vasp_id", vasp.Id).Msg("VASP is missing legal person")
-		return nil, status.Error(codes.Internal, "VASP is missing legal person")
+		log.Warn().Str("vasp_id", vasp.Id).Msg("VASP is missing legal person")
 	}
 	out.LegalPerson = vasp.Entity
 
 	// Add the TRIXO form data to the response
 	if vasp.Trixo == nil {
-		log.Error().Str("vasp_id", vasp.Id).Msg("VASP is missing TRIXO form data")
-		return nil, status.Error(codes.Internal, "VASP is missing TRIXO form data")
+		log.Warn().Str("vasp_id", vasp.Id).Msg("VASP is missing TRIXO form data")
 	}
 	out.Trixo = vasp.Trixo
 
+	// Add the contacts data to the response
+	if vasp.Contacts == nil {
+		log.Warn().Str("vasp_id", vasp.Id).Msg("VASP is missing contacts data")
+	}
+
+	// NOTE: ensure that extra and person are null on return.
+	// We only want to supply name, email, and phone to other VASPs.
+	out.Contacts = &pb.Contacts{}
+	if vasp.Contacts.Administrative != nil {
+		out.Contacts.Administrative = &pb.Contact{
+			Name: vasp.Contacts.Administrative.Name,
+			Email: vasp.Contacts.Administrative.Email,
+			Phone: vasp.Contacts.Administrative.Phone,
+		}
+	}
+
+	if vasp.Contacts.Technical != nil {
+		out.Contacts.Technical = &pb.Contact{
+			Name: vasp.Contacts.Technical.Name,
+			Email: vasp.Contacts.Technical.Email,
+			Phone: vasp.Contacts.Technical.Phone,
+		}
+	}
+
+	if vasp.Contacts.Billing != nil {
+		out.Contacts.Billing = &pb.Contact{
+			Name: vasp.Contacts.Billing.Name,
+			Email: vasp.Contacts.Billing.Email,
+			Phone: vasp.Contacts.Billing.Phone,
+		}
+	}
+
+	if vasp.Contacts.Legal != nil {
+		out.Contacts.Legal = &pb.Contact{
+			Name: vasp.Contacts.Legal.Name,
+			Email: vasp.Contacts.Legal.Email,
+			Phone: vasp.Contacts.Legal.Phone,
+		}
+	}
 	return out, nil
 }
 
