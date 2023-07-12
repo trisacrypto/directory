@@ -11,7 +11,7 @@ export const mainnetMembersMockValue: any = {
       business_category: 'BUSINESS_ENTITY',
       vasp_categories: ['OTC'],
       verified_on: '2022-04-20T10:45:33Z',
-      status: '6',
+      status: 6,
       first_listed: '2022-04-20T11:10:06Z',
       last_updated: '2022-11-19T09:32:45Z'
     },
@@ -26,7 +26,7 @@ export const mainnetMembersMockValue: any = {
       business_category: 'BUSINESS_ENTITY',
       vasp_categories: ['Exchange', 'Other'],
       verified_on: '2023-03-22T03:55:00Z',
-      status: '6',
+      status: 6,
       first_listed: '2023-03-22T04:22:18Z',
       last_updated: '2023-05-10T04:44:00Z'
     },
@@ -41,7 +41,7 @@ export const mainnetMembersMockValue: any = {
       business_category: 'BUSINESS_ENTITY',
       vasp_categories: ['Other'],
       verified_on: '2023-01-20T12:55:03Z',
-      status: '6',
+      status: 6,
       first_listed: '2023-01-20T14:10:26Z',
       last_updated: '2023-06-18T10:30:01Z'
     }
@@ -62,7 +62,7 @@ export const testnetMembersMockValue: any = {
       business_category: 'BUSINESS_ENTITY',
       vasp_categories: ['OTC'],
       verified_on: '2022-02-10T17:12:23Z',
-      status: '6',
+      status: 6,
       first_listed: '2022-02-10T13:43:55Z',
       last_updated: '2023-04-09T04:02:50Z'
     },
@@ -77,7 +77,7 @@ export const testnetMembersMockValue: any = {
       business_category: 'BUSINESS_ENTITY',
       vasp_categories: ['Exchange', 'Other'],
       verified_on: '2021-12-07T20:22:00Z',
-      status: '6',
+      status: 6,
       first_listed: '2021-12-01T23:22:18Z',
       last_updated: '2023-01-23T19:19:43Z'
     },
@@ -92,7 +92,7 @@ export const testnetMembersMockValue: any = {
       business_category: 'BUSINESS_ENTITY',
       vasp_categories: ['Other'],
       verified_on: '2021-07-29T19:11:03Z',
-      status: '6',
+      status: 6,
       first_listed: '2021-07-23T17:10:26Z',
       last_updated: '2022-12-27T18:59:01Z'
     },
@@ -107,7 +107,7 @@ export const testnetMembersMockValue: any = {
       business_category: 'BUSINESS_ENTITY',
       vasp_categories: ['Other'],
       verified_on: '2021-06-23T17:46:10Z',
-      status: '6',
+      status: 6,
       first_listed: '2021-06-23T17:12:00Z',
       last_updated: '2022-12-27T18:59:22Z'
     },
@@ -122,7 +122,7 @@ export const testnetMembersMockValue: any = {
       business_category: 'BUSINESS_ENTITY',
       vasp_categories: ['Kiosk'],
       verified_on: '2021-09-14T10:40:30Z',
-      status: '6',
+      status: 6,
       first_listed: '2021-09-01T19:46:04Z',
       last_updated: '2023-01-23T19:29:43Z'
     }
@@ -142,7 +142,7 @@ export const memberDetailMock = {
     business_category: 'PRIVATE_ORGANIZATION',
     vasp_categories: ['Exchange'],
     verified_on: '',
-    status: '6'
+    status: 6
   },
   legal_person: {
     name: {

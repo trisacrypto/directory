@@ -19,6 +19,7 @@ import { useFetchMember } from '../../hooks/useFetchMember';
 import { Trans } from '@lingui/macro';
 import { useSelector } from 'react-redux';
 import { memberSelector } from '../../member.slice';
+// import useToast from 'hooks/useToast';
 interface MemberModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -26,21 +27,28 @@ interface MemberModalProps {
 }
 const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) => {
   const network = useSelector(memberSelector).members.network;
-  const { member, isFetchingMember } = useFetchMember({ vaspId: memberId, network });
+  const { member, isFetchingMember, error, wasMemberFetched } = useFetchMember({
+    vaspId: memberId,
+    network
+  });
+
+  if (error) {
+    console.log('[] error', error?.response?.data);
+    // close the modal for now , later we need to show a toast message
+    onClose();
+  }
   return (
-    <>
-      <Flex>
-        <Box w="full">
-          {isFetchingMember ? (
-            <Loader />
-          ) : (
-            <Modal
-              closeOnOverlayClick={false}
-              isOpen={isOpen}
-              onClose={onClose}
-              data-testid="member-modal">
-              <ModalOverlay />
-              <ModalContent width={'100%'}>
+    <Flex>
+      <Box w="full">
+        <Modal
+          closeOnOverlayClick={false}
+          isOpen={isOpen}
+          onClose={onClose}
+          data-testid="member-modal">
+          <ModalOverlay />
+          <ModalContent width={'100%'}>
+            {wasMemberFetched && !isFetchingMember && !error && (
+              <>
                 <ModalHeader data-testid="confirmation-modal-header" textAlign={'center'}>
                   {member?.summary?.name}
                 </ModalHeader>
@@ -60,12 +68,18 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
                     </Button>
                   </HStack>
                 </ModalFooter>
-              </ModalContent>
-            </Modal>
-          )}
-        </Box>
-      </Flex>
-    </>
+              </>
+            )}
+
+            {isFetchingMember && (
+              <ModalBody pb={6}>
+                <Loader />
+              </ModalBody>
+            )}
+          </ModalContent>
+        </Modal>
+      </Box>
+    </Flex>
   );
 };
 

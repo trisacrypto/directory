@@ -6,9 +6,14 @@ import { memberSelector } from '../member.slice';
 import { downloadMembers2CVS } from '../utils';
 const useExportMembers = () => {
   const network = useSelector(memberSelector).members.network;
-  const { members, getMembers } = useFetchMembers(network);
+  const { members, getMembers, error } = useFetchMembers(network);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const LOADING_TIMEOUT = 500;
+
+  const isUnverified = error && error?.response?.status === 451;
+  const isMemberEmpty = !members?.vasps?.length;
+  const hasError = !isUnverified && error; // if error is not 451, then it's a real error
+
   const exportHandler = () => {
     try {
       setIsLoading(true);
@@ -17,8 +22,8 @@ const useExportMembers = () => {
         downloadMembers2CVS(members?.vasps);
         setIsLoading(false);
       }, LOADING_TIMEOUT);
-    } catch (error) {
-      console.log('[useExportMembers] error: ', error);
+    } catch (er: any) {
+      console.log('[useExportMembers] error: ', er);
     }
   };
 
@@ -27,11 +32,19 @@ const useExportMembers = () => {
       console.log('[ExportButton]');
       getMembers();
     }
-  }, [isLoading, getMembers]);
+  }, [isLoading, getMembers, error]);
+
+  useEffect(() => {
+    // this should avoid the loading state to be stuck
+    if (error) {
+      setIsLoading(false);
+    }
+  }, [error]);
 
   return {
     exportHandler,
-    isLoading
+    isLoading,
+    isDisabled: isUnverified || isMemberEmpty || hasError
   };
 };
 
