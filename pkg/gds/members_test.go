@@ -3,6 +3,7 @@ package gds_test
 import (
 	"context"
 
+	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
@@ -163,4 +164,38 @@ func (s *gdsTestSuite) TestMembersDetails() {
 	require.True(proto.Equal(details, out.MemberSummary), "VASP details mismatch")
 	require.True(proto.Equal(charlie.Entity, out.LegalPerson), "VASP legal person mismatch")
 	require.True(proto.Equal(charlie.Trixo, out.Trixo), "VASP trixo form mismatch")
+
+	// Check contacts return is correct
+	contacts := []struct{
+		expected *pb.Contact
+		actual *pb.Contact
+		name string
+	}{
+		{charlie.Contacts.Administrative, out.Contacts.Administrative, "administrative"},
+		{charlie.Contacts.Technical, out.Contacts.Technical, "technical"},
+		{charlie.Contacts.Legal, out.Contacts.Legal, "legal"},
+		{charlie.Contacts.Billing, out.Contacts.Billing, "billing"},
+	}
+
+	nContacts := 0
+	for _, contact := range contacts {
+		if contact.expected == nil {
+			require.Nil(contact.actual, "expected nil entry for %s contact", contact.name)
+			continue
+		}
+
+		require.NotNil(contact.actual, "expected non-nil entry for %s contact", contact.name)
+		nContacts++
+
+		// Ensure that private information is not returned
+		require.Nil(contact.actual.Person)
+		require.Nil(contact.actual.Extra)
+
+		// Ensure that contact matches
+		require.Equal(contact.expected.Name, contact.actual.Name, "mismatch name for %s contact", contact.name)
+		require.Equal(contact.expected.Email, contact.actual.Email, "mismatch email for %s contact", contact.name)
+		require.Equal(contact.expected.Phone, contact.actual.Phone, "mismatch phone for %s contact", contact.name)
+	}
+
+	require.Greater(nContacts, 0, "charlie fixture has no contact data")
 }
