@@ -3,7 +3,6 @@ import MemberTableRows from './MemberTableRows';
 import { useFetchMembers } from '../hooks/useFetchMembers';
 import { memberSelector } from '../member.slice';
 import { useSelector } from 'react-redux';
-// import { mainnetMembersMockValue } from '../__mocks__';
 const MemberTableList = () => {
   const network = useSelector(memberSelector).members.network;
 

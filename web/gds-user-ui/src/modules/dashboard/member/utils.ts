@@ -76,3 +76,14 @@ export const downloadMembers2CVS = (member: any) => {
   downloadCSV(memberCsv, 'members');
 };
 
+export async function copyToClipboard(data: any) {
+  try {
+    const values = data.map((item: any) => {
+      item.value = item?.value || 'N/A';
+      return ` ${item?.label}\n ${item?.value}\n`;
+    }).join('\n');
+      await navigator.clipboard.writeText(values);
+  } catch (err) {
+      console.error('[copyToClipboard]', err);
+  }
+}

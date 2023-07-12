@@ -54,10 +54,12 @@ export type MemberSummary = VaspType;
 export type MemberLegalPerson = {};
 
 export type Member = {
-  summary: VaspType;
-  legal_person: any;
-  trixo: any;
-  contacts: any;
+  data: {
+    summary: VaspType;
+    legal_person: any;
+    trixo: any;
+    contacts: any;
+  };
 };
 
 export type MemberNetworkType = {

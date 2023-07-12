@@ -20,6 +20,7 @@ import { useFetchMember } from '../../hooks/useFetchMember';
 import { Trans, t } from '@lingui/macro';
 import { useSelector } from 'react-redux';
 import { memberSelector } from '../../member.slice';
+import Copy from './Copy';
 interface MemberModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -72,9 +73,7 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
                     <Button bg={'black'} onClick={onClose} data-testid="modal-close-button">
                       <Trans>Close</Trans>
                     </Button>
-                    <Button bg={'#FF7A59'} color={'white'}>
-                      <Trans>Copy</Trans>
-                    </Button>
+                    <Copy data={member} />
                   </HStack>
                 </ModalFooter>
               </>

@@ -68,3 +68,10 @@ export const getBusinessCategoryOptions = () => {
 export const getBusinessCategiryLabel = (category: string) => {
   return vaspCategories.find((c) => c.value === category)?.label;
 };
+
+export const getVaspCategoryValue = (category: string[]) => {
+  return category.map((c) => {
+    const foundCategory = vaspCategories.find((cat) => cat.value === c);
+    return foundCategory ? foundCategory.label : c;
+  });
+};
