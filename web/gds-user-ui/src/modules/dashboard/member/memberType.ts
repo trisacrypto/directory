@@ -39,7 +39,7 @@ export type VaspType = {
   business_category: string;
   vasp_categories: string[];
   verified_on: string;
-  status: string;
+  status: number;
   first_listed: string;
   last_updated: string;
 };
