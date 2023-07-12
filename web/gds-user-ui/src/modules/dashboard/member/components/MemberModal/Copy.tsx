@@ -17,67 +17,67 @@ function Copy({ data }: CopyProps) {
 const memberDetailTableHeader = [
   {
     label: t`Name`,
-    value: data?.summary?.name || 'N/A'
+    value: data?.data?.summary?.name
   },
   {
     label: t`Website`,
-    value: data?.summary?.website || 'N/A'
+    value: data?.data?.summary?.website
   },
   {
     label: t`Business Category`,
-    value: BUSINESS_CATEGORY[data?.summary?.business_category as keyof typeof BUSINESS_CATEGORY] || 'N/A'
+    value: BUSINESS_CATEGORY[data?.data?.summary?.business_category as keyof typeof BUSINESS_CATEGORY]
   },
   {
     label: t`VASP Category`,
-    value: getVaspCategoryValue(data?.summary?.vasp_categories) || 'N/A'
+    value: getVaspCategoryValue(data?.data?.summary?.vasp_categories)
   },
   {
     label: t`Country of Registration`,
-    value: data?.legal_person?.country_of_registration || 'N/A'
+    value: data?.data?.legal_person?.country_of_registration
   },
   {
     label: t`Technical Contact Name`,
-    value: data?.contacts?.technical?.name || 'N/A'
+    value: data?.data?.contacts?.technical?.name
   },
   {
     label: t`Technical Contact Email`,
-    value: data?.contacts?.technical?.email || 'N/A'
+    value: data?.data?.contacts?.technical?.email
   },
   {
     label: t`Technical Contact Phone`,
-    value: data?.contacts?.technical?.phone || 'N/A'
+    value: data?.data?.contacts?.technical?.phone
   },
   {
     label: t`Compliance / Legal Contact Name`,
-    value: data?.contacts?.legal?.email || 'N/A'
+    value: data?.data?.contacts?.legal?.email
   },
   {
     label: t`Compliance / Legal Contact Email`,
-    value: data?.contacts?.legal?.email || 'N/A'
+    value: data?.data?.contacts?.legal?.email
   },
   {
     label: t`Compliance / Legal Contact Phone`,
-    value: data?.contacts?.legal?.phone || 'N/A'
+    value: data?.data?.contacts?.legal?.phone
   },
   {
     label: t`Administrative Contact Name`,
-    value: data?.contacts?.administrative?.name || 'N/A'
+    value: data?.data?.contacts?.administrative?.name
   },
   {
     label: t`Administrative Contact Email`,
-    value: data?.contacts?.administrative?.email || 'N/A'
+    value: data?.data?.contacts?.administrative?.email
   },
   {
     label: t`Administrative Contact Phone`,
-    value: data?.contacts?.administrative?.phone || 'N/A'
+    value: data?.data?.contacts?.administrative?.phone
   },
   {
     label: t`TRISA Endpoint`,
-    value: data?.summary?.endpoint || 'N/A'
+    value: data?.data?.summary?.endpoint
   },
   {
     label: t`Common Name`,
-    value: data?.summary?.common_name || 'N/A'
+    value: data?.data?.summary?.common_name
   },
 ];
     const [copied, setCopied] = useState(false);

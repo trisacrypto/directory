@@ -16,14 +16,14 @@ const MemberDetail = ({ member }: MemberDetailProps) => {
             <ListItem fontWeight={'bold'}>
               <Trans>Website</Trans>
             </ListItem>
-            <ListItem>{member?.summary?.website || 'N/A'}</ListItem>
+            <ListItem>{member?.data?.summary?.website || 'N/A'}</ListItem>
           </List>
           <List>
             <ListItem fontWeight={'bold'}>
               <Trans>Business Category</Trans>
             </ListItem>
             <ListItem>
-              {(BUSINESS_CATEGORY as any)[member?.summary?.business_category] || 'N/A'}
+              {(BUSINESS_CATEGORY as any)[member?.data?.summary?.business_category] || 'N/A'}
             </ListItem>
           </List>
           <List>
@@ -31,8 +31,8 @@ const MemberDetail = ({ member }: MemberDetailProps) => {
               <Trans>VASP Category</Trans>
             </ListItem>
             <ListItem>
-              {member?.summary?.vasp_categories && member?.summary?.vasp_categories.length > 0
-                ? member?.summary?.vasp_categories?.map((categ: any, index: any) => {
+              {member?.data?.summary?.vasp_categories && member?.data?.summary?.vasp_categories.length > 0
+                ? member?.data?.summary?.vasp_categories?.map((categ: any, index: any) => {
                     return (
                       <Tag key={index} color={'white'} bg={'blue'} mr={2} mb={1}>
                         {getBusinessCategiryLabel(categ)}
@@ -46,7 +46,7 @@ const MemberDetail = ({ member }: MemberDetailProps) => {
             <ListItem fontWeight={'bold'}>
               <Trans>Country of Registration</Trans>
             </ListItem>
-            <ListItem>{member?.summary?.country || 'N/A'}</ListItem>
+            <ListItem>{member?.data?.summary?.country || 'N/A'}</ListItem>
           </List>
           {['legal', 'technical', 'administrative'].map((contact, index) => (
             <List key={index}>
@@ -59,16 +59,16 @@ const MemberDetail = ({ member }: MemberDetailProps) => {
                 </Trans>
               </ListItem>
               <ListItem>
-                {hasValue(member?.contacts?.[contact]) ? (
+                {hasValue(member?.data?.contacts?.[contact]) ? (
                   <>
-                    {member?.contacts?.[contact]?.name && (
-                      <Text>{member?.contacts?.[contact]?.name}</Text>
+                    {member?.data?.contacts?.[contact]?.name && (
+                      <Text>{member?.data?.contacts?.[contact]?.name}</Text>
                     )}
-                    {member?.contacts?.[contact]?.email && (
-                      <Text>{member?.contacts?.[contact]?.email}</Text>
+                    {member?.data?.contacts?.[contact]?.email && (
+                      <Text>{member?.data?.contacts?.[contact]?.email}</Text>
                     )}
-                    {member?.contacts?.[contact]?.phone && (
-                      <Text>{member?.contacts?.[contact]?.phone}</Text>
+                    {member?.data?.contacts?.[contact]?.phone && (
+                      <Text>{member?.data?.contacts?.[contact]?.phone}</Text>
                     )}
                   </>
                 ) : (
@@ -81,13 +81,13 @@ const MemberDetail = ({ member }: MemberDetailProps) => {
             <ListItem fontWeight={'bold'}>
               <Trans>TRISA Endpoint</Trans>
             </ListItem>
-            <ListItem>{member?.summary?.endpoint || 'N/A'}</ListItem>
+            <ListItem>{member?.data?.summary?.endpoint || 'N/A'}</ListItem>
           </List>
           <List>
             <ListItem fontWeight={'bold'}>
               <Trans>Common Name</Trans>
             </ListItem>
-            <ListItem>{member?.summary?.common_name || 'N/A'}</ListItem>
+            <ListItem>{member?.data?.summary?.common_name || 'N/A'}</ListItem>
           </List>
         </SimpleGrid>
       </Stack>
