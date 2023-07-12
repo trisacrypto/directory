@@ -459,6 +459,62 @@ func (s *leveldbTestSuite) TestOrganizationStore() {
 	s.NoError(err)
 	_, err = s.db.RetrieveOrganization(context.Background(), uu)
 	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+
+	// Create a few organizations
+	for i := 0; i < 10; i++ {
+		org := &bff.Organization{}
+		id, err := s.db.CreateOrganization(context.Background(), org)
+		s.NoError(err)
+		s.NotEmpty(id)
+	}
+
+	// Test Prev() and Next() interactions
+	actualOrgs := 0
+	iter := s.db.ListOrganizations(context.Background())
+	s.False(iter.Prev(), "should move behind the first Organization")
+	s.True(iter.Next(), "should move to the first Organization")
+	first, err := iter.Organization()
+	s.NoError(err)
+	s.NotNil(first)
+	actualOrgs++
+	s.True(iter.Next(), "should move to the second Organization")
+	second, err := iter.Organization()
+	s.NoError(err)
+	s.NotNil(second)
+	s.NotEqual(first.Id, second.Id, "organizations should have unique IDs")
+	actualOrgs++
+
+	// Consume the rest of the iterator
+	for iter.Next() {
+		org, err := iter.Organization()
+		s.NoError(err)
+		s.NotNil(org)
+		actualOrgs++
+	}
+	s.NoError(iter.Error())
+	iter.Release()
+	s.Equal(actualOrgs, 10, "iterator returned the wrong number of organizations")
+
+	// Create enough organizations to exceed the default page size
+	for i := 0; i < 100; i++ {
+		org := &bff.Organization{}
+		_, err := s.db.CreateOrganization(context.Background(), org)
+		s.NoError(err)
+	}
+
+	// Consume all of the organizations
+	iter = s.db.ListOrganizations(context.Background())
+	actualOrgs = 0
+	for iter.Next() {
+		org, err := iter.Organization()
+		s.NoError(err)
+		s.NotNil(org)
+		actualOrgs++
+	}
+	s.NoError(iter.Error())
+	iter.Release()
+
+	s.Equal(actualOrgs, 110, "iterator returned the wrong number of organizations")
 }
 
 func (s *leveldbTestSuite) TestContactStore() {
