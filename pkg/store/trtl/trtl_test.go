@@ -692,6 +692,62 @@ func (s *trtlStoreTestSuite) TestOrganizationStore() {
 	require.NoError(err)
 	_, err = db.RetrieveOrganization(context.Background(), uu)
 	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
+
+	// Create a few organizations
+	for i := 0; i < 10; i++ {
+		org := &bff.Organization{}
+		id, err := db.CreateOrganization(context.Background(), org)
+		require.NoError(err)
+		require.NotEmpty(id)
+	}
+
+	// Test Prev() and Next() interactions
+	actualOrgs := 0
+	iter := db.ListOrganizations(context.Background())
+	require.False(iter.Prev(), "should move behind the first Organization")
+	require.True(iter.Next(), "should move to the first Organization")
+	first, err := iter.Organization()
+	require.NoError(err)
+	require.NotNil(first)
+	actualOrgs++
+	require.True(iter.Next(), "should move to the second Organization")
+	second, err := iter.Organization()
+	require.NoError(err)
+	require.NotNil(second)
+	require.NotEqual(first.Id, second.Id, "organizations should have unique IDs")
+	actualOrgs++
+
+	// Consume the rest of the iterator
+	for iter.Next() {
+		org, err := iter.Organization()
+		require.NoError(err)
+		require.NotNil(org)
+		actualOrgs++
+	}
+	require.NoError(iter.Error())
+	iter.Release()
+	require.Equal(actualOrgs, 10, "iterator returned the wrong number of organizations")
+
+	// Create enough organizations to exceed the default page size
+	for i := 0; i < 100; i++ {
+		org := &bff.Organization{}
+		_, err := db.CreateOrganization(context.Background(), org)
+		require.NoError(err)
+	}
+
+	// Consume all of the organizations
+	iter = db.ListOrganizations(context.Background())
+	actualOrgs = 0
+	for iter.Next() {
+		org, err := iter.Organization()
+		require.NoError(err)
+		require.NotNil(org)
+		actualOrgs++
+	}
+	require.NoError(iter.Error())
+	iter.Release()
+
+	require.Equal(actualOrgs, 110, "iterator returned the wrong number of organizations")
 }
 
 func (s *trtlStoreTestSuite) TestContactStore() {
