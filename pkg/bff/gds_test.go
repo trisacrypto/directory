@@ -2,6 +2,7 @@ package bff_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"path/filepath"
@@ -21,6 +22,7 @@ import (
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -760,10 +762,53 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 		require.Equal(expectedCalls["testnet"], s.testnet.gds.Calls[mock.RegisterRPC], "check testnet calls during %s testing", network)
 		require.Equal(expectedCalls["mainnet"], s.mainnet.gds.Calls[mock.RegisterRPC], "check mainnet calls during %s testing", network)
 
+		// Load the valid register reply response
+		reply := &gds.RegisterReply{}
+		require.NoError(loadPBFixture(fmt.Sprintf("testdata/%s/register_reply.json", network), reply), "could not load register reply fixture for %s", network)
+
 		// Test a valid register reply
-		// TODO: we should validate what is being sent to the GDS server
-		err = mgds.UseFixture(mock.RegisterRPC, fmt.Sprintf("testdata/%s/register_reply.json", network))
-		require.NoError(err, "could not load register reply fixture")
+		mgds.OnRegister = func(ctx context.Context, req *gds.RegisterRequest) (*gds.RegisterReply, error) {
+			// TODO: We could do deeper validation, but we have GDS tests for that.
+			// This makes sure that all the fields in the form are being passed to GDS.
+			if req.Entity == nil {
+				return nil, status.Error(codes.InvalidArgument, "legal person entity missing in request")
+			}
+
+			if req.Contacts == nil {
+				return nil, status.Error(codes.InvalidArgument, "contacts missing in request")
+			}
+
+			if req.TrisaEndpoint == "" {
+				return nil, status.Error(codes.InvalidArgument, "trisa endpoint missing in request")
+			}
+
+			if req.CommonName == "" {
+				return nil, status.Error(codes.InvalidArgument, "common name missing in request")
+			}
+
+			if req.Website != org.Registration.Website {
+				return nil, status.Error(codes.InvalidArgument, "wrong website in request")
+			}
+
+			if req.BusinessCategory != org.Registration.BusinessCategory {
+				return nil, status.Error(codes.InvalidArgument, "wrong business category in request")
+			}
+
+			if len(req.VaspCategories) != len(org.Registration.VaspCategories) {
+				return nil, errors.New("wrong vasp categories in request")
+			}
+
+			if req.EstablishedOn == "" {
+				return nil, status.Error(codes.InvalidArgument, "established on date missing in request")
+			}
+
+			if req.Trixo == nil {
+				return nil, status.Error(codes.InvalidArgument, "trixo questionnaire missing in request")
+			}
+
+			// Send the register reply back
+			return reply, nil
+		}
 
 		rep, err := s.client.SubmitRegistration(context.TODO(), network)
 		expectedCalls[network]++
