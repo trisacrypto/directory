@@ -9,11 +9,11 @@ import (
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/utils"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 const (
@@ -66,14 +66,14 @@ func (s *Server) Login(c *gin.Context) {
 	// Parse optional params
 	params := &api.LoginParams{}
 	if err = c.ShouldBind(params); err != nil {
-		log.Error().Err(err).Msg("could not bind request")
+		sentry.Error(c).Err(err).Msg("could not bind request")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
 
 	// Fetch the user from the context
 	if user, err = auth.GetUserInfo(c); err != nil {
-		log.Error().Err(err).Msg("login handler requires user info; expected middleware to return 401")
+		sentry.Error(c).Err(err).Msg("login handler requires user info; expected middleware to return 401")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify user to login"))
 		return
 	}
@@ -81,7 +81,7 @@ func (s *Server) Login(c *gin.Context) {
 	// Fetch the user's claims
 	var claims *auth.Claims
 	if claims, err = auth.GetClaims(c); err != nil {
-		log.Error().Err(err).Msg("could not fetch user claims")
+		sentry.Error(c).Err(err).Msg("could not fetch user claims")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 		return
 	}
@@ -90,14 +90,14 @@ func (s *Server) Login(c *gin.Context) {
 	// If the user is not associated with an organization, create it.
 	appdata := &auth.AppMetadata{}
 	if err = appdata.Load(user.AppMetadata); err != nil {
-		log.Error().Err(err).Msg("could not parse user app metadata")
+		sentry.Error(c).Err(err).Msg("could not parse user app metadata")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not parse user app metadata"))
 		return
 	}
 
 	// Fetch the current user role.
 	if roles, err = s.auth0.User.Roles(*user.ID); err != nil {
-		log.Error().Err(err).Msg("could not fetch roles associated with the user")
+		sentry.Error(c).Err(err).Msg("could not fetch roles associated with the user")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 		return
 	}
@@ -113,7 +113,7 @@ func (s *Server) Login(c *gin.Context) {
 		userRole = prevRole
 	default:
 		// TODO: Resolve the conflict rather than returning an error
-		log.Error().Err(err).Msg("user has multiple roles")
+		sentry.Error(c).Err(err).Msg("user has multiple roles")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 		return
 	}
@@ -126,7 +126,7 @@ func (s *Server) Login(c *gin.Context) {
 		// This is a new user so create a new organization for them
 		var userName string
 		if userName, err = auth.UserDisplayName(user); err != nil {
-			log.Error().Err(err).Str("user_id", *user.ID).Msg("could not get user display name")
+			sentry.Error(c).Err(err).Str("user_id", *user.ID).Msg("could not get user display name")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 			return
 		}
@@ -136,7 +136,7 @@ func (s *Server) Login(c *gin.Context) {
 		ctx, cancel := utils.WithDeadline(context.Background())
 		defer cancel()
 		if _, err = s.db.CreateOrganization(ctx, org); err != nil {
-			log.Error().Err(err).Str("user_id", *user.ID).Msg("could not create organization")
+			sentry.Error(c).Err(err).Str("user_id", *user.ID).Msg("could not create organization")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 			return
 		}
@@ -148,7 +148,7 @@ func (s *Server) Login(c *gin.Context) {
 			Verified: *user.EmailVerified,
 		}
 		if err = org.AddCollaborator(collaborator); err != nil {
-			log.Error().Err(err).Str("user_id", collaborator.UserId).Msg("could not add collaborator to organization")
+			sentry.Error(c).Err(err).Str("user_id", collaborator.UserId).Msg("could not add collaborator to organization")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 			return
 		}
@@ -164,7 +164,7 @@ func (s *Server) Login(c *gin.Context) {
 
 		// Fetch the organization from the database
 		if org, err = s.OrganizationFromID(orgID); err != nil {
-			log.Error().Err(err).Str("org_id", orgID).Msg("could not fetch organization for invited user")
+			sentry.Error(c).Err(err).Str("org_id", orgID).Msg("could not fetch organization for invited user")
 			c.JSON(http.StatusNotFound, api.ErrorResponse("organization not found"))
 			return
 		}
@@ -175,14 +175,14 @@ func (s *Server) Login(c *gin.Context) {
 		// which started the invite workflow. Without this check, any user could log
 		// into any organization simply by providing the orgID in the request.
 		if collaborator = org.GetCollaborator(*user.Email); collaborator == nil {
-			log.Debug().Str("email", *user.Email).Str("org_id", org.Id).Msg("could not find user in organization")
+			sentry.Debug(c).Str("email", *user.Email).Str("org_id", org.Id).Msg("could not find user in organization")
 			c.JSON(http.StatusUnauthorized, api.ErrorResponse("user is not authorized to access this organization"))
 			return
 		}
 
 		// Verify that pending invitations have not expired
 		if err = collaborator.ValidateInvitation(); err != nil {
-			log.Debug().Err(err).Str("email", collaborator.Email).Str("org_id", org.Id).Msg("invalid user invitation")
+			sentry.Debug(c).Err(err).Str("email", collaborator.Email).Str("org_id", org.Id).Msg("invalid user invitation")
 			c.JSON(http.StatusForbidden, api.ErrorResponse("user invitation has expired"))
 			return
 		}
@@ -225,7 +225,7 @@ func (s *Server) Login(c *gin.Context) {
 			// TODO: This might require a user confirmation prompt
 			var prevOrg *models.Organization
 			if prevOrg, err = s.OrganizationFromID(appdata.OrgID); err != nil {
-				log.Error().Err(err).Str("org_id", appdata.OrgID).Msg("could not fetch organization for user migration")
+				sentry.Error(c).Err(err).Str("org_id", appdata.OrgID).Msg("could not fetch organization for user migration")
 				c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 				return
 			}
@@ -234,12 +234,12 @@ func (s *Server) Login(c *gin.Context) {
 			// If the previous organization has no collaborators, delete it
 			if len(prevOrg.Collaborators) == 0 {
 				if err = s.db.DeleteOrganization(ctx, prevOrg.UUID()); err != nil {
-					log.Error().Err(err).Str("org_id", prevOrg.Id).Msg("could not delete organization")
+					sentry.Error(c).Err(err).Str("org_id", prevOrg.Id).Msg("could not delete organization")
 					c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 					return
 				}
 			} else if err = s.db.UpdateOrganization(ctx, prevOrg); err != nil {
-				log.Error().Err(err).Str("org_id", prevOrg.Id).Msg("could not update organization")
+				sentry.Error(c).Err(err).Str("org_id", prevOrg.Id).Msg("could not update organization")
 				c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 				return
 			}
@@ -250,14 +250,14 @@ func (s *Server) Login(c *gin.Context) {
 	// organization and make sure the metadata is up to date in Auth0.
 	appdata.UpdateOrganization(org)
 	if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
-		log.Error().Err(err).Str("user_id", *user.ID).Msg("could not save user app_metadata")
+		sentry.Error(c).Err(err).Str("user_id", *user.ID).Msg("could not save user app_metadata")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 		return
 	}
 
 	// Update the organization record in the database
 	if err = s.db.UpdateOrganization(ctx, org); err != nil {
-		log.Error().Err(err).Str("org_id", org.Id).Msg("could not update organization")
+		sentry.Error(c).Err(err).Str("org_id", org.Id).Msg("could not update organization")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 		return
 	}
@@ -265,7 +265,7 @@ func (s *Server) Login(c *gin.Context) {
 	// Assign a new user role if necessary
 	if userRole != prevRole {
 		if err = s.AssignRoles(*user.ID, []string{userRole}); err != nil {
-			log.Error().Err(err).Str("user_id", *user.ID).Msg("could not assign user role")
+			sentry.Error(c).Err(err).Str("user_id", *user.ID).Msg("could not assign user role")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 			return
 		}
@@ -275,7 +275,7 @@ func (s *Server) Login(c *gin.Context) {
 	// TODO: should we set expires at to the expiration of the access token? What happens on refresh?
 	expiresAt := time.Now().Add(DoubleCookieMaxAge)
 	if err := auth.SetDoubleCookieToken(c, s.conf.CookieDomain, expiresAt); err != nil {
-		log.Error().Err(err).Msg("could not set double cookie csrf protection")
+		sentry.Error(c).Err(err).Msg("could not set double cookie csrf protection")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not set csrf protection"))
 		return
 	}
@@ -283,7 +283,7 @@ func (s *Server) Login(c *gin.Context) {
 	// Get the old user app metadata for comparison
 	oldAppdata := &auth.AppMetadata{}
 	if err = oldAppdata.Load(user.AppMetadata); err != nil {
-		log.Error().Err(err).Msg("could not parse user app metadata")
+		sentry.Error(c).Err(err).Msg("could not parse user app metadata")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not parse user app metadata"))
 		return
 	}
@@ -316,21 +316,21 @@ func (s *Server) UpdateUser(c *gin.Context) {
 	// Parse the params from the request body
 	params := &api.UpdateUserParams{}
 	if err = c.ShouldBind(params); err != nil {
-		log.Error().Err(err).Msg("could not bind request")
+		sentry.Error(c).Err(err).Msg("could not bind request")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
 
 	// Fetch the user from the context
 	if user, err = auth.GetUserInfo(c); err != nil {
-		log.Error().Err(err).Msg("login handler requires user info; expected middleware to return 401")
+		sentry.Error(c).Err(err).Msg("login handler requires user info; expected middleware to return 401")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify user to login"))
 		return
 	}
 
 	// At least one field must be provided
 	if *params == (api.UpdateUserParams{}) {
-		log.Warn().Msg("no fields were provided to update user")
+		sentry.Warn(c).Msg("no fields were provided to update user")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("no fields were provided"))
 		return
 	}
@@ -343,7 +343,7 @@ func (s *Server) UpdateUser(c *gin.Context) {
 
 	// Commit the update to Auth0
 	if err = s.auth0.User.Update(*user.ID, patch); err != nil {
-		log.Error().Err(err).Str("user_id", *user.ID).Msg("could not update user name")
+		sentry.Error(c).Err(err).Str("user_id", *user.ID).Msg("could not update user name")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not update user name"))
 		return
 	}
@@ -399,7 +399,7 @@ func (s *Server) AssignRoles(userID string, roles []string) (err error) {
 	for _, name := range roles {
 		var role *management.Role
 		if role, err = s.FindRoleByName(name); err != nil {
-			log.Error().Err(err).Str("role", name).Msg("could not find role in Auth0")
+			sentry.Error(nil).Err(err).Str("role", name).Msg("could not find role in Auth0")
 			return ErrInvalidUserRole
 		}
 		newRoles = append(newRoles, role)
@@ -408,7 +408,7 @@ func (s *Server) AssignRoles(userID string, roles []string) (err error) {
 	// Get the existing roles for the user
 	var userRoles *management.RoleList
 	if userRoles, err = s.auth0.User.Roles(userID); err != nil {
-		log.Error().Err(err).Str("user_id", userID).Msg("could not fetch user roles from Auth0")
+		sentry.Error(nil).Err(err).Str("user_id", userID).Msg("could not fetch user roles from Auth0")
 		return err
 	}
 
@@ -416,7 +416,7 @@ func (s *Server) AssignRoles(userID string, roles []string) (err error) {
 	// The management endpoint requires a non-empty list, otherwise it returns a 400
 	if len(userRoles.Roles) > 0 {
 		if err = s.auth0.User.RemoveRoles(userID, userRoles.Roles); err != nil {
-			log.Error().Err(err).Str("user_id", userID).Msg("could not remove existing roles from user")
+			sentry.Error(nil).Err(err).Str("user_id", userID).Msg("could not remove existing roles from user")
 			return err
 		}
 	}
@@ -425,7 +425,7 @@ func (s *Server) AssignRoles(userID string, roles []string) (err error) {
 	// The management endpoint requires a non-empty list, otherwise it returns a 400
 	if len(newRoles) > 0 {
 		if err = s.auth0.User.AssignRoles(userID, newRoles); err != nil {
-			log.Error().Err(err).Str("user_id", userID).Msg("could not add new roles to user")
+			sentry.Error(nil).Err(err).Str("user_id", userID).Msg("could not add new roles to user")
 			return err
 		}
 	}
@@ -467,7 +467,7 @@ func (s *Server) FindUserByEmail(email string) (user *management.User, err error
 		// TODO: This can happen if the user has authenticated with Auth0 using
 		// multiple identities (e.g. email and Google). We might be able to handle this
 		// by linking the identities.
-		log.Warn().Str("email", email).Int("count", len(users)).Msg("multiple users found with same email address")
+		sentry.Warn(nil).Str("email", email).Int("count", len(users)).Msg("multiple users found with same email address")
 	}
 
 	return users[0], nil

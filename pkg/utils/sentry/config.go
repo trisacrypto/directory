@@ -4,12 +4,14 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/trisacrypto/directory/pkg"
 )
 
 // Sentry configuration
 type Config struct {
 	DSN              string  `split_words:"true"`
+	ServerName       string  `split_words:"true"`
 	Environment      string  `split_words:"true"`
 	Release          string  `split_words:"true"`
 	TrackPerformance bool    `split_words:"true" default:"false"`
@@ -43,4 +45,17 @@ func (c Config) GetRelease() string {
 		return fmt.Sprintf("gds@%s", pkg.Version())
 	}
 	return c.Release
+}
+
+func (c Config) ClientOptions() sentry.ClientOptions {
+	return sentry.ClientOptions{
+		Dsn:              c.DSN,
+		Environment:      c.Environment,
+		Release:          c.GetRelease(),
+		AttachStacktrace: true,
+		Debug:            c.Debug,
+		ServerName:       c.ServerName,
+		EnableTracing:    c.TrackPerformance,
+		TracesSampleRate: c.SampleRate,
+	}
 }

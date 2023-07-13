@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/trtl/metrics"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 // Monitor is an independent service which periodically scans the trtl storage and
@@ -53,7 +54,7 @@ monitor:
 		start := time.Now()
 
 		if err := m.Measure(); err != nil {
-			log.Error().Err(err).Msg("could not measure trtl database metrics")
+			sentry.Error(nil).Err(err).Msg("could not measure trtl database metrics")
 			continue monitor
 		}
 		log.Debug().Dur("duration", time.Since(start)).Msg("trtl metrics analysis complete")
@@ -97,7 +98,7 @@ objects:
 		// Load the object metadata to check if it is a tombstone
 		obj, err := iter.Object()
 		if err != nil {
-			log.Error().Err(err).
+			sentry.Error(nil).Err(err).
 				Str("namespace", namespace).
 				Bytes("key", iter.Key()).
 				Msg("could not unmarshal honu metadata")

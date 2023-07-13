@@ -16,6 +16,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/utils/emails"
 	"github.com/trisacrypto/directory/pkg/utils/emails/mock"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 func New(conf config.EmailConfig) (m *EmailManager, err error) {
@@ -95,12 +96,12 @@ func (m *EmailManager) SendUserInvite(user *management.User, inviter *management
 
 	msg, err := InviteUserEmail(m.serviceEmail.Name, m.serviceEmail.Address, userName, userEmail, ctx)
 	if err != nil {
-		log.Error().Err(err).Msg("could not create user invite email")
+		sentry.Error(nil).Err(err).Msg("could not create user invite email")
 		return err
 	}
 
 	if err = m.Send(msg); err != nil {
-		log.Error().Err(err).Msg("could not send user invite email")
+		sentry.Error(nil).Err(err).Msg("could not send user invite email")
 		return err
 	}
 	return nil

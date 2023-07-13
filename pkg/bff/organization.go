@@ -9,12 +9,12 @@ import (
 	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
 	"github.com/trisacrypto/directory/pkg/utils"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 // CreateOrganization creates a new organization in the database. This endpoint returns
@@ -41,7 +41,7 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 
 	// Fetch the user from the context
 	if user, err = auth.GetUserInfo(c); err != nil {
-		log.Error().Err(err).Msg("create organization handler requires user info; expected middleware to return 401")
+		sentry.Error(c).Err(err).Msg("create organization handler requires user info; expected middleware to return 401")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify user to create organization"))
 		return
 	}
@@ -49,7 +49,7 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 	// Load the user app metadata to check their organization assignments
 	appdata := &auth.AppMetadata{}
 	if err = appdata.Load(user.AppMetadata); err != nil {
-		log.Error().Err(err).Msg("could not parse user app metadata")
+		sentry.Error(c).Err(err).Msg("could not parse user app metadata")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not parse user app metadata"))
 		return
 	}
@@ -57,7 +57,7 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 	// Unmarshal the params from the POST request
 	params := &api.OrganizationParams{}
 	if err := c.ShouldBind(params); err != nil {
-		log.Warn().Err(err).Msg("could not bind request")
+		sentry.Warn(c).Err(err).Msg("could not bind request")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
@@ -78,7 +78,7 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 	// TODO: Should we do a universal check against the database using an index?
 	var domain string
 	if domain, err = s.ValidateOrganizationDomain(params.Domain, appdata); err != nil {
-		log.Error().Err(err).Str("domain", params.Domain).Msg("could not validate organization domain")
+		sentry.Error(c).Err(err).Str("domain", params.Domain).Msg("could not validate organization domain")
 		if errors.Is(err, ErrDomainAlreadyExists) {
 			c.JSON(http.StatusConflict, api.ErrorResponse("organization with domain already exists"))
 			return
@@ -96,7 +96,7 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 	// CreatedBy is used to render the organization name for the frontend if no other
 	// organization name is available
 	if org.CreatedBy, err = auth.UserDisplayName(user); err != nil {
-		log.Error().Err(err).Msg("could not get user display name")
+		sentry.Error(c).Err(err).Msg("could not get user display name")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not resolve name for user"))
 		return
 	}
@@ -110,7 +110,7 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 		Verified: *user.EmailVerified,
 	}
 	if err = org.AddCollaborator(collaborator); err != nil {
-		log.Error().Err(err).Str("user_id", collaborator.UserId).Msg("could not add user as collaborator in organization")
+		sentry.Error(c).Err(err).Str("user_id", collaborator.UserId).Msg("could not add user as collaborator in organization")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not create organization"))
 		return
 	}
@@ -119,7 +119,7 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 	defer cancel()
 
 	if _, err = s.db.CreateOrganization(ctx, org); err != nil {
-		log.Error().Err(err).Msg("could not create organization in database")
+		sentry.Error(c).Err(err).Msg("could not create organization in database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not create organization"))
 		return
 	}
@@ -127,7 +127,7 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 	// Assign the user to the organization
 	appdata.AddOrganization(org.Id)
 	if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
-		log.Error().Err(err).Msg("could not update user app metadata")
+		sentry.Error(c).Err(err).Msg("could not update user app metadata")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not update user app metadata"))
 		return
 	}
@@ -165,7 +165,7 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 
 	// Fetch the user from the context
 	if user, err = auth.GetUserInfo(c); err != nil {
-		log.Error().Err(err).Msg("list organizations handler requires user info; expected middleware to return 401")
+		sentry.Error(c).Err(err).Msg("list organizations handler requires user info; expected middleware to return 401")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify user to list organizations"))
 		return
 	}
@@ -173,7 +173,7 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 	// Load the user app metadata to check their organization assignments
 	appdata := &auth.AppMetadata{}
 	if err = appdata.Load(user.AppMetadata); err != nil {
-		log.Error().Err(err).Msg("could not parse user app metadata")
+		sentry.Error(c).Err(err).Msg("could not parse user app metadata")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not parse user app metadata"))
 		return
 	}
@@ -181,7 +181,7 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 	// Parse the params from the GET request
 	params := &api.ListOrganizationsParams{}
 	if err = c.ShouldBindQuery(params); err != nil {
-		log.Warn().Err(err).Msg("could not bind request with query params")
+		sentry.Warn(c).Err(err).Msg("could not bind request with query params")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
@@ -198,7 +198,7 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 	// Determine pagination index range (indexed by 1)
 	minIndex := (params.Page - 1) * params.PageSize
 	maxIndex := minIndex + params.PageSize
-	log.Debug().Int("page", params.Page).Int("page_size", params.PageSize).Int("min_index", minIndex).Int("max_index", maxIndex).Msg("paginating organizations")
+	sentry.Debug(c).Int("page", params.Page).Int("page_size", params.PageSize).Int("min_index", minIndex).Int("max_index", maxIndex).Msg("paginating organizations")
 
 	// Build the response
 	out := &api.ListOrganizationsReply{
@@ -211,7 +211,7 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 	for _, id := range appdata.GetOrganizations() {
 		var org *models.Organization
 		if org, err = s.OrganizationFromID(id); err != nil {
-			log.Error().Err(err).Str("org_id", id).Msg("could not retrieve organization from database")
+			sentry.Error(c).Err(err).Str("org_id", id).Msg("could not retrieve organization from database")
 			continue
 		}
 
@@ -220,7 +220,7 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 		// present in the claims so we can safely dereference it here.
 		var collaborator *models.Collaborator
 		if collaborator = org.GetCollaborator(*user.Email); collaborator == nil {
-			log.Error().Str("org_id", id).Str("email", *user.Email).Msg("could not find user in organization collaborators")
+			sentry.Error(c).Str("org_id", id).Str("email", *user.Email).Msg("could not find user in organization collaborators")
 			continue
 		}
 
@@ -269,7 +269,7 @@ func (s *Server) DeleteOrganization(c *gin.Context) {
 
 	// Fetch the user from the context
 	if user, err = auth.GetUserInfo(c); err != nil {
-		log.Error().Err(err).Msg("delete organization handler requires user info; expected middleware to return 401")
+		sentry.Error(c).Err(err).Msg("delete organization handler requires user info; expected middleware to return 401")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify user to delete organization"))
 		return
 	}
@@ -279,14 +279,14 @@ func (s *Server) DeleteOrganization(c *gin.Context) {
 
 	// Fetch the organization to be deleted
 	if org, err = s.OrganizationFromID(orgID); err != nil {
-		log.Error().Err(err).Str("org_id", orgID).Msg("could not retrieve organization from database")
+		sentry.Error(c).Err(err).Str("org_id", orgID).Msg("could not retrieve organization from database")
 		c.JSON(http.StatusNotFound, api.ErrorResponse("organization not found"))
 		return
 	}
 
 	// The user must be a collaborator in the organization to delete it
 	if org.GetCollaborator(*user.Email) == nil {
-		log.Error().Err(err).Str("org_id", orgID).Str("email", *user.Email).Msg("could not find user in organization collaborators")
+		sentry.Error(c).Err(err).Str("org_id", orgID).Str("email", *user.Email).Msg("could not find user in organization collaborators")
 		c.JSON(http.StatusForbidden, api.ErrorResponse("user is not authorized to access this organization"))
 		return
 	}
@@ -296,7 +296,7 @@ func (s *Server) DeleteOrganization(c *gin.Context) {
 
 	// Delete the organization from the database
 	if err = s.db.DeleteOrganization(ctx, org.UUID()); err != nil {
-		log.Error().Err(err).Str("org_id", orgID).Msg("could not delete organization from database")
+		sentry.Error(c).Err(err).Str("org_id", orgID).Msg("could not delete organization from database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not delete organization from database"))
 		return
 	}
@@ -307,21 +307,21 @@ func (s *Server) DeleteOrganization(c *gin.Context) {
 	for _, collab := range org.GetCollaborators() {
 		// If the collaborator doesn't have an Auth0 ID then they haven't logged in yet
 		if collab.UserId == "" {
-			log.Debug().Str("org_id", orgID).Str("email", collab.Email).Msg("ignoring unverified collaborator during organization deletion")
+			sentry.Debug(c).Str("org_id", orgID).Str("email", collab.Email).Msg("ignoring unverified collaborator during organization deletion")
 			continue
 		}
 
 		// Retrieve the Auth0 user record from the user ID
 		var collabUser *management.User
 		if collabUser, err = s.auth0.User.Read(collab.UserId); err != nil {
-			log.Error().Err(err).Str("user_id", collab.UserId).Msg("could not retrieve user from Auth0")
+			sentry.Error(c).Err(err).Str("user_id", collab.UserId).Msg("could not retrieve user from Auth0")
 			continue
 		}
 
 		// Remove the organization from the user's organization list
 		appdata := &auth.AppMetadata{}
 		if err = appdata.Load(collabUser.AppMetadata); err != nil {
-			log.Error().Err(err).Str("user_id", collab.UserId).Msg("could not parse user app metadata")
+			sentry.Error(c).Err(err).Str("user_id", collab.UserId).Msg("could not parse user app metadata")
 			continue
 		}
 		appdata.RemoveOrganization(org.Id)
@@ -332,7 +332,7 @@ func (s *Server) DeleteOrganization(c *gin.Context) {
 			// This method both modifies the app metadata and pushes the updates to
 			// Auth0.
 			if err = s.SwitchUserOrganization(collabUser, appdata); err != nil {
-				log.Error().Err(err).Str("user_id", collab.UserId).Msg("could not switch user to new organization")
+				sentry.Error(c).Err(err).Str("user_id", collab.UserId).Msg("could not switch user to new organization")
 				continue
 			}
 		}
@@ -366,7 +366,7 @@ func (s *Server) PatchOrganization(c *gin.Context) {
 
 	// Fetch the user from the context
 	if user, err = auth.GetUserInfo(c); err != nil {
-		log.Error().Err(err).Msg("patch organization handler requires user info; expected middleware to return 401")
+		sentry.Error(c).Err(err).Msg("patch organization handler requires user info; expected middleware to return 401")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify user to delete organization"))
 		return
 	}
@@ -374,7 +374,7 @@ func (s *Server) PatchOrganization(c *gin.Context) {
 	// Load the user app metadata to check their organization assignments
 	appdata := &auth.AppMetadata{}
 	if err = appdata.Load(user.AppMetadata); err != nil {
-		log.Error().Err(err).Msg("could not parse user app metadata")
+		sentry.Error(c).Err(err).Msg("could not parse user app metadata")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not parse user app metadata"))
 		return
 	}
@@ -382,7 +382,7 @@ func (s *Server) PatchOrganization(c *gin.Context) {
 	// Unmarshal the params from the PATCH request
 	params := &api.OrganizationParams{}
 	if err = c.ShouldBind(params); err != nil {
-		log.Warn().Err(err).Msg("could not bind request")
+		sentry.Warn(c).Err(err).Msg("could not bind request")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
@@ -397,7 +397,7 @@ func (s *Server) PatchOrganization(c *gin.Context) {
 	var org *models.Organization
 	id := c.Param("orgID")
 	if org, err = s.OrganizationFromID(id); err != nil {
-		log.Error().Err(err).Str("org_id", id).Msg("could not retrieve organization from database")
+		sentry.Error(c).Err(err).Str("org_id", id).Msg("could not retrieve organization from database")
 		c.JSON(http.StatusNotFound, api.ErrorResponse("organization not found"))
 		return
 	}
@@ -405,7 +405,7 @@ func (s *Server) PatchOrganization(c *gin.Context) {
 	// LastLogin timestamp is on the collaborator record
 	var collab *models.Collaborator
 	if collab = org.GetCollaborator(*user.Email); collab == nil {
-		log.Warn().Str("org_id", id).Str("email", *user.Email).Msg("user is not a collaborator on organization")
+		sentry.Warn(c).Str("org_id", id).Str("email", *user.Email).Msg("user is not a collaborator on organization")
 		c.JSON(http.StatusForbidden, api.ErrorResponse("user is not authorized to access this organization"))
 		return
 	}
@@ -415,7 +415,7 @@ func (s *Server) PatchOrganization(c *gin.Context) {
 		// Prevent duplicate names for organizations
 		// TODO: Perform universal check against the database using an index
 		if org.Domain, err = s.ValidateOrganizationDomain(domain, appdata); err != nil {
-			log.Error().Err(err).Str("domain", domain).Msg("could not validate organization domain")
+			sentry.Error(c).Err(err).Str("domain", domain).Msg("could not validate organization domain")
 			if errors.Is(err, ErrDomainAlreadyExists) {
 				c.JSON(http.StatusConflict, api.ErrorResponse("organization with domain already exists"))
 				return
@@ -434,7 +434,7 @@ func (s *Server) PatchOrganization(c *gin.Context) {
 
 	// Save the updated organization
 	if err = s.db.UpdateOrganization(ctx, org); err != nil {
-		log.Error().Err(err).Str("org_id", id).Msg("could not update organization in database")
+		sentry.Error(c).Err(err).Str("org_id", id).Msg("could not update organization in database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
@@ -470,7 +470,7 @@ func (s *Server) ValidateOrganizationDomain(domain string, appdata *auth.AppMeta
 	// Check for duplicate domains
 	for _, id := range appdata.GetOrganizations() {
 		if org, err := s.OrganizationFromID(id); err != nil {
-			log.Error().Err(err).Str("org_id", id).Msg("could not retrieve organization from database")
+			sentry.Error(nil).Err(err).Str("org_id", id).Msg("could not retrieve organization from database")
 		} else if org.Domain == domain {
 			return "", ErrDomainAlreadyExists
 		}
@@ -487,14 +487,14 @@ func (s *Server) OrganizationFromClaims(c *gin.Context) (org *models.Organizatio
 	// Retrieve the organization ID from the claims
 	var claims *auth.Claims
 	if claims, err = auth.GetClaims(c); err != nil {
-		log.Error().Err(err).Msg("could not retrieve claims to fetch orgID")
+		sentry.Error(c).Err(err).Msg("could not retrieve claims to fetch orgID")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify organization"))
 		return nil, err
 	}
 
 	// If there is no organization ID, something went wrong
 	if claims.OrgID == "" {
-		log.Warn().Msg("claims do not contain an orgID")
+		sentry.Warn(c).Msg("claims do not contain an orgID")
 		api.MustRefreshToken(c, "missing claims info, try logging out and logging back in")
 		return nil, errors.New("missing organization ID in claims")
 	}
@@ -502,12 +502,12 @@ func (s *Server) OrganizationFromClaims(c *gin.Context) (org *models.Organizatio
 	// Fetch the organization from the database
 	if org, err = s.OrganizationFromID(claims.OrgID); err != nil {
 		if errors.Is(err, storeerrors.ErrEntityNotFound) {
-			log.Warn().Err(err).Msg("could not find organization in database from orgID in claims")
+			sentry.Warn(c).Err(err).Msg("could not find organization in database from orgID in claims")
 			api.MustRefreshToken(c, "no organization found, try logging out and logging back in")
 			return nil, err
 		}
 
-		log.Error().Err(err).Msg("could not retrieve organization")
+		sentry.Error(c).Err(err).Msg("could not retrieve organization")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify organization"))
 		return nil, err
 	}

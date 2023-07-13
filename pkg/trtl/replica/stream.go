@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/rotationalio/honu/replica"
-	"github.com/rs/zerolog"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 const streamBufSize = 8
@@ -28,17 +28,17 @@ type streamSender struct {
 	sync.RWMutex
 	wg     *sync.WaitGroup    // A wait group so the caller knows when sending is complete
 	ok     bool               // If true, it is ok to send on the channel
-	log    zerolog.Logger     // A logger to report send errors on
+	log    *sentry.Logger     // A logger to report send errors on
 	msgs   chan *replica.Sync // The channel for go routines to send messages on
 	stream gossipStream       // The gossip stream to send messages on
 }
 
 // Creates the stream sender and kicks off the sending go routine.
-func newStreamSender(wg *sync.WaitGroup, log zerolog.Logger, stream gossipStream) *streamSender {
+func newStreamSender(wg *sync.WaitGroup, logctx *sentry.Logger, stream gossipStream) *streamSender {
 	sender := &streamSender{
 		wg:     wg,
 		ok:     true,
-		log:    log,
+		log:    logctx,
 		msgs:   make(chan *replica.Sync, streamBufSize),
 		stream: stream,
 	}

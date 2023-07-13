@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 // Parameters and names for double-cookie submit CSRF protection
@@ -30,7 +30,7 @@ func DoubleCookie() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		cookie, err := c.Cookie(CSRFReferenceCookie)
 		if err != nil {
-			log.Warn().Err(err).Msg("no csrf token cookie in request")
+			sentry.Warn(c).Err(err).Msg("no csrf token cookie in request")
 			c.JSON(http.StatusForbidden, ErrorResponse(ErrCSRFVerification))
 			c.Abort()
 			return
@@ -38,14 +38,14 @@ func DoubleCookie() gin.HandlerFunc {
 
 		header := c.GetHeader(CSRFHeader)
 		if header, err = url.QueryUnescape(header); err != nil {
-			log.Warn().Err(err).Msg("could not unescape csrf token")
+			sentry.Warn(c).Err(err).Msg("could not unescape csrf token")
 			c.JSON(http.StatusBadRequest, ErrorResponse(err))
 			c.Abort()
 			return
 		}
 
 		if cookie != header {
-			log.Warn().Bool("header_exists", header != "").Bool("cookie_exists", cookie != "").Msg("csrf token cookie/header mismatch")
+			sentry.Warn(c).Bool("header_exists", header != "").Bool("cookie_exists", cookie != "").Msg("csrf token cookie/header mismatch")
 			c.JSON(http.StatusForbidden, ErrorResponse(ErrCSRFVerification))
 			c.Abort()
 			return

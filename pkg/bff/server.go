@@ -255,7 +255,7 @@ func (s *Server) Shutdown() (err error) {
 	if !s.conf.Maintenance {
 		if s.db != nil {
 			if err = s.db.Close(); err != nil {
-				log.Error().Err(err).Msg("could not shutdown trtl db connection")
+				sentry.Error(nil).Err(err).Msg("could not shutdown trtl db connection")
 			}
 		}
 	}

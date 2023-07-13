@@ -13,10 +13,10 @@ import (
 	"github.com/auth0/go-jwt-middleware/v2/jwks"
 	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
 	"github.com/trisacrypto/directory/pkg/bff/config"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 const (
@@ -165,18 +165,18 @@ func Authenticate(conf config.AuthConfig, options ...jwks.ProviderOption) (_ gin
 			// structured. If this is a recurring problem, we will have to add extra
 			// checks to determine if an authorization header was provided or not.
 			if err != nil {
-				log.Warn().Err(err).Msg("could not extract token from authorization header")
+				sentry.Warn(c).Err(err).Msg("could not extract token from authorization header")
 			}
 
 			// Add anonymous user and empty claims to context
-			log.Debug().Msg("anonymous user")
+			sentry.Debug(c).Msg("anonymous user")
 			c.Set(ContextBFFClaims, &AnonymousClaims)
 		} else {
 			// If a token is provided in the authorization header, verify that it was
 			// correctly signed using auth0's public keys and add user claims to the
 			// context. If the token is not valid return a forbidden error.
 			if claims, err = auth0.ValidateToken(c.Request.Context(), tks); err != nil {
-				log.Warn().Err(err).Msg("invalid authorization token")
+				sentry.Warn(c).Err(err).Msg("invalid authorization token")
 				c.AbortWithStatusJSON(http.StatusForbidden, api.ErrorResponse(ErrInvalidAuthToken))
 				return
 			}

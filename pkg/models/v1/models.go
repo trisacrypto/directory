@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/sectigo"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
@@ -489,7 +490,7 @@ func NewCertificateRequest(vasp *pb.VASP) (certRequest *CertificateRequest, err 
 	if organizationName, err = vasp.Name(); err == nil {
 		UpdateCertificateRequestParams(certRequest, sectigo.ParamOrganizationName, organizationName)
 	} else {
-		log.Warn().Err(err).Str("vasp_id", vasp.Id).Str("certreq_id", certRequest.Id).Msg("organization name not found")
+		sentry.Warn(nil).Err(err).Str("vasp_id", vasp.Id).Str("certreq_id", certRequest.Id).Msg("organization name not found")
 	}
 
 	// Populate the location information, if available.
@@ -679,7 +680,7 @@ func ValidateVASP(vasp *pb.VASP, partial bool) (err error) {
 	case errors.Is(err, ivms101.ErrCompleteNationalIdentifierLegalPerson):
 		// TODO: ErrCompleteNationalIdentifierLegalPerson must be ignored to support older
 		// VASP records, see issue #34
-		log.Warn().Str("vasp_id", vasp.Id).Err(err).Msg("ignoring ErrCompleteNationalIdentifierLegalPerson validation error")
+		sentry.Warn(nil).Str("vasp_id", vasp.Id).Err(err).Msg("ignoring ErrCompleteNationalIdentifierLegalPerson validation error")
 		return nil
 	default:
 		return err

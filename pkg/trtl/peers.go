@@ -9,8 +9,8 @@ import (
 	engine "github.com/rotationalio/honu/engines"
 	"github.com/rotationalio/honu/object"
 	"github.com/rotationalio/honu/options"
-	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
@@ -52,13 +52,13 @@ func (p *PeerService) AddPeers(ctx context.Context, in *peers.Peer) (out *peers.
 	// Check if the peer is in the database; if it is unmarshal it and update it
 	if data, err := p.db.Get([]byte(key), options.WithNamespace(NamespacePeers)); err != nil {
 		if !errors.Is(err, engine.ErrNotFound) {
-			log.Error().Err(err).Msg("could not access database for peers lookup")
+			sentry.Error(ctx).Err(err).Msg("could not access database for peers lookup")
 			return nil, status.Error(codes.FailedPrecondition, "could not get peer from database")
 		}
 
 		current := new(peers.Peer)
 		if err = proto.Unmarshal(data, current); err != nil {
-			log.Error().Err(err).Str("key", key).Msg("could not unmarshal peer from database")
+			sentry.Error(ctx).Err(err).Str("key", key).Msg("could not unmarshal peer from database")
 			return nil, status.Error(codes.FailedPrecondition, "could not get peer from database")
 		}
 
@@ -76,12 +76,12 @@ func (p *PeerService) AddPeers(ctx context.Context, in *peers.Peer) (out *peers.
 	// Insert the peer into the database
 	var value []byte
 	if value, err = proto.Marshal(in); err != nil {
-		log.Error().Err(err).Msg("could not marshal peer protocol buffers")
+		sentry.Error(ctx).Err(err).Msg("could not marshal peer protocol buffers")
 		return nil, status.Error(codes.FailedPrecondition, "could not marshal peer protocol buffers")
 	}
 
 	if _, err = p.db.Put([]byte(key), value, options.WithNamespace(NamespacePeers)); err != nil {
-		log.Error().Err(err).Msg("could not put peer to database")
+		sentry.Error(ctx).Err(err).Msg("could not put peer to database")
 		return nil, status.Error(codes.FailedPrecondition, "could not insert peer into database")
 	}
 
@@ -99,7 +99,7 @@ func (p *PeerService) AddPeers(ctx context.Context, in *peers.Peer) (out *peers.
 
 func (p *PeerService) RmPeers(ctx context.Context, in *peers.Peer) (out *peers.PeersStatus, err error) {
 	if _, err = p.db.Delete([]byte(in.Key()), options.WithNamespace(NamespacePeers)); err != nil {
-		log.Error().Err(err).Msg("unable to remove peer")
+		sentry.Error(ctx).Err(err).Msg("unable to remove peer")
 		return nil, status.Error(codes.InvalidArgument, "invalid peer; could not be removed")
 	}
 
@@ -139,7 +139,7 @@ func (p *PeerService) peerStatus(ctx context.Context, in *peers.PeersFilter) (ou
 		// TODO: why is Honu returning tombstones in iter?
 		var obj *object.Object
 		if obj, err = ps.Object(); err != nil {
-			log.Error().Err(err).Str("key", string(ps.Key())).Msg("could not retrieve object from db")
+			sentry.Error(ctx).Err(err).Str("key", string(ps.Key())).Msg("could not retrieve object from db")
 			continue
 		}
 
@@ -149,7 +149,7 @@ func (p *PeerService) peerStatus(ctx context.Context, in *peers.PeersFilter) (ou
 
 		peer := new(peers.Peer)
 		if err = proto.Unmarshal(obj.Data, peer); err != nil {
-			log.Warn().Err(err).Str("key", string(ps.Key())).Msg("could not unmarshal peer")
+			sentry.Warn(ctx).Err(err).Str("key", string(ps.Key())).Msg("could not unmarshal peer")
 			continue
 		}
 
@@ -176,7 +176,7 @@ func (p *PeerService) peerStatus(ctx context.Context, in *peers.PeersFilter) (ou
 	}
 
 	if err = ps.Error(); err != nil {
-		log.Error().Err(err).Msg("unable to retrieve peers from the database")
+		sentry.Error(ctx).Err(err).Msg("unable to retrieve peers from the database")
 		return nil, status.Error(codes.FailedPrecondition, "error reading from database")
 	}
 	return out, nil

@@ -10,7 +10,6 @@ import (
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
@@ -18,6 +17,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/store"
 	"github.com/trisacrypto/directory/pkg/utils"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -60,7 +60,7 @@ func (s *Server) Lookup(c *gin.Context) {
 	// Bind the parameters associated with the lookup
 	params := &api.LookupParams{}
 	if err := c.ShouldBindQuery(&params); err != nil {
-		log.Warn().Err(err).Msg("could not bind request with query params")
+		sentry.Warn(c).Err(err).Msg("could not bind request with query params")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
@@ -82,7 +82,7 @@ func (s *Server) Lookup(c *gin.Context) {
 			// If the code is not found then do not return an error, just no result.
 			serr, _ := status.FromError(err)
 			if serr.Code() != codes.NotFound {
-				log.Error().Err(err).Str("network", network).Msg("GDS lookup unsuccessful")
+				sentry.Error(ctx).Err(err).Str("network", network).Msg("GDS lookup unsuccessful")
 				return nil, err
 			}
 			return nil, nil
@@ -93,7 +93,7 @@ func (s *Server) Lookup(c *gin.Context) {
 		// an empty reply is not returned.
 		if rep.Error != nil && rep.Error.Code != 0 {
 			rerr := fmt.Errorf("[%d] %s", rep.Error.Code, rep.Error.Message)
-			log.Warn().Err(rerr).Msg("received error in response body with a gRPC status ok")
+			sentry.Warn(ctx).Err(rerr).Msg("received error in response body with a gRPC status ok")
 			if rep.Id == "" && rep.CommonName == "" {
 				// If we don't have an ID or common name, don't return an empty result
 				return nil, rerr
@@ -104,7 +104,7 @@ func (s *Server) Lookup(c *gin.Context) {
 
 	// Execute the parallel GDS lookup request, ensuring that flatten is false with the
 	// expectation that TestNet will be in the 0 index and MainNet in the 1 index.
-	results, errs := s.ParallelGDSRequests(c.Request.Context(), lookup, false)
+	results, errs := s.ParallelGDSRequests(sentry.RequestContext(c), lookup, false)
 
 	// If there were multiple errors, return a 500
 	// Because the results cannot be flattened we have to check each err individually.
@@ -130,14 +130,14 @@ func (s *Server) Lookup(c *gin.Context) {
 
 		if _, ok := result.(*gds.LookupReply); !ok {
 			err := fmt.Errorf("unexpected result type: %T", result)
-			log.Error().Err(err).Msg("unexpected result type")
+			sentry.Error(c).Err(err).Msg("unexpected result type")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 			return
 		}
 
 		data, err := wire.Rewire(result.(proto.Message))
 		if err != nil {
-			log.Error().Err(err).Msg("could not rewire LookupReply")
+			sentry.Error(c).Err(err).Msg("could not rewire LookupReply")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not process lookup reply"))
 			return
 		}
@@ -173,7 +173,7 @@ func (s *Server) VerifyContact(c *gin.Context) {
 	// Bind the parameters associated with the verify contact request
 	params := &api.VerifyContactParams{}
 	if err := c.ShouldBindQuery(&params); err != nil {
-		log.Warn().Err(err).Msg("could not bind request with query params")
+		sentry.Warn(c).Err(err).Msg("could not bind request with query params")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
@@ -192,9 +192,9 @@ func (s *Server) VerifyContact(c *gin.Context) {
 	}
 
 	// Make the GDS request
-	log.Debug().Str("registered_directory", params.Directory).Msg("issuing GDS verify contact request")
+	sentry.Debug(c).Str("registered_directory", params.Directory).Msg("issuing GDS verify contact request")
 	req := &gds.VerifyContactRequest{Id: params.ID, Token: params.Token}
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 25*time.Second)
+	ctx, cancel := context.WithTimeout(sentry.RequestContext(c), 25*time.Second)
 	defer cancel()
 
 	var (
@@ -208,7 +208,7 @@ func (s *Server) VerifyContact(c *gin.Context) {
 	case config.MainNet:
 		rep, err = s.mainnetGDS.VerifyContact(ctx, req)
 	default:
-		log.Error().Str("registered_directory", params.Directory).Str("endpoint", "verify").Msg("unhandled directory")
+		sentry.Error(c).Str("registered_directory", params.Directory).Str("endpoint", "verify").Msg("unhandled directory")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not verify contact"))
 		return
 	}
@@ -224,7 +224,7 @@ func (s *Server) VerifyContact(c *gin.Context) {
 		case codes.Aborted:
 			c.JSON(http.StatusConflict, api.ErrorResponse(serr.Message()))
 		default:
-			log.Error().Err(err).Str("code", serr.Code().String()).Str("registered_directory", params.Directory).Msg("could not verify contact")
+			sentry.Error(c).Err(err).Str("code", serr.Code().String()).Str("registered_directory", params.Directory).Msg("could not verify contact")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse(serr.Message()))
 		}
 		return
@@ -238,7 +238,7 @@ func (s *Server) VerifyContact(c *gin.Context) {
 
 	if rep.Error != nil && rep.Error.Code != 0 {
 		if out.Error, err = wire.Rewire(rep.Error); err != nil {
-			log.Error().Err(err).Msg("could not rewire response error struct")
+			sentry.Error(c).Err(err).Msg("could not rewire response error struct")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse(fmt.Errorf("could not handle verify contact response from %s", params.Directory)))
 			return
 		}
@@ -277,14 +277,14 @@ func (s *Server) LoadRegisterForm(c *gin.Context) {
 	// NOTE: the step is optional and does not need to be specified
 	params = &api.RegistrationFormParams{}
 	if err = c.ShouldBindQuery(&params); err != nil {
-		log.Debug().Err(err).Msg("could not bind request with query params")
+		sentry.Debug(c).Err(err).Msg("could not bind request with query params")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
 
 	// Convert the step into a StepType
 	if step, err = records.ParseStepType(string(params.Step)); err != nil {
-		log.Debug().Err(err).Msg("user requested invalid form step type")
+		sentry.Debug(c).Err(err).Msg("user requested invalid form step type")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
@@ -301,7 +301,7 @@ func (s *Server) LoadRegisterForm(c *gin.Context) {
 
 	// If necessary, truncate the form to the specified step
 	if out.Form, err = org.Registration.Truncate(step); err != nil {
-		log.Warn().Err(err).Str("step", string(step)).Msg("could not truncate registration form")
+		sentry.Warn(c).Err(err).Str("step", string(step)).Msg("could not truncate registration form")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
@@ -312,7 +312,7 @@ func (s *Server) LoadRegisterForm(c *gin.Context) {
 		if errors.As(verrs, &fields) {
 			out.Errors = api.FromValidationErrors(fields)
 		} else {
-			log.Warn().Err(err).Msg("could not validate registration form")
+			sentry.Warn(c).Err(err).Msg("could not validate registration form")
 			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 			return
 		}
@@ -320,7 +320,7 @@ func (s *Server) LoadRegisterForm(c *gin.Context) {
 
 	var cleaned gin.H
 	if cleaned, err = out.MarshalStepJSON(); err != nil {
-		log.Warn().Err(err).Str("step", string(step)).Msg("could not marshal registration form for the requested step")
+		sentry.Warn(c).Err(err).Str("step", string(step)).Msg("could not marshal registration form for the requested step")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
@@ -355,14 +355,14 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 	// Unmarshal the registration form from the POST request
 	form = &api.RegistrationForm{}
 	if err = c.ShouldBind(form); err != nil {
-		log.Warn().Err(err).Msg("could not bind request")
+		sentry.Warn(c).Err(err).Msg("could not bind request")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
 
 	// Convert the step into a StepType
 	if step, err = records.ParseStepType(string(form.Step)); err != nil {
-		log.Debug().Err(err).Msg("user requested invalid form step type")
+		sentry.Debug(c).Err(err).Msg("user requested invalid form step type")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
@@ -405,7 +405,7 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		if errors.As(err, &fields) {
 			out.Errors = api.FromValidationErrors(fields)
 		} else {
-			log.Debug().Err(err).Msg("could not update registration form")
+			sentry.Debug(c).Err(err).Msg("could not update registration form")
 			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 			return
 		}
@@ -416,21 +416,21 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 	defer cancel()
 
 	if err = s.db.UpdateOrganization(ctx, org); err != nil {
-		log.Error().Err(err).Msg("could not update organization")
+		sentry.Error(c).Err(err).Msg("could not update organization")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not save registration form"))
 		return
 	}
 
 	// Return the updated form in a 200 OK response, truncated if necessary.
 	if out.Form, err = org.Registration.Truncate(step); err != nil {
-		log.Warn().Err(err).Str("step", string(step)).Msg("could not truncate registration form")
+		sentry.Warn(c).Err(err).Str("step", string(step)).Msg("could not truncate registration form")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
 
 	var cleaned gin.H
 	if cleaned, err = out.MarshalStepJSON(); err != nil {
-		log.Warn().Err(err).Str("step", string(step)).Msg("could not marshal registration form for the requested step")
+		sentry.Warn(c).Err(err).Str("step", string(step)).Msg("could not marshal registration form for the requested step")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
@@ -468,14 +468,14 @@ func (s *Server) ResetRegisterForm(c *gin.Context) {
 	// NOTE: the step is optional and does not need to be specified
 	params = &api.RegistrationFormParams{}
 	if err = c.ShouldBindQuery(&params); err != nil {
-		log.Debug().Err(err).Msg("could not bind request with query params")
+		sentry.Debug(c).Err(err).Msg("could not bind request with query params")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
 
 	// Convert the step into a StepType
 	if step, err = records.ParseStepType(string(params.Step)); err != nil {
-		log.Debug().Err(err).Msg("user requested invalid form step type")
+		sentry.Debug(c).Err(err).Msg("user requested invalid form step type")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
@@ -495,7 +495,7 @@ func (s *Server) ResetRegisterForm(c *gin.Context) {
 		// Ignore validation errors on delete
 		var fields records.ValidationErrors
 		if !errors.As(err, &fields) {
-			log.Debug().Err(err).Msg("could not reset registration form")
+			sentry.Warn(c).Err(err).Msg("could not reset registration form")
 			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 			return
 		}
@@ -506,21 +506,21 @@ func (s *Server) ResetRegisterForm(c *gin.Context) {
 	defer cancel()
 
 	if err = s.db.UpdateOrganization(ctx, org); err != nil {
-		log.Error().Err(err).Msg("could not update organization with reset registration form")
+		sentry.Error(c).Err(err).Msg("could not update organization with reset registration form")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not reset registration form"))
 		return
 	}
 
 	// Return the updated form in a 200 OK response, truncated if necessary.
 	if out.Form, err = org.Registration.Truncate(step); err != nil {
-		log.Warn().Err(err).Str("step", string(step)).Msg("could not truncate registration form")
+		sentry.Warn(c).Err(err).Str("step", string(step)).Msg("could not truncate registration form")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
 
 	var cleaned gin.H
 	if cleaned, err = out.MarshalStepJSON(); err != nil {
-		log.Warn().Err(err).Str("step", string(step)).Msg("could not marshal registration form for the requested step")
+		sentry.Warn(c).Err(err).Str("step", string(step)).Msg("could not marshal registration form for the requested step")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
@@ -563,7 +563,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	// Fetch the user from the context
 	var user *management.User
 	if user, err = auth.GetUserInfo(c); err != nil {
-		log.Error().Err(err).Msg("submit registration requires user info; expected middleware to return 401")
+		sentry.Error(c).Err(err).Msg("submit registration requires user info; expected middleware to return 401")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not fetch user info"))
 		return
 	}
@@ -571,7 +571,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	// Load the app metadata for the user for updating
 	appdata := &auth.AppMetadata{}
 	if err = appdata.Load(user.AppMetadata); err != nil {
-		log.Error().Err(err).Msg("could not parse user app metadata")
+		sentry.Error(c).Err(err).Msg("could not parse user app metadata")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not parse user app metadata"))
 		return
 	}
@@ -581,14 +581,14 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	case config.TestNet:
 		if org.Testnet != nil && org.Testnet.Submitted != "" {
 			err = fmt.Errorf("registration form has already been submitted to the %s", network)
-			log.Warn().Err(err).Str("network", network).Str("orgID", org.Id).Msg("cannot resubmit registration")
+			sentry.Warn(c).Err(err).Str("network", network).Str("orgID", org.Id).Msg("cannot resubmit registration")
 			c.JSON(http.StatusConflict, api.ErrorResponse(err))
 			return
 		}
 	case config.MainNet:
 		if org.Mainnet != nil && org.Mainnet.Submitted != "" {
 			err = fmt.Errorf("registration form has already been submitted to the %s", network)
-			log.Warn().Err(err).Str("network", network).Str("orgID", org.Id).Msg("cannot resubmit registration")
+			sentry.Warn(c).Err(err).Str("network", network).Str("orgID", org.Id).Msg("cannot resubmit registration")
 			c.JSON(http.StatusConflict, api.ErrorResponse(err))
 			return
 		}
@@ -596,7 +596,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 
 	// Validate that a registration form exists on the organization
 	if org.Registration == nil || !org.Registration.ReadyToSubmit(network) {
-		log.Debug().Str("orgID", org.Id).Msg("cannot submit empty or partial registration form")
+		sentry.Debug(c).Str("orgID", org.Id).Msg("cannot submit empty or partial registration form")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("registration form is not ready to submit"))
 		return
 	}
@@ -614,7 +614,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 
 	// Make the GDS request
 	var rep *gds.RegisterReply
-	log.Debug().Str("network", network).Msg("issuing GDS register request")
+	sentry.Debug(c).Str("network", network).Msg("issuing GDS register request")
 	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
@@ -641,7 +641,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 		case codes.Aborted:
 			c.JSON(http.StatusConflict, api.ErrorResponse(serr.Message()))
 		default:
-			log.Error().Err(err).Str("code", serr.Code().String()).Str("network", network).Msg("could not register with directory service")
+			sentry.Error(c).Err(err).Str("code", serr.Code().String()).Str("network", network).Msg("could not register with directory service")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse(fmt.Errorf("could not register with %s", network)))
 		}
 		return
@@ -660,7 +660,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 
 	if rep.Error != nil && rep.Error.Code != 0 {
 		if out.Error, err = wire.Rewire(rep.Error); err != nil {
-			log.Error().Err(err).Str("network", network).Msg("could not rewire response error struct")
+			sentry.Error(c).Err(err).Str("network", network).Msg("could not rewire response error struct")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse(fmt.Errorf("could not handle register response from %s", network)))
 			return
 		}
@@ -668,7 +668,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 
 	// If there is only an error and no vaspID, return a 409 and the response
 	if out.Error != nil && out.Id == "" {
-		log.Error().Err(rep.Error).Str("network", network).Msg("received unexpected GDS OK with an error in the response")
+		sentry.Error(c).Err(rep.Error).Str("network", network).Msg("received unexpected GDS OK with an error in the response")
 		c.JSON(http.StatusConflict, out)
 		return
 	}
@@ -691,14 +691,14 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	}
 
 	if err = s.db.UpdateOrganization(ctx, org); err != nil {
-		log.Error().Err(err).Str("network", network).Msg("could not update organization with directory record")
+		sentry.Error(c).Err(err).Str("network", network).Msg("could not update organization with directory record")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete registration submission"))
 		return
 	}
 
 	// Commit the user metadata updates to auth0
 	if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
-		log.Error().Err(err).Str("user_id", *user.ID).Msg("could not save user app metadata")
+		sentry.Error(c).Err(err).Str("user_id", *user.ID).Msg("could not save user app metadata")
 	}
 
 	c.JSON(http.StatusOK, out)
@@ -798,7 +798,7 @@ func (s *Server) Certificates(c *gin.Context) {
 	// Get the bff claims from the context
 	var claims *auth.Claims
 	if claims, err = auth.GetClaims(c); err != nil {
-		log.Error().Err(err).Msg("unable to retrieve bff claims from context")
+		sentry.Error(c).Err(err).Msg("unable to retrieve bff claims from context")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
@@ -811,7 +811,7 @@ func (s *Server) Certificates(c *gin.Context) {
 	mainnetID := claims.VASPs.MainNet
 
 	// Get the certificate replies from the admin APIs
-	testnet, mainnet, testnetErr, mainnetErr := s.GetCertificates(c.Request.Context(), testnetID, mainnetID)
+	testnet, mainnet, testnetErr, mainnetErr := s.GetCertificates(sentry.RequestContext(c), testnetID, mainnetID)
 
 	// Construct the response
 	out := &api.CertificatesReply{
@@ -833,7 +833,7 @@ func (s *Server) Certificates(c *gin.Context) {
 			}
 
 			if entry.Details, err = wire.Rewire(cert.Details); err != nil {
-				log.Error().Str("cert_id", cert.Id).Err(err).Msg("could not rewire testnet certificate details")
+				sentry.Error(c).Str("cert_id", cert.Id).Err(err).Msg("could not rewire testnet certificate details")
 				c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 				return
 			}
@@ -855,7 +855,7 @@ func (s *Server) Certificates(c *gin.Context) {
 			}
 
 			if entry.Details, err = wire.Rewire(cert.Details); err != nil {
-				log.Error().Str("cert_id", cert.Id).Err(err).Msg("could not rewire mainnet certificate details")
+				sentry.Error(c).Str("cert_id", cert.Id).Err(err).Msg("could not rewire mainnet certificate details")
 				c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 				return
 			}
@@ -1019,7 +1019,7 @@ func (s *Server) Attention(c *gin.Context) {
 	// Get the bff claims from the context
 	var claims *auth.Claims
 	if claims, err = auth.GetClaims(c); err != nil {
-		log.Error().Err(err).Msg("unable to retrieve bff claims from context")
+		sentry.Error(c).Err(err).Msg("unable to retrieve bff claims from context")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
@@ -1073,7 +1073,7 @@ func (s *Server) Attention(c *gin.Context) {
 	// NOTE: This will not attempt to retrieve the VASP records if the VASP ID is not
 	// set in the claims for a network and a nil result will be returned instead for
 	// that network.
-	testnetVASP, mainnetVASP, testnetErr, mainnetErr := s.GetVASPs(c.Request.Context(), claims.VASPs.TestNet, claims.VASPs.MainNet)
+	testnetVASP, mainnetVASP, testnetErr, mainnetErr := s.GetVASPs(sentry.RequestContext(c), claims.VASPs.TestNet, claims.VASPs.MainNet)
 
 	if testnetErr != nil {
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(testnetErr))
@@ -1088,7 +1088,7 @@ func (s *Server) Attention(c *gin.Context) {
 	// Get attention messages relating to certificates
 	var testnetMsg *api.AttentionMessage
 	if testnetMsg, err = registrationMessage(testnetVASP, testnetName); err != nil {
-		log.Error().Err(err).Msg("could not get testnet certificate attention message")
+		sentry.Error(c).Err(err).Msg("could not get testnet certificate attention message")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
@@ -1098,7 +1098,7 @@ func (s *Server) Attention(c *gin.Context) {
 
 	var mainnetMsg *api.AttentionMessage
 	if mainnetMsg, err = registrationMessage(mainnetVASP, mainnetName); err != nil {
-		log.Error().Err(err).Msg("could not get mainnet certificate attention message")
+		sentry.Error(c).Err(err).Msg("could not get mainnet certificate attention message")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}

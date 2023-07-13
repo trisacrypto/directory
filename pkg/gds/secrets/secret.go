@@ -11,6 +11,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/config"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -153,7 +154,7 @@ func (smc *SecretManagerContext) AddSecretVersion(ctx context.Context, secret st
 			return err
 		}
 
-		log.Error().Err(err).Msg("error returned from secret manager")
+		sentry.Error(ctx).Err(err).Msg("error returned from secret manager")
 
 		serr, ok := status.FromError(err)
 		if ok {

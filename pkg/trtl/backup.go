@@ -10,12 +10,12 @@ import (
 
 	"github.com/rotationalio/honu"
 	honuldb "github.com/rotationalio/honu/engines/leveldb"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
 	ldbstore "github.com/trisacrypto/directory/pkg/store/leveldb"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
 	"github.com/trisacrypto/directory/pkg/utils"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 // BackupManager runs as an independent service which periodically copies the trtl
@@ -52,7 +52,7 @@ func (m *BackupManager) Run() {
 		// If we're here, we're just starting the BackupManager, do not continue if we
 		// know we won't be able to access the backup directory. log.Fatal() will kill
 		// the program with an exit code of 1.
-		log.Fatal().Err(err).Msg("trtl backup manager cannot access backup directory")
+		sentry.Fatal(nil).Err(err).Msg("trtl backup manager cannot access backup directory")
 	}
 
 	ticker := time.NewTicker(m.conf.Interval)
@@ -78,7 +78,7 @@ backups:
 			// loop should expect that the backup was successful.
 			// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
 			// this ensures that we issue a CRITICAL severity without stopping the server.
-			log.WithLevel(zerolog.FatalLevel).Err(err).Msg("could not backup database")
+			sentry.Fatal(nil).Err(err).Msg("could not backup database")
 			continue backups
 		} else {
 			log.Info().Dur("duration", time.Since(start)).Msg("trtl backup complete")
@@ -88,7 +88,7 @@ backups:
 		// NOTE: this requires the backup to write filenames as trtldb-200601021504.*
 		var archives []string
 		if archives, err = listArchives(backupDir); err != nil {
-			log.Error().Err(err).Msg("could not list backup directory")
+			sentry.Error(nil).Err(err).Msg("could not list backup directory")
 		} else {
 			if len(archives) > m.conf.Keep {
 				var removed int

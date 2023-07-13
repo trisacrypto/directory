@@ -24,12 +24,13 @@ func UnaryInterceptor(conf Config) grpc.UnaryServerInterceptor {
 		}
 
 		if trackPerformance {
-			span := sentry.StartSpan(ctx, "grpc", sentry.TransactionName(info.FullMethod))
+			span := sentry.StartSpan(ctx, "grpc", sentry.WithTransactionName(info.FullMethod))
 			defer span.Finish()
 		}
 
-		hub.Scope().SetTransaction(info.FullMethod)
-		hub.Scope().SetTag("rpc", "unary")
+		hub.ConfigureScope(func(scope *sentry.Scope) {
+			scope.SetTag("rpc", "unary")
+		})
 
 		defer sentryRecovery(hub, ctx, repanic)
 		rep, err := handler(ctx, req)
@@ -51,7 +52,6 @@ func StreamInterceptor(conf Config) grpc.StreamServerInterceptor {
 
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
 		// Clone the hub for concurrent operations
-		// TODO: this context is not updating the stream context.
 		ctx := stream.Context()
 		hub := sentry.GetHubFromContext(ctx)
 		if hub == nil {
@@ -60,14 +60,17 @@ func StreamInterceptor(conf Config) grpc.StreamServerInterceptor {
 		}
 
 		if trackPerformance {
-			span := sentry.StartSpan(ctx, "grpc", sentry.TransactionName(info.FullMethod))
+			span := sentry.StartSpan(ctx, "grpc", sentry.WithTransactionName(info.FullMethod))
 			defer span.Finish()
 		}
 
-		hub.Scope().SetTransaction(info.FullMethod)
-		hub.Scope().SetTag("rpc", "streaming")
+		hub.ConfigureScope(func(scope *sentry.Scope) {
+			scope.SetTag("rpc", "streaming")
+		})
 
+		stream = Stream(stream, ctx)
 		defer sentryRecovery(hub, ctx, repanic)
+
 		err = handler(srv, stream)
 		if reportErrors && err != nil {
 			hub.CaptureException(err)

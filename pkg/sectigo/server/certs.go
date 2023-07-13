@@ -13,6 +13,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/sectigo"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"github.com/trisacrypto/trisa/pkg/trisa/keys/signature"
 )
 
@@ -31,15 +32,15 @@ func (s *Server) CreateCerts(params Params, profile string, batchID int) {
 	// TODO: handle dNSNames
 	certs, err := s.certs.Issue(sub)
 	if err != nil {
-		log.Error().Err(err).Msg("could not issue certs")
+		sentry.Error(nil).Err(err).Msg("could not issue certs")
 		if err = s.store.RejectBatch(batchID, err.Error()); err != nil {
-			log.Error().Err(err).Msg("could not reject batch")
+			sentry.Error(nil).Err(err).Msg("could not reject batch")
 		}
 		return
 	}
 
 	if err := s.store.AddCert(batchID, certs); err != nil {
-		log.Error().Err(err).Msg("could not add certs to store")
+		sentry.Error(nil).Err(err).Msg("could not add certs to store")
 		return
 	}
 

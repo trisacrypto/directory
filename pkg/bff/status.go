@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"google.golang.org/protobuf/proto"
 )
@@ -42,7 +43,7 @@ func (s *Server) Status(c *gin.Context) {
 	// Check if the user has supplied a nogds query param
 	params := &api.StatusParams{}
 	if err := c.ShouldBindQuery(&params); err != nil {
-		log.Warn().Err(err).Msg("could not bind request with query params")
+		sentry.Warn(c).Err(err).Msg("could not bind request with query params")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
@@ -58,7 +59,7 @@ func (s *Server) Status(c *gin.Context) {
 		go func() {
 			defer wg.Done()
 			if status, err := s.testnetGDS.Status(ctx, &gds.HealthCheck{}); err != nil {
-				log.Warn().Err(err).Str("network", testnetName).Msg("could not connect to GDS")
+				sentry.Warn(c).Err(err).Str("network", testnetName).Msg("could not connect to GDS")
 				out.TestNet = "unavailable"
 			} else {
 				log.Debug().Str("network", testnetName).
@@ -73,7 +74,7 @@ func (s *Server) Status(c *gin.Context) {
 		go func() {
 			defer wg.Done()
 			if status, err := s.mainnetGDS.Status(ctx, &gds.HealthCheck{}); err != nil {
-				log.Warn().Err(err).Str("network", mainnetName).Msg("could not connect to GDS")
+				sentry.Warn(c).Err(err).Str("network", mainnetName).Msg("could not connect to GDS")
 				out.MainNet = "unavailable"
 			} else {
 				log.Debug().Str("network", mainnetName).
@@ -109,7 +110,7 @@ func (s *Server) GetStatuses(ctx context.Context) (testnet, mainnet *gds.Service
 	// Parse the results
 	var ok bool
 	if errs[0] != nil {
-		log.Warn().Err(errs[0]).Msg("could not call testnet Status RPC")
+		sentry.Warn(ctx).Err(errs[0]).Msg("could not call testnet Status RPC")
 		testnet = nil
 	} else if results[0] == nil {
 		return nil, nil, fmt.Errorf("nil testnet result returned from parallel requests")
@@ -118,7 +119,7 @@ func (s *Server) GetStatuses(ctx context.Context) (testnet, mainnet *gds.Service
 	}
 
 	if errs[1] != nil {
-		log.Warn().Err(errs[1]).Msg("could not call mainnet Status RPC")
+		sentry.Warn(ctx).Err(errs[1]).Msg("could not call mainnet Status RPC")
 		mainnet = nil
 	} else if results[1] == nil {
 		return nil, nil, fmt.Errorf("nil mainnet status result returned from parallel requests")

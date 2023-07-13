@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 const (
@@ -28,14 +28,14 @@ func Authorization(tm *tokens.TokenManager) gin.HandlerFunc {
 
 		// Get access token from the request and ensure it is supplied
 		if accessToken, err = GetAccessToken(c); err != nil {
-			log.Debug().Err(err).Msg("no access token requested with secure endpoint")
+			sentry.Debug(c).Err(err).Msg("no access token requested with secure endpoint")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, ErrorResponse("a valid authorization is required to access this endpoint"))
 			return
 		}
 
 		// Verify that the access_token is valid and signed with server keys
 		if claims, err = tm.Verify(accessToken); err != nil {
-			log.Debug().Err(err).Msg("access token is invalid")
+			sentry.Debug(c).Err(err).Msg("access token is invalid")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, ErrorResponse("a valid authorization is required to access this endpoint"))
 			return
 		}

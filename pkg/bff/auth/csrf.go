@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 // Parameters and headers for double-cookie submit CSRF protection
@@ -46,13 +47,13 @@ func DoubleCookie() gin.HandlerFunc {
 		}
 
 		if cookie == "" || header == "" {
-			log.Warn().Bool("header_exists", header != "").Bool("cookie_exists", cookie != "").Msg("missing either csrf token header or reference cookie")
+			sentry.Warn(c).Bool("header_exists", header != "").Bool("cookie_exists", cookie != "").Msg("missing either csrf token header or reference cookie")
 			c.AbortWithStatusJSON(http.StatusForbidden, api.ErrorResponse(ErrCSRFVerification))
 			return
 		}
 
 		if cookie != header {
-			log.Warn().Bool("header_exists", header != "").Bool("cookie_exists", cookie != "").Msg("csrf token cookie/header mismatch")
+			sentry.Warn(c).Bool("header_exists", header != "").Bool("cookie_exists", cookie != "").Msg("csrf token cookie/header mismatch")
 			c.AbortWithStatusJSON(http.StatusForbidden, api.ErrorResponse(ErrCSRFVerification))
 			return
 		}

@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/store"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 // BackupManager is a go routine that periodically copies the directory storage to a
@@ -25,14 +26,14 @@ func (s *Service) BackupManager(stop <-chan bool) {
 
 	// Test that the store is backupable
 	if _, ok := s.db.(store.Backup); !ok {
-		log.Error().Msg("currently configured store cannot be backed up, mark as disabled or use different store")
+		sentry.Error(nil).Msg("currently configured store cannot be backed up, mark as disabled or use different store")
 		return
 	}
 
 	// Check backup directory, creating it as necessary
 	backupDir, err := s.getBackupStorage()
 	if err != nil {
-		log.Fatal().Err(err).Msg("backup manager cannot access backup directory")
+		sentry.Fatal(nil).Err(err).Msg("backup manager cannot access backup directory")
 	}
 
 	ticker := time.NewTicker(s.conf.Backup.Interval)
@@ -90,7 +91,7 @@ func (s *Service) Backup(path string) (err error) {
 	// NOTE: this requires the backup to write filenames as gdsdb-200601021504.*
 	var archives []string
 	if archives, err = listArchives(path); err != nil {
-		log.Error().Err(err).Msg("could not list backup directory")
+		sentry.Error(nil).Err(err).Msg("could not list backup directory")
 		return err
 	}
 
