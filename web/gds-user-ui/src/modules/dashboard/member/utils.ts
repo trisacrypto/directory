@@ -41,23 +41,32 @@ export const getVaspNetwork = (dir: any) => {
 
 export const getVaspStatus = (status: any) => {
   switch (status) {
-    case 1 || 'NO_VERIFICATION':
+    case 1:
+    case 'NO_VERIFICATION':
       return t`NO VERIFICATION`;
-    case 2 || 'SUBMITTED':
+    case 2:
+    case 'SUBMITTED':
       return t`SUBMITTED`;
-    case 3 || 'EMAIL_VERIFIED':
+    case 3: 
+    case 'EMAIL_VERIFIED':
       return t`EMAIL VERIFIED`;
-    case 4 || 'PENDING_REVIEW':
+    case 4: 
+    case 'PENDING_REVIEW':
       return t`PENDING REVIEW`;
-    case 5 || 'REVIEWED':
+    case 5: 
+    case 'REVIEWED':
       return t`REVIEWED`;
-    case 6 || 'VERIFIED':
+    case 6:
+    case 'VERIFIED':
       return t`VERIFIED`;
-    case 7 || 'REJECTED':
+    case 7:
+    case 'REJECTED':
       return t`REJECTED`;
-    case 8 || 'APPEALED':
+    case 8:
+    case 'APPEALED':
       return t`APPEALED`;
-    case 9 || 'ERRORED':
+    case 9:
+    case 'ERRORED':
       return t`ERRORED`;
     default:
       return t`NO VERIFICATION`;
@@ -90,13 +99,17 @@ export async function copyToClipboard(data: any) {
 
 export const getBusinessCategory = (category: any) => {
   switch (category) {
-    case 1 || 'PRIVATE_ORGANIZATION':
+    case 1:
+    case 'PRIVATE_ORGANIZATION':
       return t`Private Organization`;
-    case 2 || 'GOVERNMENT_ENTITY':
+    case 2:
+    case 'GOVERNMENT_ENTITY':
       return t`Government Entity`;
-    case 3 || 'BUSINESS_ENTITY':
+    case 3:
+    case 'BUSINESS_ENTITY':
       return t`Business Entity`;
-    case 4 || 'NON_COMMERCIAL_ENTITY':
+    case 4:
+    case 'NON_COMMERCIAL_ENTITY':
       return t`Non-Commercial Entity`;
     default:
       return t`Unknown Entity`;
