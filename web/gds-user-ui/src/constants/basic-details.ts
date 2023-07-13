@@ -70,7 +70,7 @@ export const getBusinessCategiryLabel = (category: string) => {
 };
 
 export const getVaspCategoryValue = (category: string[]) => {
-  return category.map((c) => {
+  return category?.map((c) => {
     const foundCategory = vaspCategories.find((cat) => cat.value === c);
     return foundCategory ? foundCategory.label : c;
   });
