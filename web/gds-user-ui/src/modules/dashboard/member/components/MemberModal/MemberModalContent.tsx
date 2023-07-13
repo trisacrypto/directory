@@ -1,8 +1,9 @@
 import { Tag, Text, Stack, SimpleGrid, List, ListItem } from '@chakra-ui/react';
 import { Trans } from '@lingui/macro';
 import { Member } from '../../memberType';
-import { BUSINESS_CATEGORY, getBusinessCategiryLabel } from 'constants/basic-details';
+import { getBusinessCategiryLabel } from 'constants/basic-details';
 import { hasValue } from 'utils/utils';
+import { getBusinessCategory } from '../../utils';
 interface MemberDetailProps {
   member: Member;
 }
@@ -23,7 +24,7 @@ const MemberDetail = ({ member }: MemberDetailProps) => {
               <Trans>Business Category</Trans>
             </ListItem>
             <ListItem>
-              {(BUSINESS_CATEGORY as any)[member?.data?.summary?.business_category] || 'N/A'}
+              {getBusinessCategory(member?.data?.summary?.business_category as any) || 'N/A'}
             </ListItem>
           </List>
           <List>

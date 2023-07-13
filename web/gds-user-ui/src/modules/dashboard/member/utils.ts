@@ -39,25 +39,25 @@ export const getVaspNetwork = (dir: any) => {
   }
 };
 
-export const getVaspStatus = (status: number) => {
+export const getVaspStatus = (status: any) => {
   switch (status) {
-    case 1:
+    case 1 || 'NO_VERIFICATION':
       return t`NO VERIFICATION`;
-    case 2:
+    case 2 || 'SUBMITTED':
       return t`SUBMITTED`;
-    case 3:
+    case 3 || 'EMAIL_VERIFIED':
       return t`EMAIL VERIFIED`;
-    case 4:
+    case 4 || 'PENDING_REVIEW':
       return t`PENDING REVIEW`;
-    case 5:
+    case 5 || 'REVIEWED':
       return t`REVIEWED`;
-    case 6:
+    case 6 || 'VERIFIED':
       return t`VERIFIED`;
-    case 7:
+    case 7 || 'REJECTED':
       return t`REJECTED`;
-    case 8:
+    case 8 || 'APPEALED':
       return t`APPEALED`;
-    case 9:
+    case 9 || 'ERRORED':
       return t`ERRORED`;
     default:
       return t`NO VERIFICATION`;
@@ -87,3 +87,18 @@ export async function copyToClipboard(data: any) {
       console.error('[copyToClipboard]', err);
   }
 }
+
+export const getBusinessCategory = (category: any) => {
+  switch (category) {
+    case 1 || 'PRIVATE_ORGANIZATION':
+      return t`Private Organization`;
+    case 2 || 'GOVERNMENT_ENTITY':
+      return t`Government Entity`;
+    case 3 || 'BUSINESS_ENTITY':
+      return t`Business Entity`;
+    case 4 || 'NON_COMMERCIAL_ENTITY':
+      return t`Non-Commercial Entity`;
+    default:
+      return t`Unknown Entity`;
+  }
+};
