@@ -84,12 +84,7 @@ const ReviewsSummary: React.FC = () => {
 
   useEffect(() => {
     if (localStorage.getItem('isFirstRender') !== 'false') {
-      // Perform any necessary actions or updates
-      console.log('[] isFirstRender', localStorage.getItem('isFirstRender'));
-      // Update the local storage flag to indicate it's no longer the first render
       localStorage.setItem('isFirstRender', 'false');
-
-      // Reload the page
       window.location.reload();
     }
   }, []);
