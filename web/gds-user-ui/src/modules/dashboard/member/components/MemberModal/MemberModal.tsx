@@ -49,7 +49,7 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
 
   return (
     <Flex>
-      <Box w="full">
+      <Box w="full" maxHeight="fit-content">
         <Modal
           closeOnOverlayClick={false}
           isOpen={isOpen}
