@@ -49,14 +49,14 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
 
   return (
     <Flex>
-      <Box w="full" maxHeight="fit-content">
+      <Box w="full">
         <Modal
           closeOnOverlayClick={false}
           isOpen={isOpen}
           onClose={onClose}
           data-testid="member-modal">
           <ModalOverlay />
-          <ModalContent width={'100%'}>
+          <ModalContent width={'100%'} maxHeight={'1000px'}>
             {wasMemberFetched && !isFetchingMember && !error && (
               <>
                 <ModalHeader data-testid="confirmation-modal-header" textAlign={'center'}>
