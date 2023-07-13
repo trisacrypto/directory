@@ -11,6 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/trtl/config"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 // Prometheus namespaces for the collectors defined in this package.
@@ -311,7 +312,7 @@ func registerMetrics() error {
 	// Register all collectors
 	for _, collector := range collectors {
 		if err := prometheus.Register(collector); err != nil {
-			log.Debug().Err(err).Msg("could not register collector")
+			sentry.Warn(nil).Err(err).Msg("could not register collector")
 			return err
 		}
 	}

@@ -15,11 +15,11 @@ import (
 	"github.com/rotationalio/honu/object"
 	"github.com/rotationalio/honu/options"
 	"github.com/rotationalio/honu/replica"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/trtl/jitter"
 	prom "github.com/trisacrypto/directory/pkg/trtl/metrics"
 	"github.com/trisacrypto/directory/pkg/trtl/peers/v1"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -71,17 +71,16 @@ bayou:
 		// Randomly select a remote peer to synchronize with, continuing if we cannot
 		// select a peer or no remote peers exist yet.
 		var peer *peers.Peer
-		if peer = r.SelectPeer(); peer == nil {
+		if peer = r.SelectPeer(context.Background()); peer == nil {
 			log.Debug().Msg("no remote peer available, skipping synchronization")
 			continue bayou
 		}
 
 		// Create a logctx with the peer information for future logging
-		logctx := log.With().
-			Dict("peer", zerolog.Dict().Uint64("id", peer.Id).Str("addr", peer.Addr).Str("name", peer.Name)).
+		logctx := sentry.With(nil).
+			Dict("peer", sentry.Dict().Uint64("id", peer.Id).Str("addr", peer.Addr).Str("name", peer.Name)).
 			Str("service", "anti-entropy").
-			Bool("initiator", true).
-			Logger()
+			Bool("initiator", true)
 
 		// Perform the anti-entropy synchronization session with the remote peer.
 		if err := r.AntiEntropySync(peer, logctx); err != nil {
@@ -96,13 +95,13 @@ bayou:
 // SelectPeer randomly to perform anti-entropy with, ensuring that the current replica
 // is not selected if it is stored in the database. If a peer cannot be selected, then
 // nil is returned. This method handles logging.
-func (r *Service) SelectPeer() (peer *peers.Peer) {
+func (r *Service) SelectPeer(ctx context.Context) (peer *peers.Peer) {
 	// Create a list of keys to select from so we don't unmarshal all peers in the
 	// database in the case where we have a very large number of peers.
 	keys := make([][]byte, 0)
 	iter, err := r.db.Iter(nil, options.WithNamespace(wire.NamespaceReplicas))
 	if err != nil {
-		log.Error().Err(err).Msg("could not fetch peers from database")
+		sentry.Error(ctx).Err(err).Msg("could not fetch peers from database")
 		return nil
 	}
 	defer iter.Release()
@@ -117,7 +116,7 @@ func (r *Service) SelectPeer() (peer *peers.Peer) {
 	}
 
 	if err = iter.Error(); err != nil {
-		log.Error().Err(err).Msg("could not iterate over peers in the database")
+		sentry.Error(ctx).Err(err).Msg("could not iterate over peers in the database")
 		return nil
 	}
 
@@ -133,13 +132,13 @@ func (r *Service) SelectPeer() (peer *peers.Peer) {
 			var key, data []byte
 			key = keys[rand.Intn(len(keys))]
 			if data, err = r.db.Get(key, options.WithNamespace(wire.NamespaceReplicas)); err != nil {
-				log.Warn().Str("key", string(key)).Err(err).Msg("could not fetch peer from the database")
+				sentry.Warn(ctx).Str("key", string(key)).Err(err).Msg("could not fetch peer from the database")
 				continue
 			}
 
 			peer = new(peers.Peer)
 			if err = proto.Unmarshal(data, peer); err != nil {
-				log.Warn().Str("key", string(key)).Err(err).Msg("could not unmarshal peer from database")
+				sentry.Warn(ctx).Str("key", string(key)).Err(err).Msg("could not unmarshal peer from database")
 				continue
 			}
 
@@ -148,11 +147,11 @@ func (r *Service) SelectPeer() (peer *peers.Peer) {
 			}
 		}
 
-		log.Warn().Int("nPeers", len(keys)).Msg("could not select peer after 10 attempts")
+		sentry.Warn(ctx).Int("nPeers", len(keys)).Msg("could not select peer after 10 attempts")
 		return nil
 	}
 
-	log.Warn().Msg("database does not contain any peers")
+	sentry.Warn(ctx).Msg("database does not contain any peers")
 	return nil
 }
 
@@ -176,7 +175,7 @@ func (r *Service) SelectPeer() (peer *peers.Peer) {
 // remote. The send go routine ends when there are no more messages on its channel. Once
 // all go routines are completed the initiator closes the channel, ending the
 // synchronization between the initiator and the remote.
-func (r *Service) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (err error) {
+func (r *Service) AntiEntropySync(peer *peers.Peer, logctx *sentry.Logger) (err error) {
 	// Start a timer to track latency
 	start := time.Now()
 
@@ -202,14 +201,14 @@ func (r *Service) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (err err
 	}
 
 	// Report successful connection
-	log.Debug().Msg("dialed remote peer and connected to the gossip stream")
+	logctx.Debug().Msg("dialed remote peer and connected to the gossip stream")
 
 	// Create a stream sender to ensure that both phase1 and phase2 go routines can send
 	// messages concurrently without violating the grpc semantic that only one go
 	// routine can send messages on the stream.
 	// NOTE: newStreamSender calls wg.Add(1) and runs the sender go routine.
 	wg := new(sync.WaitGroup)
-	sender := newStreamSender(wg, log, stream)
+	sender := newStreamSender(wg, logctx, stream)
 
 	// Start phase 1: loop over all objects in the local database and send check
 	// requests to the remote replica. This is also called the "pull" phase, since we're
@@ -217,7 +216,7 @@ func (r *Service) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (err err
 	// objects to this replica from the remote. Phase 1 ends when we've completed
 	// looping over the local database.
 	wg.Add(1)
-	go r.initiatorPhase1(ctx, wg, log, sender)
+	go r.initiatorPhase1(ctx, wg, logctx, sender)
 
 	// Start phase 2: this phase is concurrent with phase 1 since it listens for and
 	// responds to all messages from the remote replica. This is also called the "push"
@@ -226,7 +225,7 @@ func (r *Service) AntiEntropySync(peer *peers.Peer, log zerolog.Logger) (err err
 	// messages. At that point, we will no longer send any messages so this phase will
 	// close the sender go routine, which will stop when all messages have been sent.
 	wg.Add(1)
-	go r.initiatorPhase2(ctx, wg, log, sender, stream)
+	go r.initiatorPhase2(ctx, wg, logctx, sender, stream)
 
 	// Wait for the initiatorPhase1, initiatorPhase2, and sender anti-entropy routines
 	wg.Wait()
@@ -300,13 +299,13 @@ func (r *Service) connect(ctx context.Context, peer *peers.Peer) (cc *grpc.Clien
 // Note that this go routine does not handle any of the replies from the remote replica,
 // all replies are handled in initiatorPhase2 whether they are replies to phase1 or
 // messages sent in the remote's phase2.
-func (r *Service) initiatorPhase1(ctx context.Context, wg *sync.WaitGroup, log zerolog.Logger, sender *streamSender) {
+func (r *Service) initiatorPhase1(ctx context.Context, wg *sync.WaitGroup, logctx *sentry.Logger, sender *streamSender) {
 	// Start a timer to track latency
 	start := time.Now()
 
 	// Ensure that this routine signals when it exits
 	defer wg.Done()
-	log.Trace().Msg("starting initiator phase 1")
+	logctx.Trace().Msg("starting initiator phase 1")
 
 	// Track how many namespaces and versions we attempt to synchronize for logging.
 	var nNamespaces, nVersions uint64
@@ -316,10 +315,10 @@ namespaces:
 	for _, namespace := range r.replicatedNamespaces {
 		iter, err := r.db.Iter(nil, options.WithNamespace(namespace), options.WithTombstones())
 		if err != nil {
-			log.Error().Err(err).Str("namespace", namespace).Msg("could not iterate over namespace")
+			logctx.Error().Err(err).Str("namespace", namespace).Msg("could not iterate over namespace")
 			continue namespaces
 		}
-		log.Trace().Str("namespace", namespace).Msg("sending namespace")
+		logctx.Trace().Str("namespace", namespace).Msg("sending namespace")
 
 	objects:
 		for iter.Next() {
@@ -335,7 +334,7 @@ namespaces:
 			// on pod memory and increasing our cloud bill.
 			obj, err := iter.Object()
 			if err != nil {
-				log.Error().Err(err).
+				logctx.Error().Err(err).
 					Str("namespace", namespace).
 					Str("key", b64e(iter.Key())).
 					Msg("could not unmarshal honu metadata")
@@ -363,7 +362,7 @@ namespaces:
 		}
 
 		if err = iter.Error(); err != nil {
-			log.Error().Err(err).Str("namespace", namespace).Msg("could not iterate over namespace")
+			logctx.Error().Err(err).Str("namespace", namespace).Msg("could not iterate over namespace")
 		}
 
 		// Ensure the iterator is released, note even if break objects occurs, the
@@ -375,13 +374,13 @@ namespaces:
 	// Send a sync complete message to let the remote know that the pull phase is
 	// complete and they can start the push phase.
 	sender.Send(&replica.Sync{Status: replica.Sync_COMPLETE})
-	log.Trace().Msg("initiator phase 1 complete")
+	logctx.Trace().Msg("initiator phase 1 complete")
 
 	// Compute latency in milliseconds
 	latency := float64(time.Since(start)/1000) / 1000.0
 	prom.PmAEPhase1Latency.WithLabelValues(r.conf.Name).Observe(latency)
 
-	log.Debug().
+	logctx.Debug().
 		Uint64("versions", nVersions).
 		Uint64("namespaces", nNamespaces).
 		Msg("version vectors sent to remote peer")
@@ -394,10 +393,10 @@ namespaces:
 // gets a COMPLETE message from the remote. This phase handles incoming messages from
 // the remote by responding to CHECK requests sending later versions to the remote (but
 // ignoring if local versions are equal or earlier), and handling REPAIR and error.
-func (r *Service) initiatorPhase2(ctx context.Context, wg *sync.WaitGroup, log zerolog.Logger, sender *streamSender, stream gossipStream) {
+func (r *Service) initiatorPhase2(ctx context.Context, wg *sync.WaitGroup, logctx *sentry.Logger, sender *streamSender, stream gossipStream) {
 	// Ensure that this routine signals when it exits
 	defer wg.Done()
-	log.Trace().Msg("starting initiator phase 2")
+	logctx.Trace().Msg("starting initiator phase 2")
 
 	// Ensure that we close the sending channel when this routine exits to prevent
 	// deadlocks if this phase ends prematurely (e.g. the timeout expires).
@@ -412,7 +411,7 @@ gossip:
 		// Check to make sure the deadline isn't over
 		select {
 		case <-ctx.Done():
-			log.Debug().Msg("context canceled while trying to recv messages from remote")
+			logctx.Debug().Msg("context canceled while trying to recv messages from remote")
 			return
 		default:
 		}
@@ -422,7 +421,7 @@ gossip:
 		if sync, err = stream.Recv(); err != nil {
 			if err != io.EOF {
 				// If the error is not EOF then something has gone wrong.
-				log.Error().Err(err).Msg("anti-entropy aborted early with recv error")
+				logctx.Error().Err(err).Msg("anti-entropy aborted early with recv error")
 			}
 			return
 		}
@@ -434,7 +433,7 @@ gossip:
 			versions++
 			var local *object.Object
 			if local, err = r.db.Object(sync.Object.Key, options.WithNamespace(sync.Object.Namespace)); err != nil {
-				log.Warn().Err(err).
+				logctx.Warn().Err(err).
 					Str("namespace", sync.Object.Namespace).
 					Str("key", b64e(sync.Object.Key)).
 					Msg("failed check sync on initiator: could not fetch object meta")
@@ -470,7 +469,7 @@ gossip:
 
 			var updateType honu.UpdateType
 			if updateType, err = r.db.Update(sync.Object, options.WithNamespace(sync.Object.Namespace)); err != nil {
-				log.Warn().Err(err).
+				logctx.Warn().Err(err).
 					Str("namespace", sync.Object.Namespace).
 					Str("key", b64e(sync.Object.Key)).
 					Msg("could not update object from remote peer")
@@ -488,33 +487,33 @@ gossip:
 		case replica.Sync_ERROR:
 			// Something went wrong on the remote, log and continue
 			if sync.Object != nil {
-				log.Warn().Str("error", sync.Error).
+				logctx.Warn().Str("error", sync.Error).
 					Str("key", b64e(sync.Object.Key)).
 					Str("namespace", sync.Object.Namespace).
 					Msg("a replication error occurred")
 			} else {
-				log.Warn().Str("error", sync.Error).Msg("a replication error occurred")
+				logctx.Warn().Str("error", sync.Error).Msg("a replication error occurred")
 			}
 
 		case replica.Sync_COMPLETE:
 			// The remote replica is done synchronizing and since we are the
 			// initiating replica, we can safely quit receiving.
-			log.Debug().Uint64("versions", versions).Msg("received version vectors from remote peer")
+			logctx.Debug().Uint64("versions", versions).Msg("received version vectors from remote peer")
 			if updates > 0 || repairs > 0 {
 				r.synchronizedNow()
-				log.Info().
+				logctx.Info().
 					Uint64("local_repairs", repairs).
 					Uint64("remote_updates", updates).
 					Uint64("versions", versions).
 					Msg("anti-entropy synchronization complete")
 			} else {
-				log.Debug().Msg("anti-entropy complete with no synchronization")
+				logctx.Debug().Msg("anti-entropy complete with no synchronization")
 			}
 
 			// When we receive the COMPLETE message from the remote replica, we're done:
 			// exit the for loop and close the sender (via the defer above). Once all
 			// messages are sent, we can close the stream and finish.
-			log.Trace().Msg("initiator phase 2 complete")
+			logctx.Trace().Msg("initiator phase 2 complete")
 
 			// Update Prometheus metrics
 			prom.PmAEVersions.WithLabelValues(r.conf.Name, r.conf.Region, "initiator").Observe(float64(versions))
@@ -524,7 +523,7 @@ gossip:
 			return
 
 		default:
-			log.Error().Str("status", sync.Status.String()).Msg("unhandled sync status")
+			logctx.Error().Str("status", sync.Status.String()).Msg("unhandled sync status")
 		}
 	}
 }

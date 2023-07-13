@@ -1,6 +1,7 @@
 package replica_test
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"testing"
@@ -38,7 +39,7 @@ func TestSelectZeroOrOnePeer(t *testing.T) {
 			}
 			db := createDB(t, dbPeers)
 			replica := initReplica(t, db, fixtures[tc.self])
-			selected := replica.SelectPeer()
+			selected := replica.SelectPeer(context.Background())
 			if tc.expected == "" {
 				require.Nil(t, selected, "should not have selected a peer")
 			} else {
@@ -62,7 +63,7 @@ func TestSelectPeerAll(t *testing.T) {
 	// Run enough times so that all peers have a chance to be selected.
 	counter := make(map[uint64]uint8)
 	for i := 0; i < 100; i++ {
-		peer := replica.SelectPeer()
+		peer := replica.SelectPeer(context.Background())
 		require.NotNil(t, peer, "should have selected a peer")
 		counter[peer.Id]++
 	}

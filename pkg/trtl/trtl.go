@@ -12,11 +12,11 @@ import (
 	"github.com/rotationalio/honu/iterator"
 	"github.com/rotationalio/honu/object"
 	"github.com/rotationalio/honu/options"
-	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/trtl/internal"
 	"github.com/trisacrypto/directory/pkg/trtl/metrics"
 	"github.com/trisacrypto/directory/pkg/trtl/pb/v1"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 )
@@ -51,12 +51,12 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (out *pb.GetRe
 
 	// Validate request
 	if _, found := reservedNamespaces[in.Namespace]; found {
-		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
+		sentry.Warn(ctx).Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
 	}
 
 	if len(in.Key) == 0 {
-		log.Warn().Msg("missing key in trtl Get request")
+		sentry.Warn(ctx).Msg("missing key in trtl Get request")
 		return nil, status.Error(codes.InvalidArgument, "key must be provided in Get request")
 	}
 
@@ -71,11 +71,11 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (out *pb.GetRe
 			// TODO: this should be part of honu not trtl
 			metrics.PmTrtlReads.WithLabelValues(in.Namespace).Inc()
 
-			log.Debug().Err(err).Bytes("key", in.Key).Msg("specified key not found")
+			sentry.Debug(ctx).Err(err).Bytes("key", in.Key).Msg("specified key not found")
 			return nil, status.Error(codes.NotFound, err.Error())
 		}
 
-		log.Error().Err(err).Bytes("key", in.Key).Msg("unable to retrieve object")
+		sentry.Error(ctx).Err(err).Bytes("key", in.Key).Msg("unable to retrieve object")
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -86,7 +86,7 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (out *pb.GetRe
 	metrics.PmTrtlBytesRead.WithLabelValues(in.Namespace).Add(float64(len(object.Data)))
 
 	if object.Version.Tombstone {
-		log.Debug().Err(engine.ErrNotFound).Bytes("key", in.Key).Msg("specified key not found")
+		sentry.Debug(ctx).Err(engine.ErrNotFound).Bytes("key", in.Key).Msg("specified key not found")
 		return nil, status.Error(codes.NotFound, engine.ErrNotFound.Error())
 	}
 
@@ -100,7 +100,7 @@ func (h *TrtlService) Get(ctx context.Context, in *pb.GetRequest) (out *pb.GetRe
 	}
 
 	// No metadata requested; just return the value for the given key
-	log.Debug().Bytes("key", in.Key).Bool("return_meta", out.Meta != nil).Msg("trtl Get")
+	sentry.Debug(ctx).Bytes("key", in.Key).Bool("return_meta", out.Meta != nil).Msg("trtl Get")
 	return out, nil
 }
 
@@ -113,17 +113,17 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 
 	// Validate Request
 	if _, found := reservedNamespaces[in.Namespace]; found {
-		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
+		sentry.Warn(ctx).Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
 	}
 
 	if len(in.Key) == 0 {
-		log.Warn().Msg("missing key in trtl Put request")
+		sentry.Warn(ctx).Msg("missing key in trtl Put request")
 		return nil, status.Error(codes.InvalidArgument, "key must be provided in Put request")
 	}
 
 	if len(in.Value) == 0 {
-		log.Warn().Msg("missing value in trtl Put request")
+		sentry.Warn(ctx).Msg("missing value in trtl Put request")
 		return nil, status.Error(codes.InvalidArgument, "value must be provided in Put request")
 	}
 
@@ -131,7 +131,7 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
 	var object *object.Object
 	if object, err = h.db.Put(in.Key, in.Value, options.WithNamespace(in.Namespace)); err != nil {
-		log.Error().Err(err).Bytes("key", in.Key).Msg("unable to put object")
+		sentry.Error(ctx).Err(err).Bytes("key", in.Key).Msg("unable to put object")
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -147,7 +147,7 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 		out.Meta = returnMeta(object)
 	}
 
-	log.Debug().Bytes("key", in.Key).Bool("return_meta", out.Meta != nil).Msg("trtl Put")
+	sentry.Debug(ctx).Bytes("key", in.Key).Bool("return_meta", out.Meta != nil).Msg("trtl Put")
 	return out, nil
 }
 
@@ -160,11 +160,11 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 
 	// Validate Request
 	if _, found := reservedNamespaces[in.Namespace]; found {
-		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
+		sentry.Warn(ctx).Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
 	}
 	if len(in.Key) == 0 {
-		log.Warn().Msg("missing key in trtl Delete request")
+		sentry.Warn(ctx).Msg("missing key in trtl Delete request")
 		return nil, status.Error(codes.InvalidArgument, "key must be provided in Delete request")
 	}
 
@@ -175,7 +175,7 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 		if err == engine.ErrNotFound {
 			return nil, status.Error(codes.NotFound, err.Error())
 		}
-		log.Error().Err(err).Bytes("key", in.Key).Msg("unable to delete object")
+		sentry.Error(ctx).Err(err).Bytes("key", in.Key).Msg("unable to delete object")
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -189,7 +189,7 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 		out.Meta = returnMeta(object)
 	}
 
-	log.Debug().Bytes("key", in.Key).Bool("return_meta", out.Meta != nil).Msg("trtl Delete")
+	sentry.Debug(ctx).Bytes("key", in.Key).Bool("return_meta", out.Meta != nil).Msg("trtl Delete")
 	return out, nil
 }
 
@@ -216,7 +216,7 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 
 	// Ensure the namespace is not reserved
 	if _, found := reservedNamespaces[in.Namespace]; found {
-		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
+		sentry.Warn(ctx).Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return nil, status.Error(codes.PermissionDenied, "cannot used reserved namespace")
 	}
 
@@ -236,7 +236,7 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 
 	// Test valid options
 	if opts.IterNoKeys && opts.IterNoValues && !opts.ReturnMeta {
-		log.Debug().
+		sentry.Debug(ctx).
 			Str("namespace", in.Namespace).
 			Bool("iter_no_keys", opts.IterNoKeys).
 			Bool("iter_no_values", opts.IterNoValues).
@@ -244,26 +244,26 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 			Msg("iter request would return no data")
 		return nil, status.Error(codes.InvalidArgument, "cannot specify no keys, values, and no return meta: no data would be returned")
 	} else {
-		log.Debug().Msg("trtl Iter")
+		sentry.Debug(ctx).Msg("trtl Iter")
 	}
 
 	// If a page cursor is provided load it, otherwise create the cursor for iteration
 	cursor := &internal.PageCursor{}
 	if opts.PageToken != "" {
 		if err = cursor.Load(opts.PageToken); err != nil {
-			log.Warn().Err(err).Msg("invalid page token on iter request")
+			sentry.Warn(ctx).Err(err).Msg("invalid page token on iter request")
 			return nil, status.Error(codes.InvalidArgument, "invalid page token")
 		}
 
 		// Validate the request has not changed
 		if cursor.PageSize != opts.PageSize {
-			log.Debug().Int32("cursor", cursor.PageSize).Int32("opts", opts.PageSize).Msg("invalid iter request: mismatched page size")
+			sentry.Debug(ctx).Int32("cursor", cursor.PageSize).Int32("opts", opts.PageSize).Msg("invalid iter request: mismatched page size")
 			return nil, status.Error(codes.InvalidArgument, "page size cannot change between requests")
 		}
 
 		// Note - prefix check happens on next key, but namespace check must match Honu iterator
 		if !bytes.HasPrefix(cursor.NextKey, in.Prefix) {
-			log.Debug().Msg("invalid iter request: mismatched prefix")
+			sentry.Debug(ctx).Msg("invalid iter request: mismatched prefix")
 			return nil, status.Error(codes.InvalidArgument, "prefix cannot change between requests")
 		}
 
@@ -281,7 +281,7 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
 	var iter iterator.Iterator
 	if iter, err = h.db.Iter(in.Prefix, options.WithNamespace(in.Namespace)); err != nil {
-		log.Error().Err(err).Str("namespace", in.Namespace).Msg("could not create honu iterator")
+		sentry.Error(ctx).Err(err).Str("namespace", in.Namespace).Msg("could not create honu iterator")
 		return nil, status.Errorf(codes.FailedPrecondition, "could not create iterator: %s", err)
 	}
 	defer iter.Release()
@@ -296,7 +296,7 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 	// check the namespace that the iterator is operating on rather than the one specified by
 	// the user in the first request (e.g. because a default namespace may be used).
 	if opts.PageToken != "" && cursor.Namespace != iter.Namespace() {
-		log.Debug().Msg("invalid iter request: mismatched namespace")
+		sentry.Debug(ctx).Msg("invalid iter request: mismatched namespace")
 		return nil, status.Error(codes.InvalidArgument, "namespace cannot change between requests")
 	}
 
@@ -328,7 +328,7 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 		// Fetch the metadata since it will need to be loaded for the response anyway.
 		var object *object.Object
 		if object, err = iter.Object(); err != nil {
-			log.Error().Err(err).Str("key", b64e(iter.Key())).Msg("could not fetch object metadata")
+			sentry.Error(ctx).Err(err).Str("key", b64e(iter.Key())).Msg("could not fetch object metadata")
 			return nil, status.Error(codes.FailedPrecondition, "database is in invalid state")
 		}
 
@@ -359,20 +359,20 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 	}
 
 	if err = iter.Error(); err != nil {
-		log.Error().Err(err).Str("namespace", in.Namespace).Msg("could not iterate")
+		sentry.Error(ctx).Err(err).Str("namespace", in.Namespace).Msg("could not iterate")
 		return nil, status.Errorf(codes.FailedPrecondition, "iteration failure: %s", err)
 	}
 
 	// Check if there is a next page cursor
 	if len(cursor.NextKey) != 0 {
 		if out.NextPageToken, err = cursor.Dump(); err != nil {
-			log.Error().Err(err).Str("namespace", in.Namespace).Msg("could not serialize next page token")
+			sentry.Error(ctx).Err(err).Str("namespace", in.Namespace).Msg("could not serialize next page token")
 			return nil, status.Error(codes.FailedPrecondition, "could not serialize next page token")
 		}
 	}
 
 	// Request complete
-	log.Info().
+	sentry.Info(ctx).
 		Str("namespace", in.Namespace).
 		Int("count", len(out.Values)).
 		Bool("has_next_page", out.NextPageToken != "").
@@ -385,8 +385,9 @@ func (h *TrtlService) Iter(ctx context.Context, in *pb.IterRequest) (out *pb.Ite
 // TODO: this method is not fully implemented yet.
 func (h *TrtlService) Batch(stream pb.Trtl_BatchServer) error {
 	msgs := 0
-	log.Debug().Msg("starting trtl Batch stream")
-	defer log.Debug().Int("msgs", msgs).Msg("trtl Batch stream closed")
+	ctx := stream.Context()
+	sentry.Debug(ctx).Msg("starting trtl Batch stream")
+	defer sentry.Debug(ctx).Int("msgs", msgs).Msg("trtl Batch stream closed")
 
 	out := &pb.BatchReply{}
 	for {
@@ -481,7 +482,7 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 
 	// Ensure the namespace is not reserved
 	if _, found := reservedNamespaces[in.Namespace]; found {
-		log.Warn().Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
+		sentry.Warn(ctx).Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
 		return status.Error(codes.PermissionDenied, "cannot used reserved namespace")
 	}
 
@@ -496,7 +497,7 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 
 	// Test valid options
 	if opts.IterNoKeys && opts.IterNoValues && !opts.ReturnMeta {
-		log.Debug().
+		sentry.Debug(ctx).
 			Str("namespace", in.Namespace).
 			Bool("iter_no_keys", opts.IterNoKeys).
 			Bool("iter_no_values", opts.IterNoValues).
@@ -504,13 +505,13 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 			Msg("cursor request would return no data")
 		return status.Error(codes.InvalidArgument, "cannot specify no keys, values, and no return meta: no data would be returned")
 	} else {
-		log.Debug().Msg("trtl Cursor")
+		sentry.Debug(ctx).Msg("trtl Cursor")
 	}
 
 	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
 	var iter iterator.Iterator
 	if iter, err = h.db.Iter(in.Prefix, options.WithNamespace(in.Namespace)); err != nil {
-		log.Error().Err(err).Str("namespace", in.Namespace).Msg("could not create honu iterator")
+		sentry.Error(ctx).Err(err).Str("namespace", in.Namespace).Msg("could not create honu iterator")
 		return status.Errorf(codes.FailedPrecondition, "could not create iterator: %s", err)
 	}
 	defer iter.Release()
@@ -534,10 +535,10 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 		case <-ctx.Done():
 			if err = ctx.Err(); err != nil && err != io.EOF {
 				// Downgrading to a debug message since this occurs relatively frequently
-				log.Debug().Err(err).Msg("cursor canceled by client with error")
+				sentry.Debug(ctx).Err(err).Msg("cursor canceled by client with error")
 				return status.Errorf(codes.Canceled, "cursor canceled by client: %s", err)
 			}
-			log.Info().
+			sentry.Info(ctx).
 				Str("namespace", in.Namespace).
 				Uint64("count", nMessages).
 				Msg("cursor request canceled by client")
@@ -548,7 +549,7 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 		// Fetch the metadata since it will need to be loaded for the response anyway.
 		var object *object.Object
 		if object, err = iter.Object(); err != nil {
-			log.Error().Err(err).Str("key", b64e(iter.Key())).Msg("could not fetch object metadata")
+			sentry.Error(ctx).Err(err).Str("key", b64e(iter.Key())).Msg("could not fetch object metadata")
 			return status.Error(codes.FailedPrecondition, "database is in invalid state")
 		}
 
@@ -579,7 +580,7 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 		// Send the message on the stream
 		if err = stream.Send(msg); err != nil {
 			// Downgrading to a debug message since this occurs relatively frequently.
-			log.Debug().Err(err).Msg("could not send cursor reply during iteration")
+			sentry.Debug(ctx).Err(err).Msg("could not send cursor reply during iteration")
 			return status.Errorf(codes.Aborted, "send error occurred: %s", err)
 		}
 
@@ -593,12 +594,12 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 	}
 
 	if err = iter.Error(); err != nil {
-		log.Error().Err(err).Str("namespace", in.Namespace).Msg("could not iterate")
+		sentry.Error(ctx).Err(err).Str("namespace", in.Namespace).Msg("could not iterate")
 		return status.Errorf(codes.FailedPrecondition, "iteration failure: %s", err)
 	}
 
 	// Cursor stream complete
-	log.Info().
+	sentry.Info(ctx).
 		Str("namespace", in.Namespace).
 		Uint64("count", nMessages).
 		Msg("cursor request complete")

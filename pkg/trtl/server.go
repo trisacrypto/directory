@@ -256,6 +256,7 @@ func (t *Server) Shutdown() (err error) {
 
 	if len(errs) > 0 {
 		log.Debug().Msg("did not successfully shutdown trtl server")
+		sentry.Error(nil).Errs(errs).Msg("trtl shutdown errors")
 		return fmt.Errorf("%d shutdown errors occurred", len(errs))
 	}
 

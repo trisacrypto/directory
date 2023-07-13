@@ -22,6 +22,7 @@ import (
 	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
 	"github.com/trisacrypto/directory/pkg/store/index"
 	"github.com/trisacrypto/directory/pkg/store/iterator"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
 )
@@ -222,7 +223,7 @@ func (s *Store) UpdateVASP(ctx context.Context, v *pb.VASP) (err error) {
 	// new indices with any changes to ensure the index correctly reflects the state.
 	if err = s.removeIndices(o); err != nil {
 		// NOTE: if this error is triggered, admins may want to reindex the database
-		log.Error().Err(err).Msg("could not remove previous indices on update: reindex required")
+		sentry.Error(ctx).Err(err).Msg("could not remove previous indices on update: reindex required")
 	}
 	if err = s.insertIndices(v); err != nil {
 		return err

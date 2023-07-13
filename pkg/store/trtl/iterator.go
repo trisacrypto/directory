@@ -6,12 +6,12 @@ import (
 	"io"
 
 	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
 	bff "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/trtl"
 	trtlpb "github.com/trisacrypto/directory/pkg/trtl/pb/v1"
 	"github.com/trisacrypto/directory/pkg/utils"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
@@ -302,7 +302,7 @@ func (i *trtlStreamingIterator) Release() {
 func (i *vaspIterator) VASP() (*pb.VASP, error) {
 	vasp := new(pb.VASP)
 	if err := proto.Unmarshal(i.Value(), vasp); err != nil {
-		log.Error().Err(err).Str("type", wire.NamespaceVASPs).Str("key", string(i.Key())).Msg("corrupted data encountered")
+		sentry.Error(nil).Err(err).Str("type", wire.NamespaceVASPs).Str("key", string(i.Key())).Msg("corrupted data encountered")
 		return nil, err
 	}
 	return vasp, nil
@@ -337,7 +337,7 @@ func (i *vaspIterator) SeekId(vaspID string) bool {
 func (i *certIterator) Cert() (*models.Certificate, error) {
 	c := new(models.Certificate)
 	if err := proto.Unmarshal(i.Value(), c); err != nil {
-		log.Error().Err(err).Str("type", wire.NamespaceCerts).Str("key", string(i.Key())).Msg("corrupted data encountered")
+		sentry.Error(nil).Err(err).Str("type", wire.NamespaceCerts).Str("key", string(i.Key())).Msg("corrupted data encountered")
 		return nil, err
 	}
 	return c, nil
@@ -364,7 +364,7 @@ func (i *certIterator) All() (certs []*models.Certificate, err error) {
 func (i *certReqIterator) CertReq() (*models.CertificateRequest, error) {
 	r := new(models.CertificateRequest)
 	if err := proto.Unmarshal(i.Value(), r); err != nil {
-		log.Error().Err(err).Str("type", wire.NamespaceCertReqs).Str("key", string(i.Key())).Msg("corrupted data encountered")
+		sentry.Error(nil).Err(err).Str("type", wire.NamespaceCertReqs).Str("key", string(i.Key())).Msg("corrupted data encountered")
 		return nil, err
 	}
 	return r, nil

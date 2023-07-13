@@ -8,6 +8,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
+	"github.com/hashicorp/go-multierror"
 	"github.com/oklog/ulid/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -118,6 +119,14 @@ func (e *Event) Err(err error) *Event {
 	return e
 }
 
+func (e *Event) Errs(errs []error) *Event {
+	if len(errs) > 0 {
+		e.err = &ServiceError{err: multierror.Append(nil, errs...)}
+	}
+	e.zero = e.zero.Errs("errors", errs)
+	return e
+}
+
 func (e *Event) Str(key, value string) *Event {
 	e.extra[key] = value
 	e.zero = e.zero.Str(key, value)
@@ -145,6 +154,12 @@ func (e *Event) Int32(key string, value int32) *Event {
 func (e *Event) Int64(key string, value int64) *Event {
 	e.extra[key] = value
 	e.zero = e.zero.Int64(key, value)
+	return e
+}
+
+func (e *Event) Uint64(key string, value uint64) *Event {
+	e.extra[key] = value
+	e.zero = e.zero.Uint64(key, value)
 	return e
 }
 
@@ -278,6 +293,11 @@ func (l Logger) createEvent(level sentry.Level, zero *zerolog.Event) *Event {
 	return event
 }
 
+func (l Logger) Trace() *zerolog.Event {
+	lg := l.zero.Logger()
+	return lg.Trace()
+}
+
 func (l Logger) Debug() *Event {
 	lg := l.zero.Logger()
 	return l.createEvent(sentry.LevelDebug, lg.Debug())
@@ -310,6 +330,20 @@ func (l *Logger) Int(key string, value int) *Logger {
 	return l
 }
 
+func (l *Logger) Bool(key string, value bool) *Logger {
+	l.extra[key] = value
+	l.zero = l.zero.Bool(key, value)
+	return l
+}
+
+func (l *Logger) Dict(key string, dict *Dictionary) *Logger {
+	for dkey, dval := range dict.extra {
+		l.extra[fmt.Sprintf("%s_%s", key, dkey)] = dval
+	}
+	l.zero = l.zero.Dict(key, dict.dict)
+	return l
+}
+
 func Dict() *Dictionary {
 	return &Dictionary{
 		dict:  zerolog.Dict(),
@@ -331,5 +365,11 @@ func (d *Dictionary) Str(key, val string) *Dictionary {
 func (d *Dictionary) Int(key string, value int) *Dictionary {
 	d.extra[key] = value
 	d.dict = d.dict.Int(key, value)
+	return d
+}
+
+func (d *Dictionary) Uint64(key string, value uint64) *Dictionary {
+	d.extra[key] = value
+	d.dict = d.dict.Uint64(key, value)
 	return d
 }
