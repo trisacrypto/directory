@@ -82,7 +82,7 @@ func (s *Server) Lookup(c *gin.Context) {
 			// If the code is not found then do not return an error, just no result.
 			serr, _ := status.FromError(err)
 			if serr.Code() != codes.NotFound {
-				sentry.Error(c).Err(err).Str("network", network).Msg("GDS lookup unsuccessful")
+				sentry.Error(ctx).Err(err).Str("network", network).Msg("GDS lookup unsuccessful")
 				return nil, err
 			}
 			return nil, nil
@@ -93,7 +93,7 @@ func (s *Server) Lookup(c *gin.Context) {
 		// an empty reply is not returned.
 		if rep.Error != nil && rep.Error.Code != 0 {
 			rerr := fmt.Errorf("[%d] %s", rep.Error.Code, rep.Error.Message)
-			sentry.Warn(c).Err(rerr).Msg("received error in response body with a gRPC status ok")
+			sentry.Warn(ctx).Err(rerr).Msg("received error in response body with a gRPC status ok")
 			if rep.Id == "" && rep.CommonName == "" {
 				// If we don't have an ID or common name, don't return an empty result
 				return nil, rerr
@@ -104,7 +104,7 @@ func (s *Server) Lookup(c *gin.Context) {
 
 	// Execute the parallel GDS lookup request, ensuring that flatten is false with the
 	// expectation that TestNet will be in the 0 index and MainNet in the 1 index.
-	results, errs := s.ParallelGDSRequests(c.Request.Context(), lookup, false)
+	results, errs := s.ParallelGDSRequests(sentry.RequestContext(c), lookup, false)
 
 	// If there were multiple errors, return a 500
 	// Because the results cannot be flattened we have to check each err individually.
@@ -194,7 +194,7 @@ func (s *Server) VerifyContact(c *gin.Context) {
 	// Make the GDS request
 	sentry.Debug(c).Str("registered_directory", params.Directory).Msg("issuing GDS verify contact request")
 	req := &gds.VerifyContactRequest{Id: params.ID, Token: params.Token}
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 25*time.Second)
+	ctx, cancel := context.WithTimeout(sentry.RequestContext(c), 25*time.Second)
 	defer cancel()
 
 	var (
@@ -811,7 +811,7 @@ func (s *Server) Certificates(c *gin.Context) {
 	mainnetID := claims.VASPs.MainNet
 
 	// Get the certificate replies from the admin APIs
-	testnet, mainnet, testnetErr, mainnetErr := s.GetCertificates(c.Request.Context(), testnetID, mainnetID)
+	testnet, mainnet, testnetErr, mainnetErr := s.GetCertificates(sentry.RequestContext(c), testnetID, mainnetID)
 
 	// Construct the response
 	out := &api.CertificatesReply{
@@ -1073,7 +1073,7 @@ func (s *Server) Attention(c *gin.Context) {
 	// NOTE: This will not attempt to retrieve the VASP records if the VASP ID is not
 	// set in the claims for a network and a nil result will be returned instead for
 	// that network.
-	testnetVASP, mainnetVASP, testnetErr, mainnetErr := s.GetVASPs(c.Request.Context(), claims.VASPs.TestNet, claims.VASPs.MainNet)
+	testnetVASP, mainnetVASP, testnetErr, mainnetErr := s.GetVASPs(sentry.RequestContext(c), claims.VASPs.TestNet, claims.VASPs.MainNet)
 
 	if testnetErr != nil {
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(testnetErr))

@@ -16,6 +16,14 @@ func CloneContext(c *gin.Context) context.Context {
 	return context.Background()
 }
 
+func RequestContext(c *gin.Context) context.Context {
+	ctx := c.Request.Context()
+	if hub := sentrygin.GetHubFromContext(c); hub != nil {
+		return sentry.SetHubOnContext(ctx, hub.Clone())
+	}
+	return ctx
+}
+
 // Wrap a grpc.ServerStream handler with the sentry context.
 func Stream(s grpc.ServerStream, ctx context.Context) grpc.ServerStream {
 	return &stream{s, ctx}

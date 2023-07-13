@@ -67,10 +67,10 @@ func (s *Server) CheckVerification(c *gin.Context) {
 			serr, _ := status.FromError(err)
 			switch serr.Code() {
 			case codes.NotFound:
-				sentry.Warn(c).Err(err).Str("network", network).Msg("verification lookup for unknown VASP claims are out of date")
+				sentry.Warn(ctx).Err(err).Str("network", network).Msg("verification lookup for unknown VASP claims are out of date")
 				return nil, nil
 			default:
-				sentry.Error(c).Err(err).Str("network", network).Msg("unsuccessful verification lookup")
+				sentry.Error(ctx).Err(err).Str("network", network).Msg("unsuccessful verification lookup")
 				return nil, err
 			}
 		}
@@ -79,7 +79,7 @@ func (s *Server) CheckVerification(c *gin.Context) {
 
 	// Execute the parallel GDS verification requests, ensuring flatten is false with
 	// the expectation that TestNet will be 0 index and MainNet the 1 index.
-	results, _ := s.ParallelGDSRequests(c.Request.Context(), verify, false)
+	results, _ := s.ParallelGDSRequests(sentry.RequestContext(c), verify, false)
 
 	// Handle TestNet Results
 	if results[0] != nil {
