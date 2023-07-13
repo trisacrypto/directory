@@ -603,12 +603,13 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 
 	// Create the RegisterRequest to send to GDS
 	req := &gds.RegisterRequest{
-		Entity:         org.Registration.Entity,
-		Contacts:       org.Registration.Contacts,
-		Website:        org.Registration.Website,
-		VaspCategories: org.Registration.VaspCategories,
-		EstablishedOn:  org.Registration.EstablishedOn,
-		Trixo:          org.Registration.Trixo,
+		Entity:           org.Registration.Entity,
+		Contacts:         org.Registration.Contacts,
+		Website:          org.Registration.Website,
+		BusinessCategory: org.Registration.BusinessCategory,
+		VaspCategories:   org.Registration.VaspCategories,
+		EstablishedOn:    org.Registration.EstablishedOn,
+		Trixo:            org.Registration.Trixo,
 	}
 
 	// Make the GDS request
