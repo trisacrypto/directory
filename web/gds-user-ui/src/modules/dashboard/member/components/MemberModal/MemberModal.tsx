@@ -56,7 +56,7 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
           onClose={onClose}
           data-testid="member-modal">
           <ModalOverlay />
-          <ModalContent width={'100%'}>
+          <ModalContent width={'100%'} maxHeight={'1000px'}>
             {wasMemberFetched && !isFetchingMember && !error && (
               <>
                 <ModalHeader data-testid="confirmation-modal-header" textAlign={'center'}>
