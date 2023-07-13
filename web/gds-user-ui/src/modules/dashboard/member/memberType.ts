@@ -36,10 +36,10 @@ export type VaspType = {
   name: string;
   website: string;
   country: string;
-  business_category: string;
+  business_category: string | number;
   vasp_categories: string[];
   verified_on: string;
-  status: number;
+  status: string | number;
   first_listed: string;
   last_updated: string;
 };

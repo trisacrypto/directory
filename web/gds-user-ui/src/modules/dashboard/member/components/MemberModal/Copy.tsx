@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { copyToClipboard } from "../../utils";
+import { copyToClipboard, getBusinessCategory } from "../../utils";
 import { Button } from "@chakra-ui/react";
 import { Trans, t } from "@lingui/macro";
-import { BUSINESS_CATEGORY, getVaspCategoryValue } from "constants/basic-details";
+import { getVaspCategoryValue } from "constants/basic-details";
 
 interface MemberDetailTableHeader {
   label: string;
@@ -25,7 +25,7 @@ const memberDetailTableHeader = [
   },
   {
     label: t`Business Category`,
-    value: BUSINESS_CATEGORY[data?.data?.summary?.business_category as keyof typeof BUSINESS_CATEGORY]
+    value: getBusinessCategory(data?.data?.summary?.business_category)
   },
   {
     label: t`VASP Category`,
