@@ -385,6 +385,8 @@ github.com/rotationalio/honu v0.3.0 h1:uqFHtWrBHfT8Dg8ClIazACCPaWHl2Zehnjs+FONb6
 github.com/rotationalio/honu v0.3.0/go.mod h1:IOxTHyGbkTPqRw35hhEIMmPDK/rIL3cesVpGWUR4RhE=
 github.com/rotationalio/whisper v1.2.0 h1:hvqgVD86DqPmrgbl8kxU9kDm7VOVZXhtYJy2R/XVICg=
 github.com/rotationalio/whisper v1.2.0/go.mod h1:XwA83zz0BFbUZ06NLdyVHmYlLTkk9TGopjdMMVG03AQ=
+github.com/rotationalio/whisper v1.2.1 h1:S3e47Pzi0LdfjNF1Wv/dzvERI+zVm/rQhXuTBc5xjXg=
+github.com/rotationalio/whisper v1.2.1/go.mod h1:XwA83zz0BFbUZ06NLdyVHmYlLTkk9TGopjdMMVG03AQ=
 github.com/rs/xid v1.4.0/go.mod h1:trrq9SKmegXys3aeAKXMUTdJsYXVwGY3RLcfgqegfbg=
 github.com/rs/zerolog v1.29.1 h1:cO+d60CHkknCbvzEWxP0S9K6KqyTjrCNUy1LdQLCGPc=
 github.com/rs/zerolog v1.29.1/go.mod h1:Le6ESbR7hc+DP6Lt1THiV8CQSdkkNrd3R0XbEgp3ZBU=

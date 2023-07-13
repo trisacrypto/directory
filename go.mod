@@ -21,7 +21,7 @@ require (
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/prometheus/client_golang v1.16.0
 	github.com/rotationalio/honu v0.3.0
-	github.com/rotationalio/whisper v1.2.0
+	github.com/rotationalio/whisper v1.2.1
 	github.com/rs/zerolog v1.29.1
 	github.com/segmentio/ksuid v1.0.4
 	github.com/sendgrid/rest v2.6.9+incompatible
