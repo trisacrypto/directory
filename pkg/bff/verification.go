@@ -6,10 +6,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	models "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
@@ -30,7 +30,7 @@ func (s *Server) CheckVerification(c *gin.Context) {
 	)
 
 	if claims, err = auth.GetClaims(c); err != nil {
-		log.Error().Err(err).Msg("cannot check verification status on unauthenticated user")
+		sentry.Error(c).Err(err).Msg("cannot check verification status on unauthenticated user")
 		c.AbortWithStatusJSON(http.StatusInternalServerError, api.ErrorResponse(auth.ErrNoAuthUser))
 		return
 	}
@@ -67,10 +67,10 @@ func (s *Server) CheckVerification(c *gin.Context) {
 			serr, _ := status.FromError(err)
 			switch serr.Code() {
 			case codes.NotFound:
-				log.Warn().Err(err).Str("network", network).Msg("verification lookup for unknown VASP claims are out of date")
+				sentry.Warn(c).Err(err).Str("network", network).Msg("verification lookup for unknown VASP claims are out of date")
 				return nil, nil
 			default:
-				log.Error().Err(err).Str("network", network).Msg("unsuccessful verification lookup")
+				sentry.Error(c).Err(err).Str("network", network).Msg("unsuccessful verification lookup")
 				return nil, err
 			}
 		}

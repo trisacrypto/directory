@@ -15,6 +15,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
 	"github.com/trisacrypto/directory/pkg/utils"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 const (
@@ -37,7 +38,7 @@ func (s *Server) Announcements(c *gin.Context) {
 
 	out, err := s.RecentAnnouncements(maxAnnouncements, nbf, time.Now())
 	if err != nil {
-		log.Error().Err(err).Msg("could not fetch recent announcements")
+		sentry.Error(c).Err(err).Msg("could not fetch recent announcements")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("unable to fetch recent announcements"))
 		return
 	}
@@ -71,7 +72,7 @@ func (s *Server) MakeAnnouncement(c *gin.Context) {
 	)
 
 	if err = c.BindJSON(&post); err != nil {
-		log.Warn().Err(err).Msg("could not parse announcement post data")
+		sentry.Warn(c).Err(err).Msg("could not parse announcement post data")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("could not parse announcement JSON data"))
 		return
 	}
@@ -82,13 +83,13 @@ func (s *Server) MakeAnnouncement(c *gin.Context) {
 	}
 
 	if claims, err = auth.GetClaims(c); err != nil {
-		log.Error().Err(err).Msg("could not fetch claims from request")
+		sentry.Error(c).Err(err).Msg("could not fetch claims from request")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not save announcement"))
 		return
 	}
 
 	if claims.Email == "" {
-		log.Warn().Msg("missing email on claims, cannot set author of network announcement")
+		sentry.Warn(c).Msg("missing email on claims, cannot set author of network announcement")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("user claims are not correctly configured"))
 		return
 	}
@@ -98,7 +99,7 @@ func (s *Server) MakeAnnouncement(c *gin.Context) {
 	post.Author = claims.Email
 
 	if id, err = s.PostAnnouncement(post); err != nil {
-		log.Error().Err(err).Msg("could not put announcement to trtl database")
+		sentry.Error(c).Err(err).Msg("could not put announcement to trtl database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not save announcement"))
 		return
 	}

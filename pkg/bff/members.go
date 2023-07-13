@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	"google.golang.org/grpc/codes"
@@ -89,7 +89,7 @@ func (s *Server) Overview(c *gin.Context) {
 	// Get the bff claims from the context
 	var claims *auth.Claims
 	if claims, err = auth.GetClaims(c); err != nil {
-		log.Error().Err(err).Msg("unable to retrieve bff claims from context")
+		sentry.Error(c).Err(err).Msg("unable to retrieve bff claims from context")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
@@ -107,7 +107,7 @@ func (s *Server) Overview(c *gin.Context) {
 	// Get the status for both testnet and mainnet
 	var testnetStatus, mainnetStatus *gds.ServiceState
 	if testnetStatus, mainnetStatus, err = s.GetStatuses(c); err != nil {
-		log.Error().Err(err).Msg("unable to retrieve status information")
+		sentry.Error(c).Err(err).Msg("unable to retrieve status information")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
@@ -128,7 +128,7 @@ func (s *Server) Overview(c *gin.Context) {
 	// Get the summaries for both testnet and mainnet
 	testnet, mainnet, testnetErr, mainnetErr := s.GetSummaries(c.Request.Context(), testnetID, mainnetID)
 	if err != nil {
-		log.Error().Err(err).Msg("could not retrieve summary information")
+		sentry.Error(c).Err(err).Msg("could not retrieve summary information")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
@@ -144,7 +144,7 @@ func (s *Server) Overview(c *gin.Context) {
 		if testnetID != "" {
 			// Check if we received the VASP details from the testnet
 			if testnet.MemberInfo == nil {
-				log.Error().Msg("expected VASP details from testnet Summary RPC")
+				sentry.Error(c).Msg("expected VASP details from testnet Summary RPC")
 				c.JSON(http.StatusInternalServerError, api.ErrorResponse(fmt.Errorf("could not retrieve testnet VASP details")))
 				return
 			}
@@ -170,7 +170,7 @@ func (s *Server) Overview(c *gin.Context) {
 		if mainnetID != "" {
 			// Check if we received the VASP details from the mainnet
 			if mainnet.MemberInfo == nil {
-				log.Error().Msg("expected VASP details from mainnet Summary RPC")
+				sentry.Error(c).Msg("expected VASP details from mainnet Summary RPC")
 				c.JSON(http.StatusInternalServerError, api.ErrorResponse(fmt.Errorf("could not retrieve mainnet VASP details")))
 				return
 			}
@@ -216,7 +216,7 @@ func (s *Server) MemberList(c *gin.Context) {
 	// Bind the query parameters and add reasonable defaults
 	params = &api.MemberPageInfo{}
 	if err = c.ShouldBindQuery(params); err != nil {
-		log.Warn().Err(err).Msg("could not bind request with query params")
+		sentry.Warn(c).Err(err).Msg("could not bind request with query params")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
@@ -240,7 +240,7 @@ func (s *Server) MemberList(c *gin.Context) {
 
 	// Check that the requester is verified with the directory they're trying to access.
 	if verified, err := RequireVerification(c, params.Directory); err != nil {
-		log.Error().Err(err).Msg("could not require verification for members endpoint")
+		sentry.Error(c).Err(err).Msg("could not require verification for members endpoint")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve members list"))
 		return
 	} else if !verified {
@@ -249,7 +249,7 @@ func (s *Server) MemberList(c *gin.Context) {
 	}
 
 	// Execute the members list request against the specified GDS
-	log.Debug().Str("registered_directory", params.Directory).Int32("page_size", params.PageSize).Str("page_token", params.PageToken).Msg("members list request")
+	sentry.Debug(c).Str("registered_directory", params.Directory).Int32("page_size", params.PageSize).Str("page_token", params.PageToken).Msg("members list request")
 	req := &members.ListRequest{
 		PageSize:  params.PageSize,
 		PageToken: params.PageToken,
@@ -264,7 +264,7 @@ func (s *Server) MemberList(c *gin.Context) {
 	case config.MainNet:
 		rep, err = s.mainnetGDS.List(ctx, req)
 	default:
-		log.Error().Str("registered_directory", params.Directory).Msg("unhandled directory")
+		sentry.Error(c).Str("registered_directory", params.Directory).Msg("unhandled directory")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member list"))
 		return
 	}
@@ -272,7 +272,7 @@ func (s *Server) MemberList(c *gin.Context) {
 	// Handle gRPC errors
 	if err != nil {
 		if serr, ok := status.FromError(err); ok {
-			log.Error().Err(err).Str("code", serr.Code().String()).Str("grpc_error", serr.Message()).Msg("members list rpc error")
+			sentry.Error(c).Err(err).Str("code", serr.Code().String()).Str("grpc_error", serr.Message()).Msg("members list rpc error")
 			if serr.Code() == codes.Unavailable {
 				c.JSON(http.StatusServiceUnavailable, api.ErrorResponse("specified directory is currently unavailable, please try again later"))
 				return
@@ -282,7 +282,7 @@ func (s *Server) MemberList(c *gin.Context) {
 			return
 		}
 
-		log.Error().Err(err).Msg("unhandled error from gRPC service")
+		sentry.Error(c).Err(err).Msg("unhandled error from gRPC service")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member list"))
 		return
 	}
@@ -316,7 +316,7 @@ func (s *Server) MemberDetail(c *gin.Context) {
 	// Bind the parameters associated with the MemberDetails request
 	params := &api.MemberDetailsParams{}
 	if err := c.ShouldBindQuery(params); err != nil {
-		log.Warn().Err(err).Msg("could not bind request with query params")
+		sentry.Warn(c).Err(err).Msg("could not bind request with query params")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
@@ -338,7 +338,7 @@ func (s *Server) MemberDetail(c *gin.Context) {
 
 	// Check that the requester is verified with the directory they're trying to access.
 	if verified, err := RequireVerification(c, params.Directory); err != nil {
-		log.Error().Err(err).Msg("could not require verification for members endpoint")
+		sentry.Error(c).Err(err).Msg("could not require verification for members endpoint")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve members list"))
 		return
 	} else if !verified {
@@ -347,7 +347,7 @@ func (s *Server) MemberDetail(c *gin.Context) {
 	}
 
 	// Do the members request
-	log.Debug().Str("registered_directory", params.Directory).Msg("issuing members detail request")
+	sentry.Debug(c).Str("registered_directory", params.Directory).Msg("issuing members detail request")
 	req := &members.DetailsRequest{
 		MemberId: params.ID,
 	}
@@ -365,7 +365,7 @@ func (s *Server) MemberDetail(c *gin.Context) {
 	case config.MainNet:
 		rep, err = s.mainnetGDS.Details(ctx, req)
 	default:
-		log.Error().Str("registered_directory", params.Directory).Msg("unknown directory")
+		sentry.Error(c).Str("registered_directory", params.Directory).Msg("unknown directory")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member details"))
 		return
 	}
@@ -377,7 +377,7 @@ func (s *Server) MemberDetail(c *gin.Context) {
 		case codes.NotFound:
 			c.JSON(http.StatusNotFound, api.ErrorResponse(serr.Message()))
 		default:
-			log.Error().Err(err).Str("code", serr.Code().String()).Str("registered_directory", params.Directory).Msg("could not retrieve member details")
+			sentry.Error(c).Err(err).Str("code", serr.Code().String()).Str("registered_directory", params.Directory).Msg("could not retrieve member details")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse(serr.Message()))
 		}
 		return
@@ -390,39 +390,39 @@ func (s *Server) MemberDetail(c *gin.Context) {
 
 	// Marshal the legal person details
 	if rep.LegalPerson == nil {
-		log.Error().Msg("did not receive legal person details from members detail RPC")
+		sentry.Error(c).Msg("did not receive legal person details from members detail RPC")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member details"))
 		return
 	}
 
 	if out.LegalPerson, err = wire.Rewire(rep.LegalPerson); err != nil {
-		log.Error().Err(err).Msg("could not serialize legal person details")
+		sentry.Error(c).Err(err).Msg("could not serialize legal person details")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
 
 	// Marshal the contacts details
 	if rep.Contacts == nil {
-		log.Error().Msg("did not receive contacts details from members detail RPC")
+		sentry.Error(c).Msg("did not receive contacts details from members detail RPC")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member details"))
 		return
 	}
 
 	if out.Contacts, err = wire.Rewire(rep.Contacts); err != nil {
-		log.Error().Err(err).Msg("could not serialize contacts details")
+		sentry.Error(c).Err(err).Msg("could not serialize contacts details")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
 
 	// Marshal the Trixo form details
 	if rep.Trixo == nil {
-		log.Error().Msg("did not receive trixo form details from members detail RPC")
+		sentry.Error(c).Msg("did not receive trixo form details from members detail RPC")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member details"))
 		return
 	}
 
 	if out.Trixo, err = wire.Rewire(rep.Trixo); err != nil {
-		log.Error().Err(err).Msg("could not serialize trixo form details")
+		sentry.Error(c).Err(err).Msg("could not serialize trixo form details")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}

@@ -10,11 +10,11 @@ import (
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/utils"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 const orgIDParam = "orgid"
@@ -52,7 +52,7 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 
 	// The invoking user is the inviter
 	if inviter, err = auth.GetUserInfo(c); err != nil {
-		log.Error().Err(err).Msg("add collaborator handler requires user info; expected middleware to return 401")
+		sentry.Error(c).Err(err).Msg("add collaborator handler requires user info; expected middleware to return 401")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not identify user"))
 		return
 	}
@@ -60,7 +60,7 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 	// Unmarshal the collaborator from the POST request
 	collaborator = &models.Collaborator{}
 	if err = c.ShouldBind(collaborator); err != nil {
-		log.Warn().Err(err).Msg("could not bind request")
+		sentry.Warn(c).Err(err).Msg("could not bind request")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
@@ -72,16 +72,16 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 	if err = org.AddCollaborator(collaborator); err != nil {
 		switch {
 		case errors.Is(err, models.ErrInvalidCollaborator):
-			log.Warn().Err(err).Msg("invalid collaborator")
+			sentry.Warn(c).Err(err).Msg("invalid collaborator")
 			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		case errors.Is(err, models.ErrCollaboratorExists):
-			log.Warn().Err(err).Str("email", collaborator.Email).Msg("collaborator already exists")
+			sentry.Warn(c).Err(err).Str("email", collaborator.Email).Msg("collaborator already exists")
 			c.JSON(http.StatusConflict, api.ErrorResponse(err))
 		case errors.Is(err, models.ErrMaxCollaborators):
-			log.Warn().Err(err).Int("maximum", models.MaxCollaborators).Msg("maximum number of collaborators reached")
+			sentry.Warn(c).Err(err).Int("maximum", models.MaxCollaborators).Msg("maximum number of collaborators reached")
 			c.JSON(http.StatusForbidden, api.ErrorResponse(err))
 		default:
-			log.Error().Err(err).Msg("could not add collaborator")
+			sentry.Error(c).Err(err).Msg("could not add collaborator")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		}
 		return
@@ -92,7 +92,7 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 	var baseURL string
 	if user, err = s.FindUserByEmail(collaborator.Email); err != nil {
 		if !errors.Is(err, ErrUserEmailNotFound) {
-			log.Error().Err(err).Str("email", collaborator.Email).Msg("error finding user by email in Auth0")
+			sentry.Error(c).Err(err).Str("email", collaborator.Email).Msg("error finding user by email in Auth0")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not add collaborator"))
 			return
 		}
@@ -110,7 +110,7 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 	// Include the organization ID in the invite URL
 	var inviteURL *url.URL
 	if inviteURL, err = url.Parse(baseURL); err != nil {
-		log.Error().Err(err).Str("url", baseURL).Msg("could not parse invite URL")
+		sentry.Error(c).Err(err).Str("url", baseURL).Msg("could not parse invite URL")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not add collaborator"))
 		return
 	}
@@ -120,7 +120,7 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 
 	// Send the invite email to the user
 	if err = s.email.SendUserInvite(user, inviter, org, inviteURL); err != nil {
-		log.Error().Err(err).Str("email", *user.Email).Msg("error sending user invite email")
+		sentry.Error(c).Err(err).Str("email", *user.Email).Msg("error sending user invite email")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not add collaborator"))
 		return
 	}
@@ -130,7 +130,7 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 
 	// Save the updated organization
 	if err = s.db.UpdateOrganization(ctx, org); err != nil {
-		log.Error().Err(err).Msg("could not save organization with new collaborator")
+		sentry.Error(c).Err(err).Msg("could not save organization with new collaborator")
 		c.JSON(http.StatusInternalServerError, "could not add collaborator")
 		return
 	}
@@ -167,7 +167,7 @@ func (s *Server) ListCollaborators(c *gin.Context) {
 
 	for _, collab := range org.Collaborators {
 		if err = s.LoadCollaboratorDetails(collab); err != nil {
-			log.Error().Err(err).Str("collabID", collab.Key()).Msg("could not load collaborator details")
+			sentry.Error(c).Err(err).Str("collabID", collab.Key()).Msg("could not load collaborator details")
 		}
 
 		// Enforce consistent ordering by email address
@@ -182,7 +182,7 @@ func (s *Server) ListCollaborators(c *gin.Context) {
 	// Collaborators exist on the organization record so we must persist the updated
 	// organization record to the database
 	if err = s.db.UpdateOrganization(ctx, org); err != nil {
-		log.Error().Err(err).Msg("could not save organization with updated collaborators")
+		sentry.Error(c).Err(err).Msg("could not save organization with updated collaborators")
 	}
 
 	c.JSON(http.StatusOK, out)
@@ -224,7 +224,7 @@ func (s *Server) UpdateCollaboratorRoles(c *gin.Context) {
 	// Unmarshal the roles from the POST request
 	params := &api.UpdateRolesParams{}
 	if err = c.ShouldBind(params); err != nil {
-		log.Warn().Err(err).Msg("could not bind request")
+		sentry.Warn(c).Err(err).Msg("could not bind request")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
@@ -232,14 +232,14 @@ func (s *Server) UpdateCollaboratorRoles(c *gin.Context) {
 	// Make sure a 404 is returned if the collaborator does not exist
 	var ok bool
 	if collaborator, ok = org.Collaborators[collabID]; !ok {
-		log.Warn().Str("collabID", collabID).Msg("collaborator does not exist")
+		sentry.Warn(c).Str("collabID", collabID).Msg("collaborator does not exist")
 		c.JSON(http.StatusNotFound, api.ErrorResponse("collaborator does not exist"))
 		return
 	}
 
 	// Collaborator needs to be a verified user in Auth0
 	if !collaborator.Verified || collaborator.UserId == "" {
-		log.Warn().Str("collabID", collabID).Msg("cannot update roles for unverified collaborator")
+		sentry.Warn(c).Str("collabID", collabID).Msg("cannot update roles for unverified collaborator")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("cannot update roles for unverified collaborator"))
 		return
 	}
@@ -256,7 +256,7 @@ func (s *Server) UpdateCollaboratorRoles(c *gin.Context) {
 
 	// Update the collaborator record with the info in Auth0
 	if err = s.LoadCollaboratorDetails(collaborator); err != nil {
-		log.Error().Err(err).Str("collabID", collabID).Str("auth0_id", collaborator.UserId).Msg("could not update collaborator record")
+		sentry.Error(c).Err(err).Str("collabID", collabID).Str("auth0_id", collaborator.UserId).Msg("could not update collaborator record")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not update collaborator record"))
 		return
 	}
@@ -272,7 +272,7 @@ func (s *Server) UpdateCollaboratorRoles(c *gin.Context) {
 
 	// Save the updated organization
 	if err = s.db.UpdateOrganization(ctx, org); err != nil {
-		log.Error().Err(err).Msg("could not save organization with new collaborator")
+		sentry.Error(c).Err(err).Msg("could not save organization with new collaborator")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not replace collaborator"))
 		return
 	}
@@ -314,7 +314,7 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 	// Make sure a 404 is returned if the collaborator does not exist
 	var ok bool
 	if collaborator, ok = org.Collaborators[collabID]; !ok {
-		log.Warn().Str("collabID", collabID).Msg("collaborator does not exist")
+		sentry.Warn(c).Str("collabID", collabID).Msg("collaborator does not exist")
 		c.JSON(http.StatusNotFound, api.ErrorResponse("collaborator not found"))
 		return
 	}
@@ -325,7 +325,7 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 		// Fetch the user from Auth0
 		var user *management.User
 		if user, err = s.auth0.User.Read(collaborator.UserId); err != nil {
-			log.Error().Err(err).Str("collabID", collabID).Str("auth0_id", collaborator.UserId).Msg("could not fetch user from Auth0")
+			sentry.Error(c).Err(err).Str("collabID", collabID).Str("auth0_id", collaborator.UserId).Msg("could not fetch user from Auth0")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not fetch user from Auth0"))
 			return
 		}
@@ -333,7 +333,7 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 		// Fetch the user app metadata
 		appdata := &auth.AppMetadata{}
 		if err = appdata.Load(user.AppMetadata); err != nil {
-			log.Error().Err(err).Str("collabID", collabID).Str("auth0_id", collaborator.UserId).Msg("could not parse user app metadata")
+			sentry.Error(c).Err(err).Str("collabID", collabID).Str("auth0_id", collaborator.UserId).Msg("could not parse user app metadata")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not parse user app metadata"))
 			return
 		}
@@ -341,7 +341,7 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 		// Update the app metadata with the removed organization
 		appdata.ClearOrganization()
 		if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
-			log.Error().Err(err).Str("collabID", collabID).Str("auth0_id", collaborator.UserId).Msg("could not save user app metadata")
+			sentry.Error(c).Err(err).Str("collabID", collabID).Str("auth0_id", collaborator.UserId).Msg("could not save user app metadata")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not save user app metadata"))
 			return
 		}
@@ -355,7 +355,7 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 
 	// Save the updated organization
 	if err = s.db.UpdateOrganization(ctx, org); err != nil {
-		log.Error().Err(err).Msg("could not save organization without collaborator")
+		sentry.Error(c).Err(err).Msg("could not save organization without collaborator")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not delete collaborator"))
 		return
 	}
