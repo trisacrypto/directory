@@ -13,6 +13,7 @@ import (
 	api "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/store"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/trisacrypto/trisa/pkg/trisa/mtls"
 	"github.com/trisacrypto/trisa/pkg/trust"
@@ -59,7 +60,7 @@ func NewMembers(svc *Service) (members *Members, err error) {
 		}
 		opts = append(opts, creds)
 	} else {
-		log.Warn().Msg("creating insecure trisa members server")
+		sentry.Warn(nil).Msg("creating insecure trisa members server")
 	}
 
 	// Add the unary interceptor to the gRPC server
@@ -151,13 +152,13 @@ func (s *Members) List(ctx context.Context, in *api.ListRequest) (out *api.ListR
 	cursor := &models.PageCursor{}
 	if in.PageToken != "" {
 		if err = cursor.Load(in.PageToken); err != nil {
-			log.Warn().Err(err).Msg("invalid page token on list request")
+			sentry.Warn(ctx).Err(err).Msg("invalid page token on list request")
 			return nil, status.Error(codes.InvalidArgument, "invalid page token")
 		}
 
 		// Validate the request has not changed
 		if cursor.PageSize != in.PageSize {
-			log.Debug().Int32("cursor", cursor.PageSize).Int32("opts", in.PageSize).Msg("invalid members list request: mismatched page size")
+			sentry.Debug(ctx).Int32("cursor", cursor.PageSize).Int32("opts", in.PageSize).Msg("invalid members list request: mismatched page size")
 			return nil, status.Error(codes.InvalidArgument, "page size cannot change between requests")
 		}
 
@@ -201,7 +202,7 @@ func (s *Members) List(ctx context.Context, in *api.ListRequest) (out *api.ListR
 		// Collect the VASP from the iterator
 		var vasp *pb.VASP
 		if vasp, err = iter.VASP(); err != nil {
-			log.Error().Err(err).Msg("could not parse VASP from database")
+			sentry.Error(ctx).Err(err).Msg("could not parse VASP from database")
 			continue
 		}
 
@@ -214,14 +215,14 @@ func (s *Members) List(ctx context.Context, in *api.ListRequest) (out *api.ListR
 	}
 
 	if err = iter.Error(); err != nil {
-		log.Error().Err(err).Msg("could not iterate over VASPs")
+		sentry.Error(ctx).Err(err).Msg("could not iterate over VASPs")
 		return nil, status.Error(codes.Internal, "could not iterate over directory service")
 	}
 
 	// Check if there is a next page cursor
 	if cursor.NextVasp != "" {
 		if out.NextPageToken, err = cursor.Dump(); err != nil {
-			log.Error().Err(err).Msg("could not serialize next page token on vasp member list")
+			sentry.Error(ctx).Err(err).Msg("could not serialize next page token on vasp member list")
 			return nil, status.Error(codes.Internal, "could not create next page token")
 		}
 	}
@@ -239,12 +240,12 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 	var since time.Time
 	if in.Since != "" {
 		if since, err = time.Parse(time.RFC3339, in.Since); err != nil {
-			log.Warn().Str("since", in.Since).Err(err).Msg("invalid since timestamp on summary request")
+			sentry.Warn(ctx).Str("since", in.Since).Err(err).Msg("invalid since timestamp on summary request")
 			return nil, status.Error(codes.InvalidArgument, "since must be a valid RFC3339 timestamp")
 		}
 
 		if since.After(time.Now()) {
-			log.Warn().Str("since", in.Since).Err(err).Msg("since timestamp must be in the past")
+			sentry.Warn(ctx).Str("since", in.Since).Err(err).Msg("since timestamp must be in the past")
 			return nil, status.Error(codes.InvalidArgument, "since timestamp must be in the past")
 		}
 	} else {
@@ -259,7 +260,7 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 		// Fetch the requested VASP if provided
 		var vasp *pb.VASP
 		if vasp, err = s.db.RetrieveVASP(ctx, in.MemberId); err != nil {
-			log.Warn().Err(err).Str("vasp_id", in.MemberId).Msg("VASP not found")
+			sentry.Warn(ctx).Err(err).Str("vasp_id", in.MemberId).Msg("VASP not found")
 			return nil, status.Error(codes.NotFound, "requested VASP not found")
 		}
 
@@ -276,7 +277,7 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 		// Collect the VASP from the iterator
 		var vasp *pb.VASP
 		if vasp, err = iter.VASP(); err != nil {
-			log.Error().Err(err).Msg("could not parse VASP from database")
+			sentry.Error(ctx).Err(err).Msg("could not parse VASP from database")
 			continue
 		}
 
@@ -285,7 +286,7 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 			// Parse verified timestamp
 			var verified time.Time
 			if verified, err = time.Parse(time.RFC3339, vasp.VerifiedOn); err != nil {
-				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not parse verified timestamp")
+				sentry.Error(ctx).Err(err).Str("vasp_id", vasp.Id).Msg("could not parse verified timestamp")
 				continue
 			}
 
@@ -305,7 +306,7 @@ func (s *Members) Summary(ctx context.Context, in *api.SummaryRequest) (out *api
 	}
 
 	if err = iter.Error(); err != nil {
-		log.Error().Err(err).Msg("could not iterate over VASPs")
+		sentry.Error(ctx).Err(err).Msg("could not iterate over VASPs")
 		return nil, status.Error(codes.Internal, "could not iterate over directory service")
 	}
 
@@ -317,7 +318,7 @@ func (s *Members) Details(ctx context.Context, in *api.DetailsRequest) (out *api
 	// Fetch the requested VASP if provided
 	var vasp *pb.VASP
 	if vasp, err = s.db.RetrieveVASP(ctx, in.MemberId); err != nil {
-		log.Warn().Err(err).Str("vasp_id", in.MemberId).Msg("VASP not found")
+		sentry.Warn(ctx).Err(err).Str("vasp_id", in.MemberId).Msg("VASP not found")
 		return nil, status.Error(codes.NotFound, "requested VASP not found")
 	}
 
@@ -328,19 +329,19 @@ func (s *Members) Details(ctx context.Context, in *api.DetailsRequest) (out *api
 
 	// Add the IVMS101 legal person to the response
 	if vasp.Entity == nil {
-		log.Warn().Str("vasp_id", vasp.Id).Msg("VASP is missing legal person")
+		sentry.Warn(ctx).Str("vasp_id", vasp.Id).Msg("VASP is missing legal person")
 	}
 	out.LegalPerson = vasp.Entity
 
 	// Add the TRIXO form data to the response
 	if vasp.Trixo == nil {
-		log.Warn().Str("vasp_id", vasp.Id).Msg("VASP is missing TRIXO form data")
+		sentry.Warn(ctx).Str("vasp_id", vasp.Id).Msg("VASP is missing TRIXO form data")
 	}
 	out.Trixo = vasp.Trixo
 
 	// Add the contacts data to the response
 	if vasp.Contacts == nil {
-		log.Warn().Str("vasp_id", vasp.Id).Msg("VASP is missing contacts data")
+		sentry.Warn(ctx).Str("vasp_id", vasp.Id).Msg("VASP is missing contacts data")
 	}
 
 	// NOTE: ensure that extra and person are null on return.
@@ -348,7 +349,7 @@ func (s *Members) Details(ctx context.Context, in *api.DetailsRequest) (out *api
 	out.Contacts = &pb.Contacts{}
 	if vasp.Contacts.Administrative != nil {
 		out.Contacts.Administrative = &pb.Contact{
-			Name: vasp.Contacts.Administrative.Name,
+			Name:  vasp.Contacts.Administrative.Name,
 			Email: vasp.Contacts.Administrative.Email,
 			Phone: vasp.Contacts.Administrative.Phone,
 		}
@@ -356,7 +357,7 @@ func (s *Members) Details(ctx context.Context, in *api.DetailsRequest) (out *api
 
 	if vasp.Contacts.Technical != nil {
 		out.Contacts.Technical = &pb.Contact{
-			Name: vasp.Contacts.Technical.Name,
+			Name:  vasp.Contacts.Technical.Name,
 			Email: vasp.Contacts.Technical.Email,
 			Phone: vasp.Contacts.Technical.Phone,
 		}
@@ -364,7 +365,7 @@ func (s *Members) Details(ctx context.Context, in *api.DetailsRequest) (out *api
 
 	if vasp.Contacts.Billing != nil {
 		out.Contacts.Billing = &pb.Contact{
-			Name: vasp.Contacts.Billing.Name,
+			Name:  vasp.Contacts.Billing.Name,
 			Email: vasp.Contacts.Billing.Email,
 			Phone: vasp.Contacts.Billing.Phone,
 		}
@@ -372,7 +373,7 @@ func (s *Members) Details(ctx context.Context, in *api.DetailsRequest) (out *api
 
 	if vasp.Contacts.Legal != nil {
 		out.Contacts.Legal = &pb.Contact{
-			Name: vasp.Contacts.Legal.Name,
+			Name:  vasp.Contacts.Legal.Name,
 			Email: vasp.Contacts.Legal.Email,
 			Phone: vasp.Contacts.Legal.Phone,
 		}
@@ -400,7 +401,7 @@ func GetVASPMember(vasp *pb.VASP) *api.VASPMember {
 
 	// Try to add the name information
 	if info.Name, err = vasp.Name(); err != nil {
-		log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not retrieve VASP name from record")
+		sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("could not retrieve VASP name from record")
 	}
 
 	// Add the country information if available

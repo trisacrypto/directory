@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 // Compile all email templates into a top-level global variable.
@@ -54,11 +54,11 @@ func (d VerifyContactData) VerifyContactURL() string {
 	)
 	if d.BaseURL != "" {
 		if link, err = url.Parse(d.BaseURL); err != nil {
-			log.Error().Err(err).Msg("could not include verify contact link in email, could not parse verify contact base url")
+			sentry.Error(nil).Err(err).Msg("could not include verify contact link in email, could not parse verify contact base url")
 			return ""
 		}
 	} else {
-		log.Error().Msg("could not include verify contact link in email, no verify contact base url")
+		sentry.Error(nil).Msg("could not include verify contact link in email, no verify contact base url")
 		return ""
 	}
 
@@ -90,11 +90,11 @@ func (d ReviewRequestData) AdminReviewURL() string {
 	)
 	if d.BaseURL != "" {
 		if link, err = url.Parse(d.BaseURL); err != nil {
-			log.Warn().Err(err).Msg("could not include admin review link in email, could not parse admin base url")
+			sentry.Warn(nil).Err(err).Msg("could not include admin review link in email, could not parse admin base url")
 			return ""
 		}
 	} else {
-		log.Warn().Msg("could not include admin review link in email, no admin base url")
+		sentry.Warn(nil).Msg("could not include admin review link in email, no admin base url")
 		return ""
 	}
 	return link.ResolveReference(&url.URL{Path: d.VID}).String()
@@ -144,11 +144,11 @@ func (d ExpiresAdminNotificationData) AdminReviewURL() string {
 	)
 	if d.BaseURL != "" {
 		if link, err = url.Parse(d.BaseURL); err != nil {
-			log.Warn().Err(err).Msg("could not include admin review link in email, could not parse admin base url")
+			sentry.Warn(nil).Err(err).Msg("could not include admin review link in email, could not parse admin base url")
 			return ""
 		}
 	} else {
-		log.Warn().Msg("could not include admin review link in email, no admin base url")
+		sentry.Warn(nil).Msg("could not include admin review link in email, no admin base url")
 		return ""
 	}
 	return link.ResolveReference(&url.URL{Path: d.VID}).String()
@@ -233,11 +233,11 @@ func (d ReissuanceAdminNotificationData) AdminReviewURL() string {
 	)
 	if d.BaseURL != "" {
 		if link, err = url.Parse(d.BaseURL); err != nil {
-			log.Warn().Err(err).Msg("could not include admin review link in email, could not parse admin base url")
+			sentry.Warn(nil).Err(err).Msg("could not include admin review link in email, could not parse admin base url")
 			return ""
 		}
 	} else {
-		log.Warn().Msg("could not include admin review link in email, no admin base url")
+		sentry.Warn(nil).Msg("could not include admin review link in email, no admin base url")
 		return ""
 	}
 	return link.ResolveReference(&url.URL{Path: d.VID}).String()
@@ -298,7 +298,7 @@ func ReviewRequestEmail(sender, senderEmail, recipient, recipientEmail string, d
 
 	if err = AttachJSON(message, data.Attachment, fmt.Sprintf("%s.json", data.VID)); err != nil {
 		// Log the error but do not stop sending the message
-		log.Error().Err(err).Msg("could not attach JSON data to review request email")
+		sentry.Error(nil).Err(err).Msg("could not attach JSON data to review request email")
 	}
 	return message, nil
 }

@@ -20,6 +20,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/utils/emails"
 	"github.com/trisacrypto/directory/pkg/utils/emails/mock"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -95,14 +96,14 @@ func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP) (sent int, err error) {
 
 		var verified bool
 		if _, verified, err = models.GetContactVerification(contact); err != nil {
-			log.Error().Err(err).Str("vasp", vasp.Id).Msg("failed to get contact verification")
+			sentry.Error(nil).Err(err).Str("vasp", vasp.Id).Msg("failed to get contact verification")
 			return sent, err
 		}
 
 		if !verified {
 			if err := m.SendVerifyContact(vasp, contact); err != nil {
 				nErrors++
-				log.Error().Err(err).Str("vasp", vasp.Id).Str("contact", kind).Msg("failed to send verify contact email")
+				sentry.Error(nil).Err(err).Str("vasp", vasp.Id).Str("contact", kind).Msg("failed to send verify contact email")
 			} else {
 				sent++
 			}
@@ -126,7 +127,7 @@ func (m *EmailManager) SendVerifyContact(vasp *pb.VASP, contact *pb.Contact) (er
 	}
 
 	if ctx.Token, _, err = models.GetContactVerification(contact); err != nil {
-		log.Error().Err(err).Str("vasp", vasp.Id).Msg("failed to get contact verification")
+		sentry.Error(nil).Err(err).Str("vasp", vasp.Id).Msg("failed to get contact verification")
 		return err
 	}
 
@@ -136,17 +137,17 @@ func (m *EmailManager) SendVerifyContact(vasp *pb.VASP, contact *pb.Contact) (er
 		ctx,
 	)
 	if err != nil {
-		log.Error().Err(err).Msg("could not create verify contact email")
+		sentry.Error(nil).Err(err).Msg("could not create verify contact email")
 		return err
 	}
 
 	if err = m.Send(msg); err != nil {
-		log.Error().Err(err).Msg("could not send verify contact email")
+		sentry.Error(nil).Err(err).Msg("could not send verify contact email")
 		return err
 	}
 
 	if err = models.AppendEmailLog(contact, string(admin.ResendVerifyContact), msg.Subject); err != nil {
-		log.Error().Err(err).Msg("could not log verify contact email")
+		sentry.Error(nil).Err(err).Msg("could not log verify contact email")
 	}
 	return nil
 }
@@ -168,12 +169,12 @@ func (m *EmailManager) SendVerifyModelContact(vasp *pb.VASP, contact *models.Con
 		ctx,
 	)
 	if err != nil {
-		log.Error().Err(err).Msg("could not create verify contact email")
+		sentry.Error(nil).Err(err).Msg("could not create verify contact email")
 		return err
 	}
 
 	if err = m.Send(msg); err != nil {
-		log.Error().Err(err).Msg("could not send verify contact email")
+		sentry.Error(nil).Err(err).Msg("could not send verify contact email")
 		return err
 	}
 	contact.AppendEmailLog(string(admin.ResendVerifyContact), msg.Subject)
@@ -381,7 +382,7 @@ func (m *EmailManager) SendExpiresAdminNotification(vasp *pb.VASP, timeWindow in
 		return 0, err
 	}
 	if emailCount, err := models.CountSentEmails(adminEmailLog, string(admin.ReissuanceReminder), timeWindow); err != nil {
-		log.Error().Err(err).Msg(fmt.Sprintf("error retrieving admin email log for %s's reissuance reminder", vasp.Id))
+		sentry.Error(nil).Err(err).Msg(fmt.Sprintf("error retrieving admin email log for %s's reissuance reminder", vasp.Id))
 		return 0, err
 	} else if emailCount > 0 {
 		return 0, nil
@@ -472,7 +473,7 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 		reissuanceReminder := string(admin.ReissuanceReminder)
 		emailCount, err := models.CountSentEmails(emailLog, reissuanceReminder, timeWindow)
 		if err != nil {
-			log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("could not retrieve email count from email log")
+			sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("could not retrieve email count from email log")
 			continue
 		}
 		if emailCount > 0 {
@@ -487,16 +488,16 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 			ctx,
 		)
 		if err != nil {
-			log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("could not create reissuance reminder email")
+			sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("could not create reissuance reminder email")
 			continue
 		}
 
 		if err = m.Send(msg); err != nil {
-			log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("error sending reissuance reminder email")
+			sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("error sending reissuance reminder email")
 			continue
 		}
 		if err = models.AppendEmailLog(contact, reissuanceReminder, msg.Subject); err != nil {
-			log.Error().Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("error appending to email log")
+			sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("error appending to email log")
 		}
 	}
 	return nil
@@ -675,7 +676,7 @@ func (m *EmailManager) SendReissuanceAdminNotification(vasp *pb.VASP, timeWindow
 		return 0, err
 	}
 	if emailCount, err := models.CountSentEmails(adminEmailLog, string(admin.ReissuanceStarted), timeWindow); err != nil {
-		log.Error().Err(err).Msg(fmt.Sprintf("error retrieving admin email log for %s's reissuance notification", vasp.Id))
+		sentry.Error(nil).Err(err).Msg(fmt.Sprintf("error retrieving admin email log for %s's reissuance notification", vasp.Id))
 		return 0, err
 	} else if emailCount > 0 {
 		return 0, nil

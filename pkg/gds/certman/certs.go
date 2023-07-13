@@ -13,7 +13,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
@@ -23,6 +22,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/sectigo/mock"
 	"github.com/trisacrypto/directory/pkg/store"
 	"github.com/trisacrypto/directory/pkg/utils"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"github.com/trisacrypto/directory/pkg/utils/whisper"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/trisacrypto/trisa/pkg/trust"
@@ -178,16 +178,16 @@ func (c *CertificateManager) HandleCertificateRequests() {
 	for careqs.Next() {
 		var req *models.CertificateRequest
 		if req, err = careqs.CertReq(); err != nil {
-			log.Error().Err(err).Msg("could not parse certificate request from database")
+			sentry.Error(nil).Err(err).Msg("could not parse certificate request from database")
 			continue
 		}
 
-		logctx := log.With().Str("id", req.Id).Str("common_name", req.CommonName).Logger()
+		logctx := sentry.With(nil).Str("id", req.Id).Str("common_name", req.CommonName)
 
 		switch req.Status {
 		case models.CertificateRequestState_READY_TO_SUBMIT:
 			wg.Add(1)
-			go func(req *models.CertificateRequest, logctx zerolog.Logger) {
+			go func(req *models.CertificateRequest, logctx *sentry.Logger) {
 				defer wg.Done()
 				// Get the VASP from the certificate request
 				var (
@@ -215,14 +215,14 @@ func (c *CertificateManager) HandleCertificateRequests() {
 					// so this is a CRITICAL severity that should alert us immediately.
 					// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
 					// this ensures that we issue a CRITICAL severity without stopping the server.
-					log.WithLevel(zerolog.FatalLevel).Err(err).Msg("cert-manager could not submit certificate request")
+					sentry.Fatal(nil).Err(err).Msg("cert-manager could not submit certificate request")
 				} else {
 					logctx.Info().Msg("certificate request submitted")
 				}
 			}(req, logctx)
 		case models.CertificateRequestState_PROCESSING:
 			wg.Add(1)
-			go func(req *models.CertificateRequest, logctx zerolog.Logger) {
+			go func(req *models.CertificateRequest, logctx *sentry.Logger) {
 				defer wg.Done()
 				if err := c.checkCertificateRequest(req); err != nil {
 					logctx.Error().Err(err).Msg("cert-manager could not process submitted certificate request")
@@ -240,7 +240,7 @@ func (c *CertificateManager) HandleCertificateRequests() {
 
 	// Check if there was an error while processing certificate requests
 	if err = careqs.Error(); err != nil {
-		log.Error().Err(err).Msg("cert-manager could not retrieve certificate requests")
+		sentry.Error(nil).Err(err).Msg("cert-manager could not retrieve certificate requests")
 		return
 	}
 
@@ -300,7 +300,7 @@ func (c *CertificateManager) submitCertificateRequest(r *models.CertificateReque
 	if rep, err = c.certs.CreateSingleCertBatch(authority, batchName, params); err != nil {
 		// Although the error may be logged again by the calling function, log the error
 		// here as well to provide debugging information about why the Sectigo request failed.
-		dict := zerolog.Dict()
+		dict := sentry.Dict()
 		for key, value := range params {
 			// NOTE: Do not log any passwords or secrets!
 			if key == "pkcs12Password" {
@@ -308,7 +308,7 @@ func (c *CertificateManager) submitCertificateRequest(r *models.CertificateReque
 			}
 			dict.Str(key, value)
 		}
-		log.Error().Err(err).
+		sentry.Error(nil).Err(err).
 			Int("authority", authority).
 			Str("batch_name", batchName).
 			Dict("params", dict).
@@ -355,7 +355,7 @@ func (c *CertificateManager) checkCertificateRequest(r *models.CertificateReques
 
 	// Step 1c: check if the batch is in an unhandled state, and if so, refresh batch status
 	if info.Status == sectigo.BatchStatusCollected || info.Status == "" {
-		log.Warn().Int64("batch_id", r.BatchId).Str("batch_status", info.Status).Msg("unknown batch info status, refreshing batch status directly")
+		sentry.Warn(nil).Int64("batch_id", r.BatchId).Str("batch_status", info.Status).Msg("unknown batch info status, refreshing batch status directly")
 		if r.BatchStatus, err = c.certs.BatchStatus(int(r.BatchId)); err != nil {
 			return fmt.Errorf("could not fetch batch status for id %d: %s", r.BatchId, err)
 		}
@@ -391,13 +391,12 @@ func (c *CertificateManager) checkCertificateRequest(r *models.CertificateReques
 
 	// Step 4: check failures -- determine if certificate request has been rejected
 	if proc.Failed > 0 {
-		logctx := log.With().
+		logctx := sentry.With(nil).
 			Int("batch_id", int(r.BatchId)).
 			Int("failed", proc.Failed).
 			Int("success", proc.Success).
 			Str("status", r.BatchStatus).
-			Str("name", r.BatchName).
-			Logger()
+			Str("name", r.BatchName)
 
 		if proc.Success > 0 || r.BatchStatus == sectigo.BatchStatusReadyForDownload {
 			// This may mean that some certificates can be downloaded, so just log
@@ -433,7 +432,7 @@ func (c *CertificateManager) checkCertificateRequest(r *models.CertificateReques
 		// so this is a developer error on our part, or a change in the Sectigo API
 		// NOTE: using WithLevel and Fatal does not Exit the program like log.Fatal()
 		// this ensures that we issue a CRITICAL severity without stopping the server.
-		log.WithLevel(zerolog.FatalLevel).Int64("batch_id", r.BatchId).Int("success", proc.Success).Str("batch_status", r.BatchStatus).Msg("unhandled sectigo state")
+		sentry.Fatal(nil).Int64("batch_id", r.BatchId).Int("success", proc.Success).Str("batch_status", r.BatchStatus).Msg("unhandled sectigo state")
 		if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_PROCESSING, "unhandled sectigo state", "automated"); err != nil {
 			return fmt.Errorf("could not update certificate request status: %s", err)
 		}
@@ -459,7 +458,7 @@ func (c *CertificateManager) checkCertificateRequest(r *models.CertificateReques
 
 	// Make sure the VASP has not errored or been rejected before downloading certificates
 	if vasp.VerificationStatus != pb.VerificationState_ISSUING_CERTIFICATE {
-		log.Error().Str("verification_status", vasp.VerificationStatus.String()).Msg("VASP is not in the ISSUING_CERTIFICATE state, cannot download certificates")
+		sentry.Error(c).Str("verification_status", vasp.VerificationStatus.String()).Msg("VASP is not in the ISSUING_CERTIFICATE state, cannot download certificates")
 		if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_CR_REJECTED, "rejecting certificate request", "automated"); err != nil {
 			return fmt.Errorf("could not update certificate request status: %s", err)
 		}
@@ -484,7 +483,7 @@ func (c *CertificateManager) findCertAuthority() (id int, err error) {
 	for _, authority := range authorities {
 		var balance int
 		if balance, err = c.certs.AuthorityAvailableBalance(authority.ID); err != nil {
-			log.Error().Err(err).Int("authority", authority.ID).Msg("could not fetch authority balance")
+			sentry.Error(c).Err(err).Int("authority", authority.ID).Msg("could not fetch authority balance")
 		}
 		if balance > 0 {
 			return authority.ID, nil
@@ -506,7 +505,7 @@ func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateReq
 
 	// Download the certificates as a zip file to the cert storage directory
 	if path, err = c.certs.Download(int(r.BatchId), c.certDir); err != nil {
-		log.Error().Err(err).Int("batch", int(r.BatchId)).Msg("could not download certificates")
+		sentry.Error(c).Err(err).Int("batch", int(r.BatchId)).Msg("could not download certificates")
 		return
 	}
 
@@ -514,15 +513,15 @@ func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateReq
 	sctx := context.Background()
 	secretType = "cert"
 	if err = c.secret.With(r.Id).CreateSecret(sctx, secretType); err != nil {
-		log.Error().Err(err).Msg("could not create cert secret")
+		sentry.Error(c).Err(err).Msg("could not create cert secret")
 		return
 	}
 	if payload, err = os.ReadFile(path); err != nil {
-		log.Error().Err(err).Msg("could not read in cert payload")
+		sentry.Error(nil).Err(err).Msg("could not read in cert payload")
 		return
 	}
 	if err = c.secret.With(r.Id).AddSecretVersion(sctx, secretType, payload); err != nil {
-		log.Error().Err(err).Msg("could not add secret version for cert payload")
+		sentry.Error(nil).Err(err).Msg("could not add secret version for cert payload")
 		return
 	}
 
@@ -531,11 +530,11 @@ func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateReq
 
 	// Mark as downloaded.
 	if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_DOWNLOADED, "certificate downloaded", "automated"); err != nil {
-		log.Error().Err(err).Msg("could not update certificate request status")
+		sentry.Error(nil).Err(err).Msg("could not update certificate request status")
 		return
 	}
 	if err = c.db.UpdateCertReq(ctx, r); err != nil {
-		log.Error().Err(err).Msg("could not save updated cert request")
+		sentry.Error(nil).Err(err).Msg("could not save updated cert request")
 		return
 	}
 
@@ -548,65 +547,65 @@ func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateReq
 	secretType = "password"
 	pkcs12password, err := c.secret.With(r.Id).GetLatestVersion(sctx, secretType)
 	if err != nil {
-		log.Error().Err(err).Msg("could not retrieve password from secret manager to extract public key")
+		sentry.Error(nil).Err(err).Msg("could not retrieve password from secret manager to extract public key")
 		return
 	}
 
 	if vasp.IdentityCertificate, err = extractCertificate(path, string(pkcs12password)); err != nil {
-		log.Error().Err(err).Msg("could not extract certificate")
+		sentry.Error(nil).Err(err).Msg("could not extract certificate")
 		return
 	}
 
 	// Create the certificate record
 	var cert *models.Certificate
 	if cert, err = models.NewCertificate(vasp, r, vasp.IdentityCertificate); err != nil {
-		log.Error().Err(err).Msg("could not create certificate record")
+		sentry.Error(nil).Err(err).Msg("could not create certificate record")
 		return
 	}
 
 	// Update the certificate record
 	if err = c.db.UpdateCert(ctx, cert); err != nil {
-		log.Error().Err(err).Msg("could not update certificate record")
+		sentry.Error(nil).Err(err).Msg("could not update certificate record")
 		return
 	}
 
 	// Add the certificate ID to the request and VASP records
 	r.Certificate = cert.Id
 	if err = models.AppendCertID(vasp, cert.Id); err != nil {
-		log.Error().Err(err).Msg("could not append certificate ID to VASP")
+		sentry.Error(nil).Err(err).Msg("could not append certificate ID to VASP")
 		return
 	}
 
 	// Update the VASP status as verified/certificate issued
 	if err := models.UpdateVerificationStatus(vasp, pb.VerificationState_VERIFIED, "certificate issued", "automated"); err != nil {
-		log.Error().Err(err).Msg("could not update VASP verification status")
+		sentry.Error(nil).Err(err).Msg("could not update VASP verification status")
 		return
 	}
 	if err = c.db.UpdateVASP(ctx, vasp); err != nil {
-		log.Error().Err(err).Msg("could not update VASP status as verified")
+		sentry.Error(nil).Err(err).Msg("could not update VASP status as verified")
 		return
 	}
 
 	// Email the certificates to the technical contacts
 	if _, err = c.email.SendDeliverCertificates(vasp, path); err != nil {
 		// If there is an error delivering emails, return here so we don't mark as completed
-		log.Error().Err(err).Msg("could not deliver certificates to technical contact")
+		sentry.Error(nil).Err(err).Msg("could not deliver certificates to technical contact")
 		return
 	}
 
 	if err = c.db.UpdateVASP(ctx, vasp); err != nil {
-		log.Error().Err(err).Msg("could not update VASP email logs")
+		sentry.Error(nil).Err(err).Msg("could not update VASP email logs")
 		return
 	}
 
 	// Mark certificate request as complete.
 	if err = models.UpdateCertificateRequestStatus(r, models.CertificateRequestState_COMPLETED, "certificate request complete", "automated"); err != nil {
-		log.Error().Err(err).Msg("could not update certificate request status")
+		sentry.Error(nil).Err(err).Msg("could not update certificate request status")
 		return
 	}
 	r.Status = models.CertificateRequestState_COMPLETED
 	if err = c.db.UpdateCertReq(ctx, r); err != nil {
-		log.Error().Err(err).Msg("could not save updated cert request")
+		sentry.Error(nil).Err(err).Msg("could not save updated cert request")
 		return
 	}
 
@@ -735,7 +734,7 @@ vaspsLoop:
 	for vasps.Next() {
 		var vasp *pb.VASP
 		if vasp, err = vasps.VASP(); err != nil {
-			log.Error().Err(err).Msg("could not parse vasp record from database")
+			sentry.Error(nil).Err(err).Msg("could not parse vasp record from database")
 			continue vaspsLoop
 		}
 
@@ -747,20 +746,20 @@ vaspsLoop:
 		// Make sure the VASP has an identity certificate to avoid a panic.
 		identityCert := vasp.IdentityCertificate
 		if identityCert == nil {
-			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("vasp is verified but does not have an identity certificate")
+			sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("vasp is verified but does not have an identity certificate")
 			continue vaspsLoop
 		}
 
 		// Calculate the number of days before the VASP's certificate expires.
 		if expirationDate, err = time.Parse(time.RFC3339, identityCert.NotAfter); err != nil {
-			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not parse %s's cert reissuance date")
+			sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("could not parse %s's cert reissuance date")
 			continue vaspsLoop
 		}
 
 		// Compute VASP signature to check if it has been modified
 		var sig []byte
 		if sig, err = models.VASPSignature(vasp); err != nil {
-			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not compute signature for VASP")
+			sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("could not compute signature for VASP")
 			continue vaspsLoop
 		}
 
@@ -775,12 +774,12 @@ vaspsLoop:
 		case daysBeforeExpiration <= 0:
 			var cert *models.Certificate
 			if cert, err = c.db.RetrieveCert(ctx, models.GetCertID(identityCert)); err != nil {
-				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not retrieve expired certificate record")
+				sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("could not retrieve expired certificate record")
 				continue vaspsLoop
 			}
 			cert.Status = models.CertificateState_EXPIRED
 			if err = c.db.UpdateCert(ctx, cert); err != nil {
-				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not update expired certificate record status")
+				sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("could not update expired certificate record status")
 			}
 
 		// Seven days before expiration, send a cert reissuance reminder to VASP.
@@ -788,7 +787,7 @@ vaspsLoop:
 		// once to a contact.
 		case daysBeforeExpiration <= 7:
 			if err = c.email.SendContactReissuanceReminder(vasp, 7, reissuanceDate); err != nil {
-				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending seven day reissuance reminder")
+				sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("error sending seven day reissuance reminder")
 				continue vaspsLoop
 			}
 
@@ -797,20 +796,20 @@ vaspsLoop:
 		case daysBeforeExpiration <= 10:
 			// Check if the reissuance process has already started for this VASP
 			if started, err := c.reissuanceInProgress(vasp); err != nil {
-				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not check vasp reissuance status")
+				sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("could not check vasp reissuance status")
 				continue vaspsLoop
 			} else if started {
-				log.Info().Str("vasp_id", vasp.Id).Msg("vasp reissuance is already in progress")
+				sentry.Info(nil).Str("vasp_id", vasp.Id).Msg("vasp reissuance is already in progress")
 				continue vaspsLoop
 			}
 
 			// Start the reissuance process for this VASP by creating a new certificate request
 			if err = c.reissueIdentityCertificates(vasp); err != nil {
-				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not start reissuance process")
+				sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("could not start reissuance process")
 				continue vaspsLoop
 			}
 			if _, err = c.email.SendReissuanceAdminNotification(vasp, 10, reissuanceDate); err != nil {
-				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending admin reissuance notification")
+				sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("error sending admin reissuance notification")
 				// The VASP and certreq records have already been updated in
 				// reissueIdentityCertificates, so we can continue to the next VASP if
 				// we failed to send the email.
@@ -821,11 +820,11 @@ vaspsLoop:
 		case daysBeforeExpiration <= 30:
 			// If the reminder fails do not stop processing and attempt to send reminder to admins
 			if err = c.email.SendContactReissuanceReminder(vasp, 30, reissuanceDate); err != nil {
-				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending thirty day reissuance reminder")
+				sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("error sending thirty day reissuance reminder")
 			}
 
 			if _, err = c.email.SendExpiresAdminNotification(vasp, 30, reissuanceDate); err != nil {
-				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error sending admin reissuance reminder")
+				sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("error sending admin reissuance reminder")
 				continue vaspsLoop
 			}
 		}
@@ -835,21 +834,21 @@ vaspsLoop:
 		// last modified timestamp is not updated every day).
 		var updated []byte
 		if updated, err = models.VASPSignature(vasp); err != nil {
-			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not compute signature for VASP")
+			sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("could not compute signature for VASP")
 			continue vaspsLoop
 		}
 
 		if !bytes.Equal(sig, updated) {
 			// We need to update the vasp record in the database so that the email logs are preserved.
 			if err = c.db.UpdateVASP(ctx, vasp); err != nil {
-				log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("error updating the VASP record in the database")
+				sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("error updating the VASP record in the database")
 				continue vaspsLoop
 			}
 		}
 	}
 
 	if err := vasps.Error(); err != nil {
-		log.Error().Err(err).Msg("could not iterate through database")
+		sentry.Error(nil).Err(err).Msg("could not iterate through database")
 	}
 }
 

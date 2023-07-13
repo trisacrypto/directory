@@ -136,6 +136,18 @@ func (e *Event) Uint8(key string, value uint8) *Event {
 	return e
 }
 
+func (e *Event) Int32(key string, value int32) *Event {
+	e.extra[key] = value
+	e.zero = e.zero.Int32(key, value)
+	return e
+}
+
+func (e *Event) Int64(key string, value int64) *Event {
+	e.extra[key] = value
+	e.zero = e.zero.Int64(key, value)
+	return e
+}
+
 func (e *Event) ULID(key string, value ulid.ULID) *Event {
 	s := value.String()
 	e.extra[key] = s
@@ -146,6 +158,20 @@ func (e *Event) ULID(key string, value ulid.ULID) *Event {
 func (e *Event) Bytes(key string, value []byte) *Event {
 	e.extra[key] = base64.RawURLEncoding.EncodeToString(value)
 	e.zero = e.zero.Bytes(key, value)
+	return e
+}
+
+func (e *Event) Bool(key string, value bool) *Event {
+	e.extra[key] = value
+	e.zero = e.zero.Bool(key, value)
+	return e
+}
+
+func (e *Event) Dict(key string, dict *Dictionary) *Event {
+	for dkey, dval := range dict.extra {
+		e.extra[fmt.Sprintf("%s_%s", key, dkey)] = dval
+	}
+	e.zero = e.zero.Dict(key, dict.dict)
 	return e
 }
 
@@ -282,4 +308,28 @@ func (l *Logger) Int(key string, value int) *Logger {
 	l.extra[key] = value
 	l.zero = l.zero.Int(key, value)
 	return l
+}
+
+func Dict() *Dictionary {
+	return &Dictionary{
+		dict:  zerolog.Dict(),
+		extra: make(map[string]interface{}),
+	}
+}
+
+type Dictionary struct {
+	dict  *zerolog.Event
+	extra map[string]interface{}
+}
+
+func (d *Dictionary) Str(key, val string) *Dictionary {
+	d.extra[key] = val
+	d.dict = d.dict.Str(key, val)
+	return d
+}
+
+func (d *Dictionary) Int(key string, value int) *Dictionary {
+	d.extra[key] = value
+	d.dict = d.dict.Int(key, value)
+	return d
 }
