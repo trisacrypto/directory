@@ -18,7 +18,6 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/idtoken"
 
@@ -274,7 +273,7 @@ const protectAuthenticateMaxAge = time.Minute * 10
 func (s *Admin) ProtectAuthenticate(c *gin.Context) {
 	expiresAt := time.Now().Add(protectAuthenticateMaxAge)
 	if err := admin.SetDoubleCookieTokens(c, s.conf.CookieDomain, expiresAt); err != nil {
-		log.Error().Err(err).Msg("could not set cookies")
+		sentry.Error(c).Err(err).Msg("could not set cookies")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not set cookies"))
 		return
 	}
@@ -298,7 +297,7 @@ func (s *Admin) Authenticate(c *gin.Context) {
 	// Parse incoming JSON data from the client request
 	in = new(admin.AuthRequest)
 	if err = c.ShouldBind(&in); err != nil {
-		log.Warn().Err(err).Msg("could not bind request")
+		sentry.Warn(c).Err(err).Msg("could not bind request")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
 		return
 	}
@@ -311,14 +310,14 @@ func (s *Admin) Authenticate(c *gin.Context) {
 
 	// Validate the credential with Google
 	if claims, err = s.tokens.Validate(c.Request.Context(), in.Credential, s.conf.Oauth.GoogleAudience); err != nil {
-		log.Warn().Err(err).Msg("invalid credentials used for authentication")
+		sentry.Warn(c).Err(err).Msg("invalid credentials used for authentication")
 		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("invalid credentials"))
 		return
 	}
 
 	// Verify that the domain is one of our authorized domains
 	if err = s.checkAuthorizedDomain(claims); err != nil {
-		log.Warn().Err(err).Msg("access request from unauthorized domain")
+		sentry.Warn(c).Err(err).Msg("access request from unauthorized domain")
 		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("invalid credentials"))
 		return
 	}
@@ -326,14 +325,14 @@ func (s *Admin) Authenticate(c *gin.Context) {
 	// At this point request has been authenticated and authorized, create credentials.
 	if out, expiresAt, err = s.createAuthReply(claims); err != nil {
 		// NOTE: additional error logging happens in createAuthReply
-		log.Error().Err(err).Msg("could not authenticate user")
+		sentry.Error(c).Err(err).Msg("could not authenticate user")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not authenticate with credentials"))
 		return
 	}
 
 	// Refresh the double cookies for CSRF protection while using the access/refresh tokens
 	if err := admin.SetDoubleCookieTokens(c, s.conf.CookieDomain, expiresAt); err != nil {
-		log.Error().Err(err).Msg("could not set double cookie tokens")
+		sentry.Error(c).Err(err).Msg("could not set double cookie tokens")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not set cookies"))
 		return
 	}
@@ -374,24 +373,20 @@ func (s *Admin) createAuthReply(creds interface{}) (out *admin.AuthReply, expire
 
 	// Create the access and refresh tokens from the claims
 	if accessToken, err = s.tokens.CreateAccessToken(creds); err != nil {
-		log.Error().Err(err).Msg("could not create access token")
-		return nil, time.Time{}, err
+		return nil, time.Time{}, fmt.Errorf("could not create access token: %w", err)
 	}
 
 	if refreshToken, err = s.tokens.CreateRefreshToken(accessToken); err != nil {
-		log.Error().Err(err).Msg("could not create refresh token")
-		return nil, time.Time{}, err
+		return nil, time.Time{}, fmt.Errorf("could not create refresh token: %w", err)
 	}
 
 	// Sign the tokens and return the response
 	out = new(admin.AuthReply)
 	if out.AccessToken, err = s.tokens.Sign(accessToken); err != nil {
-		log.Error().Err(err).Msg("could not sign access token")
-		return nil, time.Time{}, err
+		return nil, time.Time{}, fmt.Errorf("could not sign access token: %w", err)
 	}
 	if out.RefreshToken, err = s.tokens.Sign(refreshToken); err != nil {
-		log.Error().Err(err).Msg("could not sign refresh token")
-		return nil, time.Time{}, err
+		return nil, time.Time{}, fmt.Errorf("could not sign refresh token: %w", err)
 	}
 
 	// Refresh the double cookies for CSRF protection while using the access/refresh tokens
@@ -418,7 +413,7 @@ func (s *Admin) Reauthenticate(c *gin.Context) {
 
 	// Get the Bearer token from the Authorization header (contains access token)
 	if tks, err = admin.GetAccessToken(c); err != nil {
-		log.Warn().Err(err).Msg("reauthenticate called without access token")
+		sentry.Warn(c).Err(err).Msg("reauthenticate called without access token")
 		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("request is not authorized"))
 		return
 	}
@@ -427,7 +422,7 @@ func (s *Admin) Reauthenticate(c *gin.Context) {
 	// claims, e.g. it doesn't matter if the access token is expired, but it should be
 	// signed correctly by the token server.
 	if accessClaims, err = s.tokens.Parse(tks); err != nil {
-		log.Warn().Err(err).Msg("reauthenticate called with invalid access token")
+		sentry.Warn(c).Err(err).Msg("reauthenticate called with invalid access token")
 		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("request is not authorized"))
 		return
 	}
@@ -435,7 +430,7 @@ func (s *Admin) Reauthenticate(c *gin.Context) {
 	// Parse incoming JSON data from the client request (contains refresh token)
 	in = new(admin.AuthRequest)
 	if err = c.ShouldBind(&in); err != nil {
-		log.Warn().Err(err).Msg("could not bind request")
+		sentry.Warn(c).Err(err).Msg("could not bind request")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
 		return
 	}
@@ -448,7 +443,7 @@ func (s *Admin) Reauthenticate(c *gin.Context) {
 
 	// Validate the refresh token
 	if refreshClaims, err = s.tokens.Verify(in.Credential); err != nil {
-		log.Warn().Err(err).Msg("could not verify refresh token")
+		sentry.Warn(c).Err(err).Msg("could not verify refresh token")
 		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("invalid credentials"))
 		return
 	}
@@ -456,7 +451,7 @@ func (s *Admin) Reauthenticate(c *gin.Context) {
 	// Ensure the refresh token and admin token match
 	// TODO: verify the in.Credential is a refresh token using the subject or audience
 	if accessClaims.ID != refreshClaims.ID {
-		log.Warn().Msg("mismatched access and refresh token pair")
+		sentry.Warn(c).Msg("mismatched access and refresh token pair")
 		c.JSON(http.StatusUnauthorized, admin.ErrorResponse("invalid credentials"))
 		return
 	}
@@ -464,13 +459,13 @@ func (s *Admin) Reauthenticate(c *gin.Context) {
 	// At this point we've validated the reauthentication and are ready to reissue tokens
 	if out, expiresAt, err = s.createAuthReply(accessClaims); err != nil {
 		// NOTE: additional error logging happens in createAuthReply
-		log.Error().Err(err).Msg("could not reauthenticate user")
+		sentry.Error(c).Err(err).Msg("could not reauthenticate user")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not reauthenticate with credentials"))
 		return
 	}
 
 	if err := admin.SetDoubleCookieTokens(c, s.conf.CookieDomain, expiresAt); err != nil {
-		log.Error().Err(err).Msg("could not set double cookie tokens")
+		sentry.Error(c).Err(err).Msg("could not set double cookie tokens")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not set cookies"))
 		return
 	}
@@ -497,7 +492,7 @@ func (s *Admin) Summary(c *gin.Context) {
 		var vasp *pb.VASP
 		var err error
 		if vasp, err = iter.VASP(); err != nil {
-			log.Error().Err(err).Msg("could not parse VASP from database")
+			sentry.Error(c).Err(err).Msg("could not parse VASP from database")
 			continue
 		}
 
@@ -510,7 +505,7 @@ func (s *Admin) Summary(c *gin.Context) {
 			out.ContactsCount++
 			contact, kind := iter.Value()
 			if verified, err := models.ContactIsVerified(contact); err != nil {
-				log.Warn().Str("contact", kind).Err(err).Msg("could not retrieve verification status")
+				sentry.Warn(c).Str("contact", kind).Err(err).Msg("could not retrieve verification status")
 			} else if verified {
 				out.VerifiedContacts++
 			}
@@ -526,7 +521,7 @@ func (s *Admin) Summary(c *gin.Context) {
 
 	if err := iter.Error(); err != nil {
 		iter.Release()
-		log.Error().Err(err).Msg("could not iterate over vasps in store")
+		sentry.Error(c).Err(err).Msg("could not iterate over vasps in store")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
 		return
 	}
@@ -539,7 +534,7 @@ func (s *Admin) Summary(c *gin.Context) {
 		var certreq *models.CertificateRequest
 		var err error
 		if certreq, err = iter2.CertReq(); err != nil {
-			log.Error().Err(err).Msg("could not parse CertificateRequest from database")
+			sentry.Error(c).Err(err).Msg("could not parse CertificateRequest from database")
 			continue
 		}
 
@@ -551,7 +546,7 @@ func (s *Admin) Summary(c *gin.Context) {
 
 	if err := iter2.Error(); err != nil {
 		iter2.Release()
-		log.Error().Err(err).Msg("could not iterate over certreqs in store")
+		sentry.Error(c).Err(err).Msg("could not iterate over certreqs in store")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
 		return
 	}
@@ -582,7 +577,7 @@ func (s *Admin) Autocomplete(c *gin.Context) {
 		var vasp *pb.VASP
 		var err error
 		if vasp, err = iter.VASP(); err != nil {
-			log.Error().Err(err).Msg("could not parse VASP from database")
+			sentry.Error(c).Err(err).Msg("could not parse VASP from database")
 			continue
 		}
 
@@ -600,14 +595,14 @@ func (s *Admin) Autocomplete(c *gin.Context) {
 					// issued to organizations in the past, we will encounter name
 					// collisions here. We want this to be at debug level instead of at
 					// warning level to avoid alert spam.
-					log.Debug().Str("name", name).Msg("duplicate name detected")
+					sentry.Debug(c).Str("name", name).Msg("duplicate name detected")
 				}
 			}
 		}
 	}
 
 	if err := iter.Error(); err != nil {
-		log.Error().Err(err).Msg("could not iterate over vasps in store")
+		sentry.Error(c).Err(err).Msg("could not iterate over vasps in store")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
 		return
 	}
@@ -637,7 +632,7 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 	// Get request parameters
 	in = new(admin.ReviewTimelineParams)
 	if err = c.ShouldBindQuery(&in); err != nil {
-		log.Warn().Err(err).Msg("could not bind request with query params")
+		sentry.Warn(c).Err(err).Msg("could not bind request with query params")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
 		return
 	}
@@ -645,14 +640,14 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 	if in.Start != "" {
 		// Parse start date
 		if startTime, err = time.Parse(timeFormat, in.Start); err != nil {
-			log.Warn().Err(err).Msg("could not parse start date")
+			sentry.Warn(c).Err(err).Msg("could not parse start date")
 			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("invalid start date: %s", in.Start)))
 			return
 		}
 		// If the request is before the epoch then it's probably an error
 		epoch := time.Unix(0, 0)
 		if startTime.Before(epoch) {
-			log.Warn().Err(err).Msg("start date is before epoch")
+			sentry.Warn(c).Err(err).Msg("start date is before epoch")
 			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("start date can't be before %s", epoch.Format(timeFormat))))
 			return
 		}
@@ -664,7 +659,7 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 	if in.End != "" {
 		// Parse end date
 		if endTime, err = time.Parse(timeFormat, in.End); err != nil {
-			log.Warn().Err(err).Msg("could not parse end date")
+			sentry.Warn(c).Err(err).Msg("could not parse end date")
 			c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("invalid end date: %s", in.End)))
 			return
 		}
@@ -674,7 +669,7 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 	}
 
 	if weekIter, err = utils.GetWeekIterator(startTime, endTime); err != nil {
-		log.Warn().Err(err).Msg("invalid timeline request: start date can't be after current date")
+		sentry.Warn(c).Err(err).Msg("invalid timeline request: start date can't be after current date")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("start date must be before end date")))
 		return
 	}
@@ -719,14 +714,14 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 		var vasp *pb.VASP
 		var err error
 		if vasp, err = iter.VASP(); err != nil {
-			log.Error().Err(err).Msg("could not parse VASP from database")
+			sentry.Error(c).Err(err).Msg("could not parse VASP from database")
 			continue
 		}
 
 		// Get VASP audit log
 		var auditLog []*models.AuditLogEntry
 		if auditLog, err = models.GetAuditLog(vasp); err != nil {
-			log.Warn().Err(err).Msg("could not retrieve audit log for vasp")
+			sentry.Warn(c).Err(err).Msg("could not retrieve audit log for vasp")
 			continue
 		}
 
@@ -734,7 +729,7 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 		for _, entry := range auditLog {
 			var timestamp time.Time
 			if timestamp, err = time.Parse(time.RFC3339, entry.Timestamp); err != nil {
-				log.Warn().Err(err).Msg("could not parse timestamp in audit log entry")
+				sentry.Warn(c).Err(err).Msg("could not parse timestamp in audit log entry")
 				continue
 			}
 
@@ -756,7 +751,7 @@ func (s *Admin) ReviewTimeline(c *gin.Context) {
 	}
 
 	if err := iter.Error(); err != nil {
-		log.Error().Err(err).Msg("could not iterate over vasps in store")
+		sentry.Error(c).Err(err).Msg("could not iterate over vasps in store")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
 		return
 	}
@@ -782,7 +777,7 @@ func (s *Admin) ListCountries(c *gin.Context) {
 		// Fetch VASP from the database
 		var vasp *pb.VASP
 		if vasp, err = iter.VASP(); err != nil {
-			log.Error().Err(err).Str("vasp_id", vasp.Id).Msg("could not parse VASP from database")
+			sentry.Error(c).Err(err).Str("vasp_id", vasp.Id).Msg("could not parse VASP from database")
 			continue
 		}
 
@@ -793,7 +788,7 @@ func (s *Admin) ListCountries(c *gin.Context) {
 
 		// Prevent nil panics -- if this happens then the VASP is in an invalid state.
 		if vasp.Entity == nil {
-			log.Warn().Str("vasp_id", vasp.Id).Msg("vasp entity is nil")
+			sentry.Warn(c).Str("vasp_id", vasp.Id).Msg("vasp entity is nil")
 			continue
 		}
 
@@ -802,7 +797,7 @@ func (s *Admin) ListCountries(c *gin.Context) {
 		if code = vasp.Entity.CountryOfRegistration; code == "" {
 			// NOTE: Validation code does not require country of registration so
 			// ignore VASP records without it but log the message for possible fixes.
-			log.Debug().Str("vasp_id", vasp.Id).Msg("vasp country code is empty")
+			sentry.Debug(c).Str("vasp_id", vasp.Id).Msg("vasp country code is empty")
 			continue
 		}
 
@@ -814,7 +809,7 @@ func (s *Admin) ListCountries(c *gin.Context) {
 	}
 
 	if err := iter.Error(); err != nil {
-		log.Error().Err(err).Msg("could not iterate over vasps in store")
+		sentry.Error(c).Err(err).Msg("could not iterate over vasps in store")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
 		return
 	}
@@ -848,7 +843,7 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 
 	in = new(admin.ListVASPsParams)
 	if err = c.ShouldBindQuery(&in); err != nil {
-		log.Warn().Err(err).Msg("could not bind request with query params")
+		sentry.Warn(c).Err(err).Msg("could not bind request with query params")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
 		return
 	}
@@ -860,7 +855,7 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 			in.StatusFilters[i] = strings.ToUpper(strings.ReplaceAll(s, " ", "_"))
 			sn, ok := pb.VerificationState_value[in.StatusFilters[i]]
 			if !ok {
-				log.Warn().Str("status", in.StatusFilters[i]).Msg("unknown verification status")
+				sentry.Warn(c).Str("status", in.StatusFilters[i]).Msg("unknown verification status")
 				c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("unknown verification status %q", in.StatusFilters[i])))
 				return
 			}
@@ -900,7 +895,7 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 			var vasp *pb.VASP
 			var err error
 			if vasp, err = iter.VASP(); err != nil {
-				log.Error().Err(err).Msg("could not parse VASP from database")
+				sentry.Error(c).Err(err).Msg("could not parse VASP from database")
 				out.Count--
 				continue
 			}
@@ -936,7 +931,7 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 			var errs *multierror.Error
 			if snippet.VerifiedContacts, errs = models.ContactVerifications(vasp); errs != nil {
 				for _, err := range errs.Errors {
-					log.Error().Err(err).Msg("could not get contact verifications")
+					sentry.Error(c).Err(err).Msg("could not get contact verifications")
 				}
 			}
 
@@ -946,7 +941,7 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 	}
 
 	if err = iter.Error(); err != nil {
-		log.Error().Err(err).Msg("could not iterate over vasps in store")
+		sentry.Error(c).Err(err).Msg("could not iterate over vasps in store")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
 		return
 	}
@@ -965,7 +960,7 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 
 	// Get vaspID from the URL
 	vaspID = c.Param("vaspID")
-	logctx := log.With().Str("id", vaspID).Logger()
+	logctx := sentry.With(c).Str("id", vaspID)
 
 	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
@@ -989,7 +984,7 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
-func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin.RetrieveVASPReply, err error) {
+func (s *Admin) prepareVASPDetail(vasp *pb.VASP, logctx *sentry.Logger) (out *admin.RetrieveVASPReply, err error) {
 	// Create the response to send back
 	out = &admin.RetrieveVASPReply{
 		Traveler:         models.IsTraveler(vasp),
@@ -1000,19 +995,19 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 	if out.Name, err = vasp.Name(); err != nil {
 		// This is a serious data validation error that needs to be addressed ASAP by
 		// the operations team but should not block this API return.
-		log.Error().Err(err).Msg("could not get VASP name")
+		logctx.Error().Err(err).Msg("could not get VASP name")
 	}
 
 	// Add the audit log to the response, on error, create empty audit log response
 	if auditLog, err := models.GetAuditLog(vasp); err != nil {
-		log.Warn().Err(err).Msg("could not get audit log for VASP detail")
+		logctx.Warn().Err(err).Msg("could not get audit log for VASP detail")
 	} else {
 		out.AuditLog = make([]map[string]interface{}, 0, len(auditLog))
 		for i, entry := range auditLog {
 			if rewiredEntry, err := wire.Rewire(entry); err != nil {
 				// If we cannot rewire an audit log entry, do not serialize any audit
 				// log entries to prevent confusion about what has happened in the log.
-				log.Warn().Err(err).Int("index", i).Msg("could not rewire audit log entry for VASP detail")
+				logctx.Warn().Err(err).Int("index", i).Msg("could not rewire audit log entry for VASP detail")
 				out.AuditLog = nil
 				break
 			} else {
@@ -1023,14 +1018,14 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 
 	// Add a unified email log to the response
 	if emailLog, err := models.GetVASPEmailLog(vasp); err != nil {
-		log.Warn().Err(err).Msg("could not get email log for VASP detail")
+		logctx.Warn().Err(err).Msg("could not get email log for VASP detail")
 	} else {
 		out.EmailLog = make([]map[string]interface{}, 0)
 		for i, entry := range emailLog {
 			if rewiredEntry, err := wire.Rewire(entry); err != nil {
 				// If we cannot rewire an email log entry, do not serialize any email
 				// log entries to prevent confusion about what has happened in the log.
-				log.Warn().Err(err).Int("index", i).Msg("could not rewire email log entry for VASP detail")
+				logctx.Warn().Err(err).Int("index", i).Msg("could not rewire email log entry for VASP detail")
 				out.EmailLog = nil
 				break
 			} else {
@@ -1051,14 +1046,14 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 
 	// Rewire the VASP from protocol buffers to specific JSON serialization context
 	if out.VASP, err = wire.Rewire(vasp); err != nil {
-		log.Warn().Err(err).Msg("could rewire vasp json")
+		logctx.Warn().Err(err).Msg("could rewire vasp json")
 		return nil, err
 	}
 
 	// Convert the identity certificate serial number a capital hex encoded string
 	if vasp.IdentityCertificate != nil {
 		if _, ok := out.VASP["identity_certificate"].(map[string]interface{})["serial_number"]; !ok {
-			log.Warn().Msg("could not parse identity certificate serial number from vasp json")
+			logctx.Warn().Msg("could not parse identity certificate serial number from vasp json")
 			return nil, errors.New("could not parse identity certificate serial number from vasp json")
 		}
 		out.VASP["identity_certificate"].(map[string]interface{})["serial_number"] = models.GetCertID(vasp.IdentityCertificate)
@@ -1067,7 +1062,7 @@ func (s *Admin) prepareVASPDetail(vasp *pb.VASP, log zerolog.Logger) (out *admin
 	// Convert the signing certificate serial numbers to capital hex encoded strings
 	for i, cert := range vasp.SigningCertificates {
 		if _, ok := out.VASP["signing_certificates"].([]interface{})[i].(map[string]interface{})["serial_number"]; !ok {
-			log.Warn().Msg("could not parse signing certificate serial number from vasp json")
+			logctx.Warn().Msg("could not parse signing certificate serial number from vasp json")
 			return nil, errors.New("could not parse signing certificate serial number from vasp json")
 		}
 		out.VASP["signing_certificates"].([]interface{})[i].(map[string]interface{})["serial_number"] = models.GetCertID(cert)
@@ -1099,20 +1094,20 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 	// Parse incoming JSON data from the client request
 	in = new(admin.UpdateVASPRequest)
 	if err = c.ShouldBind(&in); err != nil {
-		log.Warn().Err(err).Msg("could not bind request")
+		sentry.Warn(c).Err(err).Msg("could not bind request")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
 		return
 	}
 
 	// Sanity Check: Validate VASP ID
 	if in.VASP != "" && in.VASP != vaspID {
-		log.Warn().Str("id", in.VASP).Str("vasp_id", vaspID).Msg("mismatched request ID and URL")
+		sentry.Warn(c).Str("id", in.VASP).Str("vasp_id", vaspID).Msg("mismatched request ID and URL")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse("the request ID does not match the URL endpoint"))
 		return
 	}
 
 	// Create a log context for downstream logging
-	logctx := log.With().Str("id", vaspID).Logger()
+	logctx := sentry.With(c).Str("id", vaspID)
 
 	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
@@ -1147,7 +1142,7 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 		return
 	} else if updated {
 		// Log all of the updates that were made in one log message.
-		logctx = logctx.With().Str("business_info", "VASP business information updated").Logger()
+		logctx = logctx.Str("business_info", "VASP business information updated")
 		nChanges++
 	}
 
@@ -1158,7 +1153,7 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 		return
 	} else if updated {
 		// Log all of the updates that were made in one log message.
-		logctx = logctx.With().Str("vasp_entity", "VASP IVMS101 record updated").Logger()
+		logctx = logctx.Str("vasp_entity", "VASP IVMS101 record updated")
 		nChanges++
 	}
 
@@ -1169,7 +1164,7 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 		return
 	} else if updated {
 		// Log all of the updates that were made in one log message.
-		logctx = logctx.With().Str("vasp_trixo", "VASP TRIXO form updated").Logger()
+		logctx = logctx.Str("vasp_trixo", "VASP TRIXO form updated")
 		nChanges++
 	}
 
@@ -1185,7 +1180,7 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 		return
 	} else if updated {
 		// Log all of the updates that were made in one log message.
-		logctx = logctx.With().Str("trisa_endpoint", "trisa endpoint and common name updated").Logger()
+		logctx = logctx.Str("trisa_endpoint", "trisa endpoint and common name updated")
 		nChanges++
 	}
 
@@ -1201,7 +1196,7 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 	// Note: the updateVASPEntity and updateVASPEndpoint both make similar checks to
 	// ensure that certificate requests are not saved when the VASP record is not valid.
 	if err = models.ValidateVASP(vasp, true); err != nil {
-		log.Warn().Err(err).Msg("invalid or incomplete VASP record on update")
+		sentry.Warn(c).Err(err).Msg("invalid or incomplete VASP record on update")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(fmt.Errorf("validation error: %s", err)))
 		return
 	}
@@ -1241,7 +1236,7 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 // Update the VASP business information such as website, business and VASP categories,
 // and established on date. This information can be modified at anytime but cannot be
 // set to an empty value, otherwise the PATCH update will not take place.
-func (s *Admin) updateVASPBusinessInfo(vasp *pb.VASP, in *admin.UpdateVASPRequest, log zerolog.Logger) (updated bool, _ int, err error) {
+func (s *Admin) updateVASPBusinessInfo(vasp *pb.VASP, in *admin.UpdateVASPRequest, logctx *sentry.Logger) (updated bool, _ int, err error) {
 	if in.Website != "" {
 		vasp.Website = in.Website
 		updated = true
@@ -1273,7 +1268,7 @@ func (s *Admin) updateVASPBusinessInfo(vasp *pb.VASP, in *admin.UpdateVASPReques
 // Update the VASP IVMS101 Legal Person entity; the LegalPerson entity must be valid.
 // This method completely overwrites the previous LegalPerson entity, no field-level
 // patching is available.
-func (s *Admin) updateVASPEntity(vasp *pb.VASP, data map[string]interface{}, log zerolog.Logger) (_ bool, _ int, err error) {
+func (s *Admin) updateVASPEntity(vasp *pb.VASP, data map[string]interface{}, logctx *sentry.Logger) (_ bool, _ int, err error) {
 	// Check if entity data has been supplied, otherwise do not update.
 	if len(data) == 0 {
 		return false, http.StatusOK, nil
@@ -1282,7 +1277,7 @@ func (s *Admin) updateVASPEntity(vasp *pb.VASP, data map[string]interface{}, log
 	// Remarshal the JSON IVMS 101 entity
 	entity := &ivms101.LegalPerson{}
 	if err = wire.Unwire(data, entity); err != nil {
-		log.Warn().Err(err).Msg("could not unwire JSON data into an IVMS 101 LegalPerson")
+		logctx.Warn().Err(err).Msg("could not unwire JSON data into an IVMS 101 LegalPerson")
 		return false, http.StatusBadRequest, errors.New("could not parse IVMS 101 LegalPerson entity")
 	}
 
@@ -1292,7 +1287,7 @@ func (s *Admin) updateVASPEntity(vasp *pb.VASP, data map[string]interface{}, log
 	// NOTE: other methods ignore ErrCompleteNationalIdentifierLegalPerson, but it is not
 	// ignored here, requiring the admin to determine how best to accurately update the entity.
 	if err = entity.Validate(); err != nil {
-		log.Debug().Err(err).Msg("invalid IVMS 101 LegalPerson struct")
+		logctx.Debug().Err(err).Msg("invalid IVMS 101 LegalPerson struct")
 		return false, http.StatusBadRequest, err
 	}
 
@@ -1303,7 +1298,7 @@ func (s *Admin) updateVASPEntity(vasp *pb.VASP, data map[string]interface{}, log
 // Update the VASP TRIXO form; the TRIXO form really has no internal validation.
 // This method completely overwrites the previous LegalPerson entity, no field-level
 // patching is available.
-func (s *Admin) updateVASPTRIXO(vasp *pb.VASP, data map[string]interface{}, log zerolog.Logger) (_ bool, _ int, err error) {
+func (s *Admin) updateVASPTRIXO(vasp *pb.VASP, data map[string]interface{}, logctx *sentry.Logger) (_ bool, _ int, err error) {
 	// Check if trixo data has been supplied, otherwise do not update.
 	if len(data) == 0 {
 		return false, http.StatusOK, nil
@@ -1312,7 +1307,7 @@ func (s *Admin) updateVASPTRIXO(vasp *pb.VASP, data map[string]interface{}, log 
 	// Remarshal the JSON TRIXO questionnaire
 	trixo := &pb.TRIXOQuestionnaire{}
 	if err = wire.Unwire(data, trixo); err != nil {
-		log.Warn().Err(err).Msg("could not unwire JSON data into an valid TRIXO Questionnaire")
+		logctx.Warn().Err(err).Msg("could not unwire JSON data into an valid TRIXO Questionnaire")
 		return false, http.StatusBadRequest, errors.New("could not parse TRIXO questionnaire")
 	}
 
@@ -1320,7 +1315,7 @@ func (s *Admin) updateVASPTRIXO(vasp *pb.VASP, data map[string]interface{}, log 
 	return true, http.StatusOK, nil
 }
 
-func (s *Admin) updateVASPEndpoint(vasp *pb.VASP, commonName, endpoint, source string, log zerolog.Logger) (_ bool, _ int, err error) {
+func (s *Admin) updateVASPEndpoint(vasp *pb.VASP, commonName, endpoint, source string, logctx *sentry.Logger) (_ bool, _ int, err error) {
 	if commonName == "" && endpoint == "" {
 		return false, http.StatusOK, nil
 	}
@@ -1328,7 +1323,7 @@ func (s *Admin) updateVASPEndpoint(vasp *pb.VASP, commonName, endpoint, source s
 	// Compute the common name from the TRISA endpoint if not specified
 	if commonName == "" && endpoint != "" {
 		if commonName, _, err = net.SplitHostPort(endpoint); err != nil {
-			log.Warn().Err(err).Str("endpoint", endpoint).Msg("could not parse common name from endpoint")
+			logctx.Warn().Err(err).Str("endpoint", endpoint).Msg("could not parse common name from endpoint")
 			return false, http.StatusBadRequest, errors.New("no common name supplied, could not parse common name from endpoint")
 		}
 	}
@@ -1341,13 +1336,13 @@ func (s *Admin) updateVASPEndpoint(vasp *pb.VASP, commonName, endpoint, source s
 	// Check if this is just an endpoint change
 	if vasp.CommonName == commonName {
 		vasp.TrisaEndpoint = endpoint
-		log.Info().Msg("trisa endpoint updated without change to common name")
+		logctx.Info().Msg("trisa endpoint updated without change to common name")
 		return true, http.StatusOK, nil
 	}
 
 	if vasp.VerificationStatus >= pb.VerificationState_REVIEWED {
 		// Cannot change common name after certificates have been issued
-		log.Warn().Str("status", vasp.VerificationStatus.String()).Str("common_name", commonName).Msg("could not update VASP common name")
+		logctx.Warn().Str("status", vasp.VerificationStatus.String()).Str("common_name", commonName).Msg("could not update VASP common name")
 		return false, http.StatusBadRequest, errors.New("cannot update common name in current state")
 	}
 
@@ -1358,7 +1353,7 @@ func (s *Admin) updateVASPEndpoint(vasp *pb.VASP, commonName, endpoint, source s
 	// Get the Certificate Request IDs from the VASP model
 	var certreqs []string
 	if certreqs, err = models.GetCertReqIDs(vasp); err != nil {
-		log.Error().Err(err).Msg("could not get certificate requests for VASP")
+		logctx.Error().Err(err).Msg("could not get certificate requests for VASP")
 		return false, http.StatusInternalServerError, errors.New("could not update certificate request with common name")
 	}
 
@@ -1370,35 +1365,35 @@ func (s *Admin) updateVASPEndpoint(vasp *pb.VASP, commonName, endpoint, source s
 	for _, certreqID := range certreqs {
 		var certreq *models.CertificateRequest
 		if certreq, err = s.db.RetrieveCertReq(ctx, certreqID); err != nil {
-			log.Error().Err(err).Str("certreq_id", certreqID).Msg("could not fetch certificate request for VASP")
+			logctx.Error().Err(err).Str("certreq_id", certreqID).Msg("could not fetch certificate request for VASP")
 			return false, http.StatusInternalServerError, errors.New("could not update certificate request with common name")
 		}
 
 		// If the certificate request has already been submitted, we cannot change its common name
 		if certreq.Status > models.CertificateRequestState_READY_TO_SUBMIT {
-			log.Debug().Str("status", certreq.Status.String()).Str("certreq_id", certreqID).Msg("could not update certificate request")
+			logctx.Debug().Str("status", certreq.Status.String()).Str("certreq_id", certreqID).Msg("could not update certificate request")
 			continue
 		}
 
 		// Update certificate request and add an audit log entry
 		certreq.CommonName = commonName
 		if err = models.UpdateCertificateRequestStatus(certreq, certreq.Status, "common name changed", source); err != nil {
-			log.Error().Err(err).Str("certreq_id", certreqID).Msg("could not update certificate request status to add audit log entry")
+			logctx.Error().Err(err).Str("certreq_id", certreqID).Msg("could not update certificate request status to add audit log entry")
 			continue
 		}
 
 		// Store the certificate request back to disk
 		if err = s.db.UpdateCertReq(ctx, certreq); err != nil {
-			log.Error().Err(err).Str("certreq_id", certreqID).Msg("could not update certificate request for VASP")
+			logctx.Error().Err(err).Str("certreq_id", certreqID).Msg("could not update certificate request for VASP")
 			continue
 		}
 
-		log.Info().Str("certreq_id", certreqID).Msg("certificate request updated")
+		logctx.Info().Str("certreq_id", certreqID).Msg("certificate request updated")
 		ncertreqs++
 	}
 
 	if ncertreqs == 0 {
-		log.Error().Msg("no certificate requests updated with common name")
+		logctx.Error().Msg("no certificate requests updated with common name")
 		return false, http.StatusInternalServerError, errors.New("could not update certificate request with common name")
 	}
 
@@ -1425,7 +1420,7 @@ func (s *Admin) DeleteVASP(c *gin.Context) {
 
 	// Retrieve the VASP from the database
 	if vasp, err = s.db.RetrieveVASP(ctx, vaspID); err != nil {
-		log.Warn().Err(err).Msg("could not retrieve VASP from database")
+		sentry.Warn(c).Err(err).Msg("could not retrieve VASP from database")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("could not retrieve VASP record by ID"))
 		return
 	}

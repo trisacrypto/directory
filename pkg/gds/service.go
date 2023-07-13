@@ -1,13 +1,11 @@
 package gds
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"sync"
 	"time"
 
-	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/gds/certman"
@@ -16,6 +14,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/store"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
+	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
 
 func init() {
@@ -47,20 +46,11 @@ func New(conf config.Config) (s *Service, err error) {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
-	// Configure Sentry
+	// Configure Sentry for error and performance monitoring
 	if conf.Sentry.UseSentry() {
-		if err = sentry.Init(sentry.ClientOptions{
-			Dsn:              conf.Sentry.DSN,
-			Environment:      conf.Sentry.Environment,
-			Release:          conf.Sentry.GetRelease(),
-			AttachStacktrace: true,
-			Debug:            conf.Sentry.Debug,
-			TracesSampleRate: conf.Sentry.SampleRate,
-		}); err != nil {
-			return nil, fmt.Errorf("could not initialize sentry: %w", err)
+		if err = sentry.Init(conf.Sentry); err != nil {
+			return nil, err
 		}
-
-		log.Info().Bool("track_performance", conf.Sentry.TrackPerformance).Float64("sample_rate", conf.Sentry.SampleRate).Msg("GDS sentry tracing is enabled")
 	}
 
 	// Create the server and prepare to serve
@@ -191,25 +181,22 @@ func (s *Service) Serve() (err error) {
 
 // Shutdown the TRISA Directory Service gracefully
 func (s *Service) Shutdown() (err error) {
-	log.Info().Msg("gracefully shutting down")
-
-	// Flush the Sentry log before shutting down
-	defer sentry.Flush(2 * time.Second)
+	log.Info().Msg("gracefully shutting down GDS service")
 
 	// Shutdown the TRISADirectory service gracefully
 	if err = s.gds.Shutdown(); err != nil {
-		log.Error().Err(err).Msg("could not shutdown TRISADirectory service")
+		sentry.Error(nil).Err(err).Msg("could not shutdown TRISADirectory service")
 	}
 
 	// Shutdown the DirectoryAdministration service gracefully
 	if err = s.admin.Shutdown(); err != nil {
-		log.Error().Err(err).Msg("could not shutdown DirectoryAdministration service")
+		sentry.Error(nil).Err(err).Msg("could not shutdown DirectoryAdministration service")
 	}
 
 	if !s.conf.Maintenance {
 		// Shutdown the TRISA members service gracefully
 		if err = s.members.Shutdown(); err != nil {
-			log.Error().Err(err).Msg("could not shutdown TRISAMembers service")
+			sentry.Error(nil).Err(err).Msg("could not shutdown TRISAMembers service")
 		}
 
 		// Stop the certificate manager
@@ -220,10 +207,16 @@ func (s *Service) Shutdown() (err error) {
 
 		// Close the database correctly
 		if err = s.db.Close(); err != nil {
-			log.Error().Err(err).Msg("could not shutdown database")
+			sentry.Error(nil).Err(err).Msg("could not shutdown database")
 		}
 	}
 
+	// Flush alert messages to Sentry
+	if s.conf.Sentry.UseSentry() {
+		sentry.Flush(2 * time.Second)
+	}
+
+	log.Debug().Msg("successfully shutdown GDS service")
 	return nil
 }
 

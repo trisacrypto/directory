@@ -130,6 +130,12 @@ func (e *Event) Int(key string, value int) *Event {
 	return e
 }
 
+func (e *Event) Uint8(key string, value uint8) *Event {
+	e.extra[key] = value
+	e.zero = e.zero.Uint8(key, value)
+	return e
+}
+
 func (e *Event) ULID(key string, value ulid.ULID) *Event {
 	s := value.String()
 	e.extra[key] = s
@@ -206,4 +212,74 @@ func (e *Event) Msgf(format string, args ...interface{}) {
 
 	// Log the message to zerolog
 	e.zero.Msgf(format, args...)
+}
+
+func With(ctx interface{}) *Logger {
+	return &Logger{
+		zero:  log.With(),
+		extra: make(map[string]interface{}),
+		ctx:   ctx,
+	}
+}
+
+// Logger is an intermediate struct that holds a zero-log context.
+type Logger struct {
+	zero  zerolog.Context
+	extra map[string]interface{}
+	ctx   interface{}
+}
+
+func (l Logger) createEvent(level sentry.Level, zero *zerolog.Event) *Event {
+	event := &Event{
+		zero:  zero,
+		extra: l.extra,
+		level: level,
+	}
+
+	// Attempt to fetch the hub from the context
+	switch c := l.ctx.(type) {
+	case *gin.Context:
+		event.hub = sentrygin.GetHubFromContext(c)
+		event.ginc = c
+	case context.Context:
+		event.hub = sentry.GetHubFromContext(c)
+	case *sentry.Hub:
+		event.hub = c
+	case nil:
+		event.hub = sentry.CurrentHub().Clone()
+	}
+
+	return event
+}
+
+func (l Logger) Debug() *Event {
+	lg := l.zero.Logger()
+	return l.createEvent(sentry.LevelDebug, lg.Debug())
+}
+
+func (l Logger) Info() *Event {
+	lg := l.zero.Logger()
+	return l.createEvent(sentry.LevelInfo, lg.Info())
+}
+
+func (l Logger) Warn() *Event {
+	lg := l.zero.Logger()
+	return l.createEvent(sentry.LevelWarning, lg.Warn())
+}
+
+func (l Logger) Error() *Event {
+	lg := l.zero.Logger()
+	return l.createEvent(sentry.LevelError, lg.Error())
+}
+
+func (l *Logger) Str(key, value string) *Logger {
+	l.extra[key] = value
+	l.zero = l.zero.Str(key, value)
+	return l
+}
+
+func (l *Logger) Int(key string, value int) *Logger {
+	l.extra[key] = value
+	l.zero = l.zero.Int(key, value)
+	return l
 }
