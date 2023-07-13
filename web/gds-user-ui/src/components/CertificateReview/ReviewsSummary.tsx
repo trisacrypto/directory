@@ -26,6 +26,7 @@ import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 
 const ReviewsSummary: React.FC = () => {
   const { isOpen, onClose, onOpen } = useDisclosure();
+  // const [shouldReload, setShouldReload] = useState(false);
   const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const { previousStep, updateHasReachSubmitStep, updateCurrentStepState } =
     useCertificateStepper();
@@ -66,6 +67,14 @@ const ReviewsSummary: React.FC = () => {
     setShouldShowResetFormModal(false); // this will close the modal
   };
 
+  const onCloseModalHandler = () => {
+    setShouldShowResetFormModal(false);
+    onClose();
+    updateCurrentStepState(StepEnum.BASIC);
+  };
+
+  // if certificate step is 6 then reload the page
+
   useEffect(() => {
     if (shouldShowResetFormModal) {
       onOpen();
@@ -73,11 +82,17 @@ const ReviewsSummary: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldShowResetFormModal]);
 
-  const onCloseModalHandler = () => {
-    setShouldShowResetFormModal(false);
-    onClose();
-    updateCurrentStepState(StepEnum.BASIC);
-  };
+  useEffect(() => {
+    if (localStorage.getItem('isFirstRender') !== 'false') {
+      // Perform any necessary actions or updates
+      console.log('[] isFirstRender', localStorage.getItem('isFirstRender'));
+      // Update the local storage flag to indicate it's no longer the first render
+      localStorage.setItem('isFirstRender', 'false');
+
+      // Reload the page
+      window.location.reload();
+    }
+  }, []);
 
   return (
     <Stack spacing={7}>
