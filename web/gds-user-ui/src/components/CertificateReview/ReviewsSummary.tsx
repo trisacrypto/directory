@@ -26,6 +26,7 @@ import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 
 const ReviewsSummary: React.FC = () => {
   const { isOpen, onClose, onOpen } = useDisclosure();
+  // const [shouldReload, setShouldReload] = useState(false);
   const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const { previousStep, updateHasReachSubmitStep, updateCurrentStepState } =
     useCertificateStepper();
@@ -66,6 +67,14 @@ const ReviewsSummary: React.FC = () => {
     setShouldShowResetFormModal(false); // this will close the modal
   };
 
+  const onCloseModalHandler = () => {
+    setShouldShowResetFormModal(false);
+    onClose();
+    updateCurrentStepState(StepEnum.BASIC);
+  };
+
+  // if certificate step is 6 then reload the page
+
   useEffect(() => {
     if (shouldShowResetFormModal) {
       onOpen();
@@ -73,11 +82,12 @@ const ReviewsSummary: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldShowResetFormModal]);
 
-  const onCloseModalHandler = () => {
-    setShouldShowResetFormModal(false);
-    onClose();
-    updateCurrentStepState(StepEnum.BASIC);
-  };
+  useEffect(() => {
+    if (localStorage.getItem('isFirstRender') !== 'false') {
+      localStorage.setItem('isFirstRender', 'false');
+      window.location.reload();
+    }
+  }, []);
 
   return (
     <Stack spacing={7}>

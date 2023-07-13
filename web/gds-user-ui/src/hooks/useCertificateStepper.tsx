@@ -60,6 +60,9 @@ const useCertificateStepper = () => {
       // setInitialState(data?.form);
       dispatch(setStepStatus({ step: stepNumber, status: LSTATUS.COMPLETE }));
     }
+    if (currentStep === 5) {
+      localStorage.setItem('isFirstRender', 'true');
+    }
 
     dispatch(incrementStep());
   };
@@ -77,6 +80,9 @@ const useCertificateStepper = () => {
   };
 
   const jumpToStep = (step: number) => {
+    if (currentStep === 5) {
+      localStorage.setItem('isFirstRender', 'true');
+    }
     dispatch(setHasReachSubmitStep({ hasReachSubmitStep: false }));
     dispatch(setCurrentStep({ currentStep: step }));
   };
@@ -266,7 +272,8 @@ const useCertificateStepper = () => {
     updateDeleteStepState,
     getDeletedStepState,
     isStepDeleted,
-    updateStepStatusToError
+    updateStepStatusToError,
+    currentStep
   };
 };
 
