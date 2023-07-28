@@ -10,6 +10,7 @@ import (
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
@@ -192,7 +193,7 @@ func (s *Server) VerifyContact(c *gin.Context) {
 	}
 
 	// Make the GDS request
-	sentry.Debug(c).Str("registered_directory", params.Directory).Msg("issuing GDS verify contact request")
+	log.Debug().Str("registered_directory", params.Directory).Msg("issuing GDS verify contact request")
 	req := &gds.VerifyContactRequest{Id: params.ID, Token: params.Token}
 	ctx, cancel := context.WithTimeout(sentry.RequestContext(c), 25*time.Second)
 	defer cancel()
@@ -277,14 +278,14 @@ func (s *Server) LoadRegisterForm(c *gin.Context) {
 	// NOTE: the step is optional and does not need to be specified
 	params = &api.RegistrationFormParams{}
 	if err = c.ShouldBindQuery(&params); err != nil {
-		sentry.Debug(c).Err(err).Msg("could not bind request with query params")
+		sentry.Warn(c).Err(err).Msg("could not bind request with query params")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
 
 	// Convert the step into a StepType
 	if step, err = records.ParseStepType(string(params.Step)); err != nil {
-		sentry.Debug(c).Err(err).Msg("user requested invalid form step type")
+		sentry.Warn(c).Err(err).Msg("user requested invalid form step type")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
@@ -362,7 +363,7 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 
 	// Convert the step into a StepType
 	if step, err = records.ParseStepType(string(form.Step)); err != nil {
-		sentry.Debug(c).Err(err).Msg("user requested invalid form step type")
+		sentry.Warn(c).Err(err).Msg("user requested invalid form step type")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
@@ -405,7 +406,7 @@ func (s *Server) SaveRegisterForm(c *gin.Context) {
 		if errors.As(err, &fields) {
 			out.Errors = api.FromValidationErrors(fields)
 		} else {
-			sentry.Debug(c).Err(err).Msg("could not update registration form")
+			sentry.Warn(c).Err(err).Msg("could not update registration form")
 			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 			return
 		}
@@ -468,14 +469,14 @@ func (s *Server) ResetRegisterForm(c *gin.Context) {
 	// NOTE: the step is optional and does not need to be specified
 	params = &api.RegistrationFormParams{}
 	if err = c.ShouldBindQuery(&params); err != nil {
-		sentry.Debug(c).Err(err).Msg("could not bind request with query params")
+		sentry.Warn(c).Err(err).Msg("could not bind request with query params")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
 
 	// Convert the step into a StepType
 	if step, err = records.ParseStepType(string(params.Step)); err != nil {
-		sentry.Debug(c).Err(err).Msg("user requested invalid form step type")
+		sentry.Warn(c).Err(err).Msg("user requested invalid form step type")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		return
 	}
@@ -596,7 +597,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 
 	// Validate that a registration form exists on the organization
 	if org.Registration == nil || !org.Registration.ReadyToSubmit(network) {
-		sentry.Debug(c).Str("orgID", org.Id).Msg("cannot submit empty or partial registration form")
+		sentry.Warn(c).Str("orgID", org.Id).Msg("cannot submit empty or partial registration form")
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("registration form is not ready to submit"))
 		return
 	}
@@ -614,7 +615,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 
 	// Make the GDS request
 	var rep *gds.RegisterReply
-	sentry.Debug(c).Str("network", network).Msg("issuing GDS register request")
+	log.Debug().Str("network", network).Msg("issuing GDS register request")
 	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 

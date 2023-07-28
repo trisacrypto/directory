@@ -9,6 +9,7 @@ import (
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
@@ -175,14 +176,14 @@ func (s *Server) Login(c *gin.Context) {
 		// which started the invite workflow. Without this check, any user could log
 		// into any organization simply by providing the orgID in the request.
 		if collaborator = org.GetCollaborator(*user.Email); collaborator == nil {
-			sentry.Debug(c).Str("email", *user.Email).Str("org_id", org.Id).Msg("could not find user in organization")
+			sentry.Warn(c).Str("email", *user.Email).Str("org_id", org.Id).Msg("could not find user in organization")
 			c.JSON(http.StatusUnauthorized, api.ErrorResponse("user is not authorized to access this organization"))
 			return
 		}
 
 		// Verify that pending invitations have not expired
 		if err = collaborator.ValidateInvitation(); err != nil {
-			sentry.Debug(c).Err(err).Str("email", collaborator.Email).Str("org_id", org.Id).Msg("invalid user invitation")
+			sentry.Warn(c).Err(err).Str("email", collaborator.Email).Str("org_id", org.Id).Msg("invalid user invitation")
 			c.JSON(http.StatusForbidden, api.ErrorResponse("user invitation has expired"))
 			return
 		}
@@ -467,7 +468,7 @@ func (s *Server) FindUserByEmail(email string) (user *management.User, err error
 		// TODO: This can happen if the user has authenticated with Auth0 using
 		// multiple identities (e.g. email and Google). We might be able to handle this
 		// by linking the identities.
-		sentry.Warn(nil).Str("email", email).Int("count", len(users)).Msg("multiple users found with same email address")
+		log.Warn().Str("email", email).Int("count", len(users)).Msg("multiple users found with same email address")
 	}
 
 	return users[0], nil

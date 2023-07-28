@@ -9,6 +9,7 @@ import (
 	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
@@ -198,7 +199,7 @@ func (s *Server) ListOrganizations(c *gin.Context) {
 	// Determine pagination index range (indexed by 1)
 	minIndex := (params.Page - 1) * params.PageSize
 	maxIndex := minIndex + params.PageSize
-	sentry.Debug(c).Int("page", params.Page).Int("page_size", params.PageSize).Int("min_index", minIndex).Int("max_index", maxIndex).Msg("paginating organizations")
+	log.Debug().Int("page", params.Page).Int("page_size", params.PageSize).Int("min_index", minIndex).Int("max_index", maxIndex).Msg("paginating organizations")
 
 	// Build the response
 	out := &api.ListOrganizationsReply{
@@ -307,7 +308,7 @@ func (s *Server) DeleteOrganization(c *gin.Context) {
 	for _, collab := range org.GetCollaborators() {
 		// If the collaborator doesn't have an Auth0 ID then they haven't logged in yet
 		if collab.UserId == "" {
-			sentry.Debug(c).Str("org_id", orgID).Str("email", collab.Email).Msg("ignoring unverified collaborator during organization deletion")
+			log.Debug().Str("org_id", orgID).Str("email", collab.Email).Msg("ignoring unverified collaborator during organization deletion")
 			continue
 		}
 
