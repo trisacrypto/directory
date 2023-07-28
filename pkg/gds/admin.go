@@ -595,7 +595,7 @@ func (s *Admin) Autocomplete(c *gin.Context) {
 					// issued to organizations in the past, we will encounter name
 					// collisions here. We want this to be at debug level instead of at
 					// warning level to avoid alert spam.
-					sentry.Debug(c).Str("name", name).Msg("duplicate name detected")
+					log.Debug().Str("name", name).Msg("duplicate name detected")
 				}
 			}
 		}
@@ -797,7 +797,7 @@ func (s *Admin) ListCountries(c *gin.Context) {
 		if code = vasp.Entity.CountryOfRegistration; code == "" {
 			// NOTE: Validation code does not require country of registration so
 			// ignore VASP records without it but log the message for possible fixes.
-			sentry.Debug(c).Str("vasp_id", vasp.Id).Msg("vasp country code is empty")
+			log.Debug().Str("vasp_id", vasp.Id).Msg("vasp country code is empty")
 			continue
 		}
 
@@ -1999,7 +1999,7 @@ func (s *Admin) ReviewToken(c *gin.Context) {
 
 	// Check if the VASP is in a state where it can be reviewed
 	if vasp.VerificationStatus != pb.VerificationState_PENDING_REVIEW {
-		sentry.Debug(c).Str("id", vaspID).Str("status", vasp.VerificationStatus.String()).Msg("could not retrieve admin verification token in current state")
+		log.Debug().Str("id", vaspID).Str("status", vasp.VerificationStatus.String()).Msg("could not retrieve admin verification token in current state")
 		c.JSON(http.StatusNotFound, admin.ErrorResponse("admin verification token not available if VASP is not pending review"))
 		return
 	}
@@ -2125,7 +2125,7 @@ func (s *Admin) Review(c *gin.Context) {
 
 	name, _ := vasp.Name()
 	out.Status = vasp.VerificationStatus.String()
-	sentry.Info(c).Str("vasp", vasp.Id).Str("name", name).Bool("accepted", in.Accept).Msg("registration reviewed")
+	log.Info().Str("vasp", vasp.Id).Str("name", name).Bool("accepted", in.Accept).Msg("registration reviewed")
 	c.JSON(http.StatusOK, out)
 }
 
@@ -2375,7 +2375,7 @@ func (s *Admin) Resend(c *gin.Context) {
 		return
 	}
 
-	sentry.Info(c).Str("id", vasp.Id).Int("sent", out.Sent).Str("resend_type", string(in.Action)).Msg("resend request complete")
+	log.Info().Str("id", vasp.Id).Int("sent", out.Sent).Str("resend_type", string(in.Action)).Msg("resend request complete")
 	c.JSON(http.StatusOK, out)
 }
 

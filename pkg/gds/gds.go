@@ -252,7 +252,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 				sentry.Error(ctx).Err(err).Str("vasp", vasp.Id).Int("sent", sent).Msg("could not send verify contacts emails")
 			} else {
 				// Log successful contact verification emails sent
-				sentry.Info(ctx).Msg("contact email verification sent")
+				log.Info().Msg("contact email verification sent")
 				sent++
 
 				// Update the model contact record to update the email log
@@ -381,7 +381,7 @@ func (s *GDS) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.Looku
 	case in.Id != "":
 		// TODO: add registered directory to lookup
 		if vasp, err = s.db.RetrieveVASP(ctx, in.Id); err != nil {
-			sentry.Debug(ctx).Err(err).Str("id", in.Id).Str("registered_directory", in.RegisteredDirectory).Msg("could not find VASP by ID")
+			log.Debug().Err(err).Str("id", in.Id).Str("registered_directory", in.RegisteredDirectory).Msg("could not find VASP by ID")
 			return nil, status.Error(codes.NotFound, "could not find VASP by ID")
 		}
 	case in.CommonName != "":
@@ -394,9 +394,9 @@ func (s *GDS) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.Looku
 		if len(vasps) != 1 {
 			// Don't warn when common name is not found, just when multiple results are returned
 			if len(vasps) > 1 {
-				sentry.Debug(ctx).Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("multiple VASPs returned from common name search in lookup")
+				log.Debug().Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("multiple VASPs returned from common name search in lookup")
 			} else {
-				sentry.Debug(ctx).Msg("could not lookup VASP by common name")
+				log.Debug().Msg("could not lookup VASP by common name")
 			}
 			return nil, status.Error(codes.NotFound, "could not find VASP by common name")
 		}
@@ -500,7 +500,7 @@ func (s *GDS) Verification(ctx context.Context, in *api.VerificationRequest) (ou
 	case in.Id != "":
 		// TODO: add registered directory to retrieve
 		if vasp, err = s.db.RetrieveVASP(ctx, in.Id); err != nil {
-			sentry.Debug(ctx).Err(err).Str("id", in.Id).Str("registered_directory", in.RegisteredDirectory).Msg("could not find VASP by ID")
+			log.Debug().Err(err).Str("id", in.Id).Str("registered_directory", in.RegisteredDirectory).Msg("could not find VASP by ID")
 			return nil, status.Error(codes.NotFound, "could not find VASP by ID")
 		}
 	case in.CommonName != "":
@@ -513,9 +513,9 @@ func (s *GDS) Verification(ctx context.Context, in *api.VerificationRequest) (ou
 		if len(vasps) != 1 {
 			if len(vasps) > 1 {
 				// Don't warn when common name is not found, just when multiple results are returned
-				sentry.Debug(ctx).Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("multiple VASPs returned from common name search in verification")
+				log.Debug().Str("common_name", in.CommonName).Int("nresults", len(vasps)).Msg("multiple VASPs returned from common name search in verification")
 			} else {
-				sentry.Debug(ctx).Msg("could not lookup VASP by common name")
+				log.Debug().Msg("could not lookup VASP by common name")
 			}
 			return nil, status.Error(codes.NotFound, "could not find VASP by common name")
 		}

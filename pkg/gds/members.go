@@ -158,7 +158,7 @@ func (s *Members) List(ctx context.Context, in *api.ListRequest) (out *api.ListR
 
 		// Validate the request has not changed
 		if cursor.PageSize != in.PageSize {
-			sentry.Debug(ctx).Int32("cursor", cursor.PageSize).Int32("opts", in.PageSize).Msg("invalid members list request: mismatched page size")
+			log.Debug().Int32("cursor", cursor.PageSize).Int32("opts", in.PageSize).Msg("invalid members list request: mismatched page size")
 			return nil, status.Error(codes.InvalidArgument, "page size cannot change between requests")
 		}
 

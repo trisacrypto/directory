@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth"
 	"github.com/trisacrypto/directory/pkg/bff/config"
@@ -249,7 +250,7 @@ func (s *Server) MemberList(c *gin.Context) {
 	}
 
 	// Execute the members list request against the specified GDS
-	sentry.Debug(c).Str("registered_directory", params.Directory).Int32("page_size", params.PageSize).Str("page_token", params.PageToken).Msg("members list request")
+	log.Debug().Str("registered_directory", params.Directory).Int32("page_size", params.PageSize).Str("page_token", params.PageToken).Msg("members list request")
 	req := &members.ListRequest{
 		PageSize:  params.PageSize,
 		PageToken: params.PageToken,
@@ -347,7 +348,7 @@ func (s *Server) MemberDetail(c *gin.Context) {
 	}
 
 	// Do the members request
-	sentry.Debug(c).Str("registered_directory", params.Directory).Msg("issuing members detail request")
+	log.Debug().Str("registered_directory", params.Directory).Msg("issuing members detail request")
 	req := &members.DetailsRequest{
 		MemberId: params.ID,
 	}

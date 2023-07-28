@@ -799,7 +799,7 @@ vaspsLoop:
 				sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("could not check vasp reissuance status")
 				continue vaspsLoop
 			} else if started {
-				sentry.Info(nil).Str("vasp_id", vasp.Id).Msg("vasp reissuance is already in progress")
+				log.Info().Str("vasp_id", vasp.Id).Msg("vasp reissuance is already in progress")
 				continue vaspsLoop
 			}
 

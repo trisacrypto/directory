@@ -13,6 +13,7 @@ import (
 	"github.com/auth0/go-jwt-middleware/v2/jwks"
 	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/auth/authtest"
 	"github.com/trisacrypto/directory/pkg/bff/config"
@@ -169,7 +170,7 @@ func Authenticate(conf config.AuthConfig, options ...jwks.ProviderOption) (_ gin
 			}
 
 			// Add anonymous user and empty claims to context
-			sentry.Debug(c).Msg("anonymous user")
+			log.Debug().Msg("anonymous user")
 			c.Set(ContextBFFClaims, &AnonymousClaims)
 		} else {
 			// If a token is provided in the authorization header, verify that it was
