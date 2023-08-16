@@ -46,7 +46,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data, netwo
           <Heading fontSize={20}>
             <Trans>
               {`
-                Your ${network === 'mainnet' ? 'Mainnet' : 'Testnet'} TRISA Organization Profile:
+                Your ${network === 'mainnet' ? 'MainNet' : 'TestNet'} TRISA Organization Profile:
               `}
             </Trans>
 
