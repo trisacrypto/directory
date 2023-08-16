@@ -54,7 +54,8 @@ const Contacts: React.FC = () => {
           <Trans id="Please supply contact information for representatives of your organization. All contacts will receive an email verification token and the contact emails must be verified before the registration can proceed.">
             Please supply contact information for representatives of your organization. All contacts
             will receive an email verification token and the contact emails must be verified before
-            the registration can proceed.
+            the registration can proceed. Group or shared email addresses such as
+            compliance@yourvasp.com are permitted if the email account is actively monitored
           </Trans>
         </Text>
       </FormLayout>
