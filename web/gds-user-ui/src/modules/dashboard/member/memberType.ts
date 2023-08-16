@@ -51,8 +51,6 @@ export type MemberDto = {
 
 export type MemberSummary = VaspType;
 
-export type MemberLegalPerson = {};
-
 export type Member = {
   data: {
     summary: VaspType;

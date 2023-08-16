@@ -61,7 +61,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) =
         formHelperText={
           (get(errors, `${name}.email`)
             ? get(errors, `${name}.email`)?.message
-            : t`Please use the email address associated with your organization.`) as string
+            : t`Please use the email address associated with your organization.Group or shared email addresses such as compliance@yourvasp.com are permitted if the email account is actively monitored`) as string
         }
         controlId="fullName"
         type="email"
