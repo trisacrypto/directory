@@ -391,7 +391,7 @@ exports[`ContactsForm should render 1`] = `
             class="chakra-form__helper-text emotion-9"
             id="field-2-helptext"
           >
-            Please use the email address associated with your organization.
+            Please use the email address associated with your organization. Group or shared email addresses such as compliance@yourvasp.com are permitted if the email account is actively monitored.
           </div>
         </div>
         <div

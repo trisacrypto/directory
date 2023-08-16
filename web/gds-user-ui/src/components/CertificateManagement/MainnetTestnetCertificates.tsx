@@ -38,7 +38,7 @@ function MainnetTestnetCertificates({ network, data }: MainnetCertificatesProps)
       <Box>
         <FormLayout overflowX={'scroll'}>
           <Table variant="simple">
-            <TableCaption placement="top" textAlign="start" p={0} m={0}>
+            <TableCaption placement="top" textAlign="start" p={0} m={0} marginBottom={10}>
               <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'}>
                 <Heading fontSize={'1.2rem'} data-testid="title">
                   {network === 'mainnet' ? (
@@ -71,7 +71,7 @@ function MainnetTestnetCertificates({ network, data }: MainnetCertificatesProps)
                 </Th>
               </Tr>
             </Thead>
-            <Tbody>
+            <Tbody paddingTop={8}>
               {data && data.length ? (
                 data?.map((certificate, idx) => (
                   <Tr key={idx} data-testid="table-row">

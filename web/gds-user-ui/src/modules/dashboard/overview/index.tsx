@@ -5,7 +5,7 @@ import NetworkAnnouncements from 'components/NetworkAnnouncements';
 import { useNavigate } from 'react-router-dom';
 import { t } from '@lingui/macro';
 import MetricsTabs from 'components/MetricsTabs';
-import TrisaOrganizationProfile from 'components/TrisaOrganizationProfile';
+
 import { APP_PATH } from 'utils/constants';
 import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 import useCertificateStepper from 'hooks/useCertificateStepper';
@@ -40,10 +40,6 @@ const Overview: React.FC = () => {
       <Box fontSize={'md'} mx={'auto'} w={'100%'}>
         <MetricsTabs />
       </Box>
-      {/* </Sentry.ErrorBoundary> */}
-      <Suspense fallback="">
-        <TrisaOrganizationProfile />
-      </Suspense>
     </>
   );
 };

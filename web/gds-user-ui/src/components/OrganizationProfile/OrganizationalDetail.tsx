@@ -5,44 +5,53 @@ import { getNationalIdentificationLabel } from 'constants/national-identificatio
 import { COUNTRIES } from 'constants/countries';
 import { renderAddress } from 'utils/address-utils';
 import { hasValue } from 'utils/utils';
-import { Trans } from '@lingui/react';
-import { t } from '@lingui/macro';
-import Store from 'application/store';
+import { t, Trans } from '@lingui/macro';
 
 type OrganizationalDetailProps = {
   data: any;
+  network?: string;
+  status: string;
 };
 
-const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => {
+const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data, network, status }) => {
   const getOrgDivEl: any = document.getElementById('org') as HTMLDivElement;
   const getCntDivEl: any = document.getElementById('cnt') as HTMLDivElement;
   const [, setDivOrgHeight] = useState(getOrgDivEl);
   const [, setDivCntHeight] = useState(getCntDivEl);
   const orgRef = useRef<HTMLDivElement>(null);
   const cntRef = useRef<HTMLDivElement>(null);
-  const [profileStatus, setProfileStatus] = useState('');
+  const [mainnetProfileStatus, setMainnetProfileStatus] = useState(t`pending registration`);
+  const [testnetProfileStatus, setTestnetProfileStatus] = useState(t`pending registration`);
   useLayoutEffect(() => {
     setDivOrgHeight(orgRef?.current?.clientHeight || 500);
     setDivCntHeight(cntRef?.current?.clientHeight || 500);
   }, [getOrgDivEl, getCntDivEl]);
 
-  // console.log('[Organizational Detail]', data?.organization_name);
+  useEffect(() => {
+    if (network === 'mainnet' && status) {
+      setMainnetProfileStatus(data?.organization_name);
+    }
+  }, [data?.organization_name, network, status]);
 
   useEffect(() => {
-    const { mainnetSubmitted, testnetSubmitted } = Store.getState().stepper;
-    if (mainnetSubmitted || testnetSubmitted) {
-      setProfileStatus(data?.organization_name);
+    if (network === 'testnet' && status) {
+      setTestnetProfileStatus(data?.organization_name);
     }
-  }, [data?.organization_name]);
+  }, [data?.organization_name, network, status]);
 
   return (
     <Stack py={5} w="full">
       <Stack bg={'#E5EDF1'} h="55px" justifyItems={'center'} p={4}>
         <Stack mb={5}>
           <Heading fontSize={20}>
-            <Trans id="TRISA Organization Profile:">TRISA Organization Profile:</Trans>
+            <Trans>
+              {`
+                Your ${network === 'mainnet' ? 'MainNet' : 'TestNet'} TRISA Organization Profile:
+              `}
+            </Trans>
+
             <Text as={'span'} pl={2} color={'#55ACD8'}>
-              [{profileStatus || t`pending registration`}]
+              [{network === 'mainnet' ? mainnetProfileStatus : testnetProfileStatus}]
             </Text>
           </Heading>
         </Stack>
@@ -51,12 +60,12 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
         <Stack border={'1px solid #eee'} p={4} my={5} px={7} bg={'white'} id={'org'} ref={orgRef}>
           <Box pb={5}>
             <Heading as={'h1'} fontSize={19} pb={10} pt={4}>
-              <Trans id="Organizational Details">Organizational Details</Trans>
+              <Trans>Organizational Details</Trans>
             </Heading>
             <SimpleGrid minChildWidth="280px" spacing="40px">
               <List>
                 <ListItem fontWeight={'bold'}>
-                  <Trans id="Name Identifiers">Name Identifiers</Trans>
+                  <Trans>Name Identifiers</Trans>
                 </ListItem>
                 <ListItem>
                   {data?.entity?.name?.name_identifiers?.[0]?.legal_person_name || 'N/A'}
@@ -64,13 +73,13 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
               </List>
               <List>
                 <ListItem fontWeight={'bold'}>
-                  <Trans id="Organization Type">Organization Type</Trans>
+                  <Trans>Organization Type</Trans>
                 </ListItem>
                 <ListItem>{(BUSINESS_CATEGORY as any)[data?.business_category] || 'N/A'}</ListItem>
               </List>
               <List>
                 <ListItem fontWeight={'bold'}>
-                  <Trans id="VASP Category">VASP Category</Trans>
+                  <Trans>VASP Category</Trans>
                 </ListItem>
                 <ListItem>
                   {data?.vasp_categories && data?.vasp_categories.length > 0
@@ -86,13 +95,13 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
               </List>
               <List>
                 <ListItem fontWeight={'bold'}>
-                  <Trans id="Incorporation Date">Incorporation Date</Trans>
+                  <Trans>Incorporation Date</Trans>
                 </ListItem>
                 <ListItem>{data?.established_on || 'N/A'}</ListItem>
               </List>
               <List>
                 <ListItem fontWeight={'bold'}>
-                  <Trans id="Business Address">Business Address</Trans>
+                  <Trans>Business Address</Trans>
                 </ListItem>
                 <ListItem>
                   {renderAddress(data?.entity?.geographic_addresses?.[0] || 'N/A')}
@@ -100,7 +109,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
               </List>
               <List>
                 <ListItem fontWeight={'bold'}>
-                  <Trans id="Identification Number">Identification Number</Trans>
+                  <Trans>Identification Number</Trans>
                 </ListItem>
                 <ListItem>
                   {data?.entity?.national_identification?.national_identifier || 'N/A'}
@@ -108,7 +117,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
               </List>
               <List>
                 <ListItem fontWeight={'bold'}>
-                  <Trans id="Identification Type">Identification Type</Trans>
+                  <Trans>Identification Type</Trans>
                 </ListItem>
                 <ListItem>
                   {' '}
@@ -125,7 +134,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
               </List>
               <List>
                 <ListItem fontWeight={'bold'}>
-                  <Trans id="Country of Registration">Country of Registration</Trans>
+                  <Trans>Country of Registration</Trans>
                 </ListItem>
                 <ListItem>
                   {(COUNTRIES as any)[data?.entity?.country_of_registration] || 'N/A'}
@@ -145,7 +154,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data }) => 
           id={'cnt'}>
           <Box>
             <Heading as={'h1'} fontSize={19} pb={10} pt={4}>
-              <Trans id="Contacts">Contacts</Trans>
+              <Trans>Contacts</Trans>
             </Heading>
             <SimpleGrid minChildWidth="360px" spacing="40px">
               {['legal', 'technical', 'administrative', 'billing'].map((contact, index) => (
