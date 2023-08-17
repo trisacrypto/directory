@@ -4,7 +4,12 @@ import TrisaImplementation from 'components/OrganizationProfile/TrisaImplementat
 import { handleError } from 'utils/utils';
 import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 import { StepEnum } from 'types/enums';
-function TrisaOrganizationProfile() {
+
+interface TrisaOrganizationProfileProps {
+  type: 'mainnet' | 'testnet';
+  status: string;
+}
+function TrisaOrganizationProfile({ type, status }: TrisaOrganizationProfileProps) {
   const { certificateStep, isFetchingCertificateStep, error } = useFetchCertificateStep({
     key: StepEnum.ALL
   });
@@ -20,7 +25,7 @@ function TrisaOrganizationProfile() {
 
   return (
     <div>
-      <OrganizationalDetail data={certificateStep?.form} />
+      <OrganizationalDetail data={certificateStep?.form} network={type} status={status} />
       <TrisaImplementation
         data={{
           mainnet: certificateStep?.form?.mainnet || {},

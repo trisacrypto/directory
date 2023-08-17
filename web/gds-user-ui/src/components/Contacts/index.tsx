@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Heading, HStack, Stack, Text } from '@chakra-ui/react';
-import { Trans } from '@lingui/react';
+import { Trans } from '@lingui/macro';
 import { getCurrentStep, getSteps } from 'application/store/selectors/stepper';
 import { SectionStatus } from 'components/SectionStatus';
 import FormLayout from 'layouts/FormLayout';
@@ -51,10 +51,11 @@ const Contacts: React.FC = () => {
       </HStack>
       <FormLayout>
         <Text>
-          <Trans id="Please supply contact information for representatives of your organization. All contacts will receive an email verification token and the contact emails must be verified before the registration can proceed.">
+          <Trans>
             Please supply contact information for representatives of your organization. All contacts
             will receive an email verification token and the contact emails must be verified before
-            the registration can proceed.
+            the registration can proceed. Group or shared email addresses such as
+            compliance@yourvasp.com are permitted if the email account is actively monitored.
           </Trans>
         </Text>
       </FormLayout>
