@@ -2,7 +2,7 @@ import { useToast } from '@chakra-ui/toast';
 import { useState } from 'react';
 import { useUpdateCertificateStep } from './useUpdateCertificateStep';
 import { StepEnum } from 'types/enums';
-import { validationSchema } from 'modules/dashboard/certificate/lib';
+import { allValidationSchema } from 'modules/dashboard/certificate/lib';
 import { handleError } from 'utils/utils';
 const useUploadFile = () => {
   console.log('[useUploadFile] init');
@@ -40,7 +40,7 @@ const useUploadFile = () => {
     reader.onload = async (ev: any) => {
       const data = JSON.parse(ev.target.result);
       try {
-        const validationData = await validationSchema[0].validate(data, { abortEarly: false });
+        const validationData = await allValidationSchema.validate(data, { abortEarly: false });
         console.log('[] validationData', validationData);
         const payload = {
           step: StepEnum.ALL,

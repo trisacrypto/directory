@@ -1,14 +1,15 @@
+import React, { Suspense } from 'react';
 import { Tabs, TabList, Tab, TabPanels, TabPanel, Text } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import Metrics from 'components/Metrics';
 import TrisaDetail from 'components/OrganizationProfile/TrisaDetail';
-import { getMetrics } from 'modules/dashboard/overview/service';
-import React from 'react';
+import { getOverview } from 'modules/dashboard/overview/service';
+
 import { useAsync } from 'react-use';
 import { handleError } from 'utils/utils';
-
+import TrisaOrganizationProfile from 'components/TrisaOrganizationProfile';
 function MetricsTabs() {
-  const { error, value } = useAsync(getMetrics);
+  const { error, value } = useAsync(getOverview);
 
   if (error) {
     handleError(error);
@@ -41,13 +42,21 @@ function MetricsTabs() {
       <TabPanels>
         <TabPanel p={0}>
           <Metrics data={value?.data?.mainnet} type="Mainnet" />
-
           <TrisaDetail data={value?.data?.mainnet?.member_details} type={'MainNet'} />
+          <Suspense fallback="">
+            <TrisaOrganizationProfile
+              type="mainnet"
+              status={value?.data?.mainnet?.member_details.status}
+            />
+          </Suspense>
         </TabPanel>
         <TabPanel p={0}>
           <Metrics data={value?.data?.testnet} type="Testnet" />
-
           <TrisaDetail data={value?.data?.testnet?.member_details} type={'TestNet'} />
+          <TrisaOrganizationProfile
+            type="testnet"
+            status={value?.data?.testnet?.member_details.status}
+          />
         </TabPanel>
       </TabPanels>
     </Tabs>
