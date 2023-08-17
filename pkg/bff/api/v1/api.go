@@ -18,6 +18,7 @@ type BFFClient interface {
 	// Unauthenticated Endpoints
 	Status(context.Context, *StatusParams) (*StatusReply, error)
 	Lookup(context.Context, *LookupParams) (*LookupReply, error)
+	VASPNames(context.Context) ([]string, error)
 	VerifyContact(context.Context, *VerifyContactParams) (*VerifyContactReply, error)
 
 	// User Management Endpoints

@@ -76,6 +76,60 @@ func (s *bffTestSuite) TestLookup() {
 	require.NotEmpty(rep.TestNet, "expected testnet result from server")
 }
 
+func (s *bffTestSuite) TestVASPNames() {
+	require := s.Require()
+	ctx := context.Background()
+
+	// Test that no names are returned when there are no VASPs
+	rep, err := s.client.VASPNames(ctx)
+	require.NoError(err, "error calling names endpoint")
+	require.Empty(rep, "expected no VASP names to be returned")
+
+	// Test that a single name is returned when there is one VASP in testnet
+	testnetVASP := &pb.VASP{}
+	testnetFixture := filepath.Join("testdata", "testnet", "vasp.json")
+	require.NoError(loadFixture(testnetFixture, testnetVASP))
+	testnetVASP.VerificationStatus = pb.VerificationState_VERIFIED
+	_, err = s.TestNetDB().CreateVASP(ctx, testnetVASP)
+	require.NoError(err, "error creating VASP fixture in database")
+	rep, err = s.client.VASPNames(ctx)
+	require.NoError(err, "error calling names endpoint")
+	require.Equal([]string{"Alice VASP, Inc."}, rep, "wrong names returned from names endpoint")
+
+	// Test that unverified VASPs are not returned
+	mainnetVASP := &pb.VASP{}
+	mainnetFixture := filepath.Join("testdata", "mainnet", "vasp.json")
+	require.NoError(loadFixture(mainnetFixture, mainnetVASP))
+	_, err = s.MainNetDB().CreateVASP(ctx, mainnetVASP)
+	require.NoError(err, "error creating VASP fixture in database")
+	rep, err = s.client.VASPNames(ctx)
+	require.NoError(err, "error calling names endpoint")
+	require.Equal([]string{"Alice VASP, Inc."}, rep, "wrong names returned from names endpoint")
+
+	// Test that duplicate names are not returned
+	mainnetVASP.VerificationStatus = pb.VerificationState_VERIFIED
+	require.NoError(s.MainNetDB().UpdateVASP(ctx, mainnetVASP), "error updating VASP fixture in database")
+	rep, err = s.client.VASPNames(ctx)
+	require.NoError(err, "error calling names endpoint")
+	require.Equal([]string{"Alice VASP, Inc."}, rep, "wrong names returned from names endpoint")
+
+	// Test names returned from both testnet and mainnet
+	testnetVASP.Id = uuid.New().String()
+	testnetVASP.CommonName = "testnet.bob.vaspbot.net"
+	testnetVASP.Entity.Name.NameIdentifiers[0].LegalPersonName = "Bob VASP, Inc."
+	_, err = s.TestNetDB().CreateVASP(ctx, testnetVASP)
+	require.NoError(err, "error creating VASP fixture in database")
+	mainnetVASP.Id = uuid.New().String()
+	mainnetVASP.CommonName = "mainnet.charlie.vaspbot.net"
+	mainnetVASP.Entity.Name.NameIdentifiers[0].LegalPersonName = "Charlie VASP, Inc."
+	_, err = s.MainNetDB().CreateVASP(ctx, mainnetVASP)
+	require.NoError(err, "error creating VASP fixture in database")
+	expected := []string{"Alice VASP, Inc.", "Bob VASP, Inc.", "Charlie VASP, Inc."}
+	rep, err = s.client.VASPNames(ctx)
+	require.NoError(err, "error calling names endpoint")
+	require.ElementsMatch(expected, rep, "wrong names returned from names endpoint")
+}
+
 func (s *bffTestSuite) TestLoadRegisterForm() {
 	require := s.Require()
 

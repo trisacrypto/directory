@@ -363,6 +363,7 @@ func (s *Server) setupRoutes() (err error) {
 
 		// GDS public routes (no authentication required)
 		v1.GET("/lookup", s.Lookup)
+		v1.GET("/vasps", s.VASPNames)
 		v1.GET("/verify", s.VerifyContact)
 		v1.POST("/users/login", userinfo, s.Login)
 		v1.GET("/users/roles", s.ListUserRoles)

@@ -150,6 +150,32 @@ func TestLookup(t *testing.T) {
 	require.Equal(t, fixture.MainNet, out.MainNet)
 }
 
+func TestVASPNames(t *testing.T) {
+	fixture := []string{
+		"alice",
+		"bob",
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, "/v1/vasps", r.URL.Path)
+		require.Equal(t, http.MethodGet, r.Method)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a new Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.VASPNames(context.TODO())
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
+}
+
 func TestVerifyContact(t *testing.T) {
 	fixture := &api.VerifyContactReply{
 		Status:  "PENDING_REVIEW",

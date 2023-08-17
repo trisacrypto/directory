@@ -155,6 +155,87 @@ func (s *Server) Lookup(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
+// VASPNames makes a request on behalf of the user to both the TestNet and MainNet GDS
+// databases and returns the complete deduplicated list of verified VASP names to the
+// user, to facilitate autocomplete functionality in the UI. This is an unauthenticated
+// endpoint so it's publicly accessible.
+//
+// @Summary Get the names of verified VASPs
+// @Description Get the names of all the verified VASPs in both TestNet and MainNet.
+// @Tags GDS
+// @Produce json
+// @Success 200 {list} string "List of VASP names"
+// @Failure 500 {object} api.Reply
+// @Router /vasps [get]
+func (s *Server) VASPNames(c *gin.Context) {
+	// Create an RPC func for making a parallel GDS request for the list of VASPs
+	rpc := func(ctx context.Context, db store.Store, network string) (rep interface{}, err error) {
+		iter := db.ListVASPs(ctx)
+		defer iter.Release()
+
+		var names []string
+		for iter.Next() {
+			var vasp *pb.VASP
+			if vasp, err = iter.VASP(); err != nil {
+				sentry.Error(c).Err(err).Str("network", network).Msg("could not get VASP from ListVASP iterator")
+				return nil, err
+			}
+
+			// Filter any VASPs that are not verified
+			if vasp.VerificationStatus != pb.VerificationState_VERIFIED {
+				continue
+			}
+
+			var name string
+			if name, err = vasp.Name(); err != nil {
+				sentry.Warn(c).Err(err).Str("network", network).Msg("could not resolve VASP name from VASP")
+				continue
+			}
+
+			names = append(names, name)
+		}
+
+		if err = iter.Error(); err != nil {
+			sentry.Error(c).Err(err).Str("network", network).Msg("could not iterate over VASPs")
+			return nil, err
+		}
+
+		return names, nil
+	}
+
+	// Execute the parallel GDS list request
+	results, errs := s.ParallelDBRequests(sentry.RequestContext(c), rpc, true)
+	if len(errs) > 0 {
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve VASP names"))
+		return
+	}
+
+	// Deduplicate the results for the response
+	out := make([]string, 0)
+	names := make(map[string]struct{})
+	for _, vasps := range results {
+		var (
+			vaspNames []string
+			ok        bool
+		)
+		if vaspNames, ok = vasps.([]string); !ok {
+			sentry.Error(c).Msg("unexpected result type")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve VASP names"))
+			return
+		}
+
+		// Add the name to the list
+		for _, name := range vaspNames {
+			if _, ok := names[name]; !ok {
+				names[name] = struct{}{}
+				out = append(out, name)
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, out)
+}
+
 // VerifyContact is currently a passthrough helper that forwards the verify contact
 // request from the user interface to the GDS that needs contact verification.
 //

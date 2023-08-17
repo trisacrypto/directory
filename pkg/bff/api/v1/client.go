@@ -119,6 +119,22 @@ func (s *APIv1) Lookup(ctx context.Context, in *LookupParams) (out *LookupReply,
 	return out, nil
 }
 
+// Returns the deduplicated list of all verified VASPs across both networks.
+func (s *APIv1) VASPNames(ctx context.Context) (out []string, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/vasps", nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = make([]string, 0)
+	if _, err = s.Do(req, &out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Verify a contact with the token sent to their email address.
 func (s *APIv1) VerifyContact(ctx context.Context, in *VerifyContactParams) (out *VerifyContactReply, err error) {
 	// Create the query params from the input
