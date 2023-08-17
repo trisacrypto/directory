@@ -1175,6 +1175,32 @@
                 }
             }
         },
+        "/vasps": {
+            "get": {
+                "description": "Get the names of all the verified VASPs in both TestNet and MainNet.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GDS"
+                ],
+                "summary": "Get the names of verified VASPs",
+                "responses": {
+                    "200": {
+                        "description": "List of VASP names",
+                        "schema": {
+                            "type": "list"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    }
+                }
+            }
+        },
         "/verify": {
             "get": {
                 "description": "Verify a VASP contact using a TestNet or MainNet GDS.",
@@ -1357,10 +1383,10 @@
         "api.LookupParams": {
             "type": "object",
             "properties": {
-                "common_name": {
+                "commonName": {
                     "type": "string"
                 },
-                "uuid": {
+                "id": {
                     "type": "string"
                 }
             }
@@ -1408,10 +1434,10 @@
         "api.MemberDetailsParams": {
             "type": "object",
             "properties": {
-                "-": {
+                "directory": {
                     "type": "string"
                 },
-                "registered_directory": {
+                "id": {
                     "type": "string"
                 }
             }
@@ -1419,13 +1445,13 @@
         "api.MemberPageInfo": {
             "type": "object",
             "properties": {
-                "page_size": {
-                    "type": "integer"
-                },
-                "page_token": {
+                "directory": {
                     "type": "string"
                 },
-                "registered_directory": {
+                "pageSize": {
+                    "type": "integer"
+                },
+                "pageToken": {
                     "type": "string"
                 }
             }
@@ -1546,26 +1572,9 @@
             "type": "object",
             "properties": {
                 "step": {
-                    "$ref": "#/definitions/api.RegistrationFormStep"
+                    "type": "string"
                 }
             }
-        },
-        "api.RegistrationFormStep": {
-            "type": "string",
-            "enum": [
-                "basic",
-                "legal",
-                "contacts",
-                "trisa",
-                "trixo"
-            ],
-            "x-enum-varnames": [
-                "StepBasicDetails",
-                "StepLegalPerson",
-                "StepContacts",
-                "StepTRISA",
-                "StepTRIXO"
-            ]
         },
         "api.RegistrationStatus": {
             "type": "object",
@@ -1626,13 +1635,13 @@
         "api.VerifyContactParams": {
             "type": "object",
             "properties": {
-                "registered_directory": {
+                "directory": {
+                    "type": "string"
+                },
+                "id": {
                     "type": "string"
                 },
                 "token": {
-                    "type": "string"
-                },
-                "vaspID": {
                     "type": "string"
                 }
             }
