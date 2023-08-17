@@ -150,7 +150,7 @@ func TestLookup(t *testing.T) {
 	require.Equal(t, fixture.MainNet, out.MainNet)
 }
 
-func TestVASPNames(t *testing.T) {
+func TestLookupAutocomplete(t *testing.T) {
 	fixture := []string{
 		"alice",
 		"bob",
@@ -158,7 +158,7 @@ func TestVASPNames(t *testing.T) {
 
 	// Create a Test Server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, "/v1/vasps", r.URL.Path)
+		require.Equal(t, "/v1/lookup/autocomplete", r.URL.Path)
 		require.Equal(t, http.MethodGet, r.Method)
 
 		w.Header().Add("Content-Type", "application/json; charset=utf-8")
@@ -171,7 +171,7 @@ func TestVASPNames(t *testing.T) {
 	client, err := api.New(ts.URL)
 	require.NoError(t, err)
 
-	out, err := client.VASPNames(context.TODO())
+	out, err := client.LookupAutocomplete(context.TODO())
 	require.NoError(t, err)
 	require.Equal(t, fixture, out)
 }

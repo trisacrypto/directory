@@ -155,19 +155,19 @@ func (s *Server) Lookup(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
-// VASPNames makes a request on behalf of the user to both the TestNet and MainNet GDS
-// databases and returns the complete deduplicated list of verified VASP names to the
-// user, to facilitate autocomplete functionality in the UI. This is an unauthenticated
-// endpoint so it's publicly accessible.
+// LookupAutocomplete makes a request on behalf of the user to both the TestNet and
+// MainNet GDS databases and returns the complete deduplicated list of verified VASP
+// names to the user, to facilitate client-side autocomplete functionality. This is an
+// unauthenticated endpoint so it's publicly accessible.
 //
-// @Summary Get the names of verified VASPs
+// @Summary Get the names of verified VASPs for autocomplete
 // @Description Get the names of all the verified VASPs in both TestNet and MainNet.
 // @Tags GDS
 // @Produce json
 // @Success 200 {list} string "List of VASP names"
 // @Failure 500 {object} api.Reply
-// @Router /vasps [get]
-func (s *Server) VASPNames(c *gin.Context) {
+// @Router /lookup/autocommplete [get]
+func (s *Server) LookupAutocomplete(c *gin.Context) {
 	// Create an RPC func for making a parallel GDS request for the list of VASPs
 	rpc := func(ctx context.Context, db store.Store, network string) (rep interface{}, err error) {
 		iter := db.ListVASPs(ctx)
@@ -178,7 +178,7 @@ func (s *Server) VASPNames(c *gin.Context) {
 			var vasp *pb.VASP
 			if vasp, err = iter.VASP(); err != nil {
 				sentry.Error(c).Err(err).Str("network", network).Msg("could not get VASP from ListVASP iterator")
-				return nil, err
+				continue
 			}
 
 			// Filter any VASPs that are not verified
@@ -187,8 +187,8 @@ func (s *Server) VASPNames(c *gin.Context) {
 			}
 
 			var name string
-			if name, err = vasp.Name(); err != nil {
-				sentry.Warn(c).Err(err).Str("network", network).Msg("could not resolve VASP name from VASP")
+			if name, err = vasp.Name(); err != nil || name == "" {
+				sentry.Warn(c).Err(err).Str("network", network).Str("id", iter.Id()).Msg("could not resolve VASP name from VASP")
 				continue
 			}
 

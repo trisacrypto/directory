@@ -418,6 +418,32 @@ const docTemplate = `{
                 }
             }
         },
+        "/lookup/autocommplete": {
+            "get": {
+                "description": "Get the names of all the verified VASPs in both TestNet and MainNet.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GDS"
+                ],
+                "summary": "Get the names of verified VASPs for autocomplete",
+                "responses": {
+                    "200": {
+                        "description": "List of VASP names",
+                        "schema": {
+                            "type": "list"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Reply"
+                        }
+                    }
+                }
+            }
+        },
         "/members": {
             "get": {
                 "description": "Returns a list of verified VASPs in the specified directory so long as the organization is a verified member of that directory.",
@@ -1178,32 +1204,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "type": "list"
-                        }
-                    }
-                }
-            }
-        },
-        "/vasps": {
-            "get": {
-                "description": "Get the names of all the verified VASPs in both TestNet and MainNet.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "GDS"
-                ],
-                "summary": "Get the names of verified VASPs",
-                "responses": {
-                    "200": {
-                        "description": "List of VASP names",
-                        "schema": {
-                            "type": "list"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Reply"
                         }
                     }
                 }

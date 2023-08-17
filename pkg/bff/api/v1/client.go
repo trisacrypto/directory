@@ -119,11 +119,12 @@ func (s *APIv1) Lookup(ctx context.Context, in *LookupParams) (out *LookupReply,
 	return out, nil
 }
 
-// Returns the deduplicated list of all verified VASPs across both networks.
-func (s *APIv1) VASPNames(ctx context.Context) (out []string, err error) {
+// Returns the deduplicated list of all verified VASPs across both networks to enable
+// client-side autocomplete for lookups.
+func (s *APIv1) LookupAutocomplete(ctx context.Context) (out []string, err error) {
 	// Make the HTTP request
 	var req *http.Request
-	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/vasps", nil, nil); err != nil {
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/lookup/autocomplete", nil, nil); err != nil {
 		return nil, err
 	}
 

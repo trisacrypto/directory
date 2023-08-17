@@ -81,7 +81,7 @@ func (s *bffTestSuite) TestVASPNames() {
 	ctx := context.Background()
 
 	// Test that no names are returned when there are no VASPs
-	rep, err := s.client.VASPNames(ctx)
+	rep, err := s.client.LookupAutocomplete(ctx)
 	require.NoError(err, "error calling names endpoint")
 	require.Empty(rep, "expected no VASP names to be returned")
 
@@ -92,7 +92,7 @@ func (s *bffTestSuite) TestVASPNames() {
 	testnetVASP.VerificationStatus = pb.VerificationState_VERIFIED
 	_, err = s.TestNetDB().CreateVASP(ctx, testnetVASP)
 	require.NoError(err, "error creating VASP fixture in database")
-	rep, err = s.client.VASPNames(ctx)
+	rep, err = s.client.LookupAutocomplete(ctx)
 	require.NoError(err, "error calling names endpoint")
 	require.Equal([]string{"Alice VASP, Inc."}, rep, "wrong names returned from names endpoint")
 
@@ -102,14 +102,14 @@ func (s *bffTestSuite) TestVASPNames() {
 	require.NoError(loadFixture(mainnetFixture, mainnetVASP))
 	_, err = s.MainNetDB().CreateVASP(ctx, mainnetVASP)
 	require.NoError(err, "error creating VASP fixture in database")
-	rep, err = s.client.VASPNames(ctx)
+	rep, err = s.client.LookupAutocomplete(ctx)
 	require.NoError(err, "error calling names endpoint")
 	require.Equal([]string{"Alice VASP, Inc."}, rep, "wrong names returned from names endpoint")
 
 	// Test that duplicate names are not returned
 	mainnetVASP.VerificationStatus = pb.VerificationState_VERIFIED
 	require.NoError(s.MainNetDB().UpdateVASP(ctx, mainnetVASP), "error updating VASP fixture in database")
-	rep, err = s.client.VASPNames(ctx)
+	rep, err = s.client.LookupAutocomplete(ctx)
 	require.NoError(err, "error calling names endpoint")
 	require.Equal([]string{"Alice VASP, Inc."}, rep, "wrong names returned from names endpoint")
 
@@ -125,7 +125,7 @@ func (s *bffTestSuite) TestVASPNames() {
 	_, err = s.MainNetDB().CreateVASP(ctx, mainnetVASP)
 	require.NoError(err, "error creating VASP fixture in database")
 	expected := []string{"Alice VASP, Inc.", "Bob VASP, Inc.", "Charlie VASP, Inc."}
-	rep, err = s.client.VASPNames(ctx)
+	rep, err = s.client.LookupAutocomplete(ctx)
 	require.NoError(err, "error calling names endpoint")
 	require.ElementsMatch(expected, rep, "wrong names returned from names endpoint")
 }
