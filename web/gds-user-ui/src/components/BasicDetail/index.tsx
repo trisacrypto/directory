@@ -93,7 +93,6 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
 
   useEffect(() => {
     if (isBasicStepDeleted) {
-      console.log('isBasicStepDeleted');
       const payload = {
         step: StepEnum.BASIC,
         isDeleted: false
@@ -104,7 +103,6 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
     }
 
     if (isAllFormDeleted) {
-      console.log('isAllFormDeleted');
       const payload = {
         step: StepEnum.ALL,
         isDeleted: false

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { FormEvent, useState } from 'react';
 import {
   Stack,
@@ -22,9 +23,16 @@ import {
   Tab,
   TabPanel,
   TableContainer,
-  Input,
+  // Input,
   Tbody
 } from '@chakra-ui/react';
+
+import {
+  AutoComplete,
+  AutoCompleteInput,
+  AutoCompleteItem,
+  AutoCompleteList
+} from '@choc-ui/chakra-autocomplete';
 
 import { SearchIcon } from '@chakra-ui/icons';
 import { colors } from 'utils/theme';
@@ -41,13 +49,15 @@ type TSearchDirectory = {
   error: string;
   query: string;
   handleClose?: () => void;
+  options: any[];
 };
 const SearchDirectory: React.FC<TSearchDirectory> = ({
   handleSubmit,
   isLoading,
   result,
   error,
-  handleClose
+  handleClose,
+  options
 }) => {
   const [search, setSearch] = useState<string>('');
 
@@ -83,15 +93,25 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
               <form onSubmit={(e) => handleSubmit(e, search)}>
                 <FormControl color={'gray.500'}>
                   <HStack>
-                    <Input
-                      size="md"
-                      width={'100%'}
-                      type="search"
-                      isRequired
-                      placeholder={t`Common name or VASP ID`}
-                      name="search"
-                      onChange={(event: any) => setSearch(event.currentTarget.value)}
-                    />
+                    <AutoComplete rollNavigation>
+                      <AutoCompleteInput variant="filled" placeholder="Search Vasp" autoFocus />
+                      <AutoCompleteList>
+                        {options?.map((option, oid) => (
+                          <AutoCompleteItem
+                            key={`option-${oid}`}
+                            value={option}
+                            label={option}
+                            onClick={() => {
+                              // console.log('option', option);
+                              setSearch(option);
+                            }}
+                            textTransform="capitalize">
+                            {option}
+                          </AutoCompleteItem>
+                        ))}
+                      </AutoCompleteList>
+                    </AutoComplete>
+
                     <Button
                       isLoading={isLoading}
                       variant="outline"

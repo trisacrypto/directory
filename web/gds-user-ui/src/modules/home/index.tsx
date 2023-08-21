@@ -8,8 +8,11 @@ import * as Sentry from '@sentry/react';
 import { lookup } from './service';
 import { isValidUuid } from 'utils/utils';
 import LandingLayout from 'layouts/LandingLayout';
+import useFetchLookupAutocomplete from './useFetchLookupAutocomplete';
 const HomePage: React.FC = () => {
+  const { vasps } = useFetchLookupAutocomplete();
   const [isLoading, setIsLoading] = useState(false);
+
   const [result, setResult] = useState(false);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
@@ -42,6 +45,7 @@ const HomePage: React.FC = () => {
       }
     }
   };
+
   return (
     <LandingLayout>
       <Head hasBtn isHomePage />
@@ -58,6 +62,7 @@ const HomePage: React.FC = () => {
           setError('');
         }}
         query={search}
+        options={vasps}
       />
     </LandingLayout>
   );
