@@ -47,6 +47,7 @@ export const vaspCategories = [
     value: 'Individual',
     label: 'Legal Person'
   },
+
   {
     value: 'Other',
     label: 'Other'
@@ -58,7 +59,8 @@ export const BUSINESS_CATEGORY = {
   PRIVATE_ORGANIZATION: 'Private Organization',
   GOVERNMENT_ENTITY: 'Government Entity',
   BUSINESS_ENTITY: 'Business Entity',
-  NON_COMMERCIAL_ENTITY: 'Non Commercial Entity'
+  NON_COMMERCIAL_ENTITY: 'Non Commercial Entity',
+  NON_VASP_ENTITY: 'Non VASP Entity'
 };
 
 export const getBusinessCategoryOptions = () => {

@@ -64,15 +64,16 @@ const useUploadFile = () => {
         setIsFileLoading(true);
         const basicValidationData = await validationSchema[0].validate(data, { abortEarly: true });
         const legalValidationData = await validationSchema[1].validate(data, { abortEarly: true });
-        // const contactValidationData = await validationSchema[2].validate(data, {
-        //   abortEarly: true
-        // });
+        const contactValidationData = await validationSchema[2].validate(data, {
+          abortEarly: true
+        });
         const trisaValidationData = await validationSchema[3].validate(data, { abortEarly: true });
         const trixoValidationData = await validationSchema[4].validate(data, { abortEarly: true });
 
         const validationData = {
           ...basicValidationData,
           ...legalValidationData,
+          ...contactValidationData,
           ...trisaValidationData,
           ...trixoValidationData
         };
