@@ -384,9 +384,21 @@ func (s *Server) MemberDetail(c *gin.Context) {
 		return
 	}
 
-	// Create the member details response
-	out := api.MemberDetailsReply{
-		Summary: rep.MemberSummary,
+	// Create the member details response, rewiring the protobuf types for a better
+	// JSON representation.
+	out := api.MemberDetailsReply{}
+
+	// Marshal the VASP summary details
+	if rep.MemberSummary == nil {
+		sentry.Error(c).Msg("did not receive summary details from members detail RPC")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve member details"))
+		return
+	}
+
+	if out.Summary, err = wire.Rewire(rep.MemberSummary); err != nil {
+		sentry.Error(c).Err(err).Msg("could not serialize summary details")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
 	}
 
 	// Marshal the legal person details
