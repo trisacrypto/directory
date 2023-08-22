@@ -67,7 +67,7 @@
             "name_identifiers": [
                 {
                     "legal_person_name": "Alice VASP, Inc.",
-                    "legal_person_name_identifier_type": 0
+                    "legal_person_name_identifier_type": 1
                 }
             ]
         },

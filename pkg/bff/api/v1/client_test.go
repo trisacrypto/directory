@@ -150,6 +150,32 @@ func TestLookup(t *testing.T) {
 	require.Equal(t, fixture.MainNet, out.MainNet)
 }
 
+func TestLookupAutocomplete(t *testing.T) {
+	fixture := []string{
+		"alice",
+		"bob",
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, "/v1/lookup/autocomplete", r.URL.Path)
+		require.Equal(t, http.MethodGet, r.Method)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a new Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.LookupAutocomplete(context.TODO())
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
+}
+
 func TestVerifyContact(t *testing.T) {
 	fixture := &api.VerifyContactReply{
 		Status:  "PENDING_REVIEW",
@@ -987,16 +1013,16 @@ func TestMemberList(t *testing.T) {
 
 func TestMemberDetails(t *testing.T) {
 	fixture := &api.MemberDetailsReply{
-		Summary: &members.VASPMember{
-			Id:                  "8b2e9e78-baca-4c34-a382-8b285503c901",
-			RegisteredDirectory: "trisatest.net",
-			CommonName:          "trisa.example.com",
-			Endpoint:            "trisa.example.com:443",
-			Name:                "Trisa TestNet",
-			Website:             "https://trisa.example.com",
-			Country:             "US",
-			VaspCategories:      []string{"P2P"},
-			VerifiedOn:          "2022-04-21T12:05:23Z",
+		Summary: map[string]interface{}{
+			"id":                   "8b2e9e78-baca-4c34-a382-8b285503c901",
+			"registered_directory": "trisatest.net",
+			"common_name":          "trisa.example.com",
+			"endpoint":             "trisa.example.com:443",
+			"name":                 "Trisa TestNet",
+			"website":              "https://trisa.example.com",
+			"country":              "US",
+			"vasp_categories":      []interface{}{"P2P"},
+			"verified_on":          "2022-04-21T12:05:23Z",
 		},
 		LegalPerson: map[string]interface{}{
 			"country_of_registration": "US",
