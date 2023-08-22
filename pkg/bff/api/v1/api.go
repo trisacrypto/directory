@@ -362,7 +362,7 @@ type MemberDetailsParams struct {
 
 // MemberDetailsReply contains sensitive details about a VASP member.
 type MemberDetailsReply struct {
-	Summary     *members.VASPMember    `json:"summary"`
+	Summary     map[string]interface{} `json:"summary"`
 	LegalPerson map[string]interface{} `json:"legal_person"`
 	Contacts    map[string]interface{} `json:"contacts"`
 	Trixo       map[string]interface{} `json:"trixo"`

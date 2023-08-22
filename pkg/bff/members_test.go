@@ -442,6 +442,7 @@ func (s *bffTestSuite) TestMemberDetail() {
 	s.requireError(err, http.StatusNotFound, "member not found", "expected error when VASP does not exist")
 
 	// Test successful response from testnet
+	actualSummary := &members.VASPMember{}
 	actualPerson := &ivms101.LegalPerson{}
 	actualContacts := &pb.Contacts{}
 	actualTrixo := &pb.TRIXOQuestionnaire{}
@@ -450,13 +451,17 @@ func (s *bffTestSuite) TestMemberDetail() {
 	req.ID = testnetID
 	reply, err := s.client.MemberDetails(context.TODO(), req)
 	require.NoError(err, "could not get member details")
-	require.Equal(testnetDetails.MemberSummary, reply.Summary, "response summary did not match")
+	require.NoError(wire.Unwire(reply.Summary, actualSummary), "could not unmarshal summary in response")
+	require.Equal(testnetDetails.MemberSummary, actualSummary, "response summary did not match")
 	require.NoError(wire.Unwire(reply.LegalPerson, actualPerson), "could not unmarshal legal person in response")
 	require.Equal(testnetDetails.LegalPerson, actualPerson, "response legal person did not match")
 	require.NoError(wire.Unwire(reply.Contacts, actualContacts), "could not unmarshal contacts in response")
 	require.Equal(testnetDetails.Contacts, actualContacts, "response contacts did not match")
 	require.NoError(wire.Unwire(reply.Trixo, actualTrixo), "could not unmarshal trixo in response")
 	require.Equal(testnetDetails.Trixo, actualTrixo, "response trixo did not match")
+
+	// Ensure that enums are represented as strings in the response
+	require.Equal(testnetDetails.MemberSummary.BusinessCategory.String(), reply.Summary["business_category"], "expected business category to be string representation of enum")
 
 	// Test successful response from mainnet and mixed case directory
 	req.Directory = "VASPdirectory.net"
@@ -468,7 +473,8 @@ func (s *bffTestSuite) TestMemberDetail() {
 	req.ID = mainnetID
 	reply, err = s.client.MemberDetails(context.TODO(), req)
 	require.NoError(err, "could not get member details")
-	require.Equal(mainnetDetails.MemberSummary, reply.Summary, "response summary did not match")
+	require.NoError(wire.Unwire(reply.Summary, actualSummary), "could not unmarshal summary in response")
+	require.Equal(mainnetDetails.MemberSummary, actualSummary, "response summary did not match")
 	require.NoError(wire.Unwire(reply.LegalPerson, actualPerson), "could not unmarshal legal person in response")
 	require.Equal(mainnetDetails.LegalPerson, actualPerson, "response legal person did not match")
 	require.NoError(wire.Unwire(reply.Contacts, actualContacts), "could not unmarshal contacts in response")
