@@ -61,6 +61,11 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
 }) => {
   const [search, setSearch] = useState<string>('');
 
+  // Object.keys(options)?.map((oid: any) => {
+  //   console.log('option k', oid);
+  //   console.log('option v', options[oid]);
+  // });
+
   return (
     <Flex
       py={12}
@@ -103,17 +108,17 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                         autoFocus
                       />
                       <AutoCompleteList>
-                        {options?.map((option, oid) => (
+                        {Object.keys(options)?.map((oid: any) => (
                           <AutoCompleteItem
                             key={`option-${oid}`}
-                            value={option}
-                            label={option}
+                            value={options[oid]}
+                            label={oid}
                             onClick={() => {
                               // console.log('option', option);
-                              setSearch(option);
+                              setSearch(options[oid]);
                             }}
                             textTransform="capitalize">
-                            {option}
+                            {oid}
                           </AutoCompleteItem>
                         ))}
                       </AutoCompleteList>
