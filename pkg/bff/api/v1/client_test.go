@@ -151,9 +151,9 @@ func TestLookup(t *testing.T) {
 }
 
 func TestLookupAutocomplete(t *testing.T) {
-	fixture := []string{
-		"alice",
-		"bob",
+	fixture := map[string]string{
+		"Alice": "alice",
+		"Bob":   "bob",
 	}
 
 	// Create a Test Server
