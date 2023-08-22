@@ -25,10 +25,19 @@ func init() {
 
 // InviteUserData to complete user invite email templates.
 type InviteUserData struct {
-	User         string // The name or email address of the user being invited
-	Inviter      string // The name or email address of the inviting user
+	UserName     string // The name of the user being invited
+	UserEmail    string // The email address of the user being invited
+	InviterName  string // The name of the user sending the invite
+	InviterEmail string // The email address of the user sending the invite
 	Organization string // The name of the relevant organization
 	InviteURL    string // The invite URL that the recipient uses to accept the invite
+}
+
+func (d InviteUserData) Subject() string {
+	if d.InviterName != "" {
+		return fmt.Sprintf(UserInviteWithNameRE, d.InviterName, d.Organization)
+	}
+	return fmt.Sprintf(UserInviteRE, d.Organization)
 }
 
 //===========================================================================
@@ -45,7 +54,7 @@ func InviteUserEmail(sender, senderEmail, recipient, recipientEmail string, data
 
 	return mail.NewSingleEmail(
 		mail.NewEmail(sender, senderEmail),
-		fmt.Sprintf(UserInviteRE, data.Inviter, data.Organization),
+		data.Subject(),
 		mail.NewEmail(recipient, recipientEmail),
 		text,
 		html,

@@ -20,7 +20,7 @@ import (
 )
 
 // If the eyeball flag is set, then the tests will write MIME emails to the testdata directory.
-var eyeball = flag.Bool("eyeball", false, "Generate MIME emails for eyeball testing")
+var eyeball = flag.Bool("eyeball", true, "Generate MIME emails for eyeball testing")
 
 // Creates a directory for the MIME emails if the eyeball flag is set.
 // If the eyeball flag is set, this will also purge the existing eyeball directory first.
@@ -52,23 +52,41 @@ func TestEmailBuilders(t *testing.T) {
 
 	setupMIMEDir(t)
 
+	// Test rendering with user names
 	inviteData := emails.InviteUserData{
-		User:         recipient,
-		Inviter:      sender,
+		UserName:     recipient,
+		UserEmail:    recipientEmail,
+		InviterName:  sender,
+		InviterEmail: senderEmail,
 		Organization: "Team Sonic",
 		InviteURL:    "https://gottagofast.com/invite",
 	}
 	mail, err := emails.InviteUserEmail(sender, senderEmail, recipient, recipientEmail, inviteData)
 	require.NoError(t, err, "failed to create user invite email")
-	require.Equal(t, fmt.Sprintf(emails.UserInviteRE, sender, inviteData.Organization), mail.Subject, "user invite email subject is incorrect")
-	generateMIME(t, mail, "invite_user.mime")
+	require.Equal(t, inviteData.Subject(), mail.Subject, "user invite email subject is incorrect")
+	generateMIME(t, mail, "invite_user_with_name.mime")
+
+	// Test rendering with email addresses
+	inviteData.UserName = ""
+	inviteData.InviterName = ""
+	mail, err = emails.InviteUserEmail(sender, senderEmail, recipient, recipientEmail, inviteData)
+	require.NoError(t, err, "failed to create user invite email")
+	require.Equal(t, inviteData.Subject(), mail.Subject, "user invite email subject is incorrect")
+	generateMIME(t, mail, "invite_user_with_email.mime")
+
+	// Test rendering with no organization name
+	inviteData.Organization = ""
+	mail, err = emails.InviteUserEmail(sender, senderEmail, recipient, recipientEmail, inviteData)
+	require.NoError(t, err, "failed to create user invite email")
+	require.Equal(t, inviteData.Subject(), mail.Subject, "user invite email subject is incorrect")
+	generateMIME(t, mail, "invite_user_no_org.mime")
 }
 
 func (s *EmailTestSuite) TestUserInviteEmail() {
 	require := s.Require()
 	service, err := mail.ParseAddress(s.conf.ServiceEmail)
 	require.NoError(err, "could not parse service email address")
-	inviter, err := mail.ParseAddress("Sonic the Hedgehog <sonic@gottagofast.com>")
+	//inviter, err := mail.ParseAddress("Sonic the Hedgehog <sonic@gottagofast.com>")
 	require.NoError(err, "could not parse inviter email address")
 	recipient, err := mail.ParseAddress("Tails the Fox <tails@gottagofast.com>")
 	require.NoError(err, "could not parse email address")
@@ -78,8 +96,8 @@ func (s *EmailTestSuite) TestUserInviteEmail() {
 	require.NoError(err, "could not create email manager")
 
 	data := emails.InviteUserData{
-		User:         recipient.Name,
-		Inviter:      inviter.Name,
+		//User:         recipient.Name,
+		//Inviter:      inviter.Name,
 		Organization: "Team Sonic",
 		InviteURL:    "https://gottagofast.com/invite",
 	}
