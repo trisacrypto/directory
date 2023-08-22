@@ -35,9 +35,16 @@ type InviteUserData struct {
 
 func (d InviteUserData) Subject() string {
 	if d.InviterName != "" {
-		return fmt.Sprintf(UserInviteWithNameRE, d.InviterName, d.Organization)
+		if d.Organization != "" {
+			return fmt.Sprintf(UserInviteWithNameRE, d.InviterName, d.Organization)
+		} else {
+			return fmt.Sprintf(UserInviteWithNameRE, d.InviterName, "their organization")
+		}
+	} else if d.Organization != "" {
+		return fmt.Sprintf(UserInviteRE, d.Organization)
+	} else {
+		return fmt.Sprintf(UserInviteRE, "an organization")
 	}
-	return fmt.Sprintf(UserInviteRE, d.Organization)
 }
 
 //===========================================================================
