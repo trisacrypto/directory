@@ -20,7 +20,7 @@ import (
 )
 
 // If the eyeball flag is set, then the tests will write MIME emails to the testdata directory.
-var eyeball = flag.Bool("eyeball", true, "Generate MIME emails for eyeball testing")
+var eyeball = flag.Bool("eyeball", false, "Generate MIME emails for eyeball testing")
 
 // Creates a directory for the MIME emails if the eyeball flag is set.
 // If the eyeball flag is set, this will also purge the existing eyeball directory first.
