@@ -34,7 +34,7 @@ const useUploadFile = () => {
     });
   }
   const handleFileUpload = (file: any) => {
-    console.log('[handleFileUpload] file', file);
+    // console.log('[handleFileUpload] file', file);
     if (file?.type !== 'application/json') {
       toast({
         title: 'Invalid file format.',
@@ -77,7 +77,7 @@ const useUploadFile = () => {
           ...trisaValidationData,
           ...trixoValidationData
         };
-        console.log('[] validationData', validationData);
+        // console.log('[] validationData', validationData);
         const payload = {
           step: StepEnum.ALL,
           form: validationData?.form || validationData
