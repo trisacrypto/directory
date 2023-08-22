@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/bff/config"
+	"github.com/trisacrypto/directory/pkg/utils/ensign"
 )
 
 var testEnv = map[string]string{
@@ -70,6 +71,13 @@ var testEnv = map[string]string{
 	"GDS_BFF_USER_CACHE_ENABLED":            "true",
 	"GDS_BFF_USER_CACHE_EXPIRATION":         "10h",
 	"GDS_BFF_USER_CACHE_SIZE":               "1000",
+	"GDS_BFF_ACTIVITY_ENABLED":              "true",
+	"GDS_BFF_ACTIVITY_TOPIC":                "network-activity",
+	"GDS_BFF_ACTIVITY_ENSIGN_CLIENT_ID":     "client-id",
+	"GDS_BFF_ACTIVITY_ENSIGN_CLIENT_SECRET": "client-secret",
+	"GDS_BFF_ACTIVITY_ENSIGN_ENDPOINT":      "api.ensign.world:443",
+	"GDS_BFF_ACTIVITY_ENSIGN_AUTH_URL":      "https://auth.ensign.world",
+	"GDS_BFF_ACTIVITY_ENSIGN_INSECURE":      "true",
 }
 
 func TestConfig(t *testing.T) {
@@ -149,6 +157,13 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, true, conf.Sentry.Debug)
 	require.Equal(t, true, conf.Sentry.TrackPerformance)
 	require.Equal(t, 0.2, conf.Sentry.SampleRate)
+	require.True(t, conf.Activity.Enabled)
+	require.Equal(t, testEnv["GDS_BFF_ACTIVITY_TOPIC"], conf.Activity.Topic)
+	require.Equal(t, testEnv["GDS_BFF_ACTIVITY_ENSIGN_CLIENT_ID"], conf.Activity.Ensign.ClientID)
+	require.Equal(t, testEnv["GDS_BFF_ACTIVITY_ENSIGN_CLIENT_SECRET"], conf.Activity.Ensign.ClientSecret)
+	require.Equal(t, testEnv["GDS_BFF_ACTIVITY_ENSIGN_ENDPOINT"], conf.Activity.Ensign.Endpoint)
+	require.Equal(t, testEnv["GDS_BFF_ACTIVITY_ENSIGN_AUTH_URL"], conf.Activity.Ensign.AuthURL)
+	require.Equal(t, true, conf.Activity.Ensign.Insecure)
 }
 
 func TestRequiredConfig(t *testing.T) {
@@ -327,6 +342,35 @@ func TestCacheConfigValidation(t *testing.T) {
 	conf.Enabled = false
 	err = conf.Validate()
 	require.NoError(t, err, "expected valid configuration")
+}
+
+func TestActivityValidation(t *testing.T) {
+	conf := config.ActivityConfig{
+		Enabled: true,
+		Ensign: ensign.Config{
+			ClientID:     "client-id",
+			ClientSecret: "client-secret",
+			Endpoint:     "api.ensign.world:443",
+			AuthURL:      "https://auth.ensign.world",
+		},
+	}
+
+	// Test error is returned for missing topic
+	require.EqualError(t, conf.Validate(), "invalid configuration: activity topic is required")
+
+	// Test error is returned for invalid ensign configuration
+	conf.Topic = "network-activity"
+	conf.Ensign.ClientID = ""
+	require.ErrorIs(t, conf.Validate(), ensign.ErrMissingClientID)
+
+	// Test disabled configuration is valid
+	conf.Enabled = false
+	require.NoError(t, conf.Validate())
+
+	// Test valid enabled configuration
+	conf.Enabled = true
+	conf.Ensign.ClientID = "client-id"
+	require.NoError(t, conf.Validate())
 }
 
 // Returns the current environment for the specified keys, or if no keys are specified
