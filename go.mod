@@ -20,6 +20,7 @@ require (
 	github.com/mroth/weightedrand v1.0.0
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/prometheus/client_golang v1.16.0
+	github.com/rotationalio/go-ensign v0.9.1
 	github.com/rotationalio/honu v0.3.0
 	github.com/rotationalio/whisper v1.2.1
 	github.com/rs/zerolog v1.29.1
@@ -35,9 +36,10 @@ require (
 	github.com/trisacrypto/trisa v0.99999.1
 	github.com/urfave/cli v1.22.14
 	github.com/urfave/cli/v2 v2.25.7
-	golang.org/x/net v0.12.0
+	github.com/vmihailenco/msgpack/v5 v5.3.5
+	golang.org/x/net v0.14.0
 	google.golang.org/api v0.131.0
-	google.golang.org/grpc v1.56.2
+	google.golang.org/grpc v1.57.0
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -50,6 +52,7 @@ require (
 	github.com/PuerkitoBio/rehttp v1.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.9.2 // indirect
+	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
@@ -95,25 +98,28 @@ require (
 	github.com/prometheus/procfs v0.11.0 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
+	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/arch v0.4.0 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/oauth2 v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/sync v0.3.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 	golang.org/x/tools v0.11.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230711160842-782d3b101e98 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20230711160842-782d3b101e98 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98 // indirect
+	google.golang.org/genproto v0.0.0-20230803162519-f966b187b2e5 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20230726155614-23370e0ffb3e // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230807174057-1744710a1577 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 require (
-	cloud.google.com/go/compute v1.21.0 // indirect
+	cloud.google.com/go/compute v1.23.0 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/auth0/go-auth0 v0.17.2
@@ -124,10 +130,10 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/prometheus/common v0.44.0 // indirect
-	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/crypto v0.12.0 // indirect
 	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
 	golang.org/x/exp/typeparams v0.0.0-20230711153332-06a737ee72cb // indirect
-	golang.org/x/sys v0.10.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
 	honnef.co/go/tools v0.4.3 // indirect
 	software.sslmate.com/src/go-pkcs12 v0.2.0 // indirect
 )

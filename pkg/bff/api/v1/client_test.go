@@ -1013,16 +1013,16 @@ func TestMemberList(t *testing.T) {
 
 func TestMemberDetails(t *testing.T) {
 	fixture := &api.MemberDetailsReply{
-		Summary: &members.VASPMember{
-			Id:                  "8b2e9e78-baca-4c34-a382-8b285503c901",
-			RegisteredDirectory: "trisatest.net",
-			CommonName:          "trisa.example.com",
-			Endpoint:            "trisa.example.com:443",
-			Name:                "Trisa TestNet",
-			Website:             "https://trisa.example.com",
-			Country:             "US",
-			VaspCategories:      []string{"P2P"},
-			VerifiedOn:          "2022-04-21T12:05:23Z",
+		Summary: map[string]interface{}{
+			"id":                   "8b2e9e78-baca-4c34-a382-8b285503c901",
+			"registered_directory": "trisatest.net",
+			"common_name":          "trisa.example.com",
+			"endpoint":             "trisa.example.com:443",
+			"name":                 "Trisa TestNet",
+			"website":              "https://trisa.example.com",
+			"country":              "US",
+			"vasp_categories":      []interface{}{"P2P"},
+			"verified_on":          "2022-04-21T12:05:23Z",
 		},
 		LegalPerson: map[string]interface{}{
 			"country_of_registration": "US",
