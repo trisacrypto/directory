@@ -55,6 +55,13 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
   const isBasicStepDeleted = isStepDeleted(StepEnum.BASIC);
   const isAllFormDeleted = isStepDeleted(StepEnum.ALL);
 
+  if (wasCertificateStepFetched) {
+    const { stepper } = Store.getState();
+    if (!stepper?.steps) {
+      // init stepper
+      setInitialState(certificateStep?.form);
+    }
+  }
   if (hasBeenUploaded || hasFileUploadedFail) {
     // reload the step
     setTimeout(() => {
@@ -81,18 +88,10 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
       updateCertificateStep(payload);
     }
   };
-  useEffect(() => {
-    if (wasCertificateStepFetched) {
-      const { stepper } = Store.getState();
-      if (!stepper?.steps) {
-        // init stepper
-        setInitialState(certificateStep?.form);
-      }
-    }
-  }, [wasCertificateStepFetched, certificateStep?.form, setInitialState]);
 
   useEffect(() => {
     if (isBasicStepDeleted) {
+      console.log('isBasicStepDeleted');
       const payload = {
         step: StepEnum.BASIC,
         isDeleted: false
@@ -103,6 +102,7 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
     }
 
     if (isAllFormDeleted) {
+      console.log('isAllFormDeleted');
       const payload = {
         step: StepEnum.ALL,
         isDeleted: false

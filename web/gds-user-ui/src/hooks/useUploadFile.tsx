@@ -45,11 +45,11 @@ const useUploadFile = () => {
         position: 'top-right'
       });
     }
-    // file should be up to 100kb
+    // file should'nt be up to 100kb
     if (file?.size > 100000) {
       toast({
         title: 'Invalid file size.',
-        description: `Please upload a JSON file. The maximum file size is 100KB.`,
+        description: `JSON file size is too large. The maximum file size is 100KB. Please inspect your form or contact support for assistance.`,
         status: 'error',
         duration: 5000,
         isClosable: true,
