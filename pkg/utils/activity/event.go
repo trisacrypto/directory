@@ -69,15 +69,15 @@ type Activity uint16
 
 const (
 	UnknownActivity Activity = iota
-	Lookup
-	Search
+	LookupActivity
+	SearchActivity
 )
 
 func (a Activity) String() string {
 	switch a {
-	case Lookup:
+	case LookupActivity:
 		return "lookup"
-	case Search:
+	case SearchActivity:
 		return "search"
 	default:
 		return "unknown"

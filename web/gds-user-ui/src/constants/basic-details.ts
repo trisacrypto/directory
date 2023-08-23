@@ -48,6 +48,11 @@ export const vaspCategories = [
     label: 'Legal Person'
   },
   {
+    value: 'Non VASP Entity',
+    label: 'Non VASP Entity'
+  },
+
+  {
     value: 'Other',
     label: 'Other'
   }

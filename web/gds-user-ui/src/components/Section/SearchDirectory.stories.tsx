@@ -8,6 +8,7 @@ interface SearchDirectoryProps {
   result: any;
   error: string;
   query: string;
+  options: any;
 }
 
 export default {
