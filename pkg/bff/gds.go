@@ -1227,7 +1227,7 @@ func (s *Server) RegistrationStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
-func (s *Server) GetNetworkActivity(c *gin.Context) {
+func (s *Server) NetworkActivity(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, api.ErrorResponse(fmt.Errorf("not implemented")))
 }
 

@@ -20,7 +20,7 @@ type BFFClient interface {
 	Lookup(context.Context, *LookupParams) (*LookupReply, error)
 	LookupAutocomplete(context.Context) (map[string]string, error)
 	VerifyContact(context.Context, *VerifyContactParams) (*VerifyContactReply, error)
-	GetNetworkActivity(context.Context) (*NetworkActivityReply, error)
+	NetworkActivity(context.Context) (*NetworkActivityReply, error)
 
 	// User Management Endpoints
 	Login(context.Context, *LoginParams) error

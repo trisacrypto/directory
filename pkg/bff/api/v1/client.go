@@ -612,7 +612,7 @@ func (s *APIv1) Attention(ctx context.Context) (out *AttentionReply, err error) 
 	return out, nil
 }
 
-func (s *APIv1) GetNetworkActivity(ctx context.Context) (out *NetworkActivityReply, err error) {
+func (s *APIv1) NetworkActivity(ctx context.Context) (out *NetworkActivityReply, err error) {
 	// Make the HTTP request
 	var req *http.Request
 	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/network/activity", nil, nil); err != nil {

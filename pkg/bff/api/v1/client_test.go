@@ -1130,7 +1130,7 @@ func TestNoAttention(t *testing.T) {
 	require.Nil(t, out)
 }
 
-func TestGetNetworkActivity(t *testing.T) {
+func TestNetworkActivity(t *testing.T) {
 	TestNetActivity := []api.Activity{
 		{
 			Date:   "Aug 21",
@@ -1173,7 +1173,7 @@ func TestGetNetworkActivity(t *testing.T) {
 	client, err := api.New(ts.URL)
 	require.NoError(t, err)
 
-	out, err := client.GetNetworkActivity(context.TODO())
+	out, err := client.NetworkActivity(context.TODO())
 	require.NoError(t, err)
 	require.Equal(t, fixture, out)
 	require.Equal(t, fixture.TestNet, out.TestNet)

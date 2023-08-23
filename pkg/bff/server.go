@@ -372,7 +372,7 @@ func (s *Server) setupRoutes() (err error) {
 		v1.GET("/verify", s.VerifyContact)
 		v1.POST("/users/login", userinfo, s.Login)
 		v1.GET("/users/roles", s.ListUserRoles)
-		v1.GET("/network/activity", s.GetNetworkActivity)
+		v1.GET("/network/activity", s.NetworkActivity)
 
 		// Authenticated routes
 		// Logged-in user queries and updates
