@@ -1,6 +1,7 @@
 package activity
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -14,8 +15,6 @@ var (
 	mu          sync.Mutex
 	running     bool
 	enabled     bool
-	topic       string
-	activity    *NetworkActivity
 	ticker      *time.Ticker
 	recv        chan *Entry
 	wg          *sync.WaitGroup
@@ -33,7 +32,6 @@ func Start(conf Config) (err error) {
 
 		enabled = conf.Enabled
 		if enabled {
-			topic = conf.Topic
 			ticker = time.NewTicker(conf.AggregationWindow)
 			recv = make(chan *Entry, 1000)
 
@@ -73,6 +71,7 @@ func Publish() {
 			// TODO: Add the activity event to the aggregation
 		case <-ticker.C:
 			// TODO: Publish the aggregated events to Ensign and reset the aggregation
+			client.Status(context.Background())
 		}
 	}
 }
@@ -106,8 +105,6 @@ func Reset() {
 	}
 	running = false
 	enabled = false
-	topic = ""
-	activity = nil
 	ticker = nil
 	recv = nil
 	wg = nil
