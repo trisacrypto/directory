@@ -20,6 +20,7 @@ type BFFClient interface {
 	Lookup(context.Context, *LookupParams) (*LookupReply, error)
 	LookupAutocomplete(context.Context) (map[string]string, error)
 	VerifyContact(context.Context, *VerifyContactParams) (*VerifyContactReply, error)
+	NetworkActivity(context.Context) (*NetworkActivityReply, error)
 
 	// User Management Endpoints
 	Login(context.Context, *LoginParams) error
@@ -388,4 +389,18 @@ type AttentionMessage struct {
 type NetworkError struct {
 	TestNet string `json:"testnet,omitempty"`
 	MainNet string `json:"mainnet,omitempty"`
+}
+
+// Activity is a time-aggregated collection of events (Search, Lookup, etc)
+type Activity struct {
+	Date   string `json:"date"`
+	Events int    `json:"events"`
+}
+
+// NetworkActivityReply is a map of the network (TestNet or MainNet) to Activity,
+// which is a time-aggregated collection of events (Search, Lookup, etc)
+// that occurred on the network
+type NetworkActivityReply struct {
+	TestNet []Activity `json:"testnet"`
+	MainNet []Activity `json:"mainnet"`
 }
