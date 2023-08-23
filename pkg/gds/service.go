@@ -13,6 +13,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/store"
+	"github.com/trisacrypto/directory/pkg/utils/activity"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
@@ -96,6 +97,11 @@ func New(conf config.Config) (s *Service, err error) {
 
 	// Create the certificate manager
 	if s.certman, err = certman.New(conf.CertMan, s.db, s.secret, s.email); err != nil {
+		return nil, err
+	}
+
+	// Start the activity publisher
+	if err = activity.Start(conf.Activity); err != nil {
 		return nil, err
 	}
 

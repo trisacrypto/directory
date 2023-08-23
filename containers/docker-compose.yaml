@@ -70,6 +70,7 @@ services:
       - GDS_SENTRY_DSN
       - GDS_SENTRY_ENVIRONMENT
       - GDS_SENTRY_TRACK_PERFORMANCE
+      - GDS_ACTIVITY_ENABLED=false
 
     profiles:
       - gds
@@ -181,6 +182,7 @@ services:
       - GDS_BFF_USER_CACHE_ENABLED
       - GDS_BFF_USER_CACHE_SIZE=100
       - GDS_BFF_USER_CACHE_EXPIRATION=5m
+      - GDS_ACTIVITY_ENABLED=false
 
     profiles:
       - api
@@ -337,6 +339,7 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS
       - GOOGLE_PROJECT_NAME
       - GDS_SECRETS_TESTING
+      - GDS_ACTIVITY_ENABLED=false
     profiles:
       - gds
       - api

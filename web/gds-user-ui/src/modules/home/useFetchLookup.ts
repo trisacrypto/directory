@@ -22,7 +22,7 @@ const useFetchLookup = () => {
       try {
         const response = await lookup(query);
         if (!response.mainnet && !response.testnet) setError('No data found');
-        setData(data);
+        setData(response);
         setSearchString(searchQuery);
       } catch (e: any) {
         if (!e?.response?.data?.success) {

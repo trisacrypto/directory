@@ -12,6 +12,8 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
 	"github.com/trisacrypto/directory/pkg/store/config"
+	"github.com/trisacrypto/directory/pkg/utils/activity"
+	"github.com/trisacrypto/directory/pkg/utils/ensign"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"github.com/trisacrypto/trisa/pkg/trisa/mtls"
@@ -44,6 +46,7 @@ type Config struct {
 	Database     config.StoreConfig
 	Email        EmailConfig
 	Sentry       sentry.Config
+	Activity     activity.Config
 	processed    bool
 }
 
@@ -98,6 +101,12 @@ type CacheConfig struct {
 	Enabled    bool          `split_words:"true" default:"false"`
 	Size       uint          `split_words:"true" default:"16384"`
 	Expiration time.Duration `split_words:"true" default:"8h"`
+}
+
+type ActivityConfig struct {
+	Enabled bool   `split_words:"true" default:"false"`
+	Topic   string `split_words:"true"`
+	Ensign  ensign.Config
 }
 
 // New creates a new Config object from environment variables prefixed with GDS_BFF.

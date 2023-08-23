@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/store/config"
+	"github.com/trisacrypto/directory/pkg/utils/activity"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
@@ -32,6 +33,7 @@ type Config struct {
 	Backup      BackupConfig
 	Secrets     SecretsConfig
 	Sentry      sentry.Config
+	Activity    activity.Config
 	processed   bool
 }
 

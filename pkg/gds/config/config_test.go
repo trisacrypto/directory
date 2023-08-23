@@ -68,6 +68,14 @@ var testEnv = map[string]string{
 	"GDS_SENTRY_DEBUG":                         "true",
 	"GDS_SENTRY_TRACK_PERFORMANCE":             "true",
 	"GDS_SENTRY_SAMPLE_RATE":                   "0.2",
+	"GDS_ACTIVITY_ENABLED":                     "true",
+	"GDS_ACTIVITY_TOPIC":                       "gds-activity",
+	"GDS_ACTIVITY_AGGREGATION_WINDOW":          "10m",
+	"GDS_ACTIVITY_ENSIGN_CLIENT_ID":            "client-id",
+	"GDS_ACTIVITY_ENSIGN_CLIENT_SECRET":        "client-secret",
+	"GDS_ACTIVITY_ENSIGN_ENDPOINT":             "api.ensign.world:443",
+	"GDS_ACTIVITY_ENSIGN_AUTH_URL":             "https://auth.ensign.world",
+	"GDS_ACTIVITY_ENSIGN_INSECURE":             "true",
 }
 
 func TestConfig(t *testing.T) {
@@ -146,6 +154,14 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, true, conf.Sentry.Debug)
 	require.Equal(t, .2, conf.Sentry.SampleRate)
 	require.True(t, conf.Secrets.Testing)
+	require.True(t, conf.Activity.Enabled)
+	require.Equal(t, testEnv["GDS_ACTIVITY_TOPIC"], conf.Activity.Topic)
+	require.Equal(t, 10*time.Minute, conf.Activity.AggregationWindow)
+	require.Equal(t, testEnv["GDS_ACTIVITY_ENSIGN_CLIENT_ID"], conf.Activity.Ensign.ClientID)
+	require.Equal(t, testEnv["GDS_ACTIVITY_ENSIGN_CLIENT_SECRET"], conf.Activity.Ensign.ClientSecret)
+	require.Equal(t, testEnv["GDS_ACTIVITY_ENSIGN_ENDPOINT"], conf.Activity.Ensign.Endpoint)
+	require.Equal(t, testEnv["GDS_ACTIVITY_ENSIGN_AUTH_URL"], conf.Activity.Ensign.AuthURL)
+	require.Equal(t, true, conf.Activity.Ensign.Insecure)
 }
 
 func TestAuthorizedDomainsPreprocessing(t *testing.T) {
