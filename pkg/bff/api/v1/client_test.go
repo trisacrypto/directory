@@ -1130,6 +1130,56 @@ func TestNoAttention(t *testing.T) {
 	require.Nil(t, out)
 }
 
+func TestNetworkActivity(t *testing.T) {
+	TestNetActivity := []api.Activity{
+		{
+			Date:   "Aug 21",
+			Events: 10,
+		},
+		{
+			Date:   "Aug 22",
+			Events: 20,
+		},
+	}
+
+	MainNetActivity := []api.Activity{
+		{
+			Date:   "Aug 21",
+			Events: 15,
+		},
+		{
+			Date:   "Aug 22",
+			Events: 25,
+		},
+	}
+
+	fixture := &api.NetworkActivityReply{
+		TestNet: TestNetActivity,
+		MainNet: MainNetActivity,
+	}
+
+	// Create a Test Server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/network/activity", r.URL.Path)
+
+		w.Header().Add("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(fixture)
+	}))
+	defer ts.Close()
+
+	// Create a Client that makes requests to the test server
+	client, err := api.New(ts.URL)
+	require.NoError(t, err)
+
+	out, err := client.NetworkActivity(context.TODO())
+	require.NoError(t, err)
+	require.Equal(t, fixture, out)
+	require.Equal(t, fixture.TestNet, out.TestNet)
+	require.Equal(t, fixture.MainNet, out.MainNet)
+}
+
 func loadFixture(path string, v interface{}) (err error) {
 	switch t := v.(type) {
 	case proto.Message:
