@@ -14,7 +14,7 @@ const useUploadFile = () => {
     reset();
     toast({
       title: 'File uploaded',
-      description: 'Your file has been uploaded successfully',
+      description: 'Your file has been uploaded successfully.',
       status: 'success',
       duration: 5000,
       isClosable: true,
@@ -26,7 +26,7 @@ const useUploadFile = () => {
     reset();
     toast({
       title: 'Invalid file',
-      description: error.message || 'Your json file is invalid',
+      description: error.message || 'Your json file is invalid.',
       status: 'error',
       duration: 5000,
       isClosable: true,
@@ -91,7 +91,7 @@ const useUploadFile = () => {
 
         toast({
           title: 'Invalid file',
-          description: e.message || 'Your json file is invalid',
+          description: e.message || 'Your json file is invalid.',
           status: 'error',
           duration: 5000,
           isClosable: true,

@@ -21,14 +21,14 @@ const useFetchLookup = () => {
       setIsLoading(true);
       try {
         const response = await lookup(query);
-        if (!response.mainnet || !response.testnet) setError('No data found');
+        if (!response.mainnet && !response.testnet) setError('No data found');
         setData(data);
         setSearchString(searchQuery);
       } catch (e: any) {
         if (!e?.response?.data?.success) {
           setError(e?.response?.data?.error);
         } else {
-          setError('Something went wrong');
+          setError('Something went wrong.');
         }
       } finally {
         setIsLoading(false);
