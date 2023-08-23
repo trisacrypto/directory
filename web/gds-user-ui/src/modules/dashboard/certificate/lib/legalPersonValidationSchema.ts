@@ -7,9 +7,8 @@ const _i18n = setupI18n();
 
 export const legalPersonValidationSchemam = yup.object().shape({
   entity: yup.object().shape({
-    country_of_registration: yup
-      .string()
-      .required(_i18n._(t`Country of registration is required.`)),
+    country_of_registration: yup.string(),
+    // .required(_i18n._(t`Country of registration is required.`)),
     name: yup.object().shape({
       name_identifiers: yup.array(
         yup.object().shape({
@@ -86,25 +85,10 @@ export const legalPersonValidationSchemam = yup.object().shape({
       })
     ),
     national_identification: yup.object().shape({
-      national_identifier: yup.string().required(),
+      national_identifier: yup.string(),
       national_identifier_type: yup.string(),
       country_of_issue: yup.string(),
-      registration_authority: yup
-        .string()
-        .test(
-          'registrationAuthority',
-          _i18n._(t`Registration Authority cannot be left empty.`),
-          (value, ctx) => {
-            if (
-              ctx.parent.national_identifier_type !== 'NATIONAL_IDENTIFIER_TYPE_CODE_LEIX' &&
-              !value
-            ) {
-              return false;
-            }
-
-            return true;
-          }
-        )
+      registration_authority: yup.string()
     }),
     customer_number: yup.string().notRequired()
   })

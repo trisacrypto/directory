@@ -22,6 +22,8 @@ interface LegalFormProps {
   isLoading?: boolean;
   shouldResetForm?: boolean;
   onResetFormState?: Dispatch<SetStateAction<boolean>>;
+  onNextClick?: () => void;
+  onPreviousClick?: () => void;
 }
 const LegalForm: React.FC<LegalFormProps> = ({ data, shouldResetForm, onResetFormState }) => {
   const { isOpen, onClose, onOpen } = useDisclosure();
