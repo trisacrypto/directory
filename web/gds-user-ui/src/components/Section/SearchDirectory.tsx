@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { FormEvent, useState } from 'react';
 import {
   Stack,
@@ -22,9 +23,16 @@ import {
   Tab,
   TabPanel,
   TableContainer,
-  Input,
+  // Input,
   Tbody
 } from '@chakra-ui/react';
+
+import {
+  AutoComplete,
+  AutoCompleteInput,
+  AutoCompleteItem,
+  AutoCompleteList
+} from '@choc-ui/chakra-autocomplete';
 
 import { SearchIcon } from '@chakra-ui/icons';
 import { colors } from 'utils/theme';
@@ -41,15 +49,22 @@ type TSearchDirectory = {
   error: string;
   query: string;
   handleClose?: () => void;
+  options: any[];
 };
 const SearchDirectory: React.FC<TSearchDirectory> = ({
   handleSubmit,
   isLoading,
   result,
   error,
-  handleClose
+  handleClose,
+  options
 }) => {
   const [search, setSearch] = useState<string>('');
+
+  // Object.keys(options)?.map((oid: any) => {
+  //   console.log('option k', oid);
+  //   console.log('option v', options[oid]);
+  // });
 
   return (
     <Flex
@@ -83,15 +98,32 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
               <form onSubmit={(e) => handleSubmit(e, search)}>
                 <FormControl color={'gray.500'}>
                   <HStack>
-                    <Input
-                      size="md"
-                      width={'100%'}
-                      type="search"
-                      isRequired
-                      placeholder={t`Common name or VASP ID`}
-                      name="search"
-                      onChange={(event: any) => setSearch(event.currentTarget.value)}
-                    />
+                    <AutoComplete
+                      rollNavigation
+                      // no found message
+                      noOptionsMessage="No VASP found">
+                      <AutoCompleteInput
+                        variant="filled"
+                        placeholder="Common name or VASP ID"
+                        autoFocus
+                      />
+                      <AutoCompleteList>
+                        {Object.keys(options)?.map((oid: any) => (
+                          <AutoCompleteItem
+                            key={`option-${oid}`}
+                            value={options[oid]}
+                            label={oid}
+                            onClick={() => {
+                              // console.log('option', option);
+                              setSearch(options[oid]);
+                            }}
+                            textTransform="capitalize">
+                            {oid}
+                          </AutoCompleteItem>
+                        ))}
+                      </AutoCompleteList>
+                    </AutoComplete>
+
                     <Button
                       isLoading={isLoading}
                       variant="outline"
