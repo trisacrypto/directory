@@ -61,12 +61,6 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
 }) => {
   const [search, setSearch] = useState<string>('');
 
-  Object.keys(options)?.map((oid: any, id: any) => {
-    console.log('option id', id);
-    console.log('option k', oid);
-    console.log('option v', options[oid]);
-  });
-
   return (
     <Flex
       py={12}
