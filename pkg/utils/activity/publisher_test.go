@@ -103,10 +103,8 @@ func TestPublisher(t *testing.T) {
 				assert.Equal(t, uint64(1), acv.VASPActivity[vaspID][activity.SearchActivity], "expected search activity to be 1 for VASP")
 				search = true
 			}
-
-			published <- struct{}{}
-			return nil
 		}
+		published <- struct{}{}
 
 		return nil
 	}
