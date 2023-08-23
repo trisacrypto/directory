@@ -14,8 +14,7 @@ export function useFetchCollaborators(): getCollaborators {
 
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error?.message,
+        description: error?.message || 'Something went wrong.',
         status: 'error',
         duration: 5000,
         isClosable: true
