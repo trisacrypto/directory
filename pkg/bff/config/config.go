@@ -12,6 +12,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
 	"github.com/trisacrypto/directory/pkg/store/config"
+	"github.com/trisacrypto/directory/pkg/utils/activity"
 	"github.com/trisacrypto/directory/pkg/utils/ensign"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
@@ -45,7 +46,7 @@ type Config struct {
 	Database     config.StoreConfig
 	Email        EmailConfig
 	Sentry       sentry.Config
-	Activity     ActivityConfig
+	Activity     activity.Config
 	processed    bool
 }
 
@@ -307,20 +308,6 @@ func (c CacheConfig) Validate() error {
 			return errors.New("invalid configuration: cache expiration must be greater than 0")
 		}
 	}
-	return nil
-}
-
-func (c ActivityConfig) Validate() (err error) {
-	if c.Enabled {
-		if c.Topic == "" {
-			return errors.New("invalid configuration: activity topic is required")
-		}
-
-		if err = c.Ensign.Validate(); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 

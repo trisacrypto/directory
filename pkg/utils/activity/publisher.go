@@ -2,15 +2,17 @@ package activity
 
 import (
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/rotationalio/go-ensign"
+	"github.com/rotationalio/go-ensign/mock"
 )
 
 var (
+	start, stop sync.Once
 	mu          sync.Mutex
+	running     bool
 	enabled     bool
 	topic       string
 	activity    *NetworkActivity
@@ -18,30 +20,34 @@ var (
 	recv        chan *Entry
 	wg          *sync.WaitGroup
 	client      *ensign.Client
-	start, stop sync.Once
-	running     uint32
+	emock       *mock.Ensign
 )
 
-// Create the global activity publisher from the configuration.
-func NewPublisher(conf Config) (err error) {
+// Start the global activity publisher from the configuration.
+func Start(conf Config) (err error) {
 	start.Do(func() {
+		// Validate the configuration
+		if err = conf.Validate(); err != nil {
+			return
+		}
 
-		// TODO: Validate the configuration
-		/*
-			if err = conf.Validate(); err != nil {
-				return err
-			}*/
-
-		// Set variables for the singleton
 		enabled = conf.Enabled
-		topic = conf.Topic
-		ticker = time.NewTicker(conf.AggregationWindow)
-		recv = make(chan *Entry, 1000)
-		wg = &sync.WaitGroup{}
-
-		// TODO: Create Ensign client from configuration
-
 		if enabled {
+			topic = conf.Topic
+			ticker = time.NewTicker(conf.AggregationWindow)
+			recv = make(chan *Entry, 1000)
+
+			if conf.Testing {
+				// In testing mode, create the Ensign client using a mock server
+				emock = mock.New(nil)
+				if client, err = ensign.New(ensign.WithMock(emock)); err != nil {
+					return
+				}
+			} else if client, err = conf.Ensign.Client(); err != nil {
+				return
+			}
+
+			wg = &sync.WaitGroup{}
 			wg.Add(1)
 			go Publish()
 		}
@@ -50,21 +56,23 @@ func NewPublisher(conf Config) (err error) {
 	return err
 }
 
-// Publish events from the receiver channel to the Ensign topic.
+// Global goroutine that publishes activity entries from the receiver channel to the
+// Ensign topic as events.
 func Publish() {
+	mu.Lock()
+	running = true
+	mu.Unlock()
 	defer wg.Done()
-	atomic.AddUint32(&running, 1)
 	for {
 		select {
-		case entry, ok := <-recv:
+		case _, ok := <-recv:
 			if !ok {
 				return
 			}
-		// TODO: Add cases for the ticker and recv channel. If the ticker goes off,
-		// publish aggregated events to Ensign. When an event is received on the
-		// channel, add it to the aggregation.
-		case <-done:
-			return
+
+			// TODO: Add the activity event to the aggregation
+		case <-ticker.C:
+			// TODO: Publish the aggregated events to Ensign and reset the aggregation
 		}
 	}
 }
@@ -72,17 +80,48 @@ func Publish() {
 // Stop the publisher and wait for the goroutine to exit.
 func Stop() {
 	stop.Do(func() {
-		if atomic.LoadUint32(&running) > 0 {
+		mu.Lock()
+		defer mu.Unlock()
+		// Only stop the publisher if it is running
+		if running {
 			close(recv)
 			wg.Wait()
 		}
 
-		atomic.AddUint32(&running, ^uint32(0))
+		running = false
 	})
 }
 
-// Entries are created from external go routines and are eventually published by the
-// activity publisher.
+// Reset the publisher to allow NewPublisher() to be called again, this method should
+// only be used for testing.
+func Reset() {
+	mu.Lock()
+	defer mu.Unlock()
+	start = sync.Once{}
+	stop = sync.Once{}
+
+	if running {
+		close(recv)
+		wg.Wait()
+	}
+	running = false
+	enabled = false
+	topic = ""
+	activity = nil
+	ticker = nil
+	recv = nil
+	wg = nil
+	client = nil
+	emock = nil
+}
+
+// Expose the ensign server mock to the tests.
+func GetEnsignMock() *mock.Ensign {
+	return emock
+}
+
+// Entries are created from external go routines and are eventually published as Events
+// to Ensign by the activity publisher.
 type Entry struct {
 	ts       time.Time
 	vasp     uuid.UUID
@@ -102,19 +141,19 @@ func (e *Entry) VASP(id uuid.UUID) *Entry {
 	return e
 }
 
-// Lookup creates a new activity event for a lookup. Must call Add() to commit the
-// event.
+// Lookup creates a new activity entry for a lookup. Must call Add() to commit the
+// entry.
 func Lookup() *Entry {
 	return newEvent(LookupActivity)
 }
 
-// Search creates a new activity event for a search. Must call Add() to commit the
-// event.
+// Search creates a new activity entry for a search. Must call Add() to commit the
+// entry.
 func Search() *Entry {
 	return newEvent(SearchActivity)
 }
 
-// Send an activity event to the publisher.
+// Add the activity entry to the publisher.
 func (e *Entry) Add() {
 	e.ts = time.Now()
 	if enabled {
