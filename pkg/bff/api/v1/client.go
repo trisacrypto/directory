@@ -612,6 +612,21 @@ func (s *APIv1) Attention(ctx context.Context) (out *AttentionReply, err error) 
 	return out, nil
 }
 
+func (s *APIv1) GetNetworkActivity(ctx context.Context) (out *NetworkActivityReply, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/network/activity", nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &NetworkActivityReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 //===========================================================================
 // Helper Methods
 //===========================================================================

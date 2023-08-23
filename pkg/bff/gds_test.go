@@ -1574,3 +1574,7 @@ func (s *bffTestSuite) TestRegistrationStatus() {
 	require.Equal(org.Testnet.Submitted, reply.TestNetSubmitted, "expected testnet timestamp to be returned")
 	require.Equal(org.Mainnet.Submitted, reply.MainNetSubmitted, "expected mainnet timestamp to be returned")
 }
+
+func (s *bffTestSuite) TestGetNetworkActivity() {
+	s.T().Skip("not implemented yet")
+}

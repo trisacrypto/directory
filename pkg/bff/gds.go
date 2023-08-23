@@ -1227,6 +1227,10 @@ func (s *Server) RegistrationStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
+func (s *Server) GetNetworkActivity(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, api.ErrorResponse(fmt.Errorf("not implemented")))
+}
+
 // Checks if the user supplied registered directory is one of the known directories that
 // maps to either the testnet or to the mainnet (by domain).
 func validRegisteredDirectory(r string) bool {
