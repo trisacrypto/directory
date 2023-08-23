@@ -11,6 +11,7 @@ type Config struct {
 	Endpoint     string `split_words:"true" default:"ensign.rotational.app:443"`
 	AuthURL      string `split_words:"true" default:"https://auth.rotational.app"`
 	Insecure     bool   `split_words:"true" default:"false"`
+	Testing      bool   `split_words:"true" default:"false"`
 }
 
 func (c Config) Validate() error {

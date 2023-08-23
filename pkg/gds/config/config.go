@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/store/config"
-	"github.com/trisacrypto/directory/pkg/utils/ensign"
+	"github.com/trisacrypto/directory/pkg/utils/activity"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
@@ -33,7 +33,7 @@ type Config struct {
 	Backup      BackupConfig
 	Secrets     SecretsConfig
 	Sentry      sentry.Config
-	Activity    ActivityConfig
+	Activity    activity.Config
 	processed   bool
 }
 
@@ -102,13 +102,6 @@ type SecretsConfig struct {
 	Credentials string `envconfig:"GOOGLE_APPLICATION_CREDENTIALS" required:"false"`
 	Project     string `envconfig:"GOOGLE_PROJECT_NAME" required:"false"`
 	Testing     bool   `split_words:"true" default:"false"`
-}
-
-type ActivityConfig struct {
-	Enabled           bool          `split_words:"true" default:"false"`
-	Topic             string        `split_words:"true"`
-	AggregationWindow time.Duration `split_words:"true" default:"5m"`
-	Ensign            ensign.Config
 }
 
 // New creates a new Config object, loading environment variables and defaults.
@@ -250,20 +243,6 @@ func (c EmailConfig) Validate() error {
 func (c CertManConfig) Validate() (err error) {
 	if err = c.Sectigo.Validate(); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-func (c ActivityConfig) Validate() (err error) {
-	if c.Enabled {
-		if c.Topic == "" {
-			return errors.New("invalid configuration: activity topic is required")
-		}
-
-		if err = c.Ensign.Validate(); err != nil {
-			return err
-		}
 	}
 
 	return nil

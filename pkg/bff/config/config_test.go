@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/bff/config"
-	"github.com/trisacrypto/directory/pkg/utils/ensign"
 )
 
 var testEnv = map[string]string{
@@ -342,35 +341,6 @@ func TestCacheConfigValidation(t *testing.T) {
 	conf.Enabled = false
 	err = conf.Validate()
 	require.NoError(t, err, "expected valid configuration")
-}
-
-func TestActivityValidation(t *testing.T) {
-	conf := config.ActivityConfig{
-		Enabled: true,
-		Ensign: ensign.Config{
-			ClientID:     "client-id",
-			ClientSecret: "client-secret",
-			Endpoint:     "api.ensign.world:443",
-			AuthURL:      "https://auth.ensign.world",
-		},
-	}
-
-	// Test error is returned for missing topic
-	require.EqualError(t, conf.Validate(), "invalid configuration: activity topic is required")
-
-	// Test error is returned for invalid ensign configuration
-	conf.Topic = "network-activity"
-	conf.Ensign.ClientID = ""
-	require.ErrorIs(t, conf.Validate(), ensign.ErrMissingClientID)
-
-	// Test disabled configuration is valid
-	conf.Enabled = false
-	require.NoError(t, conf.Validate())
-
-	// Test valid enabled configuration
-	conf.Enabled = true
-	conf.Ensign.ClientID = "client-id"
-	require.NoError(t, conf.Validate())
 }
 
 // Returns the current environment for the specified keys, or if no keys are specified
