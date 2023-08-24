@@ -37,6 +37,9 @@ const TrisaImplementation: React.FC = () => {
       getCertificateStep();
       setShouldResetForm(true);
     }
+    return () => {
+      setShouldResetForm(false);
+    };
   }, [
     isStepDeleted,
     updateDeleteStepState,

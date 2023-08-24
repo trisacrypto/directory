@@ -33,6 +33,9 @@ const TrixoQuestionnaire: React.FC = () => {
       getCertificateStep();
       setShouldResetForm(true);
     }
+    return () => {
+      setShouldResetForm(false);
+    };
   }, [
     isStepDeleted,
     updateDeleteStepState,

@@ -112,6 +112,10 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
       setShouldResetForm(true);
     }
 
+    return () => {
+      setShouldResetForm(false);
+    };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isStepDeleted, isAllFormDeleted, isBasicStepDeleted]);
 
