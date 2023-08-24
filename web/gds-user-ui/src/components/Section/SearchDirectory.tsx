@@ -93,23 +93,21 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
               <form onSubmit={(e) => handleSubmit(e, search)}>
                 <FormControl color={'gray.500'}>
                   <HStack>
-                    <AutoComplete
-                      rollNavigation
-                      // no found message
-                      noOptionsMessage="No VASP found">
+                    <AutoComplete rollNavigation>
                       <AutoCompleteInput
-                        variant="filled"
+                        variant="outline"
                         placeholder="Common name or VASP ID"
                         autoFocus
                       />
+
                       <AutoCompleteList>
                         {Object.keys(options)?.map((oid: any, id: any) => (
                           <AutoCompleteItem
                             key={`option-${id}`}
                             value={oid}
                             label={oid}
-                            onClick={() => {
-                              setSearch(oid);
+                            onClick={(e: any) => {
+                              handleSubmit(e, oid);
                             }}
                             textTransform="capitalize">
                             {oid}
