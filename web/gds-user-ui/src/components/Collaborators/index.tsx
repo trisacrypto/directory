@@ -110,7 +110,7 @@ const CollaboratorsSection: React.FC = () => {
   const [isAddCollaboratorModalOpen, setIsAddCollaboratorModalOpen] = useState<boolean>(false);
 
   if (error) {
-    return <Stack>Failed to fetch collaborators</Stack>;
+    return <Stack>Failed to fetch collaborators.</Stack>;
   }
 
   if (isFetchingCollaborators) {
