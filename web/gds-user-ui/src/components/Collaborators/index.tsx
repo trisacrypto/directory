@@ -92,7 +92,7 @@ const TableRow: React.FC<{ row: Collaborator }> = ({ row }) => {
 const TableRows: React.FC = () => {
   const { collaborators, error } = useFetchCollaborators();
   if (error) {
-    return <Stack>Failed to fetch collaborators</Stack>;
+    return <Stack>Failed to fetch collaborators.</Stack>;
   }
   return (
     <>
