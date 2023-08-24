@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
@@ -17,6 +18,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/store"
 	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
 	"github.com/trisacrypto/directory/pkg/utils"
+	activity "github.com/trisacrypto/directory/pkg/utils/activity"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -112,6 +114,9 @@ func (s *GDS) Shutdown() (err error) {
 // Register generates a PKCS12 password, provided in the RPC response which can be
 // used to access the certificate private keys when they're emailed.
 func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.RegisterReply, err error) {
+	// send register request activity to network activity handler
+	go activity.Register().Add()
+
 	vasp := &pb.VASP{
 		RegisteredDirectory: s.svc.conf.DirectoryID,
 		Entity:              in.Entity,
@@ -412,6 +417,13 @@ func (s *GDS) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.Looku
 		return nil, status.Error(codes.NotFound, "no VASP record available")
 	}
 
+	// send lookup request activity to network activity handler
+	if vasp != nil {
+		go activity.Lookup().VASP(uuid.MustParse(vasp.Id)).Add()
+	} else {
+		go activity.Lookup().Add()
+	}
+
 	// Prepare the response for the lookup
 	out = &api.LookupReply{
 		Id:                  vasp.Id,
@@ -440,6 +452,8 @@ func (s *GDS) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.Looku
 // Search for VASP entity records by name or by country in order to perform more detailed
 // Lookup requests. The search process is purposefully simplistic at the moment.
 func (s *GDS) Search(ctx context.Context, in *api.SearchRequest) (out *api.SearchReply, err error) {
+	// send search request activity to network activity handler
+	go activity.Search().Add()
 	if _, ok := ctx.Deadline(); !ok {
 		ctx, _ = utils.WithDeadline(ctx)
 	}

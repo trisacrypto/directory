@@ -150,6 +150,12 @@ func Search() *Entry {
 	return newEvent(SearchActivity)
 }
 
+// Search creates a new activity entry for registering a Vasp. Must call Add() to
+// commit the entry.
+func Register() *Entry {
+	return newEvent(RegisterActivity)
+}
+
 // Add the activity entry to the publisher.
 func (e *Entry) Add() {
 	e.ts = time.Now()

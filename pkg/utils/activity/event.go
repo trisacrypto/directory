@@ -71,6 +71,7 @@ const (
 	UnknownActivity Activity = iota
 	LookupActivity
 	SearchActivity
+	RegisterActivity
 )
 
 func (a Activity) String() string {
@@ -79,6 +80,8 @@ func (a Activity) String() string {
 		return "lookup"
 	case SearchActivity:
 		return "search"
+	case RegisterActivity:
+		return "register"
 	default:
 		return "unknown"
 	}
