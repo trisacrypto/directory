@@ -9,7 +9,7 @@ import (
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
-	"github.com/kelseyhightower/envconfig"
+	"github.com/rotationalio/confire"
 	"github.com/rs/zerolog"
 	"github.com/trisacrypto/directory/pkg/store/config"
 	"github.com/trisacrypto/directory/pkg/utils/activity"
@@ -111,12 +111,8 @@ type ActivityConfig struct {
 
 // New creates a new Config object from environment variables prefixed with GDS_BFF.
 func New() (conf Config, err error) {
-	if err = envconfig.Process("gds_bff", &conf); err != nil {
-		return Config{}, err
-	}
-
-	// Validate the configuration
-	if err = conf.Validate(); err != nil {
+	// Load and validate the configuration from the environment.
+	if err = confire.Process("gds_bff", &conf); err != nil {
 		return Config{}, err
 	}
 

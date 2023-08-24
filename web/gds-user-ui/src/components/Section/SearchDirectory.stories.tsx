@@ -9,6 +9,7 @@ interface SearchDirectoryProps {
   error: string;
   query: string;
   options: any;
+  onResetData: () => void;
 }
 
 export default {

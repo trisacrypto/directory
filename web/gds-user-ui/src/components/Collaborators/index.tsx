@@ -90,7 +90,10 @@ const TableRow: React.FC<{ row: Collaborator }> = ({ row }) => {
 };
 
 const TableRows: React.FC = () => {
-  const { collaborators } = useFetchCollaborators();
+  const { collaborators, error } = useFetchCollaborators();
+  if (error) {
+    return <Stack>Failed to fetch collaborators.</Stack>;
+  }
   return (
     <>
       {sortCollaboratorsByRecentDate(collaborators).map((collaborator: Collaborator) => (
@@ -101,10 +104,14 @@ const TableRows: React.FC = () => {
 };
 
 const CollaboratorsSection: React.FC = () => {
-  const { isFetchingCollaborators, hasCollaboratorsFailed } = useFetchCollaborators();
+  const { isFetchingCollaborators, hasCollaboratorsFailed, error } = useFetchCollaborators();
 
   const { onOpen, isOpen, onClose } = useDisclosure();
   const [isAddCollaboratorModalOpen, setIsAddCollaboratorModalOpen] = useState<boolean>(false);
+
+  if (error) {
+    return <Stack>Failed to fetch collaborators.</Stack>;
+  }
 
   if (isFetchingCollaborators) {
     return <Loader />;
