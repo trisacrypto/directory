@@ -49,6 +49,7 @@ type TSearchDirectory = {
   error: string;
   query: string;
   handleClose?: () => void;
+  onResetData: () => void;
   options: any[];
 };
 const SearchDirectory: React.FC<TSearchDirectory> = ({
@@ -57,7 +58,8 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
   result,
   error,
   handleClose,
-  options
+  options,
+  onResetData
 }) => {
   const [search, setSearch] = useState<string>('');
 
@@ -93,23 +95,23 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
               <form onSubmit={(e) => handleSubmit(e, search)}>
                 <FormControl color={'gray.500'}>
                   <HStack>
-                    <AutoComplete
-                      rollNavigation
-                      // no found message
-                      noOptionsMessage="No VASP found">
+                    <AutoComplete rollNavigation>
                       <AutoCompleteInput
-                        variant="filled"
+                        variant="outline"
                         placeholder="Common name or VASP ID"
                         autoFocus
                       />
+
                       <AutoCompleteList>
                         {Object.keys(options)?.map((oid: any, id: any) => (
                           <AutoCompleteItem
                             key={`option-${id}`}
                             value={oid}
                             label={oid}
-                            onClick={() => {
+                            onClick={(e: any) => {
+                              onResetData();
                               setSearch(oid);
+                              handleSubmit(e, oid);
                             }}
                             textTransform="capitalize">
                             {oid}

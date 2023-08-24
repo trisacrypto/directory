@@ -32,6 +32,7 @@ const HomePage: React.FC = () => {
         result={data}
         error={error}
         handleClose={() => resetData()}
+        onResetData={() => resetData()}
         query={search}
         options={vasps}
       />
