@@ -21,14 +21,12 @@ const LegalPerson: React.FC = () => {
     useFetchCertificateStep({
       key: StepEnum.LEGAL
     });
-  console.log('[] isLegalStepDeleted fetching', isFetchingCertificateStep);
-  // const [isDataChanged, setIsDataChanged] = React.useState(false);
+
   const { isStepDeleted, updateDeleteStepState } = useCertificateStepper();
   const isLegalStepDeleted = isStepDeleted(StepEnum.LEGAL);
-  console.log('[] isLegalStepDeleted render', isLegalStepDeleted);
+
   useEffect(() => {
     if (isLegalStepDeleted) {
-      console.log('[] isLegalStepDeleted', isLegalStepDeleted);
       const payload = {
         step: StepEnum.LEGAL,
         isDeleted: false
@@ -44,6 +42,11 @@ const LegalPerson: React.FC = () => {
     isLegalStepDeleted,
     shouldResetForm
   ]);
+
+  // rerender this view everytime user land on this page
+  useEffect(() => {
+    getCertificateStep();
+  }, [getCertificateStep]);
 
   return (
     <Stack spacing={7} mt="2rem">

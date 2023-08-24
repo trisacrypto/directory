@@ -109,6 +109,7 @@ const LegalForm: React.FC<LegalFormProps> = ({ data, shouldResetForm, onResetFor
       previousStepRef.current = true;
       // previousStep(updatedCertificateStep);
     }
+
     previousStep(data);
   };
 

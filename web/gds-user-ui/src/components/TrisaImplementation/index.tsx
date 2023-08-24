@@ -25,7 +25,7 @@ const TrisaImplementation: React.FC = () => {
   const [shouldResetForm, setShouldResetForm] = useState<boolean>(false);
   const { isStepDeleted, updateDeleteStepState } = useCertificateStepper();
   const isTrisaStepDeleted = isStepDeleted(StepEnum.TRISA);
-  console.log('[] isTrisaStepDeleted render', isTrisaStepDeleted);
+
   useEffect(() => {
     if (isTrisaStepDeleted) {
       console.log('[] isTrisaStepDeleted', isTrisaStepDeleted);
@@ -44,6 +44,11 @@ const TrisaImplementation: React.FC = () => {
     isTrisaStepDeleted,
     shouldResetForm
   ]);
+
+  // rerender this view everytime user land on this page
+  useEffect(() => {
+    getCertificateStep();
+  }, [getCertificateStep]);
 
   return (
     <Stack spacing={7} pt={8}>
