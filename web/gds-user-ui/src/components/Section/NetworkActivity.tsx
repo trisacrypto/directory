@@ -2,6 +2,7 @@ import { VStack } from '@chakra-ui/react';
 import { VictoryAxis, VictoryChart, VictoryLegend, VictoryLine, VictoryTheme, VictoryZoomContainer } from 'victory';
 import { mockNetworkActivityData } from './_mocks_';
 import formatDisplayedDate from 'utils/formatDisplayedDate';
+// import useFetchNetworkActivity from './useFetchNetworkActivity';
 
 const legendData = [
     { name: "TestNet", symbol: { fill: "black" } },
@@ -26,6 +27,8 @@ const sharedAxisStyles = {
 };
 
 const NetworkActivity = () => {
+  /* const { data } = useFetchNetworkActivity();
+  console.log(data); */
     return (
         <section>
           <VStack maxW={'5xl'} margin="auto" marginTop={10}>
@@ -35,17 +38,16 @@ const NetworkActivity = () => {
               width={600} 
               style={{ background: { fill: "#F7F9FB" } }} 
               theme={VictoryTheme.material}
-              scale={{ x: "time" }} 
+              // scale={{ x: "time" }} 
             >
               <VictoryLegend 
                 data={legendData} 
-                title="Network Activity |" 
                 orientation="horizontal" 
-                titleOrientation="left" 
-                x={150} 
+                x={225}
+                gutter={20}
               />
               <VictoryAxis fixLabelOverlap={true} />
-              <VictoryAxis dependentAxis label="Events" style={sharedAxisStyles} />
+              <VictoryAxis dependentAxis label="Network Activity" style={sharedAxisStyles} />
               <VictoryLine data={testnetData} style={{ data: { stroke: "black" } }} />
               <VictoryLine data={mainnetData} style={{ data: { stroke: "#F1511B" } }}/>
             </VictoryChart>
