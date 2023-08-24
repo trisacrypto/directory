@@ -2,6 +2,7 @@ package activity
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,7 +14,6 @@ import (
 
 const (
 	NetworkActivityMimeType = mimetype.ApplicationMsgPack
-	NetworkActivityWindow   = 5 * time.Minute
 )
 
 var NetworkActivityEventType = api.Type{
@@ -33,7 +33,7 @@ type NetworkActivity struct {
 	Window       time.Duration               `msgpack:"window"`        // The window size of the aggregation window
 }
 
-func New(network Network, ts time.Time) *NetworkActivity {
+func New(network Network, window time.Duration, ts time.Time) *NetworkActivity {
 	if ts.IsZero() {
 		ts = time.Now()
 	}
@@ -43,7 +43,7 @@ func New(network Network, ts time.Time) *NetworkActivity {
 		Activity:     make(ActivityCount),
 		VASPActivity: make(map[uuid.UUID]ActivityCount),
 		Timestamp:    ts,
-		Window:       NetworkActivityWindow,
+		Window:       window,
 	}
 }
 
@@ -61,6 +61,13 @@ func Parse(event *ensign.Event) (_ *NetworkActivity, err error) {
 		return nil, err
 	}
 	return activity, nil
+}
+
+// Reset the activity counts to zero in preparation for a new aggregation window.
+func (a *NetworkActivity) Reset() {
+	a.Activity = make(ActivityCount)
+	a.VASPActivity = make(map[uuid.UUID]ActivityCount)
+	a.Timestamp = time.Now()
 }
 
 type ActivityCount map[Activity]uint64
@@ -106,6 +113,27 @@ func (n Network) String() string {
 	}
 }
 
+func (n Network) Validate() error {
+	if n == UnknownNetwork {
+		return ErrUnknownNetwork
+	}
+	return nil
+}
+
+func (n *Network) Decode(s string) error {
+	switch strings.TrimSpace(strings.ToLower(s)) {
+	case "testnet":
+		*n = TestNet
+	case "mainnet":
+		*n = MainNet
+	case "rvasp":
+		*n = RVASP
+	default:
+		return ErrUnknownNetwork
+	}
+	return nil
+}
+
 func (a *NetworkActivity) Incr(activity Activity) {
 	if a.Activity == nil {
 		a.Activity = make(ActivityCount)
@@ -138,6 +166,13 @@ func (a *NetworkActivity) Event() (_ *ensign.Event, err error) {
 	if event.Data, err = msgpack.Marshal(a); err != nil {
 		return nil, err
 	}
+
+	// Add metadata tags for future querying
+	event.Metadata["network"] = a.Network.String()
+	if len(a.Activity) > 0 {
+		event.Metadata["has_activity"] = "true"
+	}
+
 	return event, nil
 }
 

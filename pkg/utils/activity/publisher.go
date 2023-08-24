@@ -1,13 +1,13 @@
 package activity
 
 import (
-	"context"
+	"errors"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/rotationalio/go-ensign"
-	"github.com/rotationalio/go-ensign/mock"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -15,11 +15,12 @@ var (
 	mu          sync.Mutex
 	running     bool
 	enabled     bool
+	topic       string
 	ticker      *time.Ticker
 	recv        chan *Entry
+	activity    *NetworkActivity
 	wg          *sync.WaitGroup
 	client      *ensign.Client
-	emock       *mock.Ensign
 )
 
 // Start the global activity publisher from the configuration.
@@ -32,17 +33,24 @@ func Start(conf Config) (err error) {
 
 		enabled = conf.Enabled
 		if enabled {
-			ticker = time.NewTicker(conf.AggregationWindow)
-			recv = make(chan *Entry, 1000)
+			var window time.Duration
+			if window = conf.AggregationWindow; window <= 0 {
+				err = ErrInvalidWindow
+				return
+			}
 
-			if conf.Testing {
-				// In testing mode, create the Ensign client using a mock server
-				emock = mock.New(nil)
-				if client, err = ensign.New(ensign.WithMock(emock)); err != nil {
+			topic = conf.Topic
+			ticker = time.NewTicker(window)
+			recv = make(chan *Entry, 1000)
+			activity = New(conf.Network, window, time.Now())
+
+			if !conf.Testing {
+				// If not in testing mode, create the Ensign client from the configuration
+				if client, err = conf.Ensign.Client(); err != nil {
 					return
 				}
-			} else if client, err = conf.Ensign.Client(); err != nil {
-				return
+			} else if client == nil {
+				err = errors.New("ensign client must be set in testing mode")
 			}
 
 			wg = &sync.WaitGroup{}
@@ -63,15 +71,34 @@ func Publish() {
 	defer wg.Done()
 	for {
 		select {
-		case _, ok := <-recv:
+		case entry, ok := <-recv:
 			if !ok {
 				return
 			}
 
-			// TODO: Add the activity event to the aggregation
+			// Add the entry to the aggregation
+			if entry.vasp != uuid.Nil {
+				activity.IncrVASP(entry.vasp, entry.activity)
+			} else {
+				activity.Incr(entry.activity)
+			}
 		case <-ticker.C:
-			// TODO: Publish the aggregated events to Ensign and reset the aggregation
-			client.Status(context.Background())
+			var (
+				err   error
+				event *ensign.Event
+			)
+			if event, err = activity.Event(); err != nil {
+				log.Error().Err(err).Msg("could not create activity event")
+				activity.Reset()
+				continue
+			}
+
+			if err = client.Publish(topic, event); err != nil {
+				log.Error().Err(err).Msg("could not publish activity event")
+			}
+
+			// Reset the activity counts for the next window
+			activity.Reset()
 		}
 	}
 }
@@ -108,13 +135,13 @@ func Reset() {
 	ticker = nil
 	recv = nil
 	wg = nil
-	client = nil
-	emock = nil
 }
 
-// Expose the ensign server mock to the tests.
-func GetEnsignMock() *mock.Ensign {
-	return emock
+// Set an Ensign client for testing purposes.
+func SetClient(newClient *ensign.Client) {
+	mu.Lock()
+	defer mu.Unlock()
+	client = newClient
 }
 
 // Entries are created from external go routines and are eventually published as Events
@@ -154,6 +181,9 @@ func Search() *Entry {
 func (e *Entry) Add() {
 	e.ts = time.Now()
 	if enabled {
-		recv <- e
+		select {
+		case recv <- e:
+		default:
+		}
 	}
 }

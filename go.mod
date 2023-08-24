@@ -20,6 +20,7 @@ require (
 	github.com/mroth/weightedrand v1.0.0
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/prometheus/client_golang v1.16.0
+	github.com/rotationalio/confire v1.0.0
 	github.com/rotationalio/go-ensign v0.9.1
 	github.com/rotationalio/honu v0.3.0
 	github.com/rotationalio/whisper v1.2.1
