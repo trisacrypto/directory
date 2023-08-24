@@ -1,5 +1,5 @@
 import { VStack } from '@chakra-ui/react';
-import { VictoryAxis, VictoryChart, VictoryLegend, VictoryLine, VictoryTheme, VictoryZoomContainer } from 'victory';
+import { VictoryAxis, VictoryChart, VictoryLegend, VictoryLine, VictoryTheme } from 'victory';
 import { mockNetworkActivityData } from './_mocks_';
 import formatDisplayedDate from 'utils/formatDisplayedDate';
 // import useFetchNetworkActivity from './useFetchNetworkActivity';
@@ -27,18 +27,18 @@ const sharedAxisStyles = {
 };
 
 const NetworkActivity = () => {
-  /* const { data } = useFetchNetworkActivity();
+ /* const { data } = useFetchNetworkActivity();
   console.log(data); */
+
     return (
         <section>
           <VStack maxW={'5xl'} margin="auto" marginTop={10}>
-            <VictoryChart 
-              domainPadding={{ y: 20 }}
-              containerComponent={<VictoryZoomContainer zoomDimension="x" />}
+            <VictoryChart
+              domainPadding={{ x: 1, y: 20 }}
               width={600} 
               style={{ background: { fill: "#F7F9FB" } }} 
               theme={VictoryTheme.material}
-              // scale={{ x: "time" }} 
+              scale={{ x: "time", y: "linear" }}
             >
               <VictoryLegend 
                 data={legendData} 
@@ -48,8 +48,18 @@ const NetworkActivity = () => {
               />
               <VictoryAxis fixLabelOverlap={true} />
               <VictoryAxis dependentAxis label="Network Activity" style={sharedAxisStyles} />
-              <VictoryLine data={testnetData} style={{ data: { stroke: "black" } }} />
-              <VictoryLine data={mainnetData} style={{ data: { stroke: "#F1511B" } }}/>
+              <VictoryLine 
+                data={testnetData} 
+                x="date" 
+                y="events" 
+                style={{ data: { stroke: "black" } }} 
+              />
+              <VictoryLine 
+                data={mainnetData} 
+                x="date" 
+                y="events" 
+                style={{ data: { stroke: "#F1511B" } }}
+              />
             </VictoryChart>
           </VStack>
         </section>
