@@ -6,7 +6,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/oklog/ulid/v2"
+	sdk "github.com/rotationalio/go-ensign"
 	api "github.com/rotationalio/go-ensign/api/v1beta1"
+	"github.com/rotationalio/go-ensign/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/utils/activity"
@@ -15,6 +17,12 @@ import (
 )
 
 func TestPublisher(t *testing.T) {
+	// Setup the Ensign mock and client
+	emock := mock.New(nil)
+	client, err := sdk.New(sdk.WithMock(emock))
+	require.NoError(t, err, "expected no error creating mock ensign client")
+	activity.SetClient(client)
+
 	// Test publisher with bad configuration does not start
 	conf := activity.Config{
 		Enabled:           true,
@@ -49,7 +57,6 @@ func TestPublisher(t *testing.T) {
 
 	// Configure the Ensign mock to assert that events are being published
 	vaspID := uuid.New()
-	emock := activity.GetEnsignMock()
 	published := make(chan struct{})
 	emock.OnPublish = func(stream api.Ensign_PublishServer) (err error) {
 		// Receive the initial request from the client
