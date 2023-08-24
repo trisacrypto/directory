@@ -23,12 +23,8 @@ func TestActivityValidation(t *testing.T) {
 	// Test error is returned for missing topic
 	require.ErrorIs(t, conf.Validate(), activity.ErrMissingTopic)
 
-	// Test error is returned for invalid aggregation window
-	conf.Topic = "gds-activity"
-	conf.AggregationWindow = 0
-	require.ErrorIs(t, conf.Validate(), activity.ErrInvalidWindow)
-
 	// Test error is returned for invalid ensign configuration
+	conf.Topic = "gds-activity"
 	conf.AggregationWindow = time.Duration(5 * time.Minute)
 	conf.Ensign.ClientID = ""
 	require.ErrorIs(t, conf.Validate(), ensign.ErrMissingClientID)

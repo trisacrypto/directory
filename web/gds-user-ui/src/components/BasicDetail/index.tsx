@@ -112,8 +112,17 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
       setShouldResetForm(true);
     }
 
+    return () => {
+      setShouldResetForm(false);
+    };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isStepDeleted, isAllFormDeleted, isBasicStepDeleted]);
+
+  // rerender this view everytime user land on this page
+  useEffect(() => {
+    getCertificateStep();
+  }, [getCertificateStep]);
 
   return (
     <Stack spacing={7} mt="2rem">
