@@ -107,6 +107,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                             value={oid}
                             label={oid}
                             onClick={(e: any) => {
+                              setSearch(oid);
                               handleSubmit(e, oid);
                             }}
                             textTransform="capitalize">
