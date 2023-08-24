@@ -40,16 +40,10 @@ func Start(conf Config) (err error) {
 				return
 			}
 
-			var network Network
-			if network = ParseNetwork(conf.Network); network == UnknownNetwork {
-				err = ErrUnknownNetwork
-				return
-			}
-
 			topic = conf.Topic
 			ticker = time.NewTicker(window)
 			recv = make(chan *Entry, 1000)
-			activity = New(network, window, time.Now())
+			activity = New(conf.Network, window, time.Now())
 
 			if conf.Testing {
 				// In testing mode, create the Ensign client using a mock server
@@ -189,6 +183,9 @@ func Search() *Entry {
 func (e *Entry) Add() {
 	e.ts = time.Now()
 	if enabled {
-		recv <- e
+		select {
+		case recv <- e:
+		default:
+		}
 	}
 }

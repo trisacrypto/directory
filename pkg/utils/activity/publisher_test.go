@@ -35,7 +35,7 @@ func TestPublisher(t *testing.T) {
 	// Test publisher starts with valid configuration
 	activity.Reset()
 	conf.Enabled = true
-	conf.Network = "testnet"
+	conf.Network = activity.TestNet
 	conf.Topic = "network-activity"
 	conf.AggregationWindow = time.Millisecond
 	conf.Ensign = ensign.Config{

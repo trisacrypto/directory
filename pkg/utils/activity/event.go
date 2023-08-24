@@ -2,6 +2,7 @@ package activity
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -112,17 +113,25 @@ func (n Network) String() string {
 	}
 }
 
-func ParseNetwork(s string) Network {
-	switch s {
-	case "testnet":
-		return TestNet
-	case "mainnet":
-		return MainNet
-	case "rvasp":
-		return RVASP
-	default:
-		return UnknownNetwork
+func (n Network) Validate() error {
+	if n == UnknownNetwork {
+		return ErrUnknownNetwork
 	}
+	return nil
+}
+
+func (n *Network) Decode(s string) error {
+	switch strings.TrimSpace(strings.ToLower(s)) {
+	case "testnet":
+		*n = TestNet
+	case "mainnet":
+		*n = MainNet
+	case "rvasp":
+		*n = RVASP
+	default:
+		return ErrUnknownNetwork
+	}
+	return nil
 }
 
 func (a *NetworkActivity) Incr(activity Activity) {

@@ -9,7 +9,7 @@ import (
 type Config struct {
 	Enabled           bool          `split_words:"true" default:"false"`
 	Topic             string        `split_words:"true"`
-	Network           string        `split_words:"true"`
+	Network           Network       `split_words:"true"`
 	AggregationWindow time.Duration `split_words:"true" default:"5m"`
 	Testing           bool          `split_words:"true" default:"false"`
 	Ensign            ensign.Config
