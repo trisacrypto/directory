@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useState } from 'react';
+import React, { FormEvent, useState } from 'react';
 
 import Head from 'components/Head/LandingHead';
 import JoinUsSection from 'components/Section/JoinUs';
@@ -18,12 +18,6 @@ const HomePage: React.FC = () => {
     setSearch(searchString);
   };
 
-  useEffect(() => {
-    if (searchString !== search) {
-      resetData();
-    }
-  }, [searchString, search, resetData]);
-
   return (
     <LandingLayout>
       <Head hasBtn isHomePage />
@@ -36,6 +30,7 @@ const HomePage: React.FC = () => {
         result={data}
         error={error}
         handleClose={() => resetData()}
+        onResetData={() => resetData()}
         query={search}
         options={vasps}
       />
