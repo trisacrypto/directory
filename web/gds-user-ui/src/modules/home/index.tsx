@@ -35,11 +35,6 @@ const HomePage: React.FC = () => {
         onResetData={() => resetData()}
         query={search}
         options={vasps}
-        clearForm={(e: FormEvent) => {
-          e.preventDefault();
-          resetData();
-          setSearch('');
-        }}
       />
     </LandingLayout>
   );

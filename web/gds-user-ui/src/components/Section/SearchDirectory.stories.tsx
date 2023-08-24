@@ -10,7 +10,6 @@ interface SearchDirectoryProps {
   query: string;
   options: any;
   onResetData: () => void;
-  clearForm: () => void;
 }
 
 export default {

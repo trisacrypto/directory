@@ -51,11 +51,9 @@ type TSearchDirectory = {
   handleClose?: () => void;
   onResetData: () => void;
   options: any[];
-  clearForm: (e: FormEvent, query: string) => void;
 };
 const SearchDirectory: React.FC<TSearchDirectory> = ({
   handleSubmit,
-  isLoading,
   result,
   error,
   handleClose,
@@ -95,7 +93,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
             </Text>
             <Box width={{ md: '70%', sm: '90%' }}>
               <form>
-                <FormControl color={'gray.500'} id="autocomplete-directory">
+                <FormControl color={'gray.500'}>
                   <HStack>
                     <AutoComplete rollNavigation ref={formRef}>
                       <AutoCompleteInput
