@@ -49,6 +49,7 @@ type TSearchDirectory = {
   error: string;
   query: string;
   handleClose?: () => void;
+  onResetData?: () => void;
   options: any[];
 };
 const SearchDirectory: React.FC<TSearchDirectory> = ({
@@ -107,6 +108,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                             value={oid}
                             label={oid}
                             onClick={(e: any) => {
+                              // onResetData();
                               setSearch(oid);
                               handleSubmit(e, oid);
                             }}
