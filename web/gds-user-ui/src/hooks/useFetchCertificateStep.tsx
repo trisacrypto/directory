@@ -9,7 +9,9 @@ export function useFetchCertificateStep(payload: PayloadDTO): GetCertificateQuer
     () => getCertificateStepService(payload),
     {
       enabled: !!payload.key,
-      retry: 0
+      // disable caching
+      // this is why we had issue with the stepper not updating
+      cacheTime: 0
     }
   );
   return {
