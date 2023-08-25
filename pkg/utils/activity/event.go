@@ -78,7 +78,7 @@ const (
 	LookupActivity
 	SearchActivity
 	RegisterActivity
-	FetchKeyActivity
+	KeyExchangeActivity
 )
 
 func (a Activity) String() string {
@@ -89,8 +89,8 @@ func (a Activity) String() string {
 		return "search"
 	case RegisterActivity:
 		return "register"
-	case FetchKeyActivity:
-		return "fetchKey"
+	case KeyExchangeActivity:
+		return "keyExchange"
 	default:
 		return "unknown"
 	}

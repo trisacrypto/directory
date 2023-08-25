@@ -182,10 +182,10 @@ func Register() *Entry {
 	return newEvent(RegisterActivity)
 }
 
-// FetchKey creates a new activity entry for fetching a signing key. Must call Add() to
+// KeyExchange creates a new activity entry for fetching a signing key. Must call Add() to
 // commit the entry.
-func FetchKey() *Entry {
-	return newEvent(FetchKeyActivity)
+func KeyExchange() *Entry {
+	return newEvent(KeyExchangeActivity)
 }
 
 // Add the activity entry to the publisher.
