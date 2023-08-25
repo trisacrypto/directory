@@ -1,0 +1,313 @@
+package bff_test
+
+import (
+	"context"
+	"fmt"
+	"sync"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/oklog/ulid/v2"
+	api "github.com/rotationalio/go-ensign/api/v1beta1"
+	mimetype "github.com/rotationalio/go-ensign/mimetype/v1beta1"
+	"github.com/trisacrypto/directory/pkg/bff"
+	"github.com/trisacrypto/directory/pkg/bff/models/v1"
+	"github.com/trisacrypto/directory/pkg/utils/activity"
+	"github.com/trisacrypto/directory/pkg/utils/ensign"
+	"github.com/vmihailenco/msgpack/v5"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
+)
+
+func (s *bffTestSuite) TestActivitySubscriber() {
+	require := s.Require()
+
+	// If not enabled, should return an error
+	conf := activity.Config{}
+	_, err := bff.NewActivitySubscriber(conf, s.DB())
+	require.Error(err, "should return an error if not enabled")
+
+	// If config is not valid, should return an error
+	conf.Enabled = true
+	_, err = bff.NewActivitySubscriber(conf, s.DB())
+	require.Error(err, "should return an error if config is invalid")
+
+	// Test running the subscriber under a waitgroup
+	conf.Topic = "network-activity"
+	conf.Testing = true
+	conf.Ensign = ensign.Config{
+		ClientID:     "client-id",
+		ClientSecret: "client-secret",
+		Endpoint:     "mock ensign endpoint",
+		AuthURL:      "mock ensign auth url",
+	}
+	sub, err := bff.NewActivitySubscriber(conf, s.DB())
+	require.NoError(err, "could not create subscriber")
+
+	// Setup the network activity fixtures
+	events := make([]*api.EventWrapper, 0)
+	aliceVASP := uuid.New()
+	bobVASP := uuid.New()
+
+	// First activity
+	acv := &activity.NetworkActivity{
+		Network: activity.MainNet,
+		Activity: map[activity.Activity]uint64{
+			activity.LookupActivity: 1,
+		},
+		VASPActivity: map[uuid.UUID]activity.ActivityCount{
+			aliceVASP: {
+				activity.LookupActivity: 1,
+			},
+		},
+		Window: time.Minute * 5,
+	}
+	acv.Timestamp, err = time.Parse(time.RFC3339, "2023-08-24T12:00:00Z")
+	require.NoError(err, "could not create first activity time")
+	data, err := msgpack.Marshal(acv)
+	require.NoError(err, "could not marshal first activity")
+	event := &api.Event{
+		Data:     data,
+		Mimetype: mimetype.MIME_APPLICATION_MSGPACK,
+		Type:     &activity.NetworkActivityEventType,
+		Created:  timestamppb.Now(),
+	}
+	wrapper := &api.EventWrapper{
+		Id:        []byte("eventID"),
+		TopicId:   []byte("topicID"),
+		Committed: timestamppb.Now(),
+	}
+	require.NoError(wrapper.Wrap(event), "could not wrap first event")
+	events = append(events, wrapper)
+
+	// Second activity - on the same day
+	acv = &activity.NetworkActivity{
+		Network: activity.MainNet,
+		Activity: map[activity.Activity]uint64{
+			activity.LookupActivity: 1,
+			activity.SearchActivity: 3,
+		},
+		VASPActivity: map[uuid.UUID]activity.ActivityCount{
+			aliceVASP: {
+				activity.LookupActivity: 1,
+			},
+			bobVASP: {
+				activity.SearchActivity: 3,
+			},
+		},
+		Window: time.Minute * 5,
+	}
+	acv.Timestamp, err = time.Parse(time.RFC3339, "2023-08-24T12:05:00Z")
+	require.NoError(err, "could not create second activity time")
+	data, err = msgpack.Marshal(acv)
+	require.NoError(err, "could not marshal second activity")
+	event = &api.Event{
+		Data:     data,
+		Mimetype: mimetype.MIME_APPLICATION_MSGPACK,
+		Type:     &activity.NetworkActivityEventType,
+		Created:  timestamppb.Now(),
+	}
+	wrapper = &api.EventWrapper{
+		Id:        []byte("eventID"),
+		TopicId:   []byte("topicID"),
+		Committed: timestamppb.Now(),
+	}
+	require.NoError(wrapper.Wrap(event), "could not wrap second event")
+	events = append(events, wrapper)
+
+	// Third activity - on the next day
+	acv = &activity.NetworkActivity{
+		Network: activity.MainNet,
+		Activity: map[activity.Activity]uint64{
+			activity.SearchActivity: 1,
+		},
+		VASPActivity: map[uuid.UUID]activity.ActivityCount{
+			bobVASP: {
+				activity.SearchActivity: 1,
+			},
+		},
+		Window: time.Minute * 5,
+	}
+	acv.Timestamp, err = time.Parse(time.RFC3339, "2023-08-25T12:00:00Z")
+	require.NoError(err, "could not create third activity time")
+	data, err = msgpack.Marshal(acv)
+	require.NoError(err, "could not marshal third activity")
+	event = &api.Event{
+		Data:     data,
+		Mimetype: mimetype.MIME_APPLICATION_MSGPACK,
+		Type:     &activity.NetworkActivityEventType,
+		Created:  timestamppb.Now(),
+	}
+	wrapper = &api.EventWrapper{
+		Id:        []byte("eventID"),
+		TopicId:   []byte("topicID"),
+		Committed: timestamppb.Now(),
+	}
+	require.NoError(wrapper.Wrap(event), "could not wrap third event")
+	events = append(events, wrapper)
+
+	// Fourth activity - in the next month
+	acv = &activity.NetworkActivity{
+		Network: activity.TestNet,
+		Activity: map[activity.Activity]uint64{
+			activity.LookupActivity: 2,
+		},
+		VASPActivity: map[uuid.UUID]activity.ActivityCount{},
+		Window:       time.Minute * 5,
+	}
+	acv.Timestamp, err = time.Parse(time.RFC3339, "2023-09-01T12:00:00Z")
+	require.NoError(err, "could not create fourth activity time")
+	data, err = msgpack.Marshal(acv)
+	require.NoError(err, "could not marshal fourth activity")
+	event = &api.Event{
+		Data:     data,
+		Mimetype: mimetype.MIME_APPLICATION_MSGPACK,
+		Type:     &activity.NetworkActivityEventType,
+		Created:  timestamppb.Now(),
+	}
+	wrapper = &api.EventWrapper{
+		Id:        []byte("eventID"),
+		TopicId:   []byte("topicID"),
+		Committed: timestamppb.Now(),
+	}
+	require.NoError(wrapper.Wrap(event), "could not wrap fourth event")
+	events = append(events, wrapper)
+
+	// Configure the Ensign mock to stream back the network activity
+	emock := sub.GetEnsignMock()
+	server := &sync.WaitGroup{}
+	server.Add(1)
+	emock.OnSubscribe = func(stream api.Ensign_SubscribeServer) (err error) {
+		defer server.Done()
+
+		// Read the initial subscription request
+		_, err = stream.Recv()
+		if err != nil {
+			return err
+		}
+
+		// Send the ready response back to the client
+		if err = stream.Send(&api.SubscribeReply{
+			Embed: &api.SubscribeReply_Ready{
+				Ready: &api.StreamReady{
+					ClientId: "client-id",
+					ServerId: "server-id",
+					Topics: map[string][]byte{
+						"network-activity": ulid.Make().Bytes(),
+					},
+				},
+			},
+		}); err != nil {
+			return err
+		}
+
+		// Send the activity updates
+		for _, event := range events {
+			if err = stream.Send(&api.SubscribeReply{
+				Embed: &api.SubscribeReply_Event{
+					Event: event,
+				},
+			}); err != nil {
+				return err
+			}
+		}
+
+		// Should receive all the acks from the subscruber
+		for i := 0; i < len(events); i++ {
+			var req *api.SubscribeRequest
+			if req, err = stream.Recv(); err != nil {
+				return err
+			}
+
+			if req.GetAck() == nil {
+				return status.Errorf(codes.InvalidArgument, "expected ack")
+			}
+		}
+
+		return nil
+	}
+
+	// Run the subscriber
+	wg := &sync.WaitGroup{}
+	require.NoError(sub.Run(wg), "could not run subscriber")
+
+	// Wait for the subscriber to ack all the events
+	server.Wait()
+	sub.Stop()
+	wg.Wait()
+
+	// Should be two activity months in the store
+	ctx := context.Background()
+	expected := &models.ActivityMonth{
+		Date: "2023-08",
+		Days: []*models.ActivityDay{
+			{
+				Date: "2023-08-24",
+				Activity: &models.ActivityCount{
+					Mainnet: map[string]uint64{
+						"lookup": 2,
+						"search": 3,
+					},
+				},
+				VaspActivity: map[string]*models.ActivityCount{
+					aliceVASP.String(): {
+						Mainnet: map[string]uint64{
+							"lookup": 2,
+						},
+					},
+					bobVASP.String(): {
+						Mainnet: map[string]uint64{
+							"search": 3,
+						},
+					},
+				},
+			},
+			{
+				Date: "2023-08-25",
+				Activity: &models.ActivityCount{
+					Mainnet: map[string]uint64{
+						"search": 1,
+					},
+				},
+				VaspActivity: map[string]*models.ActivityCount{
+					bobVASP.String(): {
+						Mainnet: map[string]uint64{
+							"search": 1,
+						},
+					},
+				},
+			},
+		},
+	}
+	month, err := s.DB().RetrieveActivityMonth(ctx, "2023-08")
+	require.NoError(err, "could not retrieve activity month")
+	require.Equal(expected.Date, month.Date, "wrong activity month retrieved")
+	require.Len(month.Days, len(expected.Days), "wrong number of activity days in month")
+	for i, day := range month.Days {
+		require.Equal(expected.Days[i].Date, day.Date, fmt.Sprintf("wrong date for day %d", i))
+		require.Equal(expected.Days[i].Activity, day.Activity, fmt.Sprintf("wrong activity for day %d", i))
+		require.Equal(expected.Days[i].VaspActivity, day.VaspActivity, fmt.Sprintf("wrong vasp activity for day %d", i))
+	}
+
+	expected = &models.ActivityMonth{
+		Date: "2023-09",
+		Days: []*models.ActivityDay{
+			{
+				Date: "2023-09-01",
+				Activity: &models.ActivityCount{
+					Testnet: map[string]uint64{
+						"lookup": 2,
+					},
+				},
+			},
+		},
+	}
+	month, err = s.DB().RetrieveActivityMonth(ctx, "2023-09")
+	require.NoError(err, "could not retrieve activity month")
+	require.Equal("2023-09", month.Date, "wrong activity month retrieved")
+	require.Len(month.Days, 1, "wrong number of activity days in month")
+	require.Equal(expected.Days[0].Date, month.Days[0].Date, "wrong date for day")
+	require.Equal(expected.Days[0].Activity, month.Days[0].Activity, "wrong activity for day")
+	require.Nil(month.Days[0].VaspActivity, "expected no VASP activity for day")
+}

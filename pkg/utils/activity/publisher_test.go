@@ -22,6 +22,7 @@ func TestPublisher(t *testing.T) {
 	client, err := sdk.New(sdk.WithMock(emock))
 	require.NoError(t, err, "expected no error creating mock ensign client")
 	activity.SetClient(client)
+	//fmt.Println(client.WaitForReconnect(context.Background()))
 
 	// Test publisher with bad configuration does not start
 	conf := activity.Config{
@@ -54,6 +55,7 @@ func TestPublisher(t *testing.T) {
 	}
 	conf.Testing = true
 	require.NoError(t, activity.Start(conf), "expected no error for valid configuration")
+	//fmt.Println(client.WaitForReconnect(context.Background()))
 
 	// Configure the Ensign mock to assert that events are being published
 	vaspID := uuid.New()

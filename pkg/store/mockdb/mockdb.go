@@ -46,6 +46,9 @@ type MockState struct {
 	RetrieveAnnouncementMonthInvoked bool
 	UpdateAnnouncementMonthInvoked   bool
 	DeleteAnnouncementMonthInvoked   bool
+	RetrieveActivityMonthInvoked     bool
+	UpdateActivityMonthInvoked       bool
+	DeleteActivityMonthInvoked       bool
 	ListOrganizationsInvoked         bool
 	CreateOrganizationInvoked        bool
 	RetrieveOrganizationInvoked      bool
@@ -93,6 +96,9 @@ type MockDB struct {
 	OnRetrieveAnnouncementMonth func(date string) (*bff.AnnouncementMonth, error)
 	OnUpdateAnnouncementMonth   func(o *bff.AnnouncementMonth) error
 	OnDeleteAnnouncementMonth   func(date string) error
+	OnRetrieveActivityMonth     func(date string) (*bff.ActivityMonth, error)
+	OnUpdateActivityMonth       func(o *bff.ActivityMonth) error
+	OnDeleteActivityMonth       func(date string) error
 	OnListOrganizations         func() iterator.OrganizationIterator
 	OnCreateOrganization        func(o *bff.Organization) (string, error)
 	OnRetrieveOrganization      func(id uuid.UUID) (*bff.Organization, error)
@@ -225,6 +231,21 @@ func (m *MockDB) UpdateAnnouncementMonth(_ context.Context, o *bff.AnnouncementM
 func (m *MockDB) DeleteAnnouncementMonth(_ context.Context, date string) error {
 	state.DeleteAnnouncementMonthInvoked = true
 	return m.OnDeleteAnnouncementMonth(date)
+}
+
+func (m *MockDB) RetrieveActivityMonth(_ context.Context, date string) (*bff.ActivityMonth, error) {
+	state.RetrieveActivityMonthInvoked = true
+	return m.OnRetrieveActivityMonth(date)
+}
+
+func (m *MockDB) UpdateActivityMonth(_ context.Context, o *bff.ActivityMonth) error {
+	state.UpdateActivityMonthInvoked = true
+	return m.OnUpdateActivityMonth(o)
+}
+
+func (m *MockDB) DeleteActivityMonth(_ context.Context, date string) error {
+	state.DeleteActivityMonthInvoked = true
+	return m.OnDeleteActivityMonth(date)
 }
 
 func (m *MockDB) ListOrganizations(_ context.Context) iterator.OrganizationIterator {

@@ -88,6 +88,7 @@ type Store interface {
 	CertificateStore
 	CertificateRequestStore
 	AnnouncementStore
+	ActivityStore
 	OrganizationStore
 	ContactStore
 }
@@ -129,6 +130,13 @@ type AnnouncementStore interface {
 	RetrieveAnnouncementMonth(ctx context.Context, date string) (*bff.AnnouncementMonth, error)
 	UpdateAnnouncementMonth(ctx context.Context, m *bff.AnnouncementMonth) error
 	DeleteAnnouncementMonth(ctx context.Context, date string) error
+}
+
+// ActivityStore describes how services interact with the Activity records.
+type ActivityStore interface {
+	RetrieveActivityMonth(ctx context.Context, date string) (*bff.ActivityMonth, error)
+	UpdateActivityMonth(ctx context.Context, m *bff.ActivityMonth) error
+	DeleteActivityMonth(ctx context.Context, date string) error
 }
 
 // OrganizationStore describes how services interact with the Organization records.

@@ -55,7 +55,7 @@ func Start(conf Config) (err error) {
 
 			wg = &sync.WaitGroup{}
 			wg.Add(1)
-			go Publish()
+			go publish()
 		}
 	})
 
@@ -64,7 +64,7 @@ func Start(conf Config) (err error) {
 
 // Global goroutine that publishes activity entries from the receiver channel to the
 // Ensign topic as events.
-func Publish() {
+func publish() {
 	mu.Lock()
 	running = true
 	mu.Unlock()
@@ -91,6 +91,10 @@ func Publish() {
 				log.Error().Err(err).Msg("could not create activity event")
 				activity.Reset()
 				continue
+			}
+
+			if _, err = client.Subscribe(topic); err != nil {
+				log.Error().Err(err).Msg("could not subscribe to activity topic")
 			}
 
 			if err = client.Publish(topic, event); err != nil {
