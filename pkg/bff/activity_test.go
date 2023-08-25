@@ -41,6 +41,7 @@ func (s *bffTestSuite) TestNetworkActivity() {
 	}
 	require.NoError(s.DB().UpdateActivityMonth(ctx, month), "could not create activity month")
 	rep, err = s.client.NetworkActivity(ctx)
+	require.NoError(err, "could not get network activity")
 	assertNoCounts(require, rep)
 
 	// Add some activity to the database
