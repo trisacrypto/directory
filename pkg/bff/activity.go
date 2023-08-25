@@ -76,6 +76,7 @@ func (s *Server) NetworkActivity(c *gin.Context) {
 		}
 
 		monthIndex := len(month.Days) - 1
+	monthLoop:
 		for remainingDays > 0 {
 			date := day.Format(models.DateLayout)
 
@@ -112,8 +113,8 @@ func (s *Server) NetworkActivity(c *gin.Context) {
 			prevDay := day
 			day = day.AddDate(0, 0, -1)
 			if prevDay.Day() == 1 {
-				// Go back to the previous month
-				break
+				// Reached the beginning of this month, go to the previous month
+				break monthLoop
 			}
 		}
 	}
