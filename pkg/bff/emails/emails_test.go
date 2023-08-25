@@ -20,7 +20,7 @@ import (
 )
 
 // If the eyeball flag is set, then the tests will write MIME emails to the testdata directory.
-var eyeball = flag.Bool("eyeball", false, "Generate MIME emails for eyeball testing")
+var eyeball = flag.Bool("eyeball", true, "Generate MIME emails for eyeball testing")
 
 // Creates a directory for the MIME emails if the eyeball flag is set.
 // If the eyeball flag is set, this will also purge the existing eyeball directory first.
@@ -52,16 +52,41 @@ func TestEmailBuilders(t *testing.T) {
 
 	setupMIMEDir(t)
 
+	// Test rendering with user names
 	inviteData := emails.InviteUserData{
-		User:         recipient,
-		Inviter:      sender,
+		UserName:     recipient,
+		UserEmail:    recipientEmail,
+		InviterName:  sender,
+		InviterEmail: senderEmail,
 		Organization: "Team Sonic",
 		InviteURL:    "https://gottagofast.com/invite",
 	}
 	mail, err := emails.InviteUserEmail(sender, senderEmail, recipient, recipientEmail, inviteData)
 	require.NoError(t, err, "failed to create user invite email")
-	require.Equal(t, fmt.Sprintf(emails.UserInviteRE, sender, inviteData.Organization), mail.Subject, "user invite email subject is incorrect")
-	generateMIME(t, mail, "invite_user.mime")
+	require.Equal(t, "Sonic the Hedgehog has invited you to collaborate on Team Sonic", mail.Subject, "user invite email subject is incorrect")
+	generateMIME(t, mail, "invite_user_with_name.mime")
+
+	// Test rendering with email addresses
+	inviteData.UserName = ""
+	inviteData.InviterName = ""
+	mail, err = emails.InviteUserEmail(sender, senderEmail, recipient, recipientEmail, inviteData)
+	require.NoError(t, err, "failed to create user invite email")
+	require.Equal(t, "You have been invited to collaborate on Team Sonic", mail.Subject, "user invite email subject is incorrect")
+	generateMIME(t, mail, "invite_user_with_email.mime")
+
+	// Test rendering with no organization name
+	inviteData.Organization = ""
+	mail, err = emails.InviteUserEmail(sender, senderEmail, recipient, recipientEmail, inviteData)
+	require.NoError(t, err, "failed to create user invite email")
+	require.Equal(t, "You have been invited to collaborate on an organization", mail.Subject, "user invite email subject is incorrect")
+	generateMIME(t, mail, "invite_user_no_org.mime")
+
+	// Test rendering with inviter name but no organization name
+	inviteData.InviterName = "Sonic the Hedgehog"
+	mail, err = emails.InviteUserEmail(sender, senderEmail, recipient, recipientEmail, inviteData)
+	require.NoError(t, err, "failed to create user invite email")
+	require.Equal(t, "Sonic the Hedgehog has invited you to collaborate on their organization", mail.Subject, "user invite email subject is incorrect")
+	generateMIME(t, mail, "invite_user_with_name_no_org.mime")
 }
 
 func (s *EmailTestSuite) TestUserInviteEmail() {
@@ -78,8 +103,10 @@ func (s *EmailTestSuite) TestUserInviteEmail() {
 	require.NoError(err, "could not create email manager")
 
 	data := emails.InviteUserData{
-		User:         recipient.Name,
-		Inviter:      inviter.Name,
+		UserName:     recipient.Name,
+		UserEmail:    recipient.Address,
+		InviterName:  inviter.Name,
+		InviterEmail: inviter.Address,
 		Organization: "Team Sonic",
 		InviteURL:    "https://gottagofast.com/invite",
 	}
