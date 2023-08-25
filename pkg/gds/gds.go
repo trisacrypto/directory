@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg"
 	admin "github.com/trisacrypto/directory/pkg/gds/admin/v2"
@@ -115,7 +114,7 @@ func (s *GDS) Shutdown() (err error) {
 // used to access the certificate private keys when they're emailed.
 func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.RegisterReply, err error) {
 	// send register request activity to network activity handler
-	go activity.Register().Add()
+	activity.Register().Add()
 
 	vasp := &pb.VASP{
 		RegisteredDirectory: s.svc.conf.DirectoryID,
@@ -418,11 +417,7 @@ func (s *GDS) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.Looku
 	}
 
 	// send lookup request activity to network activity handler
-	if vasp != nil {
-		go activity.Lookup().VASP(uuid.MustParse(vasp.Id)).Add()
-	} else {
-		go activity.Lookup().Add()
-	}
+	activity.Lookup().VASP(vasp.Id).Add()
 
 	// Prepare the response for the lookup
 	out = &api.LookupReply{
@@ -453,7 +448,7 @@ func (s *GDS) Lookup(ctx context.Context, in *api.LookupRequest) (out *api.Looku
 // Lookup requests. The search process is purposefully simplistic at the moment.
 func (s *GDS) Search(ctx context.Context, in *api.SearchRequest) (out *api.SearchReply, err error) {
 	// send search request activity to network activity handler
-	go activity.Search().Add()
+	activity.Search().Add()
 	if _, ok := ctx.Deadline(); !ok {
 		ctx, _ = utils.WithDeadline(ctx)
 	}

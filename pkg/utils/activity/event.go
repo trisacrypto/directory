@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/rotationalio/go-ensign"
 	api "github.com/rotationalio/go-ensign/api/v1beta1"
 	mimetype "github.com/rotationalio/go-ensign/mimetype/v1beta1"
@@ -26,11 +25,11 @@ var NetworkActivityEventType = api.Type{
 // event is published as msgpack data to an Ensign topic so that the BFF can render a
 // timeseries of network activity.
 type NetworkActivity struct {
-	Network      Network                     `msgpack:"network"`       // The network refers to TestNet or MainNet and possibly also rVASP
-	Activity     ActivityCount               `msgpack:"activity"`      // A count of activity events by name
-	VASPActivity map[uuid.UUID]ActivityCount `msgpack:"vasp_activity"` // Per-vasp activity count should be less than or equal to activity counts
-	Timestamp    time.Time                   `msgpack:"timestamp"`     // The start time of the aggregation window
-	Window       time.Duration               `msgpack:"window"`        // The window size of the aggregation window
+	Network      Network                  `msgpack:"network"`       // The network refers to TestNet or MainNet and possibly also rVASP
+	Activity     ActivityCount            `msgpack:"activity"`      // A count of activity events by name
+	VASPActivity map[string]ActivityCount `msgpack:"vasp_activity"` // Per-vasp activity count should be less than or equal to activity counts
+	Timestamp    time.Time                `msgpack:"timestamp"`     // The start time of the aggregation window
+	Window       time.Duration            `msgpack:"window"`        // The window size of the aggregation window
 }
 
 func New(network Network, window time.Duration, ts time.Time) *NetworkActivity {
@@ -41,7 +40,7 @@ func New(network Network, window time.Duration, ts time.Time) *NetworkActivity {
 	return &NetworkActivity{
 		Network:      network,
 		Activity:     make(ActivityCount),
-		VASPActivity: make(map[uuid.UUID]ActivityCount),
+		VASPActivity: make(map[string]ActivityCount),
 		Timestamp:    ts,
 		Window:       window,
 	}
@@ -66,7 +65,7 @@ func Parse(event *ensign.Event) (_ *NetworkActivity, err error) {
 // Reset the activity counts to zero in preparation for a new aggregation window.
 func (a *NetworkActivity) Reset() {
 	a.Activity = make(ActivityCount)
-	a.VASPActivity = make(map[uuid.UUID]ActivityCount)
+	a.VASPActivity = make(map[string]ActivityCount)
 	a.Timestamp = time.Now()
 }
 
@@ -144,9 +143,9 @@ func (a *NetworkActivity) Incr(activity Activity) {
 	a.Activity[activity]++
 }
 
-func (a *NetworkActivity) IncrVASP(vaspID uuid.UUID, activity Activity) {
+func (a *NetworkActivity) IncrVASP(vaspID string, activity Activity) {
 	if a.VASPActivity == nil {
-		a.VASPActivity = make(map[uuid.UUID]ActivityCount)
+		a.VASPActivity = make(map[string]ActivityCount)
 	}
 
 	if _, ok := a.VASPActivity[vaspID]; !ok {

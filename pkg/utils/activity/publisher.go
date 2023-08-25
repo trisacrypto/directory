@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/rotationalio/go-ensign"
 	"github.com/rs/zerolog/log"
 )
@@ -77,7 +76,7 @@ func Publish() {
 			}
 
 			// Add the entry to the aggregation
-			if entry.vasp != uuid.Nil {
+			if entry.vasp != "" {
 				activity.IncrVASP(entry.vasp, entry.activity)
 			} else {
 				activity.Incr(entry.activity)
@@ -148,7 +147,7 @@ func SetClient(newClient *ensign.Client) {
 // to Ensign by the activity publisher.
 type Entry struct {
 	ts       time.Time
-	vasp     uuid.UUID
+	vasp     string
 	activity Activity
 }
 
@@ -160,7 +159,7 @@ func newEvent(activity Activity) *Entry {
 }
 
 // VASP adds a VASP UUID to the event.
-func (e *Entry) VASP(id uuid.UUID) *Entry {
+func (e *Entry) VASP(id string) *Entry {
 	e.vasp = id
 	return e
 }
