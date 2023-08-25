@@ -78,6 +78,7 @@ const (
 	LookupActivity
 	SearchActivity
 	RegisterActivity
+	FetchKeyActivity
 )
 
 func (a Activity) String() string {
@@ -88,6 +89,8 @@ func (a Activity) String() string {
 		return "search"
 	case RegisterActivity:
 		return "register"
+	case FetchKeyActivity:
+		return "fetchKey"
 	default:
 		return "unknown"
 	}

@@ -176,10 +176,16 @@ func Search() *Entry {
 	return newEvent(SearchActivity)
 }
 
-// Search creates a new activity entry for registering a Vasp. Must call Add() to
+// Register creates a new activity entry for registering a Vasp. Must call Add() to
 // commit the entry.
 func Register() *Entry {
 	return newEvent(RegisterActivity)
+}
+
+// FetchKey creates a new activity entry for fetching a signing key. Must call Add() to
+// commit the entry.
+func FetchKey() *Entry {
+	return newEvent(FetchKeyActivity)
 }
 
 // Add the activity entry to the publisher.
