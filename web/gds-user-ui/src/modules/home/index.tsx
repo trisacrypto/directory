@@ -25,7 +25,7 @@ const HomePage: React.FC = () => {
       <AboutTrisaSection />
       <JoinUsSection />
       <NetworkActivity />
-      
+
       <SearchDirectory
         handleSubmit={handleSearchSubmit}
         isLoading={isLoading}
