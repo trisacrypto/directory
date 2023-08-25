@@ -94,7 +94,7 @@ func (s *bffTestSuite) TestVASPNames() {
 	require.NoError(err, "error creating VASP fixture in database")
 	rep, err = s.client.LookupAutocomplete(ctx)
 	require.NoError(err, "error calling names endpoint")
-	require.Equal([]string{"Alice VASP, Inc."}, rep, "wrong names returned from names endpoint")
+	require.Equal(map[string]string{"Alice VASP, Inc.": "alice", "alice": "alice"}, rep, "wrong names returned from names endpoint")
 
 	// Test that unverified VASPs are not returned
 	mainnetVASP := &pb.VASP{}
@@ -104,14 +104,14 @@ func (s *bffTestSuite) TestVASPNames() {
 	require.NoError(err, "error creating VASP fixture in database")
 	rep, err = s.client.LookupAutocomplete(ctx)
 	require.NoError(err, "error calling names endpoint")
-	require.Equal([]string{"Alice VASP, Inc."}, rep, "wrong names returned from names endpoint")
+	require.Equal(map[string]string{"Alice VASP, Inc.": "alice", "alice": "alice"}, rep, "wrong names returned from names endpoint")
 
 	// Test that duplicate names are not returned
 	mainnetVASP.VerificationStatus = pb.VerificationState_VERIFIED
 	require.NoError(s.MainNetDB().UpdateVASP(ctx, mainnetVASP), "error updating VASP fixture in database")
 	rep, err = s.client.LookupAutocomplete(ctx)
 	require.NoError(err, "error calling names endpoint")
-	require.Equal([]string{"Alice VASP, Inc."}, rep, "wrong names returned from names endpoint")
+	require.Equal(map[string]string{"Alice VASP, Inc.": "alice", "alice": "alice"}, rep, "wrong names returned from names endpoint")
 
 	// Test names returned from both testnet and mainnet
 	testnetVASP.Id = uuid.New().String()
@@ -124,10 +124,16 @@ func (s *bffTestSuite) TestVASPNames() {
 	mainnetVASP.Entity.Name.NameIdentifiers[0].LegalPersonName = "Charlie VASP, Inc."
 	_, err = s.MainNetDB().CreateVASP(ctx, mainnetVASP)
 	require.NoError(err, "error creating VASP fixture in database")
-	expected := []string{"Alice VASP, Inc.", "Bob VASP, Inc.", "Charlie VASP, Inc."}
+
+	expected := map[string]string{
+		"Alice VASP, Inc.": "alice", "alice": "alice",
+		"Bob VASP, Inc.": "testnet.bob.vaspbot.net", "testnet.bob.vaspbot.net": "testnet.bob.vaspbot.net",
+		"Charlie VASP, Inc.": "mainnet.charlie.vaspbot.net", "mainnet.charlie.vaspbot.net": "mainnet.charlie.vaspbot.net",
+	}
+
 	rep, err = s.client.LookupAutocomplete(ctx)
 	require.NoError(err, "error calling names endpoint")
-	require.ElementsMatch(expected, rep, "wrong names returned from names endpoint")
+	require.Equal(expected, rep, "wrong names returned from names endpoint")
 }
 
 func (s *bffTestSuite) TestLoadRegisterForm() {
@@ -1567,4 +1573,8 @@ func (s *bffTestSuite) TestRegistrationStatus() {
 	require.NoError(err, "received error from registration status endpoint")
 	require.Equal(org.Testnet.Submitted, reply.TestNetSubmitted, "expected testnet timestamp to be returned")
 	require.Equal(org.Mainnet.Submitted, reply.MainNetSubmitted, "expected mainnet timestamp to be returned")
+}
+
+func (s *bffTestSuite) TestNetworkActivity() {
+	s.T().Skip("not implemented yet")
 }

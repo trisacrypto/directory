@@ -1,0 +1,54 @@
+{
+    "date": "2023-01",
+    "days": [
+        {
+            "date": "2023-01-01",
+            "activity": {
+                "testnet": {
+                    "lookup": 1
+                },
+                "mainnet": {
+                    "lookup": 2,
+                    "search": 3
+                },
+                "RVASP": {
+                    "lookup": 4
+                }
+            },
+            "vasp_activity": {
+                "723f46ac-f9f8-4f8f-8f8f-f9f8f9f8f8f8": {
+                    "mainnet": {
+                        "lookup": 1
+                    }
+                }
+            }
+        },
+        {
+            "date": "2023-01-02",
+            "activity": {
+                "testnet": {
+                    "lookup": 2
+                },
+                "RVASP": {
+                    "lookup": 4
+                }
+            }
+        },
+        {
+            "date": "2023-01-03",
+            "activity": {
+                "mainnet": {
+                    "lookup": 2,
+                    "search": 3
+                }
+            },
+            "vasp_activity": {
+                "723f46ac-f9f8-4f8f-8f8f-f9f8f9f8f8f8": {
+                    "mainnet": {
+                        "search": 3
+                    }
+                }
+            }
+        }
+    ]
+}

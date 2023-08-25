@@ -19,6 +19,12 @@ export const basicDetailsValidationSchema = yup.object().shape({
       if (schema.isType(value)) {
         return value;
       }
+      // if the year of the data is future year, then rewrite the year to current year
+      const currentYear = new Date().getFullYear();
+      const year = dayjs(originalValue).year();
+      if (year > currentYear) {
+        return dayjs(originalValue).set('year', currentYear).toDate();
+      }
 
       return dayjs(originalValue).format(DATE_FORMAT);
     })

@@ -121,7 +121,7 @@ func (s *APIv1) Lookup(ctx context.Context, in *LookupParams) (out *LookupReply,
 
 // Returns the deduplicated list of all verified VASPs across both networks to enable
 // client-side autocomplete for lookups.
-func (s *APIv1) LookupAutocomplete(ctx context.Context) (out []string, err error) {
+func (s *APIv1) LookupAutocomplete(ctx context.Context) (out map[string]string, err error) {
 	// Make the HTTP request
 	var req *http.Request
 	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/lookup/autocomplete", nil, nil); err != nil {
@@ -129,7 +129,7 @@ func (s *APIv1) LookupAutocomplete(ctx context.Context) (out []string, err error
 	}
 
 	// Execute the request and get a response
-	out = make([]string, 0)
+	out = make(map[string]string)
 	if _, err = s.Do(req, &out, true); err != nil {
 		return nil, err
 	}
@@ -609,6 +609,21 @@ func (s *APIv1) Attention(ctx context.Context) (out *AttentionReply, err error) 
 		return nil, nil
 	}
 
+	return out, nil
+}
+
+func (s *APIv1) NetworkActivity(ctx context.Context) (out *NetworkActivityReply, err error) {
+	// Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/network/activity", nil, nil); err != nil {
+		return nil, err
+	}
+
+	// Execute the request and get a response
+	out = &NetworkActivityReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
 	return out, nil
 }
 

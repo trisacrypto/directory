@@ -173,7 +173,7 @@ func (s *Server) LookupAutocomplete(c *gin.Context) {
 		iter := db.ListVASPs(ctx)
 		defer iter.Release()
 
-		var names []string
+		names := make(map[string]string)
 		for iter.Next() {
 			var vasp *pb.VASP
 			if vasp, err = iter.VASP(); err != nil {
@@ -192,7 +192,8 @@ func (s *Server) LookupAutocomplete(c *gin.Context) {
 				continue
 			}
 
-			names = append(names, name)
+			names[name] = vasp.CommonName
+			names[vasp.CommonName] = vasp.CommonName
 		}
 
 		if err = iter.Error(); err != nil {
@@ -211,25 +212,21 @@ func (s *Server) LookupAutocomplete(c *gin.Context) {
 	}
 
 	// Deduplicate the results for the response
-	out := make([]string, 0)
-	names := make(map[string]struct{})
+	out := make(map[string]string, 0)
 	for _, vasps := range results {
 		var (
-			vaspNames []string
+			vaspNames map[string]string
 			ok        bool
 		)
-		if vaspNames, ok = vasps.([]string); !ok {
+		if vaspNames, ok = vasps.(map[string]string); !ok {
 			sentry.Error(c).Msg("unexpected result type")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not retrieve VASP names"))
 			return
 		}
 
 		// Add the name to the list
-		for _, name := range vaspNames {
-			if _, ok := names[name]; !ok {
-				names[name] = struct{}{}
-				out = append(out, name)
-			}
+		for name, commonName := range vaspNames {
+			out[name] = commonName
 		}
 	}
 
@@ -1228,6 +1225,10 @@ func (s *Server) RegistrationStatus(c *gin.Context) {
 		out.MainNetSubmitted = org.Mainnet.Submitted
 	}
 	c.JSON(http.StatusOK, out)
+}
+
+func (s *Server) NetworkActivity(c *gin.Context) {
+	c.JSON(http.StatusNotImplemented, api.ErrorResponse(fmt.Errorf("not implemented")))
 }
 
 // Checks if the user supplied registered directory is one of the known directories that

@@ -9,9 +9,11 @@ import (
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
-	"github.com/kelseyhightower/envconfig"
+	"github.com/rotationalio/confire"
 	"github.com/rs/zerolog"
 	"github.com/trisacrypto/directory/pkg/store/config"
+	"github.com/trisacrypto/directory/pkg/utils/activity"
+	"github.com/trisacrypto/directory/pkg/utils/ensign"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"github.com/trisacrypto/trisa/pkg/trisa/mtls"
@@ -44,6 +46,7 @@ type Config struct {
 	Database     config.StoreConfig
 	Email        EmailConfig
 	Sentry       sentry.Config
+	Activity     activity.Config
 	processed    bool
 }
 
@@ -100,14 +103,16 @@ type CacheConfig struct {
 	Expiration time.Duration `split_words:"true" default:"8h"`
 }
 
+type ActivityConfig struct {
+	Enabled bool   `split_words:"true" default:"false"`
+	Topic   string `split_words:"true"`
+	Ensign  ensign.Config
+}
+
 // New creates a new Config object from environment variables prefixed with GDS_BFF.
 func New() (conf Config, err error) {
-	if err = envconfig.Process("gds_bff", &conf); err != nil {
-		return Config{}, err
-	}
-
-	// Validate the configuration
-	if err = conf.Validate(); err != nil {
+	// Load and validate the configuration from the environment.
+	if err = confire.Process("gds_bff", &conf); err != nil {
 		return Config{}, err
 	}
 

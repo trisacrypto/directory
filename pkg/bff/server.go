@@ -25,6 +25,7 @@ import (
 	docs "github.com/trisacrypto/directory/pkg/bff/docs"
 	"github.com/trisacrypto/directory/pkg/bff/emails"
 	"github.com/trisacrypto/directory/pkg/store"
+	"github.com/trisacrypto/directory/pkg/utils/activity"
 	"github.com/trisacrypto/directory/pkg/utils/cache"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
@@ -96,6 +97,10 @@ func New(conf config.Config) (s *Server, err error) {
 				return nil, fmt.Errorf("could not connect to trtl database: %s", err)
 			}
 			log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.Insecure).Msg("connected to trtl database")
+		}
+
+		if err = activity.Start(conf.Activity); err != nil {
+			return nil, fmt.Errorf("could not start activity logger: %s", err)
 		}
 
 		if s.email, err = emails.New(conf.Email); err != nil {
@@ -367,6 +372,7 @@ func (s *Server) setupRoutes() (err error) {
 		v1.GET("/verify", s.VerifyContact)
 		v1.POST("/users/login", userinfo, s.Login)
 		v1.GET("/users/roles", s.ListUserRoles)
+		v1.GET("/network/activity", s.NetworkActivity)
 
 		// Authenticated routes
 		// Logged-in user queries and updates

@@ -4,60 +4,37 @@ import Head from 'components/Head/LandingHead';
 import JoinUsSection from 'components/Section/JoinUs';
 import SearchDirectory from 'components/Section/SearchDirectory';
 import AboutTrisaSection from 'components/Section/AboutUs';
-import * as Sentry from '@sentry/react';
-import { lookup } from './service';
-import { isValidUuid } from 'utils/utils';
+
 import LandingLayout from 'layouts/LandingLayout';
+import useFetchLookupAutocomplete from './useFetchLookupAutocomplete';
+import useFetchLookup from './useFetchLookup';
+// import NetworkActivity from 'components/Section/NetworkActivity/NetworkActivity';
 const HomePage: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState(false);
-  const [error, setError] = useState('');
+  const { vasps } = useFetchLookupAutocomplete();
+  const { handleSearch, searchString, data, isLoading, error, resetData } = useFetchLookup();
   const [search, setSearch] = useState('');
-  const handleSearchSubmit = async (evt: FormEvent, searchQuery: string) => {
+  const handleSearchSubmit = (evt: FormEvent, searchQuery: string) => {
     evt.preventDefault();
-    // throw new Error('Sentry Frontend Error');
-    setIsLoading(true);
-    const query = isValidUuid(searchQuery) ? `uuid=${searchQuery}` : `common_name=${searchQuery}`;
-
-    try {
-      const request = await lookup(query);
-
-      setIsLoading(false);
-      if (request?.mainnet || request?.testnet) {
-        setError('');
-        setResult(request);
-        setSearch(searchQuery);
-      } else {
-        setResult(false);
-        setError('No results found');
-      }
-    } catch (e: any) {
-      setIsLoading(false);
-      setResult(false);
-      if (!e.response?.data?.success) {
-        setError(e.response?.data?.error);
-      } else {
-        setError('Something went wrong');
-        Sentry.captureException(e);
-      }
-    }
+    handleSearch(searchQuery);
+    setSearch(searchString);
   };
+
   return (
     <LandingLayout>
       <Head hasBtn isHomePage />
       <AboutTrisaSection />
       <JoinUsSection />
+      {/* <NetworkActivity /> */}
 
       <SearchDirectory
         handleSubmit={handleSearchSubmit}
         isLoading={isLoading}
-        result={result}
+        result={data}
         error={error}
-        handleClose={() => {
-          setResult(false);
-          setError('');
-        }}
+        handleClose={() => resetData()}
+        onResetData={() => resetData()}
         query={search}
+        options={vasps}
       />
     </LandingLayout>
   );

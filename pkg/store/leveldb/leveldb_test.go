@@ -411,6 +411,92 @@ func (s *leveldbTestSuite) TestAnnouncementStore() {
 	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
 }
 
+func (s *leveldbTestSuite) TestActivityStore() {
+	// Load the activity month record from testdata
+	data, err := os.ReadFile("../testdata/activity.json")
+	s.NoError(err)
+
+	month := &bff.ActivityMonth{}
+	err = protojson.Unmarshal(data, month)
+	s.NoError(err)
+
+	// Verify the activity month is loaded correctly
+	s.NotEmpty(month.Date)
+	s.NotEmpty(month.Days)
+	s.Empty(month.Created)
+	s.Empty(month.Modified)
+
+	// Create the activity month
+	s.NoError(s.db.UpdateActivityMonth(context.Background(), month))
+
+	// Attempt to Retrieve the activity month
+	m, err := s.db.RetrieveActivityMonth(context.Background(), month.Date)
+	s.NoError(err)
+	s.Equal(month.Date, m.Date)
+	s.NotEmpty(m.Created)
+	s.Equal(m.Modified, m.Created)
+	s.Len(m.Days, len(month.Days))
+
+	// Attempt to Retrieve a non-existent activity month
+	_, err = s.db.RetrieveActivityMonth(context.Background(), "")
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+	_, err = s.db.RetrieveActivityMonth(context.Background(), "2022-01-01")
+	s.Error(err)
+	_, err = s.db.RetrieveActivityMonth(context.Background(), "2021-01")
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+
+	// Attempt to save an activity month without a date on it
+	month.Date = ""
+	err = s.db.UpdateActivityMonth(context.Background(), month)
+	s.ErrorIs(err, storeerrors.ErrIncompleteRecord)
+
+	// Sleep to advance the clock for the modified timestamp
+	time.Sleep(1 * time.Millisecond)
+
+	// Update the activity month
+	m.Days[0].Activity.Mainnet["lookup"] = 10
+	err = s.db.UpdateActivityMonth(context.Background(), m)
+	s.NoError(err)
+
+	m, err = s.db.RetrieveActivityMonth(context.Background(), m.Date)
+	s.NoError(err)
+	s.Equal(uint64(10), m.Days[0].Activity.Mainnet["lookup"])
+	s.NotEmpty(m.Modified)
+	s.NotEqual(m.Modified, m.Created)
+
+	// Add another activity month
+	month = &bff.ActivityMonth{
+		Date: "2023-02",
+		Days: []*bff.ActivityDay{
+			{
+				Date: "2023-02-01",
+				Activity: &bff.ActivityCount{
+					Testnet: map[string]uint64{
+						"lookup": 20,
+					},
+				},
+			},
+		},
+	}
+	s.NoError(s.db.UpdateActivityMonth(context.Background(), month))
+
+	// Test that we can still retrieve both months
+	january, err := s.db.RetrieveActivityMonth(context.Background(), "2023-01")
+	s.NoError(err)
+	s.Equal(uint64(1), january.Days[0].Activity.Testnet["lookup"])
+
+	february, err := s.db.RetrieveActivityMonth(context.Background(), "2023-02")
+	s.NoError(err)
+	s.Equal(uint64(20), february.Days[0].Activity.Testnet["lookup"])
+
+	// Delete an activity month
+	s.NoError(s.db.DeleteActivityMonth(context.Background(), "2023-01"))
+
+	// Should not be able to retrieve the deleted activity month
+	_, err = s.db.RetrieveActivityMonth(context.Background(), "2023-01")
+	s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+}
+
 func (s *leveldbTestSuite) TestOrganizationStore() {
 	// Create a new organization in the database
 	org := &bff.Organization{}

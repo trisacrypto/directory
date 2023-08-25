@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kelseyhightower/envconfig"
+	"github.com/rotationalio/confire"
 	"github.com/rs/zerolog"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/store/config"
+	"github.com/trisacrypto/directory/pkg/utils/activity"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
 )
@@ -32,6 +33,7 @@ type Config struct {
 	Backup      BackupConfig
 	Secrets     SecretsConfig
 	Sentry      sentry.Config
+	Activity    activity.Config
 	processed   bool
 }
 
@@ -103,14 +105,9 @@ type SecretsConfig struct {
 }
 
 // New creates a new Config object, loading environment variables and defaults.
-func New() (_ Config, err error) {
-	var conf Config
-	if err = envconfig.Process("gds", &conf); err != nil {
-		return Config{}, err
-	}
-
-	// Validate config-specific constraints
-	if err = conf.Validate(); err != nil {
+func New() (conf Config, err error) {
+	// Load and validate the configuration from the environment.
+	if err = confire.Process("gds", &conf); err != nil {
 		return Config{}, err
 	}
 

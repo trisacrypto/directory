@@ -721,6 +721,111 @@ func (s *Store) DeleteAnnouncementMonth(ctx context.Context, date string) (err e
 }
 
 //===========================================================================
+// ActivityStore Implementation
+//===========================================================================
+
+// RetrieveActivityMonth returns the activity month record for the given date
+// timestamp in the format YYYY-MM.
+func (s *Store) RetrieveActivityMonth(ctx context.Context, date string) (m *bff.ActivityMonth, err error) {
+	if date == "" {
+		return nil, storeerrors.ErrEntityNotFound
+	}
+
+	// Get the key by creating an intermediate activity month to ensure that
+	// validation and key creation always happens the same way.
+	m = &bff.ActivityMonth{Date: date}
+	key, err := m.Key()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := utils.WithDeadline(ctx)
+	defer cancel()
+	request := &pb.GetRequest{
+		Key:       key,
+		Namespace: wire.NamespaceActivities,
+	}
+	var reply *pb.GetReply
+	if reply, err = s.client.Get(ctx, request); err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, storeerrors.ErrEntityNotFound
+		}
+		return nil, err
+	}
+
+	if err = proto.Unmarshal(reply.Value, m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// UpdateActivityMonth creates a new activity month record if it doesn't already
+// exist or replaces the existing record.
+func (s *Store) UpdateActivityMonth(ctx context.Context, m *bff.ActivityMonth) (err error) {
+	if m.Date == "" {
+		return storeerrors.ErrIncompleteRecord
+	}
+
+	// Get the key by creating an intermediate activity month to ensure that
+	// validation and key creation always happens the same way.
+	var key []byte
+	if key, err = m.Key(); err != nil {
+		return err
+	}
+
+	// Update the modified timestamp
+	m.Modified = time.Now().Format(time.RFC3339Nano)
+	if m.Created == "" {
+		m.Created = m.Modified
+	}
+
+	var data []byte
+	if data, err = proto.Marshal(m); err != nil {
+		return err
+	}
+
+	ctx, cancel := utils.WithDeadline(ctx)
+	defer cancel()
+	request := &pb.PutRequest{
+		Key:       key,
+		Value:     data,
+		Namespace: wire.NamespaceActivities,
+	}
+	if reply, err := s.client.Put(ctx, request); err != nil || !reply.Success {
+		if err == nil {
+			err = storeerrors.ErrProtocol
+		}
+		return err
+	}
+	return nil
+}
+
+// DeleteActivityMonth removes an activity month record from the store.
+func (s *Store) DeleteActivityMonth(ctx context.Context, date string) (err error) {
+	// Get the key by creating an intermediate activity month to ensure that
+	// validation and key creation always happens the same way.
+	var key []byte
+	m := &bff.ActivityMonth{Date: date}
+	if key, err = m.Key(); err != nil {
+		return err
+	}
+
+	ctx, cancel := utils.WithDeadline(ctx)
+	defer cancel()
+	request := &pb.DeleteRequest{
+		Key:       key,
+		Namespace: wire.NamespaceActivities,
+	}
+	if reply, err := s.client.Delete(ctx, request); err != nil || !reply.Success {
+		if err == nil {
+			err = storeerrors.ErrProtocol
+		}
+		return err
+	}
+	return nil
+}
+
+//===========================================================================
 // OrganizationStore Implementation
 //===========================================================================
 

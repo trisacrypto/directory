@@ -157,6 +157,37 @@ message AnnouncementMonth {
     string modified = 15;
 }
 
+// ActivityDay represents activity across multiple networks aggregated over a single
+// day.
+message ActivityDay {
+    // The date which the activities occurred on
+    string date = 1;
+
+    // Activity counts broken down by network and activity type
+    ActivityCount activity = 3;
+
+    // Activity counts broken down by VASP
+    map<string, ActivityCount> vasp_activity = 4;
+}
+
+// Activity counts are aggregated by day and stored in months to enable
+// efficient lookups of multiple days of counts for time series representations.
+message ActivityMonth {
+    string date = 1;
+    repeated ActivityDay days = 2;
+
+    // Metadata as RFC3339Nano Timestamps
+    string created = 14;
+    string modified = 15;
+}
+
+// ActivityCount represents counts broken down by activity type and network.
+message ActivityCount {
+    map<string, uint64> testnet = 1;
+    map<string, uint64> mainnet = 2;
+    map<string, uint64> RVASP = 3;
+}
+
 // AttentionSeverity is used to indicate the importance of an attention message
 enum AttentionSeverity {
     SUCCESS = 0;

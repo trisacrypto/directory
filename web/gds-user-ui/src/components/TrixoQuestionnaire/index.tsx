@@ -33,6 +33,9 @@ const TrixoQuestionnaire: React.FC = () => {
       getCertificateStep();
       setShouldResetForm(true);
     }
+    return () => {
+      setShouldResetForm(false);
+    };
   }, [
     isStepDeleted,
     updateDeleteStepState,
@@ -40,6 +43,11 @@ const TrixoQuestionnaire: React.FC = () => {
     isTrixoStepDeleted,
     shouldResetForm
   ]);
+
+  useEffect(() => {
+    getCertificateStep();
+  }, [getCertificateStep]);
+
   return (
     <Stack spacing={4} mt="2rem">
       <HStack>
