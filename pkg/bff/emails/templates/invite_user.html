@@ -1,7 +1,8 @@
-<p>Greetings {{ .User }},</p>
+<p>Greetings{{if ne .UserName ""}} {{ .UserName }}{{end}},</p>
 
-<p>You have been invited by {{ .Inviter }} to join the TRISA Global Directory Service (GDS) to collaborate on {{
-    .Organization }}.</p>
+<p>{{if ne .InviterName ""}}You have been invited by {{ .InviterName }}{{else}}A user whose email address is {{
+    .InviterEmail }} has invited you{{end}} to join the TRISA Global Directory Service (GDS) to collaborate on {{if ne
+    .Organization ""}}{{ .Organization }}{{else}}their organization{{end}}.</p>
 
 <p>To accept the invitation, please <a href="{{ .InviteURL }}">click this link.</a> If you don't already have an account
     you will be asked to create one. Note that this invitation is valid for 7 calendar days.</p>
