@@ -54,7 +54,7 @@ func Start(conf Config) (err error) {
 
 			wg = &sync.WaitGroup{}
 			wg.Add(1)
-			go Publish()
+			go publish()
 		}
 	})
 
@@ -63,7 +63,7 @@ func Start(conf Config) (err error) {
 
 // Global goroutine that publishes activity entries from the receiver channel to the
 // Ensign topic as events.
-func Publish() {
+func publish() {
 	mu.Lock()
 	running = true
 	mu.Unlock()

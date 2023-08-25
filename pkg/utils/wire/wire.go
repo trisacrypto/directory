@@ -36,6 +36,7 @@ const (
 	NamespaceIndices       = "index"
 	NamespaceSequence      = "sequence"
 	NamespaceAnnouncements = "announcements"
+	NamespaceActivities    = "activities"
 	NamespaceOrganizations = "organizations"
 	NamespaceContacts      = "contacts"
 )

@@ -635,6 +635,101 @@ func (s *trtlStoreTestSuite) TestAnnouncementStore() {
 	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
 }
 
+func (s *trtlStoreTestSuite) TestActivityStore() {
+	require := s.Require()
+
+	// Load the activity month record from testdata
+	data, err := os.ReadFile("../testdata/activity.json")
+	require.NoError(err)
+
+	month := &bff.ActivityMonth{}
+	err = protojson.Unmarshal(data, month)
+	require.NoError(err)
+
+	// Inject bufconn connection into the store
+	require.NoError(s.grpc.Connect(context.Background()))
+	defer s.grpc.Close()
+
+	// Verify the activity month is loaded correctly
+	require.NotEmpty(month.Date)
+	require.NotEmpty(month.Days)
+	require.Empty(month.Created)
+	require.Empty(month.Modified)
+
+	db, err := store.NewMock(s.grpc.Conn)
+	require.NoError(err)
+
+	// Create the activity month
+	require.NoError(db.UpdateActivityMonth(context.Background(), month))
+
+	// Attempt to Retrieve the activity month
+	m, err := db.RetrieveActivityMonth(context.Background(), month.Date)
+	require.NoError(err)
+	require.Equal(month.Date, m.Date)
+	require.NotEmpty(m.Created)
+	require.Equal(m.Modified, m.Created)
+	require.Len(m.Days, len(month.Days))
+
+	// Attempt to Retrieve a non-existent activity month
+	_, err = db.RetrieveActivityMonth(context.Background(), "")
+	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
+	_, err = db.RetrieveActivityMonth(context.Background(), "2022-01-01")
+	require.Error(err)
+	_, err = db.RetrieveActivityMonth(context.Background(), "2021-01")
+	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
+
+	// Attempt to save an activity month without a date on it
+	month.Date = ""
+	err = db.UpdateActivityMonth(context.Background(), month)
+	require.ErrorIs(err, storeerrors.ErrIncompleteRecord)
+
+	// Sleep to advance the clock for the modified timestamp
+	time.Sleep(1 * time.Millisecond)
+
+	// Update the activity month
+	m.Days[0].Activity.Mainnet["lookup"] = 10
+	err = db.UpdateActivityMonth(context.Background(), m)
+	require.NoError(err)
+
+	m, err = db.RetrieveActivityMonth(context.Background(), m.Date)
+	require.NoError(err)
+	require.Equal(uint64(10), m.Days[0].Activity.Mainnet["lookup"])
+	require.NotEmpty(m.Modified)
+	require.NotEqual(m.Modified, m.Created)
+
+	// Add another activity month
+	month = &bff.ActivityMonth{
+		Date: "2023-02",
+		Days: []*bff.ActivityDay{
+			{
+				Date: "2023-02-01",
+				Activity: &bff.ActivityCount{
+					Testnet: map[string]uint64{
+						"lookup": 20,
+					},
+				},
+			},
+		},
+	}
+	require.NoError(db.UpdateActivityMonth(context.Background(), month))
+
+	// Test that we can still retrieve both months
+	january, err := db.RetrieveActivityMonth(context.Background(), "2023-01")
+	require.NoError(err)
+	require.Equal(uint64(1), january.Days[0].Activity.Testnet["lookup"])
+
+	february, err := db.RetrieveActivityMonth(context.Background(), "2023-02")
+	require.NoError(err)
+	require.Equal(uint64(20), february.Days[0].Activity.Testnet["lookup"])
+
+	// Delete an activity month
+	require.NoError(db.DeleteActivityMonth(context.Background(), "2023-01"))
+
+	// Should not be able to retrieve the deleted activity month
+	_, err = db.RetrieveActivityMonth(context.Background(), "2023-01")
+	require.ErrorIs(err, storeerrors.ErrEntityNotFound)
+}
+
 func (s *trtlStoreTestSuite) TestOrganizationStore() {
 	require := s.Require()
 
