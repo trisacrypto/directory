@@ -38,6 +38,8 @@ func TestPublisher(t *testing.T) {
 	// Activity methods are no ops but should not panic
 	activity.Lookup().Add()
 	activity.Search().VASP(uuid.New().String()).Add()
+	activity.Register().Add()
+	activity.KeyExchange().Add()
 	activity.Stop()
 
 	// Test publisher starts with valid configuration
@@ -79,8 +81,8 @@ func TestPublisher(t *testing.T) {
 
 		// Receive events from the client. Publish happens on intervals, so wait until
 		// both activity entries are published. If not received, the test should timeout.
-		var lookup, search bool
-		for lookup == false && search == false {
+		var lookup, search, register, keyExchange bool
+		for lookup == false && search == false && register == false && keyExchange == false {
 			msg, err := stream.Recv()
 			assert.NoError(t, err, "expected no error receiving event from activity publisher")
 
@@ -110,6 +112,18 @@ func TestPublisher(t *testing.T) {
 				assert.Equal(t, uint64(1), acv.VASPActivity[vaspID][activity.SearchActivity], "expected search activity to be 1 for VASP")
 				search = true
 			}
+
+			if _, ok := acv.Activity[activity.RegisterActivity]; ok {
+				_, ok = event.Metadata["has_activity"]
+				assert.True(t, ok, "expected has_activity metadata to be present")
+				register = true
+			}
+
+			if _, ok := acv.Activity[activity.KeyExchangeActivity]; ok {
+				_, ok = event.Metadata["has_activity"]
+				assert.True(t, ok, "expected has_activity metadata to be present")
+				keyExchange = true
+			}
 		}
 		published <- struct{}{}
 
@@ -119,6 +133,8 @@ func TestPublisher(t *testing.T) {
 	// Should be able to add activity entries
 	activity.Lookup().Add()
 	activity.Search().VASP(vaspID).Add()
+	activity.Register().Add()
+	activity.KeyExchange().Add()
 
 	// Wait for the publisher to publish the event
 	<-published
