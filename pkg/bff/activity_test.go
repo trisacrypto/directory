@@ -8,9 +8,11 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/oklog/ulid/v2"
-	api "github.com/rotationalio/go-ensign/api/v1beta1"
+	pb "github.com/rotationalio/go-ensign/api/v1beta1"
 	mimetype "github.com/rotationalio/go-ensign/mimetype/v1beta1"
+	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/bff"
+	"github.com/trisacrypto/directory/pkg/bff/api/v1"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/utils/activity"
 	"github.com/trisacrypto/directory/pkg/utils/ensign"
@@ -19,6 +21,102 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+func (s *bffTestSuite) TestNetworkActivity() {
+	require := s.Require()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// If there is no activity in the database, should return zeros
+	rep, err := s.client.NetworkActivity(ctx)
+	require.NoError(err, "could not get network activity")
+	require.Len(rep.MainNet, 30, "should have 30 days of activity for mainnet")
+	require.Len(rep.TestNet, 30, "should have 30 days of activity for testnet")
+	assertNoCounts(require, rep)
+
+	// Add an empty month to the database but with no data
+	now := time.Now()
+	month := &models.ActivityMonth{
+		Date: now.Format(models.MonthLayout),
+	}
+	require.NoError(s.DB().UpdateActivityMonth(ctx, month), "could not create activity month")
+	rep, err = s.client.NetworkActivity(ctx)
+	assertNoCounts(require, rep)
+
+	// Add some activity to the database
+	month.Add(&activity.NetworkActivity{
+		Network: activity.MainNet,
+		Activity: activity.ActivityCount{
+			activity.LookupActivity: 1,
+		},
+		Timestamp: now,
+		Window:    time.Minute * 5,
+	})
+	require.NoError(s.DB().UpdateActivityMonth(ctx, month), "could not update activity month")
+	rep, err = s.client.NetworkActivity(ctx)
+	require.NoError(err, "could not get network activity")
+	require.Len(rep.MainNet, 30, "should have 30 days of activity for mainnet")
+	require.Len(rep.TestNet, 30, "should have 30 days of activity for testnet")
+	require.Equal(uint64(1), rep.MainNet[29].Events, "should have one mainnet event")
+	require.Zero(rep.TestNet[28].Events, "should have zero testnet events")
+
+	// Create some more activity
+	acv := &activity.NetworkActivity{
+		Network: activity.TestNet,
+		Activity: activity.ActivityCount{
+			activity.LookupActivity: 3,
+		},
+		Timestamp: now.AddDate(0, 0, -29),
+		Window:    time.Minute * 5,
+	}
+
+	// Create a new month if less than 29 days in this month
+	monthDate := acv.Timestamp.Format(models.MonthLayout)
+	if now.Day() < 29 {
+		month = &models.ActivityMonth{
+			Date: monthDate,
+		}
+	} else {
+		month.Date = monthDate
+	}
+	month.Add(acv)
+	require.NoError(s.DB().UpdateActivityMonth(ctx, month), "could not update activity month")
+	rep, err = s.client.NetworkActivity(ctx)
+	require.NoError(err, "could not get network activity")
+	require.Len(rep.MainNet, 30, "should have 30 days of activity for mainnet")
+	require.Len(rep.TestNet, 30, "should have 30 days of activity for testnet")
+	require.Equal(uint64(1), rep.MainNet[29].Events, "should have one mainnet event on the last day")
+	require.Equal(uint64(3), rep.TestNet[0].Events, "should have three testnet events on the first day")
+}
+
+// Convenience method that verifies an activity reply has no counts
+func assertNoCounts(require *require.Assertions, rep *api.NetworkActivityReply) {
+	dates := map[string]struct{}{}
+	var prevDate string
+	for _, acv := range rep.TestNet {
+		require.Zero(acv.Events, "expected zero events")
+		_, ok := dates[acv.Date]
+		require.False(ok, "should not have duplicate dates")
+		dates[acv.Date] = struct{}{}
+		if prevDate != "" {
+			require.True(acv.Date > prevDate, "dates should be in chronological order")
+		}
+		prevDate = acv.Date
+	}
+
+	dates = map[string]struct{}{}
+	prevDate = ""
+	for _, activity := range rep.MainNet {
+		require.Zero(activity.Events, "expected zero events")
+		_, ok := dates[activity.Date]
+		require.False(ok, "should not have duplicate dates")
+		dates[activity.Date] = struct{}{}
+		if prevDate != "" {
+			require.True(activity.Date > prevDate, "dates should be in chronological order")
+		}
+		prevDate = activity.Date
+	}
+}
 
 func (s *bffTestSuite) TestActivitySubscriber() {
 	require := s.Require()
@@ -46,7 +144,7 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 	require.NoError(err, "could not create subscriber")
 
 	// Setup the network activity fixtures
-	events := make([]*api.EventWrapper, 0)
+	events := make([]*pb.EventWrapper, 0)
 	aliceVASP := uuid.New().String()
 	bobVASP := uuid.New().String()
 
@@ -67,13 +165,13 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 	require.NoError(err, "could not create first activity time")
 	data, err := msgpack.Marshal(acv)
 	require.NoError(err, "could not marshal first activity")
-	event := &api.Event{
+	event := &pb.Event{
 		Data:     data,
 		Mimetype: mimetype.MIME_APPLICATION_MSGPACK,
 		Type:     &activity.NetworkActivityEventType,
 		Created:  timestamppb.Now(),
 	}
-	wrapper := &api.EventWrapper{
+	wrapper := &pb.EventWrapper{
 		Id:        []byte("eventID"),
 		TopicId:   []byte("topicID"),
 		Committed: timestamppb.Now(),
@@ -102,13 +200,13 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 	require.NoError(err, "could not create second activity time")
 	data, err = msgpack.Marshal(acv)
 	require.NoError(err, "could not marshal second activity")
-	event = &api.Event{
+	event = &pb.Event{
 		Data:     data,
 		Mimetype: mimetype.MIME_APPLICATION_MSGPACK,
 		Type:     &activity.NetworkActivityEventType,
 		Created:  timestamppb.Now(),
 	}
-	wrapper = &api.EventWrapper{
+	wrapper = &pb.EventWrapper{
 		Id:        []byte("eventID"),
 		TopicId:   []byte("topicID"),
 		Committed: timestamppb.Now(),
@@ -133,13 +231,13 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 	require.NoError(err, "could not create third activity time")
 	data, err = msgpack.Marshal(acv)
 	require.NoError(err, "could not marshal third activity")
-	event = &api.Event{
+	event = &pb.Event{
 		Data:     data,
 		Mimetype: mimetype.MIME_APPLICATION_MSGPACK,
 		Type:     &activity.NetworkActivityEventType,
 		Created:  timestamppb.Now(),
 	}
-	wrapper = &api.EventWrapper{
+	wrapper = &pb.EventWrapper{
 		Id:        []byte("eventID"),
 		TopicId:   []byte("topicID"),
 		Committed: timestamppb.Now(),
@@ -160,13 +258,13 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 	require.NoError(err, "could not create fourth activity time")
 	data, err = msgpack.Marshal(acv)
 	require.NoError(err, "could not marshal fourth activity")
-	event = &api.Event{
+	event = &pb.Event{
 		Data:     data,
 		Mimetype: mimetype.MIME_APPLICATION_MSGPACK,
 		Type:     &activity.NetworkActivityEventType,
 		Created:  timestamppb.Now(),
 	}
-	wrapper = &api.EventWrapper{
+	wrapper = &pb.EventWrapper{
 		Id:        []byte("eventID"),
 		TopicId:   []byte("topicID"),
 		Committed: timestamppb.Now(),
@@ -178,7 +276,7 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 	emock := sub.GetEnsignMock()
 	server := &sync.WaitGroup{}
 	server.Add(1)
-	emock.OnSubscribe = func(stream api.Ensign_SubscribeServer) (err error) {
+	emock.OnSubscribe = func(stream pb.Ensign_SubscribeServer) (err error) {
 		defer server.Done()
 
 		// Read the initial subscription request
@@ -188,9 +286,9 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 		}
 
 		// Send the ready response back to the client
-		if err = stream.Send(&api.SubscribeReply{
-			Embed: &api.SubscribeReply_Ready{
-				Ready: &api.StreamReady{
+		if err = stream.Send(&pb.SubscribeReply{
+			Embed: &pb.SubscribeReply_Ready{
+				Ready: &pb.StreamReady{
 					ClientId: "client-id",
 					ServerId: "server-id",
 					Topics: map[string][]byte{
@@ -204,8 +302,8 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 
 		// Send the activity updates
 		for _, event := range events {
-			if err = stream.Send(&api.SubscribeReply{
-				Embed: &api.SubscribeReply_Event{
+			if err = stream.Send(&pb.SubscribeReply{
+				Embed: &pb.SubscribeReply_Event{
 					Event: event,
 				},
 			}); err != nil {
@@ -215,7 +313,7 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 
 		// Should receive all the acks from the subscruber
 		for i := 0; i < len(events); i++ {
-			var req *api.SubscribeRequest
+			var req *pb.SubscribeRequest
 			if req, err = stream.Recv(); err != nil {
 				return err
 			}

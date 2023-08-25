@@ -394,7 +394,7 @@ type NetworkError struct {
 // Activity is a time-aggregated collection of events (Search, Lookup, etc)
 type Activity struct {
 	Date   string `json:"date"`
-	Events int    `json:"events"`
+	Events uint64 `json:"events"`
 }
 
 // NetworkActivityReply is a map of the network (TestNet or MainNet) to Activity,
