@@ -10,7 +10,7 @@ import {
 const _i18n = setupI18n();
 
 const trisaEndpointPattern = /^$|^([a-zA-Z0-9.-]+):((?!(0))[0-9]+)$/;
-const commonNameRegex = /^[a-zA-Z0-9]+\.[a-zA-Z0-9]{2,}$/;
+const commonNameRegex = /^$|^([a-zA-Z0-9.-]+)\.([a-zA-Z0-9.-]+)$/;
 
 export const trisaImplementationValidationSchema = yup.object().shape({
   testnet: yup.object().shape({

@@ -96,6 +96,19 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({
     }
   }, [shouldResetForm, resetForm, data, onResetFormState]);
 
+  useEffect(() => {
+    // prevent keyup & keydown events on date input
+    const input = document.getElementById('established_on');
+    if (input) {
+      input.addEventListener('keydown', (e) => {
+        e.preventDefault();
+      });
+      input.addEventListener('keyup', (e) => {
+        e.preventDefault();
+      });
+    }
+  }, []);
+
   return (
     <FormLayout spacing={5}>
       <FormProvider {...methods}>
@@ -127,6 +140,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({
             <InputFormControl
               controlId="established_on"
               data-testid="established_on"
+              disabledKeyboardNavigation={false}
               label={t`Date of Incorporation / Establishment`}
               formHelperText={errors.established_on?.message as string}
               isInvalid={!!errors.established_on}
@@ -137,6 +151,7 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({
                 min: '1800-01-01',
                 max: formatDate()
               }}
+              type="date"
               isRequiredField
               {...register('established_on')}
             />
