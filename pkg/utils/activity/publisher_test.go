@@ -38,7 +38,7 @@ func TestPublisher(t *testing.T) {
 
 	// Activity methods are no ops but should not panic
 	activity.Lookup().Add()
-	activity.Search().VASP(uuid.New()).Add()
+	activity.Search().VASP(uuid.New().String()).Add()
 	activity.Stop()
 
 	// Test publisher starts with valid configuration
@@ -58,7 +58,7 @@ func TestPublisher(t *testing.T) {
 	//fmt.Println(client.WaitForReconnect(context.Background()))
 
 	// Configure the Ensign mock to assert that events are being published
-	vaspID := uuid.New()
+	vaspID := uuid.New().String()
 	published := make(chan struct{})
 	emock.OnPublish = func(stream api.Ensign_PublishServer) (err error) {
 		// Receive the initial request from the client

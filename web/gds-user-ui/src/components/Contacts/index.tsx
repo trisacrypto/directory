@@ -34,6 +34,9 @@ const Contacts: React.FC = () => {
       getCertificateStep();
       setShouldResetForm(true);
     }
+    return () => {
+      setShouldResetForm(false);
+    };
   }, [
     isStepDeleted,
     updateDeleteStepState,
@@ -41,6 +44,11 @@ const Contacts: React.FC = () => {
     isContactsStepDeleted,
     shouldResetForm
   ]);
+
+  useEffect(() => {
+    getCertificateStep();
+  }, [getCertificateStep]);
+
   return (
     <Stack spacing={13} mt="2rem">
       <HStack>

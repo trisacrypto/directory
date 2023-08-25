@@ -8,7 +8,7 @@ import AboutTrisaSection from 'components/Section/AboutUs';
 import LandingLayout from 'layouts/LandingLayout';
 import useFetchLookupAutocomplete from './useFetchLookupAutocomplete';
 import useFetchLookup from './useFetchLookup';
-import NetworkActivity from 'components/Section/NetworkActivity';
+import NetworkActivity from 'components/Section/NetworkActivity/NetworkActivity';
 const HomePage: React.FC = () => {
   const { vasps } = useFetchLookupAutocomplete();
   const { handleSearch, searchString, data, isLoading, error, resetData } = useFetchLookup();
@@ -25,7 +25,7 @@ const HomePage: React.FC = () => {
       <AboutTrisaSection />
       <JoinUsSection />
       <NetworkActivity />
-      
+
       <SearchDirectory
         handleSubmit={handleSearchSubmit}
         isLoading={isLoading}
