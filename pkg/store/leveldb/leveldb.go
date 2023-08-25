@@ -610,6 +610,87 @@ func (s *Store) DeleteAnnouncementMonth(ctx context.Context, date string) (err e
 }
 
 //===========================================================================
+// ActivityStore Implementation
+//===========================================================================
+
+// RetrieveActivityMonth returns the activity month record for the given date
+// timestamp in the format YYYY-MM.
+func (s *Store) RetrieveActivityMonth(ctx context.Context, date string) (m *bff.ActivityMonth, err error) {
+	if date == "" {
+		return nil, storeerrors.ErrEntityNotFound
+	}
+
+	// Get the key by creating an intermediate activity month to ensure that
+	// validation and key creation always happens the same way.
+	var key []byte
+	m = &bff.ActivityMonth{Date: date}
+	if key, err = m.Key(); err != nil {
+		return nil, err
+	}
+
+	var val []byte
+	if val, err = s.db.Get(key, nil); err != nil {
+		if err == leveldb.ErrNotFound {
+			return nil, storeerrors.ErrEntityNotFound
+		}
+		return nil, err
+	}
+
+	if err = proto.Unmarshal(val, m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// UpdateActivityMonth creates a new activity month record if it doesn't already
+// exist or replaces the existing record.
+func (s *Store) UpdateActivityMonth(ctx context.Context, m *bff.ActivityMonth) (err error) {
+	if m.Date == "" {
+		return storeerrors.ErrIncompleteRecord
+	}
+
+	var data []byte
+	key, err := m.Key()
+	if err != nil {
+		return err
+	}
+
+	// Update the modified timestamp
+	m.Modified = time.Now().Format(time.RFC3339Nano)
+	if m.Created == "" {
+		m.Created = m.Modified
+	}
+
+	if data, err = proto.Marshal(m); err != nil {
+		return err
+	}
+
+	if err = s.db.Put(key, data, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteActivityMonth removes an activity month record from the store.
+func (s *Store) DeleteActivityMonth(ctx context.Context, date string) (err error) {
+	// Get the key by creating an intermediate activity month to ensure that
+	// validation and key creation always happens the same way.
+	m := &bff.ActivityMonth{Date: date}
+	key, err := m.Key()
+	if err != nil {
+		return err
+	}
+
+	// LevelDB will not return an error if the entity does not exist
+	if err = s.db.Delete(key, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//===========================================================================
 // OrganizationStore Implementation
 //===========================================================================
 
