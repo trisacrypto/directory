@@ -119,7 +119,10 @@ func (s *ActivitySubscriber) Subscribe() {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 
-			// Fetch the network activity month from the database
+			// Fetch the network activity month from the database to update it.
+			// Note: There is a potential race condition with this pattern if two
+			// routines are updating the month concurrently, however currently this is
+			// the only go routine that is writing to the activity store.
 			date := update.WindowEnd().Format(models.MonthLayout)
 			var month *models.ActivityMonth
 			if month, err = s.db.RetrieveActivityMonth(ctx, date); err != nil {

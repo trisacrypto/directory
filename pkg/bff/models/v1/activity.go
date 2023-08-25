@@ -47,13 +47,12 @@ func (d *ActivityDay) Add(a *activity.NetworkActivity) {
 	}
 
 	for id, counts := range a.VASPActivity {
-		vasp := id.String()
-		if _, ok := d.VaspActivity[vasp]; !ok {
-			d.VaspActivity[vasp] = &ActivityCount{}
+		if _, ok := d.VaspActivity[id]; !ok {
+			d.VaspActivity[id] = &ActivityCount{}
 		}
 
 		for acv, count := range counts {
-			d.VaspActivity[vasp].Add(a.Network, acv, count)
+			d.VaspActivity[id].Add(a.Network, acv, count)
 		}
 	}
 }

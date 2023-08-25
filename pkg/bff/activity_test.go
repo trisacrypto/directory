@@ -47,8 +47,8 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 
 	// Setup the network activity fixtures
 	events := make([]*api.EventWrapper, 0)
-	aliceVASP := uuid.New()
-	bobVASP := uuid.New()
+	aliceVASP := uuid.New().String()
+	bobVASP := uuid.New().String()
 
 	// First activity
 	acv := &activity.NetworkActivity{
@@ -56,7 +56,7 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 		Activity: map[activity.Activity]uint64{
 			activity.LookupActivity: 1,
 		},
-		VASPActivity: map[uuid.UUID]activity.ActivityCount{
+		VASPActivity: map[string]activity.ActivityCount{
 			aliceVASP: {
 				activity.LookupActivity: 1,
 			},
@@ -88,7 +88,7 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 			activity.LookupActivity: 1,
 			activity.SearchActivity: 3,
 		},
-		VASPActivity: map[uuid.UUID]activity.ActivityCount{
+		VASPActivity: map[string]activity.ActivityCount{
 			aliceVASP: {
 				activity.LookupActivity: 1,
 			},
@@ -122,7 +122,7 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 		Activity: map[activity.Activity]uint64{
 			activity.SearchActivity: 1,
 		},
-		VASPActivity: map[uuid.UUID]activity.ActivityCount{
+		VASPActivity: map[string]activity.ActivityCount{
 			bobVASP: {
 				activity.SearchActivity: 1,
 			},
@@ -153,7 +153,7 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 		Activity: map[activity.Activity]uint64{
 			activity.LookupActivity: 2,
 		},
-		VASPActivity: map[uuid.UUID]activity.ActivityCount{},
+		VASPActivity: map[string]activity.ActivityCount{},
 		Window:       time.Minute * 5,
 	}
 	acv.Timestamp, err = time.Parse(time.RFC3339, "2023-09-01T12:00:00Z")
@@ -251,12 +251,12 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 					},
 				},
 				VaspActivity: map[string]*models.ActivityCount{
-					aliceVASP.String(): {
+					aliceVASP: {
 						Mainnet: map[string]uint64{
 							"lookup": 2,
 						},
 					},
-					bobVASP.String(): {
+					bobVASP: {
 						Mainnet: map[string]uint64{
 							"search": 3,
 						},
@@ -271,7 +271,7 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 					},
 				},
 				VaspActivity: map[string]*models.ActivityCount{
-					bobVASP.String(): {
+					bobVASP: {
 						Mainnet: map[string]uint64{
 							"search": 1,
 						},

@@ -92,10 +92,6 @@ func publish() {
 				continue
 			}
 
-			if _, err = client.Subscribe(topic); err != nil {
-				log.Error().Err(err).Msg("could not subscribe to activity topic")
-			}
-
 			if err = client.Publish(topic, event); err != nil {
 				log.Error().Err(err).Msg("could not publish activity event")
 			}

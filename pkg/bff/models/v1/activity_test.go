@@ -15,13 +15,13 @@ func TestActivityMonth(t *testing.T) {
 	month := &models.ActivityMonth{
 		Date: "2023-08",
 	}
-	aliceID := uuid.New()
+	aliceID := uuid.New().String()
 	acv := &activity.NetworkActivity{
 		Network: activity.MainNet,
 		Activity: activity.ActivityCount{
 			activity.LookupActivity: 1,
 		},
-		VASPActivity: map[uuid.UUID]activity.ActivityCount{
+		VASPActivity: map[string]activity.ActivityCount{
 			aliceID: {
 				activity.LookupActivity: 1,
 			},
