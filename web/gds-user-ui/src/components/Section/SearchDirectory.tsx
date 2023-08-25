@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { FormEvent, useState } from 'react';
+import React, { FormEvent, useState, useRef } from 'react';
 import {
   Stack,
   Container,
@@ -54,7 +54,6 @@ type TSearchDirectory = {
 };
 const SearchDirectory: React.FC<TSearchDirectory> = ({
   handleSubmit,
-  isLoading,
   result,
   error,
   handleClose,
@@ -62,6 +61,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
   onResetData
 }) => {
   const [search, setSearch] = useState<string>('');
+  const formRef = useRef<HTMLFormElement>(null);
 
   return (
     <Flex
@@ -92,10 +92,10 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
               <Trans id="Directory Lookup">Directory Lookup</Trans>
             </Text>
             <Box width={{ md: '70%', sm: '90%' }}>
-              <form onSubmit={(e) => handleSubmit(e, search)}>
+              <form>
                 <FormControl color={'gray.500'}>
                   <HStack>
-                    <AutoComplete rollNavigation>
+                    <AutoComplete rollNavigation ref={formRef}>
                       <AutoCompleteInput
                         variant="outline"
                         placeholder="Common name or VASP ID"
@@ -121,11 +121,13 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                     </AutoComplete>
 
                     <Button
-                      isLoading={isLoading}
                       variant="outline"
-                      type="submit"
+                      onClick={(e: FormEvent) => {
+                        onResetData();
+                        formRef.current?.removeItem(search);
+                      }}
                       spinnerPlacement="start">
-                      <SearchIcon />
+                      Clear
                     </Button>
                   </HStack>
 
