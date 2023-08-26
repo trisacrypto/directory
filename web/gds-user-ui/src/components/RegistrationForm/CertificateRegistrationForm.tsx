@@ -1,7 +1,7 @@
 import {
-  CertificateStepContainer,
-  CertificateStepLabel,
-  CertificateSteps
+  // CertificateStepContainer,
+  CertificateStepLabel
+  // CertificateSteps
 } from './CertificateStepper';
 import BasicDetails from 'components/BasicDetail';
 import LegalPerson from 'components/LegalPerson';
@@ -13,6 +13,33 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentStep } from 'application/store/stepper.slice';
 import { getCurrentStep } from 'application/store/selectors/stepper';
 import { useEffect } from 'react';
+
+const renderStep = (step: number) => {
+  let stepContent = null;
+  switch (step) {
+    case 1:
+      stepContent = <BasicDetails />;
+      break;
+    case 2:
+      stepContent = <LegalPerson />;
+      break;
+    case 3:
+      stepContent = <Contacts />;
+      break;
+    case 4:
+      stepContent = <TrisaImplementation />;
+      break;
+    case 5:
+      stepContent = <TrixoQuestionnaire />;
+      break;
+    case 6:
+      stepContent = <CertificateReview />;
+      break;
+    default:
+      stepContent = <BasicDetails />;
+  }
+  return stepContent;
+};
 
 const CertificateRegistrationForm = () => {
   const dispatch = useDispatch();
@@ -26,15 +53,10 @@ const CertificateRegistrationForm = () => {
 
   return (
     <>
-      <CertificateSteps>
+      <div>
         <CertificateStepLabel />
-        <CertificateStepContainer key="1" component={<BasicDetails />} />
-        <CertificateStepContainer key="2" component={<LegalPerson />} />
-        <CertificateStepContainer key="3" component={<Contacts />} />
-        <CertificateStepContainer key="4" component={<TrisaImplementation />} />
-        <CertificateStepContainer key="5" component={<TrixoQuestionnaire />} />
-        <CertificateStepContainer key="6" isLast component={<CertificateReview />} />
-      </CertificateSteps>
+        {renderStep(currentStep)}
+      </div>
     </>
   );
 };

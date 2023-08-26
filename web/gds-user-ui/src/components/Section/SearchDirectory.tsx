@@ -95,7 +95,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
               <form>
                 <FormControl color={'gray.500'}>
                   <HStack>
-                    <AutoComplete rollNavigation ref={formRef}>
+                    <AutoComplete rollNavigation ref={formRef} maxSelections={2}>
                       <AutoCompleteInput
                         variant="outline"
                         placeholder="Common name or VASP ID"

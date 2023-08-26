@@ -50,6 +50,7 @@ const useCertificateStepper = () => {
   };
 
   const nextStep = (data?: any) => {
+    console.log('[nextStep] data', data);
     const errorFields = data?.errors;
     const stepNumber = getStepNumber(data?.step) || currentStep;
     console.log('[nextStep] errorFields', errorFields);
@@ -58,6 +59,7 @@ const useCertificateStepper = () => {
       dispatch(setStepStatus({ step: stepNumber, status: LSTATUS.ERROR }));
     } else {
       // setInitialState(data?.form);
+      console.log('[nextStep] setStepStatus', stepNumber);
       dispatch(setStepStatus({ step: stepNumber, status: LSTATUS.COMPLETE }));
     }
     if (currentStep === 5) {

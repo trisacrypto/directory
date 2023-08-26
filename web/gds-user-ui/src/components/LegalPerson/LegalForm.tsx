@@ -78,7 +78,13 @@ const LegalForm: React.FC<LegalFormProps> = ({ data, shouldResetForm, onResetFor
 
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep(updatedCertificateStep ?? data);
+      nextStep({
+        step: StepEnum.LEGAL,
+        form: {
+          ...methods.getValues(),
+          state: currentState()
+        } as any
+      });
     } else {
       const payload = {
         step: StepEnum.LEGAL,
