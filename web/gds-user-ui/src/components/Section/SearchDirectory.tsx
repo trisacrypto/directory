@@ -34,7 +34,6 @@ import {
   AutoCompleteList
 } from '@choc-ui/chakra-autocomplete';
 
-import { SearchIcon } from '@chakra-ui/icons';
 import { colors } from 'utils/theme';
 import ErrorMessage from 'components/ui/ErrorMessage';
 import countryCodeEmoji, { getCountryName } from 'utils/country';
@@ -95,7 +94,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
               <form>
                 <FormControl color={'gray.500'}>
                   <HStack>
-                    <AutoComplete rollNavigation ref={formRef} maxSelections={2}>
+                    <AutoComplete rollNavigation ref={formRef}>
                       <AutoCompleteInput
                         variant="outline"
                         placeholder="Common name or VASP ID"
