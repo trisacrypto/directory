@@ -23,7 +23,7 @@ import { handleError } from 'utils/utils';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { StepEnum } from 'types/enums';
 import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
-
+import MinusLoader from 'components/Loader/MinusLoader';
 const ReviewsSummary: React.FC = () => {
   const { isOpen, onClose, onOpen } = useDisclosure();
   // const [shouldReload, setShouldReload] = useState(false);
@@ -31,9 +31,10 @@ const ReviewsSummary: React.FC = () => {
   const { previousStep, updateHasReachSubmitStep, updateCurrentStepState } =
     useCertificateStepper();
   const [isLoadingExport, setIsLoadingExport] = useState(false);
-  const { certificateStep } = useFetchCertificateStep({
-    key: StepEnum.ALL
-  });
+  const { certificateStep, getCertificateStep, isFetchingCertificateStep } =
+    useFetchCertificateStep({
+      key: StepEnum.ALL
+    });
 
   const handleExport = () => {
     const downloadData = async () => {
@@ -82,12 +83,10 @@ const ReviewsSummary: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldShowResetFormModal]);
 
+  // fetch certificate step everytime user land on this page
   useEffect(() => {
-    if (localStorage.getItem('isFirstRender') !== 'false') {
-      localStorage.setItem('isFirstRender', 'false');
-      window.location.reload();
-    }
-  }, []);
+    getCertificateStep();
+  }, [getCertificateStep]);
 
   return (
     <Stack spacing={7}>
@@ -118,24 +117,32 @@ const ReviewsSummary: React.FC = () => {
           </Trans>
         </Text>
       </FormLayout>
-      <BasicDetailsReview />
-      <LegalPersonReview />
-      <ContactsReview />
-      <TrisaImplementationReview />
-      <TrixoReview />
+      {isFetchingCertificateStep ? (
+        <Box>
+          <MinusLoader />
+        </Box>
+      ) : (
+        <>
+          <BasicDetailsReview />
+          <LegalPersonReview />
+          <ContactsReview />
+          <TrisaImplementationReview />
+          <TrixoReview />
 
-      <StepButtons
-        handleNextStep={handleNextStep}
-        handlePreviousStep={handlePreviousStep}
-        isNextButtonDisabled={isNextButtonDisabled}
-        onResetModalClose={handleResetClick}
-        isOpened={isOpen}
-        handleResetForm={handleResetForm}
-        resetFormType={StepEnum.ALL}
-        onClosed={onCloseModalHandler}
-        handleResetClick={handleResetClick}
-        shouldShowResetFormModal={shouldShowResetFormModal}
-      />
+          <StepButtons
+            handleNextStep={handleNextStep}
+            handlePreviousStep={handlePreviousStep}
+            isNextButtonDisabled={isNextButtonDisabled}
+            onResetModalClose={handleResetClick}
+            isOpened={isOpen}
+            handleResetForm={handleResetForm}
+            resetFormType={StepEnum.ALL}
+            onClosed={onCloseModalHandler}
+            handleResetClick={handleResetClick}
+            shouldShowResetFormModal={shouldShowResetFormModal}
+          />
+        </>
+      )}
     </Stack>
   );
 };

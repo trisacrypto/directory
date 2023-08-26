@@ -34,7 +34,6 @@ import {
   AutoCompleteList
 } from '@choc-ui/chakra-autocomplete';
 
-import { SearchIcon } from '@chakra-ui/icons';
 import { colors } from 'utils/theme';
 import ErrorMessage from 'components/ui/ErrorMessage';
 import countryCodeEmoji, { getCountryName } from 'utils/country';

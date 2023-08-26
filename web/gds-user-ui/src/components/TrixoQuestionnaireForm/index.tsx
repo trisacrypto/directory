@@ -117,7 +117,13 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
       updateCertificateStep(payload);
       nextStepRef.current = true;
     } else {
-      nextStep(data);
+      nextStep({
+        step: StepEnum.TRIXO,
+        form: {
+          ...methods.getValues(),
+          state: currentState()
+        } as any
+      });
     }
   };
 

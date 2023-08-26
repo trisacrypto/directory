@@ -46,10 +46,10 @@ axiosInstance.interceptors.response.use(
   (response) => {
     return response;
   },
-  async (error) => {
+  async (error: any) => {
     // let _retry = 0;
-    const originalRequest = error.config;
-    originalRequest._retry = originalRequest._retry || 0;
+    const originalRequest = error?.config;
+    originalRequest._retry = originalRequest?._retry || 0;
     //
 
     if (error && !error.response) {
