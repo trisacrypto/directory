@@ -24,6 +24,7 @@ import (
 
 func (s *bffTestSuite) TestNetworkActivity() {
 	require := s.Require()
+	defer bff.ResetTime()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -32,17 +33,23 @@ func (s *bffTestSuite) TestNetworkActivity() {
 	require.NoError(err, "could not get network activity")
 	require.Len(rep.MainNet, 30, "should have 30 days of activity for mainnet")
 	require.Len(rep.TestNet, 30, "should have 30 days of activity for testnet")
-	assertNoCounts(require, rep)
+	assertNoCounts(require, rep.MainNet)
+	assertNoCounts(require, rep.TestNet)
+
+	// Mock the current time for consistent testing
+	now, err := time.Parse(time.RFC3339, "2023-08-24T12:00:00Z")
+	require.NoError(err, "could not create activity time")
+	bff.MockTime(now)
 
 	// Add an empty month to the database but with no data
-	now := time.Now()
 	month := &models.ActivityMonth{
 		Date: now.Format(models.MonthLayout),
 	}
 	require.NoError(s.DB().UpdateActivityMonth(ctx, month), "could not create activity month")
 	rep, err = s.client.NetworkActivity(ctx)
 	require.NoError(err, "could not get network activity")
-	assertNoCounts(require, rep)
+	assertNoCounts(require, rep.MainNet)
+	assertNoCounts(require, rep.TestNet)
 
 	// Add some activity to the database
 	month.Add(&activity.NetworkActivity{
@@ -71,30 +78,36 @@ func (s *bffTestSuite) TestNetworkActivity() {
 		Window:    time.Minute * 5,
 	}
 
-	// Create a new month if less than 29 days in this month
-	monthDate := acv.Timestamp.Format(models.MonthLayout)
-	if now.Day() < 29 {
-		month = &models.ActivityMonth{
-			Date: monthDate,
-		}
-	} else {
-		month.Date = monthDate
+	// Test the case of being less than 30 days into the month
+	prevMonth := &models.ActivityMonth{
+		Date: acv.Timestamp.Format(models.MonthLayout),
 	}
-	month.Add(acv)
-	require.NoError(s.DB().UpdateActivityMonth(ctx, month), "could not update activity month")
+	prevMonth.Add(acv)
+	require.NoError(s.DB().UpdateActivityMonth(ctx, prevMonth), "could not update activity month")
 	rep, err = s.client.NetworkActivity(ctx)
 	require.NoError(err, "could not get network activity")
 	require.Len(rep.MainNet, 30, "should have 30 days of activity for mainnet")
 	require.Len(rep.TestNet, 30, "should have 30 days of activity for testnet")
 	require.Equal(uint64(1), rep.MainNet[29].Events, "should have one mainnet event on the last day")
 	require.Equal(uint64(3), rep.TestNet[0].Events, "should have three testnet events on the first day")
+
+	// Set the time to the end of the month to test the case of being more than 30 days into the month
+	now, err = time.Parse(time.RFC3339, "2023-08-31T12:00:00Z")
+	require.NoError(err, "could not create activity time")
+	bff.MockTime(now)
+	rep, err = s.client.NetworkActivity(ctx)
+	require.NoError(err, "could not get network activity")
+	require.Len(rep.MainNet, 30, "should have 30 days of activity for mainnet")
+	require.Len(rep.TestNet, 30, "should have 30 days of activity for testnet")
+	require.Equal(uint64(1), rep.MainNet[22].Events, "should have one mainnet event on August 24th")
+	assertNoCounts(require, rep.TestNet)
 }
 
-// Convenience method that verifies an activity reply has no counts
-func assertNoCounts(require *require.Assertions, rep *api.NetworkActivityReply) {
+// Convenience method that asserts an activity reply has no counts
+func assertNoCounts(require *require.Assertions, counts []api.Activity) {
 	dates := map[string]struct{}{}
 	var prevDate string
-	for _, acv := range rep.TestNet {
+	for _, acv := range counts {
 		require.Zero(acv.Events, "expected zero events")
 		_, ok := dates[acv.Date]
 		require.False(ok, "should not have duplicate dates")
@@ -103,19 +116,6 @@ func assertNoCounts(require *require.Assertions, rep *api.NetworkActivityReply) 
 			require.True(acv.Date > prevDate, "dates should be in chronological order")
 		}
 		prevDate = acv.Date
-	}
-
-	dates = map[string]struct{}{}
-	prevDate = ""
-	for _, activity := range rep.MainNet {
-		require.Zero(activity.Events, "expected zero events")
-		_, ok := dates[activity.Date]
-		require.False(ok, "should not have duplicate dates")
-		dates[activity.Date] = struct{}{}
-		if prevDate != "" {
-			require.True(activity.Date > prevDate, "dates should be in chronological order")
-		}
-		prevDate = activity.Date
 	}
 }
 

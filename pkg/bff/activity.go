@@ -34,7 +34,7 @@ func (s *Server) NetworkActivity(c *gin.Context) {
 	defer cancel()
 
 	// Get the month(s) for the last 30 days
-	now := time.Now()
+	now := currentTime()
 	currentMonth := now.Format(models.MonthLayout)
 	startingMonth := now.AddDate(0, 0, -30).Format(models.MonthLayout)
 
