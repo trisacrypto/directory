@@ -102,7 +102,13 @@ const ContactsForm: React.FC<ContactsFormProps> = ({ data, shouldResetForm, onRe
 
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep(data);
+      nextStep({
+        step: StepEnum.CONTACTS,
+        form: {
+          ...methods.getValues(),
+          state: currentState()
+        } as any
+      });
     } else {
       const payload = {
         step: StepEnum.CONTACTS,

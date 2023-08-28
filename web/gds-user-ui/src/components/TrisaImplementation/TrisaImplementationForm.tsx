@@ -91,7 +91,13 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
 
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep(data);
+      nextStep({
+        step: StepEnum.TRISA,
+        form: {
+          ...methods.getValues(),
+          state: currentState()
+        } as any
+      });
     } else {
       const payload = {
         step: StepEnum.TRISA,
