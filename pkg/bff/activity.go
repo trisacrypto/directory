@@ -9,7 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rotationalio/go-ensign"
-	pb "github.com/rotationalio/go-ensign/api/v1beta1"
+	ensign_pb "github.com/rotationalio/go-ensign/api/v1beta1"
 	"github.com/rotationalio/go-ensign/mock"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -217,7 +217,7 @@ func (s *ActivitySubscriber) Subscribe() {
 			var update *activity.NetworkActivity
 			if update, err = activity.Parse(event); err != nil {
 				log.Error().Err(err).Msg("failed to parse network activity event")
-				event.Nack(pb.Nack_UNKNOWN_TYPE)
+				event.Nack(ensign_pb.Nack_UNKNOWN_TYPE)
 				continue
 			}
 
@@ -239,12 +239,12 @@ func (s *ActivitySubscriber) Subscribe() {
 					}
 					if err = s.db.UpdateActivityMonth(ctx, month); err != nil {
 						log.Error().Err(err).Str("month_date", date).Msg("failed to create activity month")
-						event.Nack(pb.Nack_UNPROCESSED)
+						event.Nack(ensign_pb.Nack_UNPROCESSED)
 						continue
 					}
 				default:
 					log.Error().Err(err).Str("month_date", date).Msg("failed to retrieve activity month")
-					event.Nack(pb.Nack_UNPROCESSED)
+					event.Nack(ensign_pb.Nack_UNPROCESSED)
 					continue
 				}
 			}
@@ -253,7 +253,7 @@ func (s *ActivitySubscriber) Subscribe() {
 			month.Add(update)
 			if err = s.db.UpdateActivityMonth(ctx, month); err != nil {
 				log.Error().Err(err).Str("month_date", date).Msg("failed to update activity month")
-				event.Nack(pb.Nack_UNPROCESSED)
+				event.Nack(ensign_pb.Nack_UNPROCESSED)
 				continue
 			}
 

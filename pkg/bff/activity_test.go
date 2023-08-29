@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/oklog/ulid/v2"
-	pb "github.com/rotationalio/go-ensign/api/v1beta1"
+	ensign_pb "github.com/rotationalio/go-ensign/api/v1beta1"
 	mimetype "github.com/rotationalio/go-ensign/mimetype/v1beta1"
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/bff"
@@ -145,7 +145,7 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 	require.NoError(err, "could not create subscriber")
 
 	// Setup the network activity fixtures
-	events := make([]*pb.EventWrapper, 0)
+	events := make([]*ensign_pb.EventWrapper, 0)
 	aliceVASP := uuid.New().String()
 	bobVASP := uuid.New().String()
 
@@ -166,13 +166,13 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 	require.NoError(err, "could not create first activity time")
 	data, err := msgpack.Marshal(acv)
 	require.NoError(err, "could not marshal first activity")
-	event := &pb.Event{
+	event := &ensign_pb.Event{
 		Data:     data,
 		Mimetype: mimetype.MIME_APPLICATION_MSGPACK,
 		Type:     &activity.NetworkActivityEventType,
 		Created:  timestamppb.Now(),
 	}
-	wrapper := &pb.EventWrapper{
+	wrapper := &ensign_pb.EventWrapper{
 		Id:        []byte("eventID"),
 		TopicId:   []byte("topicID"),
 		Committed: timestamppb.Now(),
@@ -201,13 +201,13 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 	require.NoError(err, "could not create second activity time")
 	data, err = msgpack.Marshal(acv)
 	require.NoError(err, "could not marshal second activity")
-	event = &pb.Event{
+	event = &ensign_pb.Event{
 		Data:     data,
 		Mimetype: mimetype.MIME_APPLICATION_MSGPACK,
 		Type:     &activity.NetworkActivityEventType,
 		Created:  timestamppb.Now(),
 	}
-	wrapper = &pb.EventWrapper{
+	wrapper = &ensign_pb.EventWrapper{
 		Id:        []byte("eventID"),
 		TopicId:   []byte("topicID"),
 		Committed: timestamppb.Now(),
@@ -232,13 +232,13 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 	require.NoError(err, "could not create third activity time")
 	data, err = msgpack.Marshal(acv)
 	require.NoError(err, "could not marshal third activity")
-	event = &pb.Event{
+	event = &ensign_pb.Event{
 		Data:     data,
 		Mimetype: mimetype.MIME_APPLICATION_MSGPACK,
 		Type:     &activity.NetworkActivityEventType,
 		Created:  timestamppb.Now(),
 	}
-	wrapper = &pb.EventWrapper{
+	wrapper = &ensign_pb.EventWrapper{
 		Id:        []byte("eventID"),
 		TopicId:   []byte("topicID"),
 		Committed: timestamppb.Now(),
@@ -259,13 +259,13 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 	require.NoError(err, "could not create fourth activity time")
 	data, err = msgpack.Marshal(acv)
 	require.NoError(err, "could not marshal fourth activity")
-	event = &pb.Event{
+	event = &ensign_pb.Event{
 		Data:     data,
 		Mimetype: mimetype.MIME_APPLICATION_MSGPACK,
 		Type:     &activity.NetworkActivityEventType,
 		Created:  timestamppb.Now(),
 	}
-	wrapper = &pb.EventWrapper{
+	wrapper = &ensign_pb.EventWrapper{
 		Id:        []byte("eventID"),
 		TopicId:   []byte("topicID"),
 		Committed: timestamppb.Now(),
@@ -277,7 +277,7 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 	emock := sub.GetEnsignMock()
 	server := &sync.WaitGroup{}
 	server.Add(1)
-	emock.OnSubscribe = func(stream pb.Ensign_SubscribeServer) (err error) {
+	emock.OnSubscribe = func(stream ensign_pb.Ensign_SubscribeServer) (err error) {
 		defer server.Done()
 
 		// Read the initial subscription request
@@ -287,9 +287,9 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 		}
 
 		// Send the ready response back to the client
-		if err = stream.Send(&pb.SubscribeReply{
-			Embed: &pb.SubscribeReply_Ready{
-				Ready: &pb.StreamReady{
+		if err = stream.Send(&ensign_pb.SubscribeReply{
+			Embed: &ensign_pb.SubscribeReply_Ready{
+				Ready: &ensign_pb.StreamReady{
 					ClientId: "client-id",
 					ServerId: "server-id",
 					Topics: map[string][]byte{
@@ -303,8 +303,8 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 
 		// Send the activity updates
 		for _, event := range events {
-			if err = stream.Send(&pb.SubscribeReply{
-				Embed: &pb.SubscribeReply_Event{
+			if err = stream.Send(&ensign_pb.SubscribeReply{
+				Embed: &ensign_pb.SubscribeReply_Event{
 					Event: event,
 				},
 			}); err != nil {
@@ -314,7 +314,7 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 
 		// Should receive all the acks from the subscruber
 		for i := 0; i < len(events); i++ {
-			var req *pb.SubscribeRequest
+			var req *ensign_pb.SubscribeRequest
 			if req, err = stream.Recv(); err != nil {
 				return err
 			}
