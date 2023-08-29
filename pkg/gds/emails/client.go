@@ -131,6 +131,12 @@ func (m *EmailManager) SendVerifyContact(vasp *pb.VASP, contact *pb.Contact) (er
 		return err
 	}
 
+	if ctx.Token == "" {
+		err = errors.New("cannot send verify contact: no verification token available")
+		sentry.Error(nil).Err(err).Str("vasp", vasp.Id).Str("contact", contact.Email).Msg("no email verification token available")
+		return err
+	}
+
 	msg, err := VerifyContactEmail(
 		m.serviceEmail.Name, m.serviceEmail.Address,
 		contact.Name, contact.Email,
