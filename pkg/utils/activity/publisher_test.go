@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/oklog/ulid/v2"
 	sdk "github.com/rotationalio/go-ensign"
-	api "github.com/rotationalio/go-ensign/api/v1beta1"
+	ensgin_api "github.com/rotationalio/go-ensign/api/v1beta1"
 	"github.com/rotationalio/go-ensign/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -60,15 +60,15 @@ func TestPublisher(t *testing.T) {
 	// Configure the Ensign mock to assert that events are being published
 	vaspID := uuid.New().String()
 	published := make(chan struct{})
-	emock.OnPublish = func(stream api.Ensign_PublishServer) (err error) {
+	emock.OnPublish = func(stream ensgin_api.Ensign_PublishServer) (err error) {
 		// Receive the initial request from the client
 		_, err = stream.Recv()
 		assert.NoError(t, err, "expected no error receiving initial request from mock server")
 
 		// Send back the topic map to the client
-		err = stream.Send(&api.PublisherReply{
-			Embed: &api.PublisherReply_Ready{
-				Ready: &api.StreamReady{
+		err = stream.Send(&ensgin_api.PublisherReply{
+			Embed: &ensgin_api.PublisherReply_Ready{
+				Ready: &ensgin_api.StreamReady{
 					ClientId: "client-id",
 					ServerId: "server-id",
 					Topics: map[string][]byte{

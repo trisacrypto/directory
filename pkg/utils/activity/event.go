@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/rotationalio/go-ensign"
-	api "github.com/rotationalio/go-ensign/api/v1beta1"
+	ensign_api "github.com/rotationalio/go-ensign/api/v1beta1"
 	mimetype "github.com/rotationalio/go-ensign/mimetype/v1beta1"
 	"github.com/vmihailenco/msgpack/v5"
 )
@@ -15,7 +15,7 @@ const (
 	NetworkActivityMimeType = mimetype.ApplicationMsgPack
 )
 
-var NetworkActivityEventType = api.Type{
+var NetworkActivityEventType = ensign_api.Type{
 	Name:         "NetworkActivity",
 	MajorVersion: 1,
 }
