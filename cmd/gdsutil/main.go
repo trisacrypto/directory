@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"text/tabwriter"
 	"time"
 
 	"github.com/google/uuid"
@@ -36,11 +37,13 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/store"
+	storerr "github.com/trisacrypto/directory/pkg/store/errors"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
 	api "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/exp/slices"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -364,6 +367,25 @@ func main() {
 					Aliases: []string{"d"},
 					Usage:   "print migration results without modifying the database, used for testing",
 					Value:   true,
+				},
+				&cli.BoolFlag{
+					Name:    "compare",
+					Aliases: []string{"c"},
+					Usage:   "if the contact exists, compare to the vasp contact record",
+				},
+			},
+		},
+		{
+			Name:     "contact:fixverifytoken",
+			Usage:    "fixes any unverified contacts that do not have verification tokens",
+			Category: "contact",
+			Action:   fixVerifyToken,
+			Before:   openTrtlDB,
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "dryrun",
+					Aliases: []string{"d"},
+					Usage:   "print migration results without modifying the database, used for testing",
 				},
 			},
 		},
@@ -1298,106 +1320,178 @@ func generateTokenKey(c *cli.Context) (err error) {
 
 func migrateContacts(c *cli.Context) (err error) {
 	defer closeTrtlDB(c)
+	dryrun := c.Bool("dryrun")
+	compare := c.Bool("compare")
 
-	// Create a list of vasp contacts and model contacts
-	modelContacts := make(map[string]*models.Contact)
-	var vaspContacts []*pb.Contact
-
-	// iterate through all vasps in the database
-	vaspIter := trtl.ListVASPs(context.Background())
-	for vaspIter.Next() {
+	// Iterate through all vasps in the database
+	vasps := trtl.ListVASPs(context.Background())
+	defer vasps.Release()
+	for vasps.Next() {
 		var vasp *pb.VASP
-		if vasp, err = vaspIter.VASP(); err != nil {
-			vaspIter.Release()
+		if vasp, err = vasps.VASP(); err != nil {
 			return cli.Exit(err, 1)
 		}
-		contactIter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail())
 
 		// Iterate through all contacts on the vasp
-		for contactIter.Next() {
-			vaspContact, _ := contactIter.Value()
-			vaspContacts = append(vaspContacts, vaspContact)
-			modelContact, AlreadyExists := modelContacts[vaspContact.Email]
+		contacts := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail())
+		for contacts.Next() {
+			vaspContact, _ := contacts.Value()
 
-			// Extract the extra fields from the vasp contact
-			vaspContactExtra := &models.GDSContactExtraData{}
-			if vaspContact.Extra != nil {
-				if err = vaspContact.Extra.UnmarshalTo(vaspContactExtra); err != nil {
-					return fmt.Errorf("could not deserialize previous extra: %s", err)
+			var contact *models.Contact
+			if contact, err = trtl.RetrieveContact(context.Background(), vaspContact.Email); err != nil {
+				if errors.Is(err, storerr.ErrEntityNotFound) {
+					if dryrun {
+						fmt.Printf("contact %s missing and needs to be migrated\n\n", vaspContact.Email)
+					} else {
+						// Create the contact if it doesn't exist
+						extra := &models.GDSContactExtraData{}
+						if err := vaspContact.Extra.UnmarshalTo(extra); err != nil {
+							return cli.Exit(fmt.Errorf("could not unmarshal extra for %s: %s", vaspContact.Email, err), 1)
+						}
+
+						contact = &models.Contact{
+							Email:    vaspContact.Email,
+							Name:     vaspContact.Name,
+							Vasps:    []string{vasp.CommonName},
+							Verified: extra.Verified,
+							Token:    extra.Token,
+							EmailLog: extra.EmailLog,
+							Created:  time.Now().Format(time.RFC3339),
+							Modified: time.Now().Format(time.RFC3339),
+						}
+
+						if _, err := trtl.CreateContact(context.Background(), contact); err != nil {
+							return cli.Exit(err, 1)
+						}
+						fmt.Printf("contact %s created!\n", vaspContact.Email)
+					}
+					continue
+				}
+				return cli.Exit(err, 1)
+			}
+
+			if !compare {
+				continue
+			}
+
+			// Check contact equality
+			updates := make(map[string]map[string]interface{})
+			if vaspContact.Email != contact.Email {
+				updates["email"] = map[string]interface{}{
+					"contact": contact.Email,
+					"vasp":    vaspContact.Email,
 				}
 			}
 
-			// If the model contact doesn't already exist create it,
-			// if it does update the email log and vasp list
-			if !AlreadyExists {
-				modelContacts[vaspContact.Email] = &models.Contact{
-					Email:    vaspContact.Email,
-					Name:     vaspContact.Name,
-					Vasps:    []string{vasp.CommonName},
-					Verified: vaspContactExtra.Verified,
-					Token:    vaspContactExtra.Token,
-					EmailLog: vaspContactExtra.EmailLog,
-					Created:  time.Now().Format(time.RFC3339),
-					Modified: time.Now().Format(time.RFC3339),
+			if vaspContact.Name != contact.Name {
+				updates["name"] = map[string]interface{}{
+					"contact": contact.Name,
+					"vasp":    vaspContact.Name,
 				}
-			} else {
-				modelContact.Vasps = append(modelContact.Vasps, vasp.CommonName)
-				if vaspContactExtra.EmailLog != nil {
-					modelContact.EmailLog = append(modelContact.EmailLog, vaspContactExtra.EmailLog...)
+			}
+
+			found := false
+			for _, included := range contact.Vasps {
+				if vasp.CommonName == included {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				updates["vasps"] = map[string]interface{}{
+					"contact": contact.Vasps,
+					"vasp":    append(contact.Vasps, vasp.CommonName),
+				}
+			}
+
+			extra := &models.GDSContactExtraData{}
+			if err := vaspContact.Extra.UnmarshalTo(extra); err != nil {
+				return cli.Exit(fmt.Errorf("could not unmarshal extra for %s: %s", vaspContact.Email, err), 1)
+			}
+
+			if extra.Verified != contact.Verified {
+				updates["verified"] = map[string]interface{}{
+					"contact": contact.Verified,
+					"vasp":    extra.Verified,
+				}
+			}
+
+			if extra.Token != contact.Token {
+				updates["token"] = map[string]interface{}{
+					"contact": contact.Token,
+					"vasp":    extra.Token,
+				}
+			}
+
+			if !slices.Equal(extra.EmailLog, contact.EmailLog) {
+				updates["email_log"] = map[string]interface{}{
+					"contact": len(contact.EmailLog),
+					"vasp":    len(extra.EmailLog),
+				}
+			}
+
+			if len(updates) > 0 {
+				if dryrun {
+					fmt.Printf("contact %s does not match vasp contact and needs to be updated\n", contact.Email)
+					w := tabwriter.NewWriter(os.Stdout, 4, 4, 2, ' ', tabwriter.AlignRight)
+					fmt.Fprintln(w, "field\tcontact\tvasp")
+					for field, vals := range updates {
+						fmt.Fprintf(w, "%s\t%v\t%v\n", field, vals["contact"], vals["vasp"])
+					}
+					w.Flush()
+					fmt.Println()
+				} else {
+					fmt.Printf("contact %s updated!\n", contact.Email)
 				}
 			}
 		}
 	}
 
-	// if the dryrun flag is set, print all vasp contacts and the
-	// newly created model contacts and return
-	if c.Bool("dryrun") {
-		fmt.Println("existing vasp contacts:")
-		for _, contact := range vaspContacts {
-			fmt.Println(contact.Email)
-			vaspContactExtra := &models.GDSContactExtraData{}
-			if contact.Extra != nil {
-				if err = contact.Extra.UnmarshalTo(vaspContactExtra); err != nil {
-					return fmt.Errorf("could not deserialize previous extra: %s", err)
-				}
-			}
-			fmt.Println("verified", vaspContactExtra.Verified)
-			fmt.Println("token", vaspContactExtra.Token)
-			fmt.Println("log", vaspContactExtra.EmailLog)
-			fmt.Println()
-		}
-		fmt.Println() // Print a new line for clarity
-		fmt.Println("created contacts:")
-		for _, contact := range modelContacts {
-			fmt.Println(contact.Email)
-			fmt.Println("verified", contact.Verified)
-			fmt.Println("token", contact.Token)
-			fmt.Println("log", contact.EmailLog)
-			fmt.Println()
-		}
-		return nil
+	if err = vasps.Error(); err != nil {
+		return cli.Exit(err, 1)
 	}
+	return nil
+}
 
-	// Put all new model contacts into the trtl database
-	for _, contact := range modelContacts {
-		// Check if the contact already exists
-		if _, err = trtl.RetrieveContact(context.Background(), contact.Email); err == nil {
-			fmt.Printf("contact %s already exists\n\n", contact.Email)
-			continue
-		}
+func fixVerifyToken(c *cli.Context) (err error) {
+	defer closeTrtlDB(c)
+	dryrun := c.Bool("dryrun")
 
-		// Create if not exists
-		var email string
-		if email, err = trtl.CreateContact(context.Background(), contact); err != nil {
+	vasps := trtl.ListVASPs(context.Background())
+	defer vasps.Release()
+	for vasps.Next() {
+		var vasp *pb.VASP
+		if vasp, err = vasps.VASP(); err != nil {
 			return cli.Exit(err, 1)
 		}
 
-		fmt.Printf("created contact model for %s\n", email)
-		fmt.Println("verified", contact.Verified)
-		fmt.Println("token", contact.Token)
-		fmt.Println("log", contact.EmailLog)
-		fmt.Println()
+		contacts := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail(), models.SkipDuplicates())
+		for contacts.Next() {
+			vaspContact, _ := contacts.Value()
+
+			var contact *models.Contact
+			if contact, err = trtl.RetrieveContact(context.Background(), vaspContact.Email); err != nil {
+				return cli.Exit(err, 1)
+			}
+
+			if !contact.Verified && contact.Token == "" {
+				fmt.Printf("contact %s is not verified and has no verification token\n", contact.Email)
+
+				if !dryrun {
+					contact.Token = secrets.CreateToken(models.VerificationTokenLength)
+					if err = trtl.UpdateContact(context.Background(), contact); err != nil {
+						return cli.Exit(err, 1)
+					}
+				}
+			}
+		}
 	}
+
+	if err = vasps.Error(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
 	return nil
 }
 

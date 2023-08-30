@@ -1626,6 +1626,7 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 	}
 
 	if emailUpdated {
+		// BUG: this only sets the verification token on the VASP contact, not the contacts database
 		// The email address changed, so the contact needs to be verified
 		if err = models.SetContactVerification(contact, secrets.CreateToken(models.VerificationTokenLength), false); err != nil {
 			sentry.Error(c).Err(err).Msg("could not set contact verification")
