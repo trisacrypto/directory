@@ -34,7 +34,7 @@ require (
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.1
 	github.com/syndtr/goleveldb v1.0.0
-	github.com/trisacrypto/trisa v0.99999.1
+	github.com/trisacrypto/trisa v0.4.0
 	github.com/urfave/cli v1.22.14
 	github.com/urfave/cli/v2 v2.25.7
 	github.com/vmihailenco/msgpack/v5 v5.3.5
@@ -115,7 +115,7 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230803162519-f966b187b2e5 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230726155614-23370e0ffb3e // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230807174057-1744710a1577 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230815205213-6bfd019c3878 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
@@ -136,5 +136,5 @@ require (
 	golang.org/x/exp/typeparams v0.0.0-20230711153332-06a737ee72cb // indirect
 	golang.org/x/sys v0.11.0 // indirect
 	honnef.co/go/tools v0.4.3 // indirect
-	software.sslmate.com/src/go-pkcs12 v0.2.0 // indirect
+	software.sslmate.com/src/go-pkcs12 v0.2.1 // indirect
 )

@@ -168,6 +168,7 @@ func TestValidateLegalPerson(t *testing.T) {
 			},
 			ValidationErrors{
 				{Field: FieldEntityNationalIdentificationRA, Err: ErrNoRAForLEIX.Error()},
+				{Field: FieldEntity, Err: ivms101.ErrCompleteNationalIdentifierAuthority.Error()},
 			},
 		},
 		{

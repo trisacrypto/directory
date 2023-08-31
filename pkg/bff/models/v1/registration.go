@@ -446,7 +446,7 @@ func (r *RegistrationForm) ValidateLegalPerson() error {
 	// Final validation just to check and make sure we didn't miss anything
 	if verr := r.Entity.Validate(); verr != nil {
 		// C9 constraint errors are ignored because they are also ignored in GDS
-		if verr.Error() != ivms101.ErrCompleteNationalIdentifierLegalPerson.Error() {
+		if verr.Error() != ivms101.ErrCompleteNationalIdentifierCountry.Error() {
 			err = append(err, &ValidationError{
 				Field: FieldEntity,
 				Err:   verr.Error(),

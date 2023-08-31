@@ -677,7 +677,7 @@ func ValidateVASP(vasp *pb.VASP, partial bool) (err error) {
 	switch {
 	case err == nil:
 		return nil
-	case errors.Is(err, ivms101.ErrCompleteNationalIdentifierLegalPerson):
+	case errors.Is(err, ivms101.ErrCompleteNationalIdentifierCountry):
 		// TODO: ErrCompleteNationalIdentifierLegalPerson must be ignored to support older
 		// VASP records, see issue #34
 		sentry.Warn(nil).Str("vasp_id", vasp.Id).Err(err).Msg("ignoring ErrCompleteNationalIdentifierLegalPerson validation error")
