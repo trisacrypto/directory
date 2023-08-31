@@ -164,26 +164,24 @@ func (e *Entry) VASP(id string) *Entry {
 	return e
 }
 
-// Lookup creates a new activity entry for a lookup. Must call Add() to commit the
-// entry.
+// Lookup creates a new activity entry for a lookup. Must call Add() to commit the entry.
 func Lookup() *Entry {
 	return newEvent(LookupActivity)
 }
 
-// Search creates a new activity entry for a search. Must call Add() to commit the
-// entry.
+// Search creates a new activity entry for a search. Must call Add() to commit the entry.
 func Search() *Entry {
 	return newEvent(SearchActivity)
 }
 
-// Register creates a new activity entry for registering a Vasp. Must call Add() to
+// Register creates a new activity entry for registering a VASP. Must call Add() to
 // commit the entry.
 func Register() *Entry {
 	return newEvent(RegisterActivity)
 }
 
-// KeyExchange creates a new activity entry for fetching a signing key. Must call Add() to
-// commit the entry.
+// KeyExchange creates a new activity entry for fetching a signing key. Must call Add()
+// to commit the entry.
 func KeyExchange() *Entry {
 	return newEvent(KeyExchangeActivity)
 }
