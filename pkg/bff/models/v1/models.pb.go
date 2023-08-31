@@ -1147,7 +1147,7 @@ func (x *ActivityMonth) GetModified() string {
 	return ""
 }
 
-// ActivityCount represents counts broken down by activity type.
+// ActivityCount represents counts broken down by activity type and network.
 type ActivityCount struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

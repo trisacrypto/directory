@@ -1,5 +1,12 @@
 basePath: /v1
 definitions:
+  api.Activity:
+    properties:
+      date:
+        type: string
+      events:
+        type: integer
+    type: object
   api.AnnouncementsReply:
     properties:
       announcements:
@@ -79,9 +86,9 @@ definitions:
     type: object
   api.LookupParams:
     properties:
-      commonName:
+      common_name:
         type: string
-      id:
+      uuid:
         type: string
     type: object
   api.LookupReply:
@@ -113,19 +120,30 @@ definitions:
     type: object
   api.MemberDetailsParams:
     properties:
-      directory:
+      '-':
         type: string
-      id:
+      registered_directory:
         type: string
     type: object
   api.MemberPageInfo:
     properties:
-      directory:
-        type: string
-      pageSize:
+      page_size:
         type: integer
-      pageToken:
+      page_token:
         type: string
+      registered_directory:
+        type: string
+    type: object
+  api.NetworkActivityReply:
+    properties:
+      mainnet:
+        items:
+          $ref: '#/definitions/api.Activity'
+        type: array
+      testnet:
+        items:
+          $ref: '#/definitions/api.Activity'
+        type: array
     type: object
   api.NetworkError:
     properties:
@@ -203,8 +221,22 @@ definitions:
   api.RegistrationFormParams:
     properties:
       step:
-        type: string
+        $ref: '#/definitions/api.RegistrationFormStep'
     type: object
+  api.RegistrationFormStep:
+    enum:
+    - basic
+    - legal
+    - contacts
+    - trisa
+    - trixo
+    type: string
+    x-enum-varnames:
+    - StepBasicDetails
+    - StepLegalPerson
+    - StepContacts
+    - StepTRISA
+    - StepTRIXO
   api.RegistrationStatus:
     properties:
       mainnet_submitted:
@@ -243,11 +275,11 @@ definitions:
     type: object
   api.VerifyContactParams:
     properties:
-      directory:
-        type: string
-      id:
+      registered_directory:
         type: string
       token:
+        type: string
+      vaspID:
         type: string
     type: object
   api.VerifyContactReply:

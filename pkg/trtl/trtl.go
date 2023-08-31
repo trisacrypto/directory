@@ -13,6 +13,7 @@ import (
 	"github.com/rotationalio/honu/object"
 	"github.com/rotationalio/honu/options"
 	"github.com/rs/zerolog/log"
+	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/trtl/internal"
 	"github.com/trisacrypto/directory/pkg/trtl/metrics"
@@ -608,6 +609,53 @@ func (h *TrtlService) Cursor(in *pb.CursorRequest, stream pb.Trtl_CursorServer) 
 
 func (h *TrtlService) Sync(stream pb.Trtl_SyncServer) (err error) {
 	return status.Error(codes.Unimplemented, "not implemented")
+}
+
+func (h *TrtlService) Count(ctx context.Context, in *pb.CountRequest) (out *pb.CountReply, err error) {
+	metrics.UpdateNamespace(ctx, in.Namespace)
+
+	if _, found := reservedNamespaces[in.Namespace]; found {
+		sentry.Warn(ctx).Str("namespace", in.Namespace).Msg("cannot use reserved namespace")
+		return nil, status.Error(codes.PermissionDenied, "cannot use reserved namespace")
+	}
+
+	var iter iterator.Iterator
+	if iter, err = h.db.Iter(in.Prefix, options.WithNamespace(in.Namespace), options.WithLevelDBRead(&opt.ReadOptions{DontFillCache: true})); err != nil {
+		sentry.Error(ctx).Err(err).Str("namespace", in.Namespace).Msg("could not create honu iterator")
+		return nil, status.Errorf(codes.FailedPrecondition, "could not create iterator: %s", err)
+	}
+	defer iter.Release()
+
+	// Opening an iterator is considered a single read since it scans the database.
+	// TODO: this should be part of honu not trtl
+	metrics.PmTrtlReads.WithLabelValues(in.Namespace).Inc()
+
+	// If a seek key is provided, seek to that key before iteration
+	// NOTE: that because we'll be calling iter.Next to start the loop, we need set the
+	// iterator to the key previous to the seek key.
+	if len(in.SeekKey) > 0 {
+		iter.Seek(in.SeekKey)
+		iter.Prev()
+	}
+
+	out = &pb.CountReply{}
+	for iter.Next() {
+		// TODO: exclude tombstones!
+		out.Objects++
+		out.KeyBytes += uint64(len(iter.Key()))
+		out.ObjectBytes += uint64(len(iter.Value()))
+	}
+
+	totalBytes := out.KeyBytes + out.ObjectBytes
+	metrics.PmTrtlBytesRead.WithLabelValues(in.Namespace).Add(float64(totalBytes))
+
+	if err = iter.Error(); err != nil {
+		sentry.Error(ctx).Err(err).Str("namespace", in.Namespace).Msg("could not iterate")
+		return nil, status.Errorf(codes.FailedPrecondition, "iteration failure: %s", err)
+	}
+
+	log.Info().Str("namespace", in.Namespace).Uint64("count", out.Objects).Msg("count request complete")
+	return out, nil
 }
 
 func (h *TrtlService) Status(ctx context.Context, in *pb.HealthCheck) (out *pb.ServerStatus, err error) {

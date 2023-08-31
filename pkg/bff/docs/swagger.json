@@ -1261,6 +1261,17 @@
         }
     },
     "definitions": {
+        "api.Activity": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "events": {
+                    "type": "integer"
+                }
+            }
+        },
         "api.AnnouncementsReply": {
             "type": "object",
             "properties": {
@@ -1383,10 +1394,10 @@
         "api.LookupParams": {
             "type": "object",
             "properties": {
-                "commonName": {
+                "common_name": {
                     "type": "string"
                 },
-                "id": {
+                "uuid": {
                     "type": "string"
                 }
             }
@@ -1434,10 +1445,10 @@
         "api.MemberDetailsParams": {
             "type": "object",
             "properties": {
-                "directory": {
+                "-": {
                     "type": "string"
                 },
-                "id": {
+                "registered_directory": {
                     "type": "string"
                 }
             }
@@ -1445,14 +1456,31 @@
         "api.MemberPageInfo": {
             "type": "object",
             "properties": {
-                "directory": {
-                    "type": "string"
-                },
-                "pageSize": {
+                "page_size": {
                     "type": "integer"
                 },
-                "pageToken": {
+                "page_token": {
                     "type": "string"
+                },
+                "registered_directory": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.NetworkActivityReply": {
+            "type": "object",
+            "properties": {
+                "mainnet": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.Activity"
+                    }
+                },
+                "testnet": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.Activity"
+                    }
                 }
             }
         },
@@ -1572,9 +1600,26 @@
             "type": "object",
             "properties": {
                 "step": {
-                    "type": "string"
+                    "$ref": "#/definitions/api.RegistrationFormStep"
                 }
             }
+        },
+        "api.RegistrationFormStep": {
+            "type": "string",
+            "enum": [
+                "basic",
+                "legal",
+                "contacts",
+                "trisa",
+                "trixo"
+            ],
+            "x-enum-varnames": [
+                "StepBasicDetails",
+                "StepLegalPerson",
+                "StepContacts",
+                "StepTRISA",
+                "StepTRIXO"
+            ]
         },
         "api.RegistrationStatus": {
             "type": "object",
@@ -1635,13 +1680,13 @@
         "api.VerifyContactParams": {
             "type": "object",
             "properties": {
-                "directory": {
-                    "type": "string"
-                },
-                "id": {
+                "registered_directory": {
                     "type": "string"
                 },
                 "token": {
+                    "type": "string"
+                },
+                "vaspID": {
                     "type": "string"
                 }
             }
