@@ -25,7 +25,6 @@ import (
 	docs "github.com/trisacrypto/directory/pkg/bff/docs"
 	"github.com/trisacrypto/directory/pkg/bff/emails"
 	"github.com/trisacrypto/directory/pkg/store"
-	"github.com/trisacrypto/directory/pkg/utils/activity"
 	"github.com/trisacrypto/directory/pkg/utils/cache"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
@@ -86,34 +85,37 @@ func New(conf config.Config) (s *Server, err error) {
 			}
 
 			if s.testnetGDS, err = ConnectGDS(s.conf.TestNet); err != nil {
-				return nil, fmt.Errorf("could not connect to testnet: %s", err)
+				return nil, fmt.Errorf("could not connect to testnet: %w", err)
 			}
 
 			if s.mainnetGDS, err = ConnectGDS(s.conf.MainNet); err != nil {
-				return nil, fmt.Errorf("could not connect to mainnet: %s", err)
+				return nil, fmt.Errorf("could not connect to mainnet: %w", err)
 			}
 
 			if s.db, err = store.Open(s.conf.Database); err != nil {
-				return nil, fmt.Errorf("could not connect to trtl database: %s", err)
+				return nil, fmt.Errorf("could not connect to trtl database: %w", err)
 			}
 			log.Debug().Str("dsn", s.conf.Database.URL).Bool("insecure", s.conf.Database.Insecure).Msg("connected to trtl database")
-		}
 
-		if err = activity.Start(conf.Activity); err != nil {
-			return nil, fmt.Errorf("could not start activity logger: %s", err)
+			// Initialize Activity Subscriber if enabled
+			if s.conf.Activity.Enabled {
+				if s.activity, err = NewActivitySubscriber(s.conf.Activity, s.db); err != nil {
+					return nil, fmt.Errorf("could not create activity subscriber: %w", err)
+				}
+			}
 		}
 
 		if s.email, err = emails.New(conf.Email); err != nil {
-			return nil, fmt.Errorf("could not connect to email service: %s", err)
+			return nil, fmt.Errorf("could not connect to email service: %w", err)
 		}
 
 		if s.auth0, err = auth.NewManagementClient(s.conf.Auth0); err != nil {
-			return nil, fmt.Errorf("could not connect to auth0 management api: %s", err)
+			return nil, fmt.Errorf("could not connect to auth0 management api: %w", err)
 		}
 
 		// Initialize the user cache or use a no-op cache if disabled
 		if s.users, err = cache.New(s.conf.UserCache); err != nil {
-			return nil, fmt.Errorf("could not initialize user cache: %s", err)
+			return nil, fmt.Errorf("could not initialize user cache: %w", err)
 		}
 
 		log.Debug().Str("domain", s.conf.Auth0.Domain).Msg("connected to auth0")
@@ -185,6 +187,7 @@ type Server struct {
 	auth0      *management.Management
 	email      *emails.EmailManager
 	users      cache.Cache
+	activity   *ActivitySubscriber
 	started    time.Time
 	healthy    bool
 	url        string
@@ -208,12 +211,19 @@ func (s *Server) Serve() (err error) {
 		log.Warn().Msg("starting server in maintenance mode")
 	}
 
+	// Start the activity subscriber
+	if s.conf.Activity.Enabled {
+		if err = s.activity.Run(&sync.WaitGroup{}); err != nil {
+			return fmt.Errorf("could not start activity subscriber: %w", err)
+		}
+	}
+
 	// Create a socket to listen on so that we can infer the final URL (e.g. if the
 	// BindAddr is 127.0.0.1:0 for testing, a random port will be assigned, manually
 	// creating the listener will allow us to determine which port).
 	var sock net.Listener
 	if sock, err = net.Listen("tcp", s.conf.BindAddr); err != nil {
-		return fmt.Errorf("could not listen on bind addr %s: %s", s.conf.BindAddr, err)
+		return fmt.Errorf("could not listen on bind addr %s: %w", s.conf.BindAddr, err)
 	}
 
 	// Set the URL from the listener
@@ -247,6 +257,11 @@ func (s *Server) Shutdown() (err error) {
 
 	s.SetHealth(false)
 	s.srv.SetKeepAlivesEnabled(false)
+
+	// Stop the activity subscriber
+	if s.activity != nil {
+		s.activity.Stop()
+	}
 
 	// Require shutdown in 30 seconds without blocking
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
