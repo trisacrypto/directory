@@ -399,6 +399,10 @@ func (s *trtlErrorClient) Sync(context.Context, ...grpc.CallOption) (pb.Trtl_Syn
 	return nil, status.Error(codes.Unavailable, "trtl is down")
 }
 
+func (s *trtlErrorClient) Count(context.Context, *pb.CountRequest, ...grpc.CallOption) (*pb.CountReply, error) {
+	return nil, status.Error(codes.Unavailable, "trtl is down")
+}
+
 func (s *trtlErrorClient) Status(context.Context, *pb.HealthCheck, ...grpc.CallOption) (*pb.ServerStatus, error) {
 	return nil, status.Error(codes.Unavailable, "trtl is down")
 }

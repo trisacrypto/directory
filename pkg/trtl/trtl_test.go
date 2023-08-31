@@ -664,6 +664,47 @@ func (s *trtlTestSuite) TestCursor() {
 	require.Equal(2, i, "expected 3 results returned after seek, have fixtures changed?")
 }
 
+func (s *trtlTestSuite) TestCount() {
+	require := s.Require()
+	ctx := context.Background()
+
+	// Start the gRPC client
+	require.NoError(s.grpc.Connect(ctx))
+	defer s.grpc.Close()
+	client := pb.NewTrtlClient(s.grpc.Conn)
+
+	// Test cannot use reserved namespace
+	_, err := client.Count(ctx, &pb.CountRequest{Namespace: "sequence"})
+	s.StatusError(err, codes.PermissionDenied, "cannot use reserved namespace")
+
+	testCases := []struct {
+		namespace string
+		count     uint64
+		keyb      uint64
+		objb      uint64
+	}{
+		{"people", 0xa, 0x10e, 0x1c4},
+		{"certs", 1, 0x24, 0x58},
+		{"", 1, 0x24, 0x21},
+		{"frozentundra", 0, 0, 0},
+	}
+
+	for i, tc := range testCases {
+		out, err := client.Count(ctx, &pb.CountRequest{Namespace: tc.namespace})
+		require.NoError(err, "test case %d failed with error", i)
+		require.Equal(tc.count, out.Objects, "test case %d failed with mismatch count", i)
+		require.Equal(tc.keyb, out.KeyBytes, "test case %d failed with mismatch key bytes", i)
+		require.Equal(tc.objb, out.ObjectBytes, "test case %d failed with mismatch object bytes", i)
+	}
+
+	// Test Seek
+	out, err := client.Count(ctx, &pb.CountRequest{Namespace: "people", SeekKey: []byte("216")})
+	require.NoError(err, "could not count with seek key")
+	require.Equal(uint64(5), out.Objects)
+	require.Equal(uint64(0x87), out.KeyBytes)
+	require.Equal(uint64(0xe4), out.ObjectBytes)
+}
+
 func (s *trtlTestSuite) TestStatus() {
 	require := s.Require()
 	ctx := context.Background()

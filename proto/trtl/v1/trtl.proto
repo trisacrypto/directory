@@ -25,6 +25,9 @@ service Trtl {
     // Sync is a bi-directional streaming mechanism to issue access requests synchronously.
     rpc Sync(stream SyncRequest) returns (stream SyncReply) {};
 
+    // Count the number of objects currently stored in the database
+    rpc Count(CountRequest) returns (CountReply) {};
+
     // This RPC servers as a health check for clients to make sure the server is online.
     rpc Status(HealthCheck) returns (ServerStatus) {};
 }
@@ -122,6 +125,18 @@ message SyncReply {
         DeleteReply delete = 6;
         IterReply iter = 7;
     }
+}
+
+message CountRequest {
+    bytes prefix = 1;       // the prefix to range over, if nil all objects are counted
+    bytes seek_key = 2;     // a key to seekto within the prefix (optional)
+    string namespace = 3;
+}
+
+message CountReply {
+    uint64 objects = 1;      // the number of objects in the iterator
+    uint64 key_bytes = 2;    // the number of bytes used for keys
+    uint64 object_bytes = 3; // the number of bytes used for objects
 }
 
 message HealthCheck {}

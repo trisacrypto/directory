@@ -15,14 +15,14 @@ import (
 
 var db store.Store = &MockDB{}
 var state = &MockState{
-	VASPs: make(map[string]pb.VASP),
+	VASPs: make(map[string]*pb.VASP),
 	Keys:  []string{},
 }
 
 // MockState contains the current state of the MockDB for test verification.
 type MockState struct {
 	// in-memory database store
-	VASPs map[string]pb.VASP
+	VASPs map[string]*pb.VASP
 	Keys  []string
 
 	// keep track of store interface calls
@@ -33,32 +33,39 @@ type MockState struct {
 	DeleteVASPInvoked                bool
 	ListVASPsInvoked                 bool
 	SearchVASPsInvoked               bool
+	CountVASPsInvoked                bool
 	ListCertReqsInvoked              bool
 	CreateCertReqInvoked             bool
 	RetrieveCertReqInvoked           bool
 	UpdateCertReqInvoked             bool
 	DeleteCertReqInvoked             bool
+	CountCertReqsInvoked             bool
 	ListCertInvoked                  bool
 	CreateCertInvoked                bool
 	RetrieveCertInvoked              bool
 	UpdateCertInvoked                bool
 	DeleteCertInvoked                bool
+	CountCertsInvoked                bool
 	RetrieveAnnouncementMonthInvoked bool
 	UpdateAnnouncementMonthInvoked   bool
 	DeleteAnnouncementMonthInvoked   bool
+	CountAnnouncementMonthsInvoked   bool
 	RetrieveActivityMonthInvoked     bool
 	UpdateActivityMonthInvoked       bool
 	DeleteActivityMonthInvoked       bool
+	CountActivityMonthsInvoked       bool
 	ListOrganizationsInvoked         bool
 	CreateOrganizationInvoked        bool
 	RetrieveOrganizationInvoked      bool
 	UpdateOrganizationInvoked        bool
 	DeleteOrganizationInvoked        bool
+	CountOrganizationsInvoked        bool
 	ListContactsInvoked              bool
 	CreateContactInvoked             bool
 	RetrieveContactInvoked           bool
 	UpdateContactInvoked             bool
 	DeleteContactInvoked             bool
+	CountContactsInvoked             bool
 	ReindexInvoked                   bool
 	BackupInvoked                    bool
 }
@@ -69,7 +76,7 @@ func GetState() *MockState {
 
 func ResetState() {
 	state = &MockState{
-		VASPs: make(map[string]pb.VASP),
+		VASPs: make(map[string]*pb.VASP),
 		Keys:  []string{},
 	}
 }
@@ -83,32 +90,39 @@ type MockDB struct {
 	OnDeleteVASP                func(id string) error
 	OnListVASPs                 func() iterator.DirectoryIterator
 	OnSearchVASPs               func(query map[string]interface{}) ([]*pb.VASP, error)
+	OnCountVASPs                func(context.Context) (uint64, error)
 	OnListCertReqs              func() iterator.CertificateRequestIterator
 	OnCreateCertReq             func(r *models.CertificateRequest) (string, error)
 	OnRetrieveCertReq           func(id string) (*models.CertificateRequest, error)
 	OnUpdateCertReq             func(r *models.CertificateRequest) error
 	OnDeleteCertReq             func(id string) error
+	OnCountCertReqs             func(context.Context) (uint64, error)
 	OnListCerts                 func() iterator.CertificateIterator
 	OnCreateCert                func(c *models.Certificate) (string, error)
 	OnRetrieveCert              func(id string) (*models.Certificate, error)
 	OnUpdateCert                func(c *models.Certificate) error
 	OnDeleteCert                func(id string) error
+	OnCountCerts                func(context.Context) (uint64, error)
 	OnRetrieveAnnouncementMonth func(date string) (*bff.AnnouncementMonth, error)
 	OnUpdateAnnouncementMonth   func(o *bff.AnnouncementMonth) error
 	OnDeleteAnnouncementMonth   func(date string) error
+	OnCountAnnouncementMonths   func(context.Context) (uint64, error)
 	OnRetrieveActivityMonth     func(date string) (*bff.ActivityMonth, error)
 	OnUpdateActivityMonth       func(o *bff.ActivityMonth) error
 	OnDeleteActivityMonth       func(date string) error
+	OnCountActivityMonths       func(context.Context) (uint64, error)
 	OnListOrganizations         func() iterator.OrganizationIterator
 	OnCreateOrganization        func(o *bff.Organization) (string, error)
 	OnRetrieveOrganization      func(id uuid.UUID) (*bff.Organization, error)
 	OnUpdateOrganization        func(o *bff.Organization) error
 	OnDeleteOrganization        func(id uuid.UUID) error
+	OnCountOrganizations        func(context.Context) (uint64, error)
 	OnListContacts              func() []*models.Contact
 	OnCreateContact             func(c *models.Contact) (string, error)
 	OnRetrieveContact           func(email string) (*models.Contact, error)
 	OnUpdateContact             func(c *models.Contact) error
 	OnDeleteContact             func(email string) error
+	OnCountContacts             func(context.Context) (uint64, error)
 	OnReindex                   func() error
 	OnBackup                    func(string) error
 }
@@ -130,7 +144,7 @@ func (m *MockDB) CreateVASP(_ context.Context, v *pb.VASP) (string, error) {
 	if _, ok := state.VASPs[v.Id]; ok {
 		return "", fmt.Errorf("VASP with ID %s already exists", v.Id)
 	}
-	state.VASPs[v.Id] = *v
+	state.VASPs[v.Id] = v
 	state.Keys = append(state.Keys, v.Id)
 	return v.Id, nil
 }
@@ -140,12 +154,12 @@ func (m *MockDB) RetrieveVASP(_ context.Context, id string) (*pb.VASP, error) {
 	if id == "" {
 		return nil, errors.New("missing VASP ID")
 	}
-	var v pb.VASP
-	var ok bool
-	if v, ok = state.VASPs[id]; !ok {
+
+	v, ok := state.VASPs[id]
+	if !ok {
 		return nil, fmt.Errorf("VASP with ID %s not found", id)
 	}
-	return &v, nil
+	return v, nil
 }
 
 func (m *MockDB) UpdateVASP(_ context.Context, v *pb.VASP) error {
@@ -166,6 +180,11 @@ func (m *MockDB) ListVASPs(_ context.Context) iterator.DirectoryIterator {
 func (m *MockDB) SearchVASPs(_ context.Context, query map[string]interface{}) ([]*pb.VASP, error) {
 	state.SearchVASPsInvoked = true
 	return m.OnSearchVASPs(query)
+}
+
+func (m *MockDB) CountVASPs(ctx context.Context) (uint64, error) {
+	state.CountVASPsInvoked = true
+	return m.OnCountVASPs(ctx)
 }
 
 func (m *MockDB) ListCertReqs(_ context.Context) iterator.CertificateRequestIterator {
@@ -193,6 +212,11 @@ func (m *MockDB) DeleteCertReq(_ context.Context, id string) error {
 	return m.OnDeleteCertReq(id)
 }
 
+func (m *MockDB) CountCertReqs(ctx context.Context) (uint64, error) {
+	state.CountCertReqsInvoked = true
+	return m.OnCountCertReqs(ctx)
+}
+
 func (m *MockDB) ListCerts(_ context.Context) iterator.CertificateIterator {
 	state.ListCertInvoked = true
 	return m.OnListCerts()
@@ -218,6 +242,11 @@ func (m *MockDB) DeleteCert(_ context.Context, id string) error {
 	return m.OnDeleteCert(id)
 }
 
+func (m *MockDB) CountCerts(ctx context.Context) (uint64, error) {
+	state.CountCertsInvoked = true
+	return m.OnCountCerts(ctx)
+}
+
 func (m *MockDB) RetrieveAnnouncementMonth(_ context.Context, date string) (*bff.AnnouncementMonth, error) {
 	state.RetrieveAnnouncementMonthInvoked = true
 	return m.OnRetrieveAnnouncementMonth(date)
@@ -233,6 +262,11 @@ func (m *MockDB) DeleteAnnouncementMonth(_ context.Context, date string) error {
 	return m.OnDeleteAnnouncementMonth(date)
 }
 
+func (m *MockDB) CountAnnouncementMonths(ctx context.Context) (uint64, error) {
+	state.CountAnnouncementMonthsInvoked = true
+	return m.OnCountAnnouncementMonths(ctx)
+}
+
 func (m *MockDB) RetrieveActivityMonth(_ context.Context, date string) (*bff.ActivityMonth, error) {
 	state.RetrieveActivityMonthInvoked = true
 	return m.OnRetrieveActivityMonth(date)
@@ -246,6 +280,11 @@ func (m *MockDB) UpdateActivityMonth(_ context.Context, o *bff.ActivityMonth) er
 func (m *MockDB) DeleteActivityMonth(_ context.Context, date string) error {
 	state.DeleteActivityMonthInvoked = true
 	return m.OnDeleteActivityMonth(date)
+}
+
+func (m *MockDB) CountActivityMonth(ctx context.Context) (uint64, error) {
+	state.CountActivityMonthsInvoked = true
+	return m.OnCountActivityMonths(ctx)
 }
 
 func (m *MockDB) ListOrganizations(_ context.Context) iterator.OrganizationIterator {
@@ -273,6 +312,11 @@ func (m *MockDB) DeleteOrganization(_ context.Context, id uuid.UUID) error {
 	return m.OnDeleteOrganization(id)
 }
 
+func (m *MockDB) CountOrganizations(ctx context.Context) (uint64, error) {
+	state.CountOrganizationsInvoked = true
+	return m.OnCountOrganizations(ctx)
+}
+
 func (m *MockDB) ListContacts(_ context.Context) []*models.Contact {
 	state.ListContactsInvoked = true
 	return m.OnListContacts()
@@ -296,6 +340,11 @@ func (m *MockDB) UpdateContact(_ context.Context, c *models.Contact) error {
 func (m *MockDB) DeleteContact(_ context.Context, email string) error {
 	state.DeleteContactInvoked = true
 	return m.OnDeleteContact(email)
+}
+
+func (m *MockDB) CountContacts(ctx context.Context) (uint64, error) {
+	state.CountContactsInvoked = true
+	return m.OnCountContacts(ctx)
 }
 
 func (m *MockDB) Reindex() error {

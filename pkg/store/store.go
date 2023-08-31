@@ -13,6 +13,7 @@ namespace as follows:
 		Retrieve(id string) (o *Object, err error)     // Fetch an object by ID or by key
 		Update(o *Object) error                        // Make changes to an object
 		Delete(id string) error                        // Delete an object
+		Count() (uint64, error) 					   // Count the number of objects
 	}
 
 Ideally there would be a store per namespace, but in order to generalize the store to
@@ -105,6 +106,7 @@ type DirectoryStore interface {
 	RetrieveVASP(ctx context.Context, id string) (*pb.VASP, error)
 	UpdateVASP(ctx context.Context, v *pb.VASP) error
 	DeleteVASP(ctx context.Context, id string) error
+	CountVASPs(ctx context.Context) (uint64, error)
 }
 
 // CertificateRequestStore describes how services interact with Certificate requests.
@@ -114,6 +116,7 @@ type CertificateRequestStore interface {
 	RetrieveCertReq(ctx context.Context, id string) (*models.CertificateRequest, error)
 	UpdateCertReq(ctx context.Context, r *models.CertificateRequest) error
 	DeleteCertReq(ctx context.Context, id string) error
+	CountCertReqs(context.Context) (uint64, error)
 }
 
 // CertificateStore describes how services interact with Certificate records.
@@ -123,6 +126,7 @@ type CertificateStore interface {
 	RetrieveCert(ctx context.Context, id string) (*models.Certificate, error)
 	UpdateCert(ctx context.Context, c *models.Certificate) error
 	DeleteCert(ctx context.Context, id string) error
+	CountCerts(context.Context) (uint64, error)
 }
 
 // AnnouncementStore describes how services interact with the Announcement records.
@@ -130,6 +134,7 @@ type AnnouncementStore interface {
 	RetrieveAnnouncementMonth(ctx context.Context, date string) (*bff.AnnouncementMonth, error)
 	UpdateAnnouncementMonth(ctx context.Context, m *bff.AnnouncementMonth) error
 	DeleteAnnouncementMonth(ctx context.Context, date string) error
+	CountAnnouncementMonths(context.Context) (uint64, error)
 }
 
 // ActivityStore describes how services interact with the Activity records.
@@ -137,6 +142,7 @@ type ActivityStore interface {
 	RetrieveActivityMonth(ctx context.Context, date string) (*bff.ActivityMonth, error)
 	UpdateActivityMonth(ctx context.Context, m *bff.ActivityMonth) error
 	DeleteActivityMonth(ctx context.Context, date string) error
+	CountActivityMonth(context.Context) (uint64, error)
 }
 
 // OrganizationStore describes how services interact with the Organization records.
@@ -146,6 +152,7 @@ type OrganizationStore interface {
 	RetrieveOrganization(ctx context.Context, id uuid.UUID) (*bff.Organization, error)
 	UpdateOrganization(ctx context.Context, o *bff.Organization) error
 	DeleteOrganization(ctx context.Context, id uuid.UUID) error
+	CountOrganizations(context.Context) (uint64, error)
 }
 
 // ContactStore describes how services interact with the Contact records.
@@ -155,6 +162,7 @@ type ContactStore interface {
 	RetrieveContact(ctx context.Context, email string) (*models.Contact, error)
 	UpdateContact(ctx context.Context, c *models.Contact) error
 	DeleteContact(ctx context.Context, email string) error
+	CountContacts(context.Context) (uint64, error)
 }
 
 // Indexer allows external methods to access the index function of the store if it has

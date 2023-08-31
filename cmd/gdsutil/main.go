@@ -28,6 +28,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/store"
 	storerr "github.com/trisacrypto/directory/pkg/store/errors"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
+	"github.com/trisacrypto/directory/pkg/utils/wire"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/exp/slices"
@@ -118,6 +119,15 @@ func main() {
 					Value:   4096,
 				},
 			},
+		},
+		{
+			Name:     "db:usage",
+			Usage:    "count the number of objects in the database by namespace",
+			Category: "db",
+			Action:   dbUsage,
+			Before:   connectDB,
+			After:    closeDB,
+			Flags:    []cli.Flag{},
 		},
 		{
 			Name:     "contact:migrate",
@@ -373,6 +383,39 @@ func generateTokenKey(c *cli.Context) (err error) {
 	}
 
 	fmt.Printf("RSA key id: %s -- saved with PEM encoding to %s\n", keyid, out)
+	return nil
+}
+
+//===========================================================================
+// Database Functions
+//===========================================================================
+
+func dbUsage(c *cli.Context) (err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	counters := []struct {
+		namespace string
+		count     func(context.Context) (uint64, error)
+	}{
+		{wire.NamespaceVASPs, db.CountVASPs},
+		{wire.NamespaceCertReqs, db.CountCertReqs},
+		{wire.NamespaceCerts, db.CountCerts},
+		{wire.NamespaceAnnouncements, db.CountAnnouncementMonths},
+		{wire.NamespaceActivities, db.CountActivityMonth},
+		{wire.NamespaceOrganizations, db.CountOrganizations},
+		{wire.NamespaceContacts, db.CountContacts},
+	}
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', tabwriter.AlignRight)
+	for _, counter := range counters {
+		var count uint64
+		if count, err = counter.count(ctx); err != nil {
+			return cli.Exit(err, 1)
+		}
+		fmt.Fprintf(w, "%s\t%d\n", counter.namespace, count)
+	}
+	w.Flush()
 	return nil
 }
 

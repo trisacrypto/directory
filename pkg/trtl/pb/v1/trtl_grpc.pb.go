@@ -26,6 +26,7 @@ const (
 	Trtl_Batch_FullMethodName  = "/trtl.v1.Trtl/Batch"
 	Trtl_Cursor_FullMethodName = "/trtl.v1.Trtl/Cursor"
 	Trtl_Sync_FullMethodName   = "/trtl.v1.Trtl/Sync"
+	Trtl_Count_FullMethodName  = "/trtl.v1.Trtl/Count"
 	Trtl_Status_FullMethodName = "/trtl.v1.Trtl/Status"
 )
 
@@ -47,6 +48,8 @@ type TrtlClient interface {
 	Cursor(ctx context.Context, in *CursorRequest, opts ...grpc.CallOption) (Trtl_CursorClient, error)
 	// Sync is a bi-directional streaming mechanism to issue access requests synchronously.
 	Sync(ctx context.Context, opts ...grpc.CallOption) (Trtl_SyncClient, error)
+	// Count the number of objects currently stored in the database
+	Count(ctx context.Context, in *CountRequest, opts ...grpc.CallOption) (*CountReply, error)
 	// This RPC servers as a health check for clients to make sure the server is online.
 	Status(ctx context.Context, in *HealthCheck, opts ...grpc.CallOption) (*ServerStatus, error)
 }
@@ -192,6 +195,15 @@ func (x *trtlSyncClient) Recv() (*SyncReply, error) {
 	return m, nil
 }
 
+func (c *trtlClient) Count(ctx context.Context, in *CountRequest, opts ...grpc.CallOption) (*CountReply, error) {
+	out := new(CountReply)
+	err := c.cc.Invoke(ctx, Trtl_Count_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *trtlClient) Status(ctx context.Context, in *HealthCheck, opts ...grpc.CallOption) (*ServerStatus, error) {
 	out := new(ServerStatus)
 	err := c.cc.Invoke(ctx, Trtl_Status_FullMethodName, in, out, opts...)
@@ -219,6 +231,8 @@ type TrtlServer interface {
 	Cursor(*CursorRequest, Trtl_CursorServer) error
 	// Sync is a bi-directional streaming mechanism to issue access requests synchronously.
 	Sync(Trtl_SyncServer) error
+	// Count the number of objects currently stored in the database
+	Count(context.Context, *CountRequest) (*CountReply, error)
 	// This RPC servers as a health check for clients to make sure the server is online.
 	Status(context.Context, *HealthCheck) (*ServerStatus, error)
 	mustEmbedUnimplementedTrtlServer()
@@ -248,6 +262,9 @@ func (UnimplementedTrtlServer) Cursor(*CursorRequest, Trtl_CursorServer) error {
 }
 func (UnimplementedTrtlServer) Sync(Trtl_SyncServer) error {
 	return status.Errorf(codes.Unimplemented, "method Sync not implemented")
+}
+func (UnimplementedTrtlServer) Count(context.Context, *CountRequest) (*CountReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Count not implemented")
 }
 func (UnimplementedTrtlServer) Status(context.Context, *HealthCheck) (*ServerStatus, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Status not implemented")
@@ -410,6 +427,24 @@ func (x *trtlSyncServer) Recv() (*SyncRequest, error) {
 	return m, nil
 }
 
+func _Trtl_Count_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TrtlServer).Count(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Trtl_Count_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TrtlServer).Count(ctx, req.(*CountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Trtl_Status_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(HealthCheck)
 	if err := dec(in); err != nil {
@@ -450,6 +485,10 @@ var Trtl_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Iter",
 			Handler:    _Trtl_Iter_Handler,
+		},
+		{
+			MethodName: "Count",
+			Handler:    _Trtl_Count_Handler,
 		},
 		{
 			MethodName: "Status",
