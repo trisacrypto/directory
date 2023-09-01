@@ -250,7 +250,7 @@ func (s *GDS) Register(ctx context.Context, in *api.RegisterRequest) (out *api.R
 		if !contact.Verified {
 			// Begin verification process by sending email to the contact created from the VASP record.
 			// TODO: add to processing queue to return sooner/parallelize work
-			if err = s.svc.email.SendVerifyModelContact(vasp, contact); err != nil {
+			if err = s.svc.email.SendVerifyContact(vasp, contact); err != nil {
 				// If there is an error sending contact verification emails, alert admins who
 				// can resend emails later, do not abort processing the registration.
 				sentry.Error(ctx).Err(err).Str("vasp", vasp.Id).Int("sent", sent).Msg("could not send verify contacts emails")

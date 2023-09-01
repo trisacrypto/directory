@@ -97,7 +97,7 @@ func TestClientSendEmails(t *testing.T) {
 	err = models.SetContactVerification(vasp.Contacts.Legal, "12345token1234", false)
 	require.NoError(t, err)
 
-	sent, err := email.SendVerifyContacts(vasp)
+	sent, err := email.SendVerifyContacts(vasp, nil)
 	require.NoError(t, err)
 	require.Equal(t, 1, sent)
 

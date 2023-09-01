@@ -1635,7 +1635,8 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 		}
 
 		// Send the verification email
-		if err = s.svc.email.SendVerifyContact(vasp, contact); err != nil {
+		// HACK: need to put in a models.Contact instead of nil here to avoid a panic.
+		if err = s.svc.email.SendVerifyContact(vasp, nil); err != nil {
 			sentry.Error(c).Err(err).Msg("could not send verification email")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not send verification email to the new contact"))
 			return
@@ -2319,7 +2320,15 @@ func (s *Admin) Resend(c *gin.Context) {
 	out = &admin.ResendReply{}
 	switch in.Action {
 	case admin.ResendVerifyContact:
-		if out.Sent, err = s.svc.email.SendVerifyContacts(vasp); err != nil {
+		// TODO: have the contact cards come the VASP on load; not from the database here
+		var contacts map[string]*models.Contact
+		if contacts, err = s.loadContacts(ctx, vasp); err != nil {
+			sentry.Error(c).Err(err).Msg("could not load contact cards from database")
+			c.JSON(http.StatusInternalServerError, admin.ErrorResponse(fmt.Errorf("could not resend contact verification emails: %s", err)))
+		}
+
+		// Send Verify Contacts needs to include not just the VASPs but also the contacts from the database
+		if out.Sent, err = s.svc.email.SendVerifyContacts(vasp, contacts); err != nil {
 			sentry.Error(c).Err(err).Int("sent", out.Sent).Msg("could not resend verify contacts emails")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse(fmt.Errorf("could not resend contact verification emails: %s", err)))
 			return
@@ -2378,6 +2387,22 @@ func (s *Admin) Resend(c *gin.Context) {
 
 	log.Info().Str("id", vasp.Id).Int("sent", out.Sent).Str("resend_type", string(in.Action)).Msg("resend request complete")
 	c.JSON(http.StatusOK, out)
+}
+
+func (s *Admin) loadContacts(ctx context.Context, vasp *pb.VASP) (_ map[string]*models.Contact, err error) {
+	contacts := make(map[string]*models.Contact, 4)
+	iter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail(), models.SkipDuplicates())
+	for iter.Next() {
+		var card *models.Contact
+		contact, _ := iter.Value()
+
+		if card, err = s.db.RetrieveContact(ctx, contact.Email); err != nil {
+			return nil, err
+		}
+		contacts[contact.Email] = card
+	}
+
+	return contacts, nil
 }
 
 const (
