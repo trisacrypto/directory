@@ -2325,6 +2325,7 @@ func (s *Admin) Resend(c *gin.Context) {
 		if contacts, err = s.loadContacts(ctx, vasp); err != nil {
 			sentry.Error(c).Err(err).Msg("could not load contact cards from database")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse(fmt.Errorf("could not resend contact verification emails: %s", err)))
+			return
 		}
 
 		// Send Verify Contacts needs to include not just the VASPs but also the contacts from the database
