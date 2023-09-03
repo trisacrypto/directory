@@ -11,7 +11,7 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	api "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
-	"github.com/trisacrypto/directory/pkg/models/v1"
+	"github.com/trisacrypto/directory/pkg/gds/pagination/v1"
 	"github.com/trisacrypto/directory/pkg/store"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -149,7 +149,7 @@ func (s *Members) List(ctx context.Context, in *api.ListRequest) (out *api.ListR
 	}
 
 	// If a page cursor is provided, load it - otherwise create a cursor for iteration
-	cursor := &models.PageCursor{}
+	cursor := &pagination.PageCursor{}
 	if in.PageToken != "" {
 		if err = cursor.Load(in.PageToken); err != nil {
 			sentry.Warn(ctx).Err(err).Msg("invalid page token on list request")

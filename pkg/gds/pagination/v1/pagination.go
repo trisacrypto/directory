@@ -1,4 +1,4 @@
-package models
+package pagination
 
 import (
 	"encoding/base64"
