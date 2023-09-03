@@ -1,0 +1,44 @@
+syntax="proto3";
+
+package gds.models.v1;
+option go_package = "github.com/trisacrypto/directory/pkg/models/v1;models";
+
+
+// Contact contains a unique email address and information about a TRISA member.
+message Contact {
+    // Unique email address for this contact
+    string email = 1;
+    string name = 2; // used to address the email
+
+    // List of VASPs that the contact is included in
+    repeated string vasps = 3;
+
+    // Token for email verification
+    bool verified = 4;
+    string token = 5;
+
+    // Email audit log
+    repeated EmailLogEntry email_log = 6;
+
+    // RFC3339 Timestamp for when the contact was verified
+    string verified_on = 7;
+
+    // Logging information timestamps
+    string created = 8;
+    string modified = 9;
+}
+
+// EmailLogEntry contains information about a single email message that was sent.
+message EmailLogEntry {
+    // RFC3339 timestamp
+    string timestamp = 1;
+
+    // Reason why the email was sent
+    string reason = 2;
+
+    // Subject line of the email
+    string subject = 3;
+
+    // Email address of the recipient
+    string recipient = 4;
+}
