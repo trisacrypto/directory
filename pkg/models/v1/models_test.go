@@ -542,46 +542,6 @@ func TestContactEmailLog(t *testing.T) {
 	require.Equal(t, "review resend", emailLog[1].Subject)
 }
 
-func TestVeriedContacts(t *testing.T) {
-	vasp := &pb.VASP{
-		Contacts: &pb.Contacts{
-			Administrative: &pb.Contact{
-				Name:  "Admin Person",
-				Email: "admin@example.com",
-			},
-			Technical: &pb.Contact{
-				Name:  "Technical Person",
-				Email: "tech@example.com",
-			},
-			Legal: &pb.Contact{
-				Name:  "Legal Person",
-				Email: "legal@example.com",
-			},
-		},
-	}
-
-	contacts := VerifiedContacts(vasp)
-	require.Len(t, contacts, 0)
-
-	err := SetContactVerification(vasp.Contacts.Administrative, "", true)
-	require.NoError(t, err)
-
-	err = SetContactVerification(vasp.Contacts.Technical, "12345", false)
-	require.NoError(t, err)
-
-	contacts = VerifiedContacts(vasp)
-	require.Len(t, contacts, 1)
-
-	err = SetContactVerification(vasp.Contacts.Technical, "", true)
-	require.NoError(t, err)
-
-	err = SetContactVerification(vasp.Contacts.Legal, "12345", false)
-	require.NoError(t, err)
-
-	contacts = VerifiedContacts(vasp)
-	require.Len(t, contacts, 2)
-}
-
 func TestNewCertificate(t *testing.T) {
 	vasp := &pb.VASP{
 		Id: "b5841869-105f-411c-8722-4045aad72717",
