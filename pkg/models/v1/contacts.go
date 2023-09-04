@@ -34,10 +34,6 @@ type ContactRecord struct {
 	Email   *Email      // the email record associated with the contact
 }
 
-func (c *ContactRecord) EmailAddress() string {
-	return c.Email.Email
-}
-
 // Returns True if a Contact is nil or is empty.
 func ContactIsZero(contact *pb.Contact) bool {
 	return contact == nil || contact.IsZero()
@@ -327,7 +323,7 @@ func (c *Contacts) VerifiedContacts() (contacts map[string]string) {
 	iter := c.NewIterator(SkipUnverified())
 	for iter.Next() {
 		contact := iter.Contact()
-		contacts[contact.Kind] = contact.EmailAddress()
+		contacts[contact.Kind] = contact.Email.Email
 	}
 	return contacts
 }

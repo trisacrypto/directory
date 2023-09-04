@@ -165,6 +165,23 @@ type ContactStore interface {
 	CountContacts(context.Context) (uint64, error)
 }
 
+// EmailStore describes how services interact with Email records.
+type EmailStore interface {
+	ListEmails(ctx context.Context) []*models.Email
+	CreateEmail(ctx context.Context, c *models.Email) (string, error)
+	RetrieveEmail(ctx context.Context, email string) (*models.Email, error)
+	UpdateEmail(ctx context.Context, c *models.Email) error
+	DeleteEmail(ctx context.Context, email string) error
+	CountEmails(context.Context) (uint64, error)
+}
+
+// DirectoryContactStore joins VASP contact records with Email records.
+type DirectoryContactStore interface {
+	VASPContacts(ctx context.Context, vasp *pb.VASP) (*models.Contacts, error)
+	RetrieveVASPContacts(ctx context.Context, vaspID string) (*models.Contacts, error)
+	UpdateVASPContacts(ctx context.Context, vaspID string, contacts *models.Contacts) error
+}
+
 // Indexer allows external methods to access the index function of the store if it has
 // them. E.g. a leveldb embedded database or other store that uses an in-memory index
 // needs to be an Indexer but not a SQL database.

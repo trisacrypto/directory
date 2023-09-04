@@ -231,9 +231,12 @@ func TestVerifiedContacts(t *testing.T) {
 	for i, tc := range testCases {
 		verified := tc.Contacts.VerifiedContacts()
 
-		// TODO: how to measure verified contacts for duplicates?
 		if tc.Duplicates == 0 {
+			// If there are no duplicates the verified contacts should exactly match.
 			require.Len(t, verified, tc.Verified, "test case %d failed", i)
+		} else {
+			// Otherwise there should be at least as many verified contacts, more indicates duplicates.
+			require.GreaterOrEqual(t, len(verified), tc.Verified, "test case %d failed", i)
 		}
 
 		for kind, email := range verified {

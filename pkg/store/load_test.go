@@ -2,17 +2,20 @@ package store_test
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/trisacrypto/directory/pkg/store"
-	"github.com/trisacrypto/directory/pkg/store/mockdb"
+	"github.com/trisacrypto/directory/pkg/store/mock"
+	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
 // Test that the Load functions fails to load improperly formatted files.
 func TestLoadInvalid(t *testing.T) {
-	db := mockdb.GetStore()
+	db, _ := mock.Open()
 
 	// Invalid path
 	require.Error(t, store.Load(db, filepath.Join("testdata", "invalid", "invalid.csv")))
@@ -30,28 +33,58 @@ func TestLoadInvalid(t *testing.T) {
 	require.NoError(t, store.Load(db, filepath.Join("testdata", "empty.csv")))
 
 	// No store calls
-	require.False(t, mockdb.GetState().CreateVASPInvoked, "CreateVASP should not have been invoked")
-	require.False(t, mockdb.GetState().RetrieveVASPInvoked, "RetrieveVASP should not have been invoked")
+	require.False(t, db.Invoked(mock.CreateVASP), "CreateVASP should not have been invoked")
+	require.False(t, db.Invoked(mock.RetrieveVASP), "RetrieveVASP should not have been invoked")
 }
 
 // Test that the Load function correctly loads VASPs from a valid CSV file.
 func TestLoad(t *testing.T) {
-	db := mockdb.GetStore()
-	defer mockdb.ResetState()
+	db, _ := mock.Open()
+	defer db.Reset()
+
+	// Create a mock in-momry store
+	var (
+		vasps = make(map[string]*pb.VASP)
+		keys  = make([]string, 0)
+	)
+
+	db.OnCreateVASP = func(_ context.Context, v *pb.VASP) (string, error) {
+		if v.Id == "" {
+			return "", errors.New("VASP must contain an ID")
+		}
+		if _, ok := vasps[v.Id]; ok {
+			return "", fmt.Errorf("VASP with ID %s already exists", v.Id)
+		}
+		vasps[v.Id] = v
+		keys = append(keys, v.Id)
+		return v.Id, nil
+	}
+
+	db.OnRetrieveVASP = func(_ context.Context, id string) (*pb.VASP, error) {
+		if id == "" {
+			return nil, errors.New("missing VASP ID")
+		}
+
+		v, ok := vasps[id]
+		if !ok {
+			return nil, fmt.Errorf("VASP with ID %s not found", id)
+		}
+		return v, nil
+	}
 
 	// Load a valid CSV file
 	require.Nil(t, store.Load(db, filepath.Join("testdata", "vasps.csv")))
-	state := mockdb.GetState()
-	require.True(t, state.CreateVASPInvoked, "CreateVASP should have been invoked")
-	require.True(t, state.RetrieveVASPInvoked, "RetrieveVASP should have been invoked")
+	require.True(t, db.Invoked(mock.CreateVASP), "CreateVASP should have been invoked")
+	require.True(t, db.Invoked(mock.RetrieveVASP), "RetrieveVASP should have been invoked")
 
 	// Should be new VASPs in the store
 	// Echo Funds should be skipped because there is no url provided
-	require.Len(t, state.VASPs, 2)
-	require.Len(t, state.Keys, 2)
+	require.Equal(t, 2, db.Calls(mock.CreateVASP))
+	require.Len(t, vasps, 2)
+	require.Len(t, keys, 2)
 
 	// Check that the VASPs were correctly loaded into the store
-	charlieVASP, err := db.RetrieveVASP(context.Background(), state.Keys[0])
+	charlieVASP, err := db.RetrieveVASP(context.Background(), keys[0])
 	require.NoError(t, err)
 	require.NotEmpty(t, charlieVASP.Id)
 	require.Equal(t, "CharlieBank", charlieVASP.Entity.Name.NameIdentifiers[0].LegalPersonName)
@@ -61,7 +94,7 @@ func TestLoad(t *testing.T) {
 	require.Equal(t, "CA", charlieVASP.Entity.GeographicAddresses[0].Country)
 	require.Equal(t, "trisa.charliebank.io", charlieVASP.CommonName)
 
-	deltaVASP, err := db.RetrieveVASP(context.Background(), state.Keys[1])
+	deltaVASP, err := db.RetrieveVASP(context.Background(), keys[1])
 	require.NoError(t, err)
 	require.NotEmpty(t, deltaVASP.Id)
 	require.NotEqual(t, charlieVASP.Id, deltaVASP.Id, "VASP IDs should be unique")
