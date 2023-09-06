@@ -294,6 +294,7 @@ func (s *Server) VerifyContact(c *gin.Context) {
 
 	// Handle GDS errors
 	if err != nil {
+		log.Warn().Err(err).Str("directory", params.Directory).Msg("could not verify contact")
 		serr, _ := status.FromError(err)
 		switch serr.Code() {
 		case codes.InvalidArgument:
@@ -308,6 +309,12 @@ func (s *Server) VerifyContact(c *gin.Context) {
 		}
 		return
 	}
+
+	log.Info().
+		Str("status", rep.Status.String()).
+		Str("message", rep.Message).
+		Str("directory", params.Directory).
+		Msg("gds contact verification completed")
 
 	// Create the response from the reply
 	out := &api.VerifyContactReply{

@@ -11,10 +11,12 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"text/tabwriter"
 	"time"
 
@@ -33,6 +35,8 @@ import (
 	"github.com/urfave/cli/v2"
 	"golang.org/x/exp/slices"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"gopkg.in/yaml.v2"
 )
 
@@ -130,6 +134,25 @@ func main() {
 			Flags:    []cli.Flag{},
 		},
 		{
+			Name:     "vasp:list",
+			Usage:    "list the VASPs in the current database by name, common name, and id",
+			Category: "vasps",
+			Action:   vaspList,
+			Before:   connectDB,
+			After:    closeDB,
+			Flags:    []cli.Flag{},
+		},
+		{
+			Name:      "vasp:detail",
+			Usage:     "get the detail for a vasp record",
+			ArgsUsage: "uuid [uuid ...]",
+			Category:  "vasps",
+			Action:    vaspDetail,
+			Before:    connectDB,
+			After:     closeDB,
+			Flags:     []cli.Flag{},
+		},
+		{
 			Name:     "contact:migrate",
 			Usage:    "migrate all contacts on vasps into the model contacts namespace",
 			Category: "contact",
@@ -164,6 +187,25 @@ func main() {
 					Usage:   "print migration results without modifying the database, used for testing",
 				},
 			},
+		},
+		{
+			Name:     "contact:list",
+			Usage:    "list the contacts in the current database",
+			Category: "contact",
+			Action:   contactList,
+			Before:   connectDB,
+			After:    closeDB,
+			Flags:    []cli.Flag{},
+		},
+		{
+			Name:      "contact:detail",
+			Usage:     "get the detail for a contact record",
+			ArgsUsage: "email [email ...]",
+			Category:  "contact",
+			Action:    contactDetail,
+			Before:    connectDB,
+			After:     closeDB,
+			Flags:     []cli.Flag{},
 		},
 	}
 	app.Run(os.Args)
@@ -407,7 +449,8 @@ func dbUsage(c *cli.Context) (err error) {
 		{wire.NamespaceContacts, db.CountContacts},
 	}
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', tabwriter.AlignRight)
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(w, "Namespace\tObjects")
 	for _, counter := range counters {
 		var count uint64
 		if count, err = counter.count(ctx); err != nil {
@@ -417,6 +460,62 @@ func dbUsage(c *cli.Context) (err error) {
 	}
 	w.Flush()
 	return nil
+}
+
+//===========================================================================
+// VASP Functions
+//===========================================================================
+
+func vaspList(c *cli.Context) (err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	iter := db.ListVASPs(ctx)
+	defer iter.Release()
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(w, "Name\tID\tCommon Name")
+
+	for iter.Next() {
+		vasp, _ := iter.VASP()
+		name, _ := vasp.Name()
+		fmt.Fprintln(w, strings.Join([]string{name, vasp.Id, vasp.CommonName}, "\t"))
+	}
+
+	if err = iter.Error(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	w.Flush()
+	return nil
+}
+
+func vaspDetail(c *cli.Context) (err error) {
+	if c.NArg() == 0 {
+		return cli.Exit("specify at least one vasp uuid to retrieve", 1)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if c.NArg() == 1 {
+		var vasp *pb.VASP
+		if vasp, err = db.RetrieveVASP(ctx, c.Args().First()); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		return printJSON(vasp)
+	}
+
+	vasps := make([]*pb.VASP, 0, c.NArg())
+	for i := 0; i < c.NArg(); i++ {
+		var vasp *pb.VASP
+		if vasp, err = db.RetrieveVASP(ctx, c.Args().Get(i)); err != nil {
+			return cli.Exit(err, 1)
+		}
+		vasps = append(vasps, vasp)
+	}
+	return printJSON(vasps)
 }
 
 //===========================================================================
@@ -598,6 +697,57 @@ func fixVerifyToken(c *cli.Context) (err error) {
 	return nil
 }
 
+func contactList(c *cli.Context) (err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	contacts := db.ListContacts(ctx)
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(w, "Name\tEmail\tVerified\tVASP(s)")
+
+	for _, contact := range contacts {
+		row := []string{
+			contact.Name,
+			contact.Email,
+			fmt.Sprintf("%t", contact.Verified),
+			strings.Join(contact.Vasps, ", "),
+		}
+		fmt.Fprintln(w, strings.Join(row, "\t"))
+	}
+
+	w.Flush()
+	return nil
+}
+
+func contactDetail(c *cli.Context) (err error) {
+	if c.NArg() == 0 {
+		return cli.Exit("specify at least one email address", 1)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if c.NArg() == 1 {
+		var contact *models.Contact
+		if contact, err = db.RetrieveContact(ctx, c.Args().First()); err != nil {
+			return cli.Exit(err, 1)
+		}
+		return printJSON(contact)
+	}
+
+	contacts := make([]*models.Contact, 0, c.NArg())
+	for i := 0; i < c.NArg(); i++ {
+		var contact *models.Contact
+		if contact, err = db.RetrieveContact(ctx, c.Args().Get(i)); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		contacts = append(contacts, contact)
+	}
+	return printJSON(contacts)
+}
+
 //===========================================================================
 // Helper Functions
 //===========================================================================
@@ -614,6 +764,57 @@ func loadProfile(c *cli.Context) (err error) {
 		if err = profile.Update(c); err != nil {
 			return cli.Exit(err, 1)
 		}
+	}
+	return nil
+}
+
+func printJSON(v interface{}) (err error) {
+	if m, ok := v.(protoreflect.ProtoMessage); ok {
+		return printJSONPB(m)
+	}
+
+	if msgs, ok := v.([]protoreflect.ProtoMessage); ok {
+		return printJSONPBList(msgs)
+	}
+
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	if err = encoder.Encode(v); err != nil {
+		return cli.Exit(fmt.Errorf("could not marshal json: %w", err), 1)
+	}
+	return nil
+}
+
+func printJSONPB(m protoreflect.ProtoMessage) (err error) {
+	jsonpb := protojson.MarshalOptions{
+		Multiline:       true,
+		Indent:          "  ",
+		AllowPartial:    true,
+		UseProtoNames:   true,
+		UseEnumNumbers:  false,
+		EmitUnpopulated: true,
+	}
+
+	var data []byte
+	if data, err = jsonpb.Marshal(m); err != nil {
+		return cli.Exit(fmt.Errorf("could not marshal protocol buffer: %w", err), 1)
+	}
+	fmt.Println(string(data))
+	return nil
+}
+
+func printJSONPBList(msgs []protoreflect.ProtoMessage) (err error) {
+	objs := make([]map[string]interface{}, len(msgs))
+	for i, msg := range msgs {
+		if objs[i], err = wire.Rewire(msg); err != nil {
+			return cli.Exit(fmt.Errorf("could not rewire message %d: %w", i, err), 1)
+		}
+	}
+
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	if err = encoder.Encode(objs); err != nil {
+		return cli.Exit(fmt.Errorf("could not marshal json: %w", err), 1)
 	}
 	return nil
 }
