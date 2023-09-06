@@ -591,6 +591,8 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 		}
 
 		// If the model contact is verified make sure the vasp contact is verified
+		// BUG: if a previous contact is verified this will not return a 404 because
+		// found is being set to true; this check has to happen after token == in.Token
 		if contact.Verified {
 			found = true
 			prevVerified++
@@ -671,7 +673,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 }
 
 func (s *GDS) Status(ctx context.Context, in *api.HealthCheck) (out *api.ServiceState, err error) {
-	log.Info().
+	log.Debug().
 		Uint32("attempts", in.Attempts).
 		Str("last_checked_at", in.LastCheckedAt).
 		Msg("status check")

@@ -670,7 +670,7 @@ func fixVerifyToken(c *cli.Context) (err error) {
 
 		contacts := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail(), models.SkipDuplicates())
 		for contacts.Next() {
-			vaspContact, _ := contacts.Value()
+			vaspContact, kind := contacts.Value()
 
 			var contact *models.Contact
 			if contact, err = db.RetrieveContact(context.Background(), vaspContact.Email); err != nil {
@@ -687,6 +687,28 @@ func fixVerifyToken(c *cli.Context) (err error) {
 					}
 				}
 			}
+
+			// Ensure the vaspContact matches the contact
+			token, verified, err := models.GetContactVerification(vaspContact)
+			if err != nil {
+				return cli.Exit(err, 1)
+			}
+
+			if contact.Verified != verified || contact.Token != token {
+				vaspName, _ := vasp.Name()
+				fmt.Printf("vasp %s contact %s (%s) does not match contact record\n", vaspName, kind, vaspContact.Email)
+
+				if !dryrun {
+					if err = models.SetContactVerification(vaspContact, contact.Token, contact.Verified); err != nil {
+						return cli.Exit(err, 1)
+					}
+
+					if err = db.UpdateVASP(context.Background(), vasp); err != nil {
+						return cli.Exit(err, 1)
+					}
+				}
+			}
+
 		}
 	}
 

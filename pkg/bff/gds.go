@@ -312,7 +312,7 @@ func (s *Server) VerifyContact(c *gin.Context) {
 
 	log.Info().
 		Str("status", rep.Status.String()).
-		Str("message", rep.Message).
+		Str("reply", rep.Message).
 		Str("directory", params.Directory).
 		Msg("gds contact verification completed")
 
