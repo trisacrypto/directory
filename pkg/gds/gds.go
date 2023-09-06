@@ -591,10 +591,12 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 		}
 
 		// If the model contact is verified make sure the vasp contact is verified
+		// BUG: if a previous contact is verified this will not return a 404 because
+		// found is being set to true; this check has to happen after token == in.Token
 		if contact.Verified {
 			found = true
 			prevVerified++
-			if err = models.SetContactVerification(vaspContact, token, true); err != nil {
+			if err = models.SetContactVerification(vaspContact, "", true); err != nil {
 				sentry.Error(ctx).Err(err).Str("contact", kind).Str("vasp", vasp.Id).Msg("could not set contact verification token")
 				return nil, status.Error(codes.Aborted, "could not verify contact")
 			}
@@ -607,13 +609,15 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 
 			// Verify and update the models contact
 			contact.Verified = true
+			contact.VerifiedOn = time.Now().Format(time.RFC3339Nano)
+			contact.Token = ""
 			if err = s.db.UpdateContact(ctx, contact); err != nil {
 				sentry.Error(ctx).Err(err).Str("contact", contact.Email).Msg("could not update email logs on contact")
 				return nil, status.Error(codes.Aborted, "could not update contact record")
 			}
 
 			// Verify the vasp contact
-			if err = models.SetContactVerification(vaspContact, token, true); err != nil {
+			if err = models.SetContactVerification(vaspContact, "", true); err != nil {
 				sentry.Error(ctx).Err(err).Str("contact", kind).Str("vasp", vasp.Id).Msg("could not set contact verification token")
 				return nil, status.Error(codes.Aborted, "could not verify contact")
 			}
@@ -669,7 +673,7 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 }
 
 func (s *GDS) Status(ctx context.Context, in *api.HealthCheck) (out *api.ServiceState, err error) {
-	log.Info().
+	log.Debug().
 		Uint32("attempts", in.Attempts).
 		Str("last_checked_at", in.LastCheckedAt).
 		Msg("status check")
