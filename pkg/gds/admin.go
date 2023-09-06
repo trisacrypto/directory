@@ -17,7 +17,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/idtoken"
 
@@ -928,11 +927,11 @@ func (s *Admin) ListVASPs(c *gin.Context) {
 			snippet.Name, _ = vasp.Name()
 
 			// Add verified contacts to snippet
-			var errs *multierror.Error
-			if snippet.VerifiedContacts, errs = models.ContactVerifications(vasp); errs != nil {
-				for _, err := range errs.Errors {
-					sentry.Error(c).Err(err).Msg("could not get contact verifications")
-				}
+			var contacts *models.Contacts
+			if contacts, err = s.db.VASPContacts(ctx, vasp); err != nil {
+				sentry.Error(c).Err(err).Msg("could not get contact verifications")
+			} else {
+				snippet.VerifiedContacts = contacts.ContactVerifications()
 			}
 
 			// Append to list in reply
@@ -974,7 +973,7 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 
 	// Prepare VASP detail response (both retrieve and update use this method)
 	// NOTE: VASP is modified in this step, must not save VASP after this!
-	if out, err = s.prepareVASPDetail(vasp, logctx); err != nil {
+	if out, err = s.prepareVASPDetail(ctx, vasp, logctx); err != nil {
 		// NOTE: logging occurs in prepareVASPDetail
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not create VASP detail"))
 		return
@@ -984,11 +983,15 @@ func (s *Admin) RetrieveVASP(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
-func (s *Admin) prepareVASPDetail(vasp *pb.VASP, logctx *sentry.Logger) (out *admin.RetrieveVASPReply, err error) {
-	// Create the response to send back
+func (s *Admin) prepareVASPDetail(ctx context.Context, vasp *pb.VASP, logctx *sentry.Logger) (out *admin.RetrieveVASPReply, err error) {
+	var contacts *models.Contacts
+	if contacts, err = s.db.VASPContacts(ctx, vasp); err != nil {
+		return nil, err
+	}
+
 	out = &admin.RetrieveVASPReply{
 		Traveler:         models.IsTraveler(vasp),
-		VerifiedContacts: models.VerifiedContacts(vasp),
+		VerifiedContacts: contacts.VerifiedContacts(),
 	}
 
 	// Attempt to determine the VASP name from IVMS 101 data.
@@ -1222,7 +1225,7 @@ func (s *Admin) UpdateVASP(c *gin.Context) {
 	// Create the response to send back, ensuring extra fields are removed.
 	// Prepare VASP detail response (both retrieve and update use this method)
 	// NOTE: VASP is modified in this step, must not save VASP after this!
-	if out, err = s.prepareVASPDetail(vasp, logctx); err != nil {
+	if out, err = s.prepareVASPDetail(ctx, vasp, logctx); err != nil {
 		// NOTE: logging occurs in prepareVASPDetail
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not create VASP detail"))
 		return

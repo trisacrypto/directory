@@ -2,6 +2,7 @@ package trtl
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
@@ -952,7 +953,7 @@ func (s *Store) DeleteOrganization(ctx context.Context, id uuid.UUID) (err error
 	return nil
 }
 
-// TODO: Complete the trtl ContactStore implementation
+// TODO: Delete the trtl ContactStore implementation
 //===========================================================================
 // ContactStore Implementation
 //===========================================================================
@@ -1081,4 +1082,50 @@ func (s *Store) DeleteContact(ctx context.Context, email string) error {
 		return err
 	}
 	return nil
+}
+
+//===========================================================================
+// EmailStore Implementation
+//===========================================================================
+
+func (s *Store) ListEmails(ctx context.Context) []*models.Email {
+	return nil
+}
+
+// CreateContact creates a new Contact record in the store, using the contact's
+// email as a unique ID.
+func (s *Store) CreateEmail(ctx context.Context, c *models.Email) (_ string, err error) {
+	return "", errors.New("not implemented yet")
+}
+
+// RetrieveContact returns a contact request by contact email.
+func (s *Store) RetrieveEmail(ctx context.Context, email string) (c *models.Email, err error) {
+	return nil, errors.New("not implemented yet")
+}
+
+// UpdateContact can create or update a contact request. The request should be as
+// complete as possible, including an email provided by the caller.
+func (s *Store) UpdateEmail(ctx context.Context, c *models.Email) (err error) {
+	return errors.New("not implemented yet")
+}
+
+// DeleteContact deletes an contact record from the store by email.
+func (s *Store) DeleteEmail(ctx context.Context, email string) (err error) {
+	return errors.New("not implemented yet")
+}
+
+//===========================================================================
+// DirectoryStore Implementation
+//===========================================================================
+
+func (s *Store) VASPContacts(ctx context.Context, vasp *gds.VASP) (*models.Contacts, error) {
+	return nil, errors.New("not implemented yet")
+}
+
+func (s *Store) RetrieveVASPContacts(ctx context.Context, vaspID string) (*models.Contacts, error) {
+	return nil, errors.New("not implemented yet")
+}
+
+func (s *Store) UpdateVASPContacts(ctx context.Context, vaspID string, contacts *models.Contacts) error {
+	return errors.New("not implemented yet")
 }

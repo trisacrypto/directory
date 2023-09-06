@@ -36,6 +36,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/store/config"
 	"github.com/trisacrypto/directory/pkg/store/iterator"
 	"github.com/trisacrypto/directory/pkg/store/leveldb"
+	"github.com/trisacrypto/directory/pkg/store/mock"
 	"github.com/trisacrypto/directory/pkg/store/trtl"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
@@ -44,6 +45,8 @@ import (
 // specify protocol+transport://user:pass@host/dbname?opt1=a&opt2=b for servers or
 // protocol:///relative/path/to/file for embedded databases (for absolute paths, specify
 // protocol:////absolute/path/to/file).
+//
+// To open a mock store, use the DSN mock:///
 func Open(conf config.StoreConfig) (s Store, err error) {
 	var dsn *DSN
 	if dsn, err = ParseDSN(conf.URL); err != nil {
@@ -57,6 +60,10 @@ func Open(conf config.StoreConfig) (s Store, err error) {
 		}
 	case "trtl":
 		if s, err = trtl.Open(conf); err != nil {
+			return nil, err
+		}
+	case "mock":
+		if s, err = mock.Open(); err != nil {
 			return nil, err
 		}
 	default:
@@ -92,11 +99,14 @@ type Store interface {
 	ActivityStore
 	OrganizationStore
 	ContactStore
+	EmailStore
+	DirectoryContactStore
 }
 
 // leveldb.Store and trtl.Store must implement the Store interface.
 var _ Store = &leveldb.Store{}
 var _ Store = &trtl.Store{}
+var _ Store = &mock.Store{}
 
 // DirectoryStore describes how services interact with VASP identity records.
 type DirectoryStore interface {

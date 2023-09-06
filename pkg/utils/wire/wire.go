@@ -39,6 +39,7 @@ const (
 	NamespaceActivities    = "activities"
 	NamespaceOrganizations = "organizations"
 	NamespaceContacts      = "contacts"
+	NamespaceEmails        = "emails"
 )
 
 // Namespaces defines all possible namespaces that GDS manages
