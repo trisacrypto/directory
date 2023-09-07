@@ -3,6 +3,8 @@ package models
 import (
 	"errors"
 	"fmt"
+	"net/mail"
+	"strings"
 	"time"
 
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -42,6 +44,37 @@ func ContactIsZero(contact *pb.Contact) bool {
 // Returns True if a Contact is not nil and has an email address.
 func ContactHasEmail(contact *pb.Contact) bool {
 	return contact != nil && contact.Email != ""
+}
+
+// Validate that the email record is complete and ensure the email and name are
+// normalized correctly to ensure that the email record is handled uniformly.
+func (c *Email) Validate() error {
+	// Parse the name from the email if the name is not set
+	if c.Name == "" {
+		if addr, err := mail.ParseAddress(c.Email); err == nil {
+			c.Name = addr.Name
+		}
+	}
+
+	// Normalize the email address
+	c.Email = NormalizeEmail(c.Email)
+
+	// Ensure the email exists
+	if c.Email == "" {
+		return ErrNoEmailAddress
+	}
+
+	if c.Verified {
+		if c.VerifiedOn == "" || c.Token != "" {
+			return ErrVerifiedInvalid
+		}
+	} else {
+		if c.VerifiedOn != "" || c.Token == "" {
+			return ErrUnverifiedInvalid
+		}
+	}
+
+	return nil
 }
 
 // Returns True if a Contact is verified.
@@ -405,4 +438,14 @@ func (c ContactIterator) Error() error {
 
 func NewContactIterator(*pb.Contacts, ...ContactIterOption) *ContactIterator {
 	return &ContactIterator{}
+}
+
+// Normalize an email address to just the user@domain component.
+func NormalizeEmail(email string) string {
+	if addr, err := mail.ParseAddress(email); err == nil {
+		return strings.ToLower(strings.TrimSpace(addr.Address))
+	}
+
+	// Otherwise just return the string lowercased without spaces
+	return strings.ToLower(strings.TrimSpace(email))
 }

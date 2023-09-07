@@ -177,7 +177,7 @@ type ContactStore interface {
 
 // EmailStore describes how services interact with Email records.
 type EmailStore interface {
-	ListEmails(ctx context.Context) []*models.Email
+	ListEmails(ctx context.Context) iterator.EmailIterator
 	CreateEmail(ctx context.Context, c *models.Email) (string, error)
 	RetrieveEmail(ctx context.Context, email string) (*models.Email, error)
 	UpdateEmail(ctx context.Context, c *models.Email) error

@@ -31,6 +31,10 @@ type organizationIterator struct {
 	iterWrapper
 }
 
+type emailIterator struct {
+	iterWrapper
+}
+
 func (i *iterWrapper) Next() bool {
 	return i.iter.Next()
 }
@@ -155,4 +159,12 @@ func (i *organizationIterator) Organization() (o *bff.Organization, err error) {
 		return nil, err
 	}
 	return o, nil
+}
+
+func (i *emailIterator) Email() (c *models.Email, err error) {
+	c = &models.Email{}
+	if err = proto.Unmarshal(i.iter.Value(), c); err != nil {
+		return nil, err
+	}
+	return c, nil
 }

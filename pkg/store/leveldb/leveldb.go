@@ -882,30 +882,115 @@ func (s *Store) DeleteContact(ctx context.Context, email string) (err error) {
 // EmailStore Implementation
 //===========================================================================
 
-func (s *Store) ListEmails(ctx context.Context) []*models.Email {
+// List all of the emails in the database.
+func (s *Store) ListEmails(ctx context.Context) iterator.EmailIterator {
+	return &emailIterator{
+		iterWrapper{
+			iter: s.db.NewIterator(util.BytesPrefix(preEmails), nil),
+		},
+	}
+}
+
+// CreateEmail creates a new Email record in the store using the normalized unique email
+// as the key. If the email already exists in the database, an error is returned.
+func (s *Store) CreateEmail(ctx context.Context, c *models.Email) (_ string, err error) {
+	if c == nil || c.Email == "" {
+		return "", storeerrors.ErrIncompleteRecord
+	}
+
+	// Validate the email model
+	if err = c.Validate(); err != nil {
+		return "", err
+	}
+
+	// Update management timestamps and record metadata
+	c.Created = time.Now().Format(time.RFC3339)
+	c.Modified = c.Created
+
+	// Check that the email record doesn't already exist
+	// NOTE: because there is no locking there is the possibility of a concurrency bug
+	// between the "Has" check and the Put: callers should use locks to prevent this.
+	key := emailKey(c.Email)
+	if exists, err := s.db.Has(key, nil); exists || err != nil {
+		if err != nil {
+			return "", err
+		}
+		return "", storeerrors.ErrEmailExists
+	}
+
+	var data []byte
+	if data, err = proto.Marshal(c); err != nil {
+		return "", err
+	}
+
+	if err = s.db.Put(key, data, nil); err != nil {
+		return "", err
+	}
+
+	return c.Email, nil
+}
+
+// RetrieveEmail returns the contact email record if found.
+func (s *Store) RetrieveEmail(ctx context.Context, email string) (c *models.Email, err error) {
+	if strings.TrimSpace(email) == "" {
+		return nil, storeerrors.ErrEntityNotFound
+	}
+
+	var data []byte
+	if data, err = s.db.Get(emailKey(email), nil); err != nil {
+		if errors.Is(err, leveldb.ErrNotFound) {
+			return nil, storeerrors.ErrEntityNotFound
+		}
+		return nil, err
+	}
+
+	c = &models.Email{}
+	if err = proto.Unmarshal(data, c); err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+// UpdateEmail can create or update an email contact record in the database and does not
+// return an error if the email does not exist in the database.
+func (s *Store) UpdateEmail(ctx context.Context, c *models.Email) (err error) {
+	if c == nil || c.Email == "" {
+		return storeerrors.ErrIncompleteRecord
+	}
+
+	// Validate the email model
+	if err = c.Validate(); err != nil {
+		return err
+	}
+
+	// Manage the updated and modified timestamps
+	c.Modified = time.Now().Format(time.RFC3339)
+	if c.Created == "" {
+		c.Created = c.Modified
+	}
+
+	var data []byte
+	if data, err = proto.Marshal(c); err != nil {
+		return err
+	}
+
+	if err = s.db.Put(emailKey(c.Email), data, nil); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-// CreateContact creates a new Contact record in the store, using the contact's
-// email as a unique ID.
-func (s *Store) CreateEmail(ctx context.Context, c *models.Email) (_ string, err error) {
-	return "", errors.New("not implemented yet")
-}
-
-// RetrieveContact returns a contact request by contact email.
-func (s *Store) RetrieveEmail(ctx context.Context, email string) (c *models.Email, err error) {
-	return nil, errors.New("not implemented yet")
-}
-
-// UpdateContact can create or update a contact request. The request should be as
-// complete as possible, including an email provided by the caller.
-func (s *Store) UpdateEmail(ctx context.Context, c *models.Email) (err error) {
-	return errors.New("not implemented yet")
-}
-
-// DeleteContact deletes an contact record from the store by email.
+// DeleteEmail deletes an email contact record from the store.
 func (s *Store) DeleteEmail(ctx context.Context, email string) (err error) {
-	return errors.New("not implemented yet")
+	if email == "" {
+		return storeerrors.ErrEntityNotFound
+	}
+
+	if err = s.db.Delete(emailKey(email), nil); err != nil {
+		return err
+	}
+	return nil
 }
 
 //===========================================================================
@@ -963,6 +1048,14 @@ func orgKey(orgKey []byte) (key []byte) {
 func contactKey(email string) []byte {
 	email = models.NormalizeEmail(email)
 	return makeKey(preContacts, email)
+}
+
+func emailKey(email string) []byte {
+	email = models.NormalizeEmail(email)
+	if email == "" {
+		panic("cannot create key for empty email")
+	}
+	return makeKey(preEmails, email)
 }
 
 //===========================================================================

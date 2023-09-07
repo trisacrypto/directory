@@ -245,13 +245,6 @@ func (c *Contact) AppendEmailLog(reason, subject string) {
 	c.EmailLog = append(c.EmailLog, entry)
 }
 
-// Normalize the email and convert to bytes
-func NormalizeEmail(email string) string {
-	trimmed := strings.TrimSpace(email)
-	normalized := strings.ToLower(trimmed)
-	return normalized
-}
-
 // Counts emails within the given EmailLogEntry slice for the given reason within the given time frame.
 func CountSentEmails(emailLog []*EmailLogEntry, reason string, timeWindowDays int) (sent int, err error) {
 	if reason == "" {

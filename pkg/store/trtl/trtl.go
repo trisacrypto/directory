@@ -3,10 +3,12 @@ package trtl
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
+	engine "github.com/rotationalio/honu/engines"
 	"github.com/rs/zerolog/log"
 	bff "github.com/trisacrypto/directory/pkg/bff/models/v1"
 	"github.com/trisacrypto/directory/pkg/models/v1"
@@ -1088,30 +1090,165 @@ func (s *Store) DeleteContact(ctx context.Context, email string) error {
 // EmailStore Implementation
 //===========================================================================
 
-func (s *Store) ListEmails(ctx context.Context) []*models.Email {
-	return nil
+// List all of the emails in the database.
+func (s *Store) ListEmails(ctx context.Context) iterator.EmailIterator {
+	return &emailIterator{
+		NewTrtlStreamingIterator(s.client, wire.NamespaceEmails),
+	}
 }
 
-// CreateContact creates a new Contact record in the store, using the contact's
-// email as a unique ID.
+// CreateEmail creates a new Email record in the store using the normalized unique email
+// as the key. If the email already exists in the database, an error is returned.
 func (s *Store) CreateEmail(ctx context.Context, c *models.Email) (_ string, err error) {
-	return "", errors.New("not implemented yet")
+	if c == nil || c.Email == "" {
+		return "", storeerrors.ErrIncompleteRecord
+	}
+
+	// Validate the email model
+	if err = c.Validate(); err != nil {
+		return "", err
+	}
+
+	// Update management timestamps and record metadata
+	c.Created = time.Now().Format(time.RFC3339)
+	c.Modified = c.Created
+
+	// Create the Put request to save the email in trtl; create email requires that the
+	// email doesn't exist, otherwise an AlreadyExists error is returned. This is
+	// handled by the Honu transaction exists invariant.
+	request := &pb.PutRequest{
+		Key:       []byte(models.NormalizeEmail(c.Email)),
+		Namespace: wire.NamespaceEmails,
+		Options: &pb.Options{
+			RequireNotExists: true,
+		},
+	}
+
+	// Serialize the protocol buffer into the request
+	if request.Value, err = proto.Marshal(c); err != nil {
+		return "", err
+	}
+
+	ctx, cancel := utils.WithDeadline(ctx)
+	defer cancel()
+
+	// Execute the Put request to save the data in trtl
+	if reply, err := s.client.Put(ctx, request); err != nil || !reply.Success {
+		if err == nil {
+			err = storeerrors.ErrProtocol
+		}
+
+		if serr, ok := status.FromError(err); ok {
+			// Unfortunately there isn't a better way to check if the error is already
+			// exists without string matching.
+			if serr.Code() == codes.FailedPrecondition && serr.Message() == engine.ErrAlreadyExists.Error() {
+				return "", storeerrors.ErrEmailExists
+			}
+		}
+		return "", err
+	}
+	return c.Email, nil
 }
 
 // RetrieveContact returns a contact request by contact email.
 func (s *Store) RetrieveEmail(ctx context.Context, email string) (c *models.Email, err error) {
-	return nil, errors.New("not implemented yet")
+	if strings.TrimSpace(email) == "" {
+		return nil, storeerrors.ErrEntityNotFound
+	}
+
+	request := &pb.GetRequest{
+		Key:       []byte(models.NormalizeEmail(email)),
+		Namespace: wire.NamespaceEmails,
+	}
+
+	ctx, cancel := utils.WithDeadline(ctx)
+	defer cancel()
+
+	var reply *pb.GetReply
+	if reply, err = s.client.Get(ctx, request); err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, storeerrors.ErrEntityNotFound
+		}
+		return nil, err
+	}
+
+	c = &models.Email{}
+	if err = proto.Unmarshal(reply.Value, c); err != nil {
+		return nil, err
+	}
+	return c, nil
 }
 
 // UpdateContact can create or update a contact request. The request should be as
 // complete as possible, including an email provided by the caller.
 func (s *Store) UpdateEmail(ctx context.Context, c *models.Email) (err error) {
-	return errors.New("not implemented yet")
+	if c == nil || c.Email == "" {
+		return storeerrors.ErrIncompleteRecord
+	}
+
+	// Validate the email model
+	if err = c.Validate(); err != nil {
+		return err
+	}
+
+	// Manage the updated and modified timestamps
+	c.Modified = time.Now().Format(time.RFC3339)
+	if c.Created == "" {
+		c.Created = c.Modified
+	}
+
+	// RequireNotExists should be false for update semantics. We're also ensuring that
+	// RequireExists is false so that this method can be used for create without an
+	// existence check to match the leveldb store semantics.
+	request := &pb.PutRequest{
+		Key:       []byte(models.NormalizeEmail(c.Email)),
+		Namespace: wire.NamespaceEmails,
+		Options: &pb.Options{
+			RequireExists:    false,
+			RequireNotExists: false,
+		},
+	}
+
+	// Serialize the protocol buffer into the request
+	if request.Value, err = proto.Marshal(c); err != nil {
+		return err
+	}
+
+	ctx, cancel := utils.WithDeadline(ctx)
+	defer cancel()
+
+	if reply, err := s.client.Put(ctx, request); err != nil || !reply.Success {
+		if err == nil {
+			return storeerrors.ErrProtocol
+		}
+		return err
+	}
+
+	return nil
 }
 
 // DeleteContact deletes an contact record from the store by email.
 func (s *Store) DeleteEmail(ctx context.Context, email string) (err error) {
-	return errors.New("not implemented yet")
+	if email == "" {
+		return storeerrors.ErrEntityNotFound
+	}
+
+	request := &pb.DeleteRequest{
+		Key:       []byte(models.NormalizeEmail(email)),
+		Namespace: wire.NamespaceEmails,
+	}
+
+	ctx, cancel := utils.WithDeadline(ctx)
+	defer cancel()
+
+	var reply *pb.DeleteReply
+	if reply, err = s.client.Delete(ctx, request); err != nil || !reply.Success {
+		if err == nil {
+			return storeerrors.ErrProtocol
+		}
+		return err
+	}
+	return nil
 }
 
 //===========================================================================

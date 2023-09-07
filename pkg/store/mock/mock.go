@@ -117,7 +117,7 @@ type Store struct {
 	OnUpdateContact             func(ctx context.Context, c *models.Contact) error
 	OnDeleteContact             func(ctx context.Context, email string) error
 	OnCountContacts             func(context.Context) (uint64, error)
-	OnListEmails                func(ctx context.Context) []*models.Email
+	OnListEmails                func(ctx context.Context) iterator.EmailIterator
 	OnCreateEmail               func(ctx context.Context, c *models.Email) (string, error)
 	OnRetrieveEmail             func(ctx context.Context, email string) (*models.Email, error)
 	OnUpdateEmail               func(ctx context.Context, c *models.Email) error
@@ -569,7 +569,7 @@ func (s *Store) CountContacts(ctx context.Context) (uint64, error) {
 	panic(ErrNoMock)
 }
 
-func (s *Store) ListEmails(ctx context.Context) []*models.Email {
+func (s *Store) ListEmails(ctx context.Context) iterator.EmailIterator {
 	s.incrCalls(ListEmails)
 	if s.OnListEmails != nil {
 		return s.OnListEmails(ctx)

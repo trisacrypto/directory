@@ -43,3 +43,9 @@ type OrganizationIterator interface {
 	ID() string
 	Organization() (*bff.Organization, error)
 }
+
+// EmailIterator allows access to Email models
+type EmailIterator interface {
+	Iterator
+	Email() (*models.Email, error)
+}
