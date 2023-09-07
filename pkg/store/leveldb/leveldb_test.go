@@ -879,3 +879,51 @@ func (s *leveldbTestSuite) TestEmailStore() {
 		s.ErrorIs(err, storeerrors.ErrEntityNotFound)
 	})
 }
+
+func (s *leveldbTestSuite) TestDirectoryContactStore() {
+	ctx := context.Background()
+	require := s.Require()
+
+	// Load fixtures into database for tests
+	data, err := os.ReadFile("../testdata/altvasp.json")
+	require.NoError(err)
+
+	vasp := &pb.VASP{}
+	err = protojson.Unmarshal(data, vasp)
+	require.NoError(err)
+
+	vaspID, err := s.db.CreateVASP(ctx, vasp)
+	require.NoError(err, "could not create vasp fixture")
+
+	admin := &models.Email{Name: vasp.Contacts.Administrative.Name, Email: vasp.Contacts.Administrative.Email, Verified: true, VerifiedOn: time.Now().Format(time.RFC3339)}
+	tech := &models.Email{Name: vasp.Contacts.Technical.Name, Email: vasp.Contacts.Technical.Email, Verified: true, VerifiedOn: time.Now().Format(time.RFC3339)}
+	legal := &models.Email{Name: vasp.Contacts.Legal.Name, Email: vasp.Contacts.Legal.Email, Verified: true, VerifiedOn: time.Now().Format(time.RFC3339)}
+	billing := &models.Email{Name: vasp.Contacts.Billing.Name, Email: vasp.Contacts.Billing.Email, Verified: true, VerifiedOn: time.Now().Format(time.RFC3339)}
+
+	for _, record := range []*models.Email{admin, tech, legal, billing} {
+		err = s.db.UpdateEmail(ctx, record)
+		require.NoError(err, "could not create associated contact email")
+	}
+
+	defer func() {
+		require.NoError(s.db.DeleteVASP(ctx, vaspID), "could not delete darlene vasp")
+		for _, record := range []*models.Email{admin, tech, legal, billing} {
+			err = s.db.DeleteEmail(ctx, record.Email)
+			require.NoError(err, "could not delete associated contact email")
+		}
+	}()
+
+	s.Run("VASPContacts", func() {
+		contacts, err := s.db.VASPContacts(ctx, vasp)
+		require.NoError(err, "could not get vasp contacts for darlene")
+		require.Equal(vasp.Contacts, contacts.Contacts, "expected the contacts to match the VASP")
+		require.Len(contacts.Emails, 4, "expected two emails retrieved")
+	})
+
+	s.Run("RetrieveVASPContacts", func() {
+		contacts, err := s.db.RetrieveVASPContacts(ctx, vaspID)
+		require.NoError(err, "could not retrieve vasp contacts for darlene")
+		require.True(proto.Equal(vasp.Contacts, contacts.Contacts), "expected the contacts to match the VASP")
+		require.Len(contacts.Emails, 4, "expected two emails retrieved")
+	})
+}

@@ -1255,12 +1255,56 @@ func (s *Store) DeleteEmail(ctx context.Context, email string) (err error) {
 // DirectoryStore Implementation
 //===========================================================================
 
-func (s *Store) VASPContacts(ctx context.Context, vasp *gds.VASP) (*models.Contacts, error) {
-	return nil, errors.New("not implemented yet")
+// VASPContacts implements a join mechanism to ensure that the contacts on the VASP
+// (e.g. the technical, administrative, legal, and billing contacts) are connected with
+// the email address records for those contacts.
+func (s *Store) VASPContacts(ctx context.Context, vasp *gds.VASP) (_ *models.Contacts, err error) {
+	// Identify all the normalized, unique emails that need to be retrieved.
+	emails := make(map[string]struct{})
+	vcards := vasp.Contacts
+
+	if vcards.Administrative != nil && vcards.Administrative.Email != "" {
+		emails[models.NormalizeEmail(vcards.Administrative.Email)] = struct{}{}
+	}
+
+	if vcards.Technical != nil && vcards.Technical.Email != "" {
+		emails[models.NormalizeEmail(vcards.Technical.Email)] = struct{}{}
+	}
+
+	if vcards.Legal != nil && vcards.Legal.Email != "" {
+		emails[models.NormalizeEmail(vcards.Legal.Email)] = struct{}{}
+	}
+
+	if vcards.Billing != nil && vcards.Billing.Email != "" {
+		emails[models.NormalizeEmail(vcards.Billing.Email)] = struct{}{}
+	}
+
+	// Create the contacts record to return.
+	contacts := &models.Contacts{
+		Contacts: vcards,
+		Emails:   make([]*models.Email, 0, len(emails)),
+	}
+
+	// Fetch the emails and add them to the contacts.
+	// TODO: rather than doing a retrieve request for each email, batch the request.
+	for email := range emails {
+		var record *models.Email
+		if record, err = s.RetrieveEmail(ctx, email); err != nil {
+			return nil, err
+		}
+		contacts.Emails = append(contacts.Emails, record)
+	}
+	return contacts, nil
 }
 
-func (s *Store) RetrieveVASPContacts(ctx context.Context, vaspID string) (*models.Contacts, error) {
-	return nil, errors.New("not implemented yet")
+// This is a helper method to fetch the contacts for a VASP with only the vaspID.
+func (s *Store) RetrieveVASPContacts(ctx context.Context, vaspID string) (_ *models.Contacts, err error) {
+	// TODO: batch all requests rather than sending indvidual requests.
+	var vasp *gds.VASP
+	if vasp, err = s.RetrieveVASP(ctx, vaspID); err != nil {
+		return nil, err
+	}
+	return s.VASPContacts(ctx, vasp)
 }
 
 func (s *Store) UpdateVASPContacts(ctx context.Context, vaspID string, contacts *models.Contacts) error {

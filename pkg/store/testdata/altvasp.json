@@ -1,0 +1,80 @@
+{
+    "registered_directory": "test.trisa.dev",
+    "entity": {
+        "name": {
+            "name_identifiers": [
+                {
+                    "legal_person_name": "DarleneCoin, Inc.",
+                    "legal_person_name_identifier_type": 1
+                },
+                {
+                    "legal_person_name": "Darlene VASP",
+                    "legal_person_name_identifier_type": 2
+                },
+                {
+                    "legal_person_name": "DarleneCoin",
+                    "legal_person_name_identifier_type": 3
+                }
+            ]
+        },
+        "geographic_addresses": [
+            {
+                "address_type": 2,
+                "building_number": "23",
+                "street_name": "Roosevelt Place",
+                "town_name": "Boston",
+                "country_sub_division": "MA",
+                "post_code": "02151",
+                "country": "US"
+            }
+        ],
+        "national_identification": {
+            "national_identifier": "5493004YBI24IF4TIP92",
+            "national_identifier_type": 9
+        },
+        "country_of_registration": "US"
+    },
+    "contacts": {
+        "technical": {
+            "name": "TRISA Technical Support",
+            "email": "support@trisa.io"
+        },
+        "administrative": {
+            "name": "TRISA Administration",
+            "email": "admin@trisa.io"
+        },
+        "legal": {
+            "name": "TRISA Legal Team",
+            "email": "compliance@trisa.io"
+        },
+        "billing": {
+            "name": "TRISA Finance",
+            "email": "finance@trisa.io"
+        }
+    },
+    "common_name": "api.darlene.vaspbot.net",
+    "trisa_endpoint": "api.darlene.vaspbot.net:443",
+    "website": "https://darlene.vaspbot.net/",
+    "business_category": "PRIVATE_ORGANIZATION",
+    "vasp_categories": ["ATM"],
+    "established_on": "2020-11-10",
+    "trixo": {
+        "primary_national_jurisdiction": "US",
+        "primary_regulator": "FinCEN",
+        "financial_transfers_permitted": "yes",
+        "has_required_regulatory_program": "yes",
+        "conducts_customer_kyc": true,
+        "kyc_threshold": 10000.00,
+        "kyc_threshold_currency": "USD",
+        "must_comply_travel_rule": true,
+        "applicable_regulations": [
+            "BSA Travel Rule – 31 CFR 103.33(g)",
+            "FATF Travel Rule"
+        ],
+        "compliance_threshold": 10000.00,
+        "compliance_threshold_currency": "USD",
+        "must_safeguard_pii": false,
+        "safeguards_pii": true
+    },
+    "verification_status": "SUBMITTED"
+}
