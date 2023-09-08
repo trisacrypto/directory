@@ -60,6 +60,10 @@ var (
 			"adam@example.com":  {},
 			"bruce@example.com": {},
 		},
+		wire.NamespaceEmails: {
+			"adam@example.com":  {},
+			"bruce@example.com": {},
+		},
 	}
 )
 
@@ -103,6 +107,14 @@ func (lib *Library) GetContact(name string) (contact *models.Contact, err error)
 		return nil, fmt.Errorf("could not retrieve contact %s from fixtures", name)
 	}
 
+	return contact, nil
+}
+
+func (lib *Library) GetEmail(name string) (contact *models.Email, _ error) {
+	var ok bool
+	if contact, ok = lib.fixtures[wire.NamespaceEmails][name].(*models.Email); !ok {
+		return nil, fmt.Errorf("could not retrieve email %q from fixtures", name)
+	}
 	return contact, nil
 }
 
@@ -267,7 +279,7 @@ func (lib *Library) LoadReferenceFixtures() (err error) {
 
 	// Create the reference fixtures map
 	lib.fixtures = make(map[string]map[string]interface{})
-	for _, namespace := range []string{wire.NamespaceContacts, wire.NamespaceVASPs, wire.NamespaceCerts, wire.NamespaceCertReqs} {
+	for _, namespace := range []string{wire.NamespaceContacts, wire.NamespaceVASPs, wire.NamespaceCerts, wire.NamespaceCertReqs, wire.NamespaceEmails} {
 		lib.fixtures[namespace] = make(map[string]interface{})
 	}
 
@@ -317,6 +329,12 @@ func (lib *Library) LoadReferenceFixtures() (err error) {
 				return err
 			}
 			lib.fixtures[wire.NamespaceCertReqs][key] = cert
+		case wire.NamespaceEmails:
+			email := &models.Email{}
+			if err = protojson.Unmarshal(data, email); err != nil {
+				return err
+			}
+			lib.fixtures[wire.NamespaceEmails][key] = email
 		default:
 			return fmt.Errorf("unrecognized prefix for file: %s", info.Name())
 		}
@@ -407,6 +425,10 @@ func (lib *Library) GenerateDB(ftype FixtureType) (err error) {
 				}
 			case wire.NamespaceCertReqs:
 				if err = db.UpdateCertReq(context.Background(), item.(*models.CertificateRequest)); err != nil {
+					return err
+				}
+			case wire.NamespaceEmails:
+				if err = db.UpdateEmail(context.Background(), item.(*models.Email)); err != nil {
 					return err
 				}
 			default:
@@ -551,6 +573,31 @@ func (lib *Library) CompareFixture(namespace, key string, obj interface{}, remov
 
 		return proto.Equal(a, b), nil
 
+	case wire.NamespaceEmails:
+		var a *models.Email
+		for _, f := range lib.fixtures[namespace] {
+			ref := f.(*models.Email)
+			if ref.Email == key {
+				a = ref
+				break
+			}
+		}
+		if a == nil {
+			return false, fmt.Errorf("unknown email fixture %s", key)
+		}
+
+		var b *models.Email
+		if b, ok = obj.(*models.Email); !ok {
+			return false, errors.New("obj is not a Email object")
+		}
+
+		// Remove time fields for comparison
+		a.Created, b.Created = "", ""
+		a.Modified, b.Modified = "", ""
+		a.VerifiedOn, b.VerifiedOn = "", ""
+
+		return proto.Equal(a, b), nil
+
 	default:
 		return false, fmt.Errorf("unrecognized namespace: %s", namespace)
 	}
@@ -592,6 +639,12 @@ func RemarshalProto(namespace string, obj map[string]interface{}) (_ protoreflec
 			return nil, err
 		}
 		return certreq, nil
+	case wire.NamespaceEmails:
+		record := &models.Email{}
+		if err = jsonpb.Unmarshal(data, record); err != nil {
+			return nil, err
+		}
+		return record, nil
 	default:
 		return nil, fmt.Errorf("unknown namespace %q", namespace)
 	}
