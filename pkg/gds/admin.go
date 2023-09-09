@@ -498,18 +498,6 @@ func (s *Admin) Summary(c *gin.Context) {
 		// Count VASPs
 		out.VASPsCount++
 
-		// Count contacts
-		iter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail())
-		for iter.Next() {
-			out.ContactsCount++
-			contact, kind := iter.Value()
-			if verified, err := models.ContactIsVerified(contact); err != nil {
-				sentry.Warn(c).Str("contact", kind).Err(err).Msg("could not retrieve verification status")
-			} else if verified {
-				out.VerifiedContacts++
-			}
-		}
-
 		// Count Statuses and any status that is "pending" -- awaiting action by a reviewer.
 		out.Statuses[vasp.VerificationStatus.String()]++
 		if int32(vasp.VerificationStatus) < int32(pb.VerificationState_VERIFIED) || vasp.VerificationStatus == pb.VerificationState_APPEALED {
@@ -526,13 +514,32 @@ func (s *Admin) Summary(c *gin.Context) {
 	}
 	iter.Release()
 
-	// Loop over certificate requests next
-	iter2 := s.db.ListCertReqs(ctx)
+	// Loop over the email contact records next
+	iter2 := s.db.ListEmails(ctx)
 	for iter2.Next() {
+		out.ContactsCount++
+		if contact, err := iter2.Email(); err == nil && contact.Verified {
+			out.VerifiedContacts++
+		} else if err != nil {
+			sentry.Error(c).Err(err).Msg("could not parse email from database")
+		}
+	}
+
+	if err := iter2.Error(); err != nil {
+		iter2.Release()
+		sentry.Error(c).Err(err).Msg("could not iterate over emails in store")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
+		return
+	}
+	iter2.Release()
+
+	// Loop over certificate requests next
+	iter3 := s.db.ListCertReqs(ctx)
+	for iter3.Next() {
 		// Fetch CertificateRequest from the database
 		var certreq *models.CertificateRequest
 		var err error
-		if certreq, err = iter2.CertReq(); err != nil {
+		if certreq, err = iter3.CertReq(); err != nil {
 			sentry.Error(c).Err(err).Msg("could not parse CertificateRequest from database")
 			continue
 		}
@@ -543,13 +550,13 @@ func (s *Admin) Summary(c *gin.Context) {
 		}
 	}
 
-	if err := iter2.Error(); err != nil {
-		iter2.Release()
+	if err := iter3.Error(); err != nil {
+		iter3.Release()
 		sentry.Error(c).Err(err).Msg("could not iterate over certreqs in store")
 		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
 		return
 	}
-	iter2.Release()
+	iter3.Release()
 
 	// Successful request, return the VASP list JSON data
 	c.JSON(http.StatusOK, out)

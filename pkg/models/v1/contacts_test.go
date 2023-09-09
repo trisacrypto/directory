@@ -17,211 +17,185 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func TestIterContacts(t *testing.T) {
-	contacts := &pb.Contacts{
-		Technical: &pb.Contact{
-			Name: "technical",
-		},
-		Administrative: &pb.Contact{
-			Email: "administrative@example.com",
-		},
-		Billing: &pb.Contact{
-			Name: "billing",
-		},
-		Legal: &pb.Contact{
-			Email: "legal@example.com",
-		},
+func TestContactKind(t *testing.T) {
+	testCases := []struct {
+		kind   string
+		assert require.BoolAssertionFunc
+	}{
+		{models.TechnicalContact, require.True},
+		{models.AdministrativeContact, require.True},
+		{models.LegalContact, require.True},
+		{models.BillingContact, require.True},
+		{"foo", require.False},
+		{"ADMINISTRATIVE", require.False},
+		{"Technical", require.False},
+		{"  legal\t", require.False},
 	}
-	expectedContacts := []*pb.Contact{
-		contacts.Technical,
-		contacts.Administrative,
-		contacts.Legal,
-		contacts.Billing,
+
+	for i, tc := range testCases {
+		tc.assert(t, models.ContactKindIsValid(tc.kind), "test case %d failed", i)
 	}
-	expectedKinds := []string{
+}
+
+func TestContacts(t *testing.T) {
+	kinds := []string{
 		models.TechnicalContact,
 		models.AdministrativeContact,
 		models.LegalContact,
 		models.BillingContact,
 	}
 
-	actualContacts := []*pb.Contact{}
-	actualKinds := []string{}
+	// Create some simple fixtures for tests
+	allNil := &models.Contacts{Contacts: &pb.Contacts{}, Emails: nil}
+	allZero := &models.Contacts{Contacts: &pb.Contacts{Technical: &pb.Contact{}, Administrative: &pb.Contact{}, Legal: &pb.Contact{}, Billing: &pb.Contact{}}, Emails: make([]*models.Email, 0)}
+	allPop := &models.Contacts{Contacts: &pb.Contacts{Technical: &pb.Contact{Email: "technical@example.com"}, Administrative: &pb.Contact{Email: "administrative@example.com"}, Legal: &pb.Contact{Email: "legal@example.com"}, Billing: &pb.Contact{Email: "billing@example.com"}}, Emails: []*models.Email{{Email: "technical@example.com", Token: "1"}, {Email: "administrative@example.com", Token: "2"}, {Email: "legal@example.com", Token: "3"}, {Email: "billing@example.com", Token: "4"}}}
 
-	// Should iterate over all contacts.
-	iter := models.NewContactIterator(contacts)
-	for iter.Next() {
-		contact, kind := iter.Value()
-		actualContacts = append(actualContacts, contact)
-		actualKinds = append(actualKinds, kind)
-	}
-	require.NoError(t, iter.Error())
-	require.Equal(t, expectedContacts, actualContacts)
-	require.Equal(t, expectedKinds, actualKinds)
+	t.Run("Has", func(t *testing.T) {
+		for _, kind := range kinds {
+			require.False(t, allNil.Has(kind))
+			require.False(t, allZero.Has(kind))
+			require.True(t, allPop.Has(kind))
+		}
 
-	actualContacts = []*pb.Contact{}
-	actualKinds = []string{}
+		// Expect a panic when an unknown kind is passed in
+		require.Panics(t, func() { allNil.Has("foo") }, "expected panic with unknown kind")
+	})
 
-	// Should skip contacts without an email address.
-	expectedContacts = []*pb.Contact{
-		contacts.Administrative,
-		contacts.Legal,
-	}
-	expectedKinds = []string{
-		models.AdministrativeContact,
-		models.LegalContact,
-	}
-	iter = models.NewContactIterator(contacts, models.SkipNoEmail())
-	for iter.Next() {
-		contact, kind := iter.Value()
-		actualContacts = append(actualContacts, contact)
-		actualKinds = append(actualKinds, kind)
-	}
-	require.NoError(t, iter.Error())
-	require.Equal(t, expectedContacts, actualContacts)
-	require.Equal(t, expectedKinds, actualKinds)
+	t.Run("Get", func(t *testing.T) {
+		for _, kind := range kinds {
+			require.Nil(t, allNil.Get(kind))
 
-	actualContacts = []*pb.Contact{}
-	actualKinds = []string{}
+			contact := allZero.Get(kind)
+			require.True(t, contact.IsZero())
 
-	// Should skip nil contacts.
-	contacts.Technical = nil
-	contacts.Billing = nil
-	iter = models.NewContactIterator(contacts)
-	for iter.Next() {
-		contact, kind := iter.Value()
-		actualContacts = append(actualContacts, contact)
-		actualKinds = append(actualKinds, kind)
-	}
-	require.NoError(t, iter.Error())
-	require.Equal(t, expectedContacts, actualContacts)
-	require.Equal(t, expectedKinds, actualKinds)
+			contact = allPop.Get(kind)
+			require.False(t, contact.IsZero())
+			require.NotEmpty(t, contact.Email)
+			require.True(t, strings.HasPrefix(contact.Contact.Email, kind))
+			require.True(t, strings.HasPrefix(contact.Email.Email, kind))
+		}
+
+		// Expect a panic when an unknown kind is passed in
+		require.Panics(t, func() { allNil.Get("foo") }, "expected panic with unknown kind")
+	})
 }
 
-func TestIterVerifiedContacts(t *testing.T) {
-	contacts := &pb.Contacts{
-		Technical: &pb.Contact{
-			Email: "technical@example.com",
-		},
-		Administrative: &pb.Contact{
-			Email: "administrative@example.com",
-		},
-		Billing: &pb.Contact{
-			Email: "billing@example.com",
-		},
-		Legal: &pb.Contact{
-			Email: "legal@example.com",
-		},
-	}
+func TestContactsIter(t *testing.T) {
+	testCases, err := loadContactFixtures()
+	require.NoError(t, err, "could not load contact fixtures")
 
-	actualContacts := []*pb.Contact{}
-	actualKinds := []string{}
+	allNil := &models.Contacts{Contacts: &pb.Contacts{}, Emails: nil}
+	allZero := &models.Contacts{Contacts: &pb.Contacts{Technical: &pb.Contact{}, Administrative: &pb.Contact{}, Legal: &pb.Contact{}, Billing: &pb.Contact{}}, Emails: make([]*models.Email, 0)}
+	allNames := &models.Contacts{Contacts: &pb.Contacts{Technical: &pb.Contact{Name: "Tech Person"}, Administrative: &pb.Contact{Name: "Admin Person"}, Legal: &pb.Contact{Name: "Legal Person"}, Billing: &pb.Contact{Name: "Billing Person"}}, Emails: make([]*models.Email, 0)}
+	allPop := &models.Contacts{Contacts: &pb.Contacts{Technical: &pb.Contact{Email: "technical@example.com"}, Administrative: &pb.Contact{Email: "administrative@example.com"}, Legal: &pb.Contact{Email: "legal@example.com"}, Billing: &pb.Contact{Email: "billing@example.com"}}, Emails: []*models.Email{{Email: "technical@example.com", Token: "1"}, {Email: "administrative@example.com", Token: "2"}, {Email: "legal@example.com", Token: "3"}, {Email: "billing@example.com", Token: "4"}}}
 
-	// No contacts are verified.
-	iter := models.NewContactIterator(contacts, models.SkipUnverified())
-	for iter.Next() {
-		contact, kind := iter.Value()
-		actualContacts = append(actualContacts, contact)
-		actualKinds = append(actualKinds, kind)
-	}
-	require.NoError(t, iter.Error())
-	require.Equal(t, []*pb.Contact{}, actualContacts)
-	require.Equal(t, []string{}, actualKinds)
+	t.Run("Empty", func(t *testing.T) {
+		for _, contacts := range []*models.Contacts{allNil, allZero} {
+			iter := contacts.NewIterator()
+			require.False(t, iter.Next())
+		}
 
-	actualContacts = []*pb.Contact{}
-	actualKinds = []string{}
+		require.Equal(t, 4, allNames.Length())
+		require.Equal(t, 4, allPop.Length())
+	})
 
-	// Should only iterate through the verified contacts.
-	require.NoError(t, models.SetContactVerification(contacts.Technical, "", true))
-	require.NoError(t, models.SetContactVerification(contacts.Legal, "", true))
-	expectedContacts := []*pb.Contact{
-		contacts.Technical,
-		contacts.Legal,
-	}
-	expectedKinds := []string{
-		models.TechnicalContact,
-		models.LegalContact,
-	}
-	iter = models.NewContactIterator(contacts, models.SkipUnverified())
-	for iter.Next() {
-		contact, kind := iter.Value()
-		actualContacts = append(actualContacts, contact)
-		actualKinds = append(actualKinds, kind)
-	}
-	require.NoError(t, iter.Error())
-	require.Equal(t, expectedContacts, actualContacts)
-	require.Equal(t, expectedKinds, actualKinds)
-}
+	t.Run("All", func(t *testing.T) {
+		for i, tc := range testCases {
+			iter := tc.Contacts.NewIterator()
+			count := 0
 
-func TestIterDuplicates(t *testing.T) {
-	contacts := &pb.Contacts{
-		Technical: &pb.Contact{
-			Email: "data@enterprised.com",
-		},
-		Administrative: &pb.Contact{
-			Email: "picard@enterpised.com",
-		},
-		Legal: &pb.Contact{
-			Email: "troi@enterprised.com",
-		},
-		Billing: &pb.Contact{
-			Email: "riker@enterprised.com",
-		},
-	}
+			for iter.Next() {
+				contact := iter.Contact()
+				require.NotNil(t, contact, "iter returned nil contact in test case %d", i)
+				count++
+			}
 
-	actualContacts := []*pb.Contact{}
-	actualKinds := []string{}
+			require.Equal(t, tc.Length, count)
+			require.Equal(t, count, tc.Contacts.Length())
+		}
+	})
 
-	// Should iterate over all contacts if there are no duplicates.
-	expectedContacts := []*pb.Contact{
-		contacts.Technical,
-		contacts.Administrative,
-		contacts.Legal,
-		contacts.Billing,
-	}
-	expectedKinds := []string{
-		models.TechnicalContact,
-		models.AdministrativeContact,
-		models.LegalContact,
-		models.BillingContact,
-	}
+	t.Run("SkipNoEmail", func(t *testing.T) {
+		// All test cases have emails so none will be skipped.
+		for i, tc := range testCases {
+			iter := tc.Contacts.NewIterator(models.SkipNoEmail())
+			count := 0
 
-	iter := models.NewContactIterator(contacts, models.SkipDuplicates())
-	for iter.Next() {
-		contact, kind := iter.Value()
-		actualContacts = append(actualContacts, contact)
-		actualKinds = append(actualKinds, kind)
-	}
+			for iter.Next() {
+				contact := iter.Contact()
+				require.NotNil(t, contact, "iter returned nil contact in test case %d", i)
+				require.NotEmpty(t, contact.Contact.Email, "expected email to not be empty in test case %d", i)
+				count++
+			}
 
-	require.NoError(t, iter.Error())
-	require.Equal(t, expectedContacts, actualContacts)
-	require.Equal(t, expectedKinds, actualKinds)
+			require.Equal(t, count, tc.Contacts.Length(models.SkipNoEmail()), "incorrect length on test case %d", i)
+			require.Equal(t, tc.Length, count, "test case %d failed", i)
+		}
 
-	// Should skip duplicate contacts.
-	actualContacts = []*pb.Contact{}
-	actualKinds = []string{}
-	contacts.Legal.Email = "riker@enterprised.com"
-	expectedContacts = []*pb.Contact{
-		contacts.Technical,
-		contacts.Administrative,
-		contacts.Legal,
-	}
-	expectedKinds = []string{
-		models.TechnicalContact,
-		models.AdministrativeContact,
-		models.LegalContact,
-	}
+		// Ensure that contacts without emails are skipped
+		require.Equal(t, 0, allNames.Length(models.SkipNoEmail()))
+	})
 
-	iter = models.NewContactIterator(contacts, models.SkipDuplicates())
-	for iter.Next() {
-		contact, kind := iter.Value()
-		actualContacts = append(actualContacts, contact)
-		actualKinds = append(actualKinds, kind)
-	}
+	t.Run("SkipUnverified", func(t *testing.T) {
+		for i, tc := range testCases {
+			iter := tc.Contacts.NewIterator(models.SkipUnverified())
+			count := 0
 
-	require.NoError(t, iter.Error())
-	require.Equal(t, expectedContacts, actualContacts)
-	require.Equal(t, expectedKinds, actualKinds)
+			for iter.Next() {
+				contact := iter.Contact()
+				require.NotNil(t, contact, "iter returned nil contact in test case %d", i)
+				require.True(t, contact.IsVerified())
+				count++
+			}
+
+			if tc.Duplicates == 0 {
+				require.Equal(t, tc.Verified, count)
+			} else {
+				require.GreaterOrEqual(t, count, tc.Verified)
+			}
+
+			require.Equal(t, count, tc.Contacts.Length(models.SkipUnverified()))
+		}
+	})
+
+	t.Run("SkipVerified", func(t *testing.T) {
+		for i, tc := range testCases {
+			iter := tc.Contacts.NewIterator(models.SkipVerified())
+			count := 0
+
+			for iter.Next() {
+				contact := iter.Contact()
+				require.NotNil(t, contact, "iter returned nil contact in test case %d", i)
+				require.False(t, contact.IsVerified())
+				count++
+			}
+
+			if tc.Duplicates == 0 {
+				require.Equal(t, tc.Unverified, count)
+			} else {
+				require.GreaterOrEqual(t, count, tc.Unverified)
+			}
+
+			require.Equal(t, count, tc.Contacts.Length(models.SkipVerified()))
+		}
+	})
+
+	t.Run("SkipDuplicates", func(t *testing.T) {
+		for i, tc := range testCases {
+			iter := tc.Contacts.NewIterator(models.SkipDuplicates())
+			count := 0
+
+			for iter.Next() {
+				contact := iter.Contact()
+				require.NotNil(t, contact, "iter returned nil contact in test case %d", i)
+				count++
+			}
+
+			require.Equal(t, tc.Length-tc.Duplicates, count)
+			require.Equal(t, count, tc.Contacts.Length(models.SkipDuplicates()))
+		}
+	})
+
 }
 
 func TestVerifiedContacts(t *testing.T) {
@@ -243,6 +217,22 @@ func TestVerifiedContacts(t *testing.T) {
 			contact := tc.Contacts.Get(kind)
 			require.NotNil(t, contact, "expected %s contact (%s) to not be nil in test case %d", kind, email, i)
 			require.True(t, contact.Email.Verified, "expected %s contact (%s) to be verified in test case %d", kind, email, i)
+		}
+	}
+}
+
+func TestContactVerifications(t *testing.T) {
+	testCases, err := loadContactFixtures()
+	require.NoError(t, err, "could not load contact fixtures")
+
+	for i, tc := range testCases {
+		contacts := tc.Contacts.ContactVerifications()
+		require.Len(t, contacts, tc.Length, "test case %d failed", i)
+
+		for kind, verified := range contacts {
+			contact := tc.Contacts.Get(kind)
+			require.NotNil(t, contact, "expected %s contact to not be nil in test case %d", kind, i)
+			require.Equal(t, contact.IsVerified(), verified, "expected %s contact verified to be %t in test case %d", kind, verified, i)
 		}
 	}
 }
@@ -376,62 +366,6 @@ func TestGetSentEmailCount(t *testing.T) {
 	require.Equal(t, 1, sent, "expected 1 emails sent within the last 30 days")
 }
 
-func TestEmailValidation(t *testing.T) {
-	testCases := []struct {
-		email         *models.Email
-		err           error
-		expectedName  string
-		expectedEmail string
-	}{
-		{&models.Email{}, models.ErrNoEmailAddress, "", ""},
-		{&models.Email{Email: "\t\n\t\n\t\t\t"}, models.ErrNoEmailAddress, "", ""},
-		{&models.Email{Email: "ted@example.com", Verified: true, VerifiedOn: "", Token: ""}, models.ErrVerifiedInvalid, "", ""},
-		{&models.Email{Email: "ted@example.com", Verified: true, VerifiedOn: "", Token: "foo"}, models.ErrVerifiedInvalid, "", ""},
-		{&models.Email{Email: "ted@example.com", Verified: true, VerifiedOn: "2023-09-06T16:05:45-05:00", Token: "foo"}, models.ErrVerifiedInvalid, "", ""},
-		{&models.Email{Email: "ted@example.com", Verified: true, VerifiedOn: "2023-09-06T16:05:45-05:00", Token: ""}, nil, "", "ted@example.com"},
-		{&models.Email{Email: "ted@example.com", Verified: false, VerifiedOn: "", Token: ""}, models.ErrUnverifiedInvalid, "", ""},
-		{&models.Email{Email: "ted@example.com", Verified: false, VerifiedOn: "2023-09-06T16:05:45-05:00", Token: ""}, models.ErrUnverifiedInvalid, "", ""},
-		{&models.Email{Email: "ted@example.com", Verified: false, VerifiedOn: "2023-09-06T16:05:45-05:00", Token: "foo"}, models.ErrUnverifiedInvalid, "", ""},
-		{&models.Email{Email: "ted@example.com", Verified: false, VerifiedOn: "", Token: "foo"}, nil, "", "ted@example.com"},
-		{&models.Email{Email: "TED@example.com", Verified: false, VerifiedOn: "", Token: "foo"}, nil, "", "ted@example.com"},
-		{&models.Email{Email: "Ted Tonks <TED@example.com>", Verified: false, VerifiedOn: "", Token: "foo"}, nil, "Ted Tonks", "ted@example.com"},
-		{&models.Email{Name: "James Surry", Email: "Ted Tonks <TED@example.com>", Verified: false, VerifiedOn: "", Token: "foo"}, nil, "James Surry", "ted@example.com"},
-		{&models.Email{Email: "TED@example.com", Verified: true, VerifiedOn: "2023-09-06T16:05:45-05:00", Token: ""}, nil, "", "ted@example.com"},
-		{&models.Email{Email: "Ted Tonks <TED@example.com>", Verified: true, VerifiedOn: "2023-09-06T16:05:45-05:00", Token: ""}, nil, "Ted Tonks", "ted@example.com"},
-		{&models.Email{Name: "James Surry", Email: "Ted Tonks <TED@example.com>", Verified: true, VerifiedOn: "2023-09-06T16:05:45-05:00", Token: ""}, nil, "James Surry", "ted@example.com"},
-	}
-
-	for i, tc := range testCases {
-		err := tc.email.Validate()
-		if tc.err == nil {
-			require.NoError(t, err, "test case %d failed with error", i)
-			require.Equal(t, tc.expectedName, tc.email.Name, "test case %d failed with name mismatch", i)
-			require.Equal(t, tc.expectedEmail, tc.email.Email, "test case %d failed with email mismatch", i)
-		} else {
-			require.ErrorIs(t, err, tc.err, "test case %d failed with incorrect error", i)
-		}
-	}
-
-}
-
-func TestNormalizeEmail(t *testing.T) {
-	testCases := []struct {
-		email    string
-		expected string
-	}{
-		{"support@trisa.io", "support@trisa.io"},
-		{"Gary.Verdun@example.com", "gary.verdun@example.com"},
-		{"   jessica@blankspace.net       ", "jessica@blankspace.net"},
-		{"\t\t\nweird@foo.co.uk\t\n", "weird@foo.co.uk"},
-		{"ALLCAPSCREAM@WILD.FR", "allcapscream@wild.fr"},
-		{"Gary Verdun <gary@example.com>", "gary@example.com"},
-	}
-
-	for i, tc := range testCases {
-		require.Equal(t, tc.expected, models.NormalizeEmail(tc.email), "test case %d failed", i)
-	}
-}
-
 // Helper function to serialize an email log onto a contact's extra data.
 func SetEmailLog(contact *pb.Contact, log []*models.EmailLogEntry) (err error) {
 	extra := &models.GDSContactExtraData{}
@@ -440,6 +374,14 @@ func SetEmailLog(contact *pb.Contact, log []*models.EmailLogEntry) (err error) {
 		return err
 	}
 	return nil
+}
+
+type ContactsTestCase struct {
+	Contacts   *models.Contacts `json:"contacts"`
+	Length     int              `json:"length"`
+	Verified   int              `json:"verified"`
+	Unverified int              `json:"unverified"`
+	Duplicates int              `json:"duplicates"`
 }
 
 const contactFixturesPath = "testdata/contacts.json.gz"
@@ -474,14 +416,6 @@ func loadContactFixtures() (_ []*ContactsTestCase, err error) {
 		return nil, err
 	}
 	return contacts, nil
-}
-
-type ContactsTestCase struct {
-	Contacts   *models.Contacts `json:"contacts"`
-	Length     int              `json:"length"`
-	Verified   int              `json:"verified"`
-	Unverified int              `json:"unverified"`
-	Duplicates int              `json:"duplicates"`
 }
 
 func createContactFixtures() (err error) {

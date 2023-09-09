@@ -409,7 +409,7 @@ func (m *EmailManager) SendExpiresAdminNotification(vasp *pb.VASP, timeWindow in
 // Helper function for HandleCertificateReissuance that sends reissuance reminder emails
 // a vasp's contacts, ensuring at least one of the contact's receives the reminder or a
 // critical alert is raised.
-func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow int, reissuanceDate time.Time) (err error) {
+func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, contacts *models.Contacts, timeWindow int, reissuanceDate time.Time) (err error) {
 	ctx := ReissuanceReminderData{
 		VID:                 vasp.Id,
 		CommonName:          vasp.CommonName,
@@ -431,23 +431,16 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 	}
 
 	// Iterate through the VASP's verified contacts and send the reissuance reminder email.
-	contactsToNotify, err := getContactsToNotify(vasp.Contacts)
-	if err != nil {
-		return err
-	}
-	if len(contactsToNotify) == 0 {
+	var contactsToNotify []*models.Email
+	if contactsToNotify = getContactsToNotify(contacts); len(contactsToNotify) == 0 {
 		log.WithLevel(zerolog.FatalLevel).Str("vasp_id", vasp.Id).Msg("cert-manager could not find a verified contact for vasp")
 		return nil
 	}
 
 	for _, contact := range contactsToNotify {
 		// Make sure that the reminder email hasn't already been sent to this contact.
-		var emailLog []*models.EmailLogEntry
-		if emailLog, err = models.GetEmailLog(contact); err != nil {
-			return err
-		}
 		reissuanceReminder := string(admin.ReissuanceReminder)
-		emailCount, err := models.CountSentEmails(emailLog, reissuanceReminder, timeWindow)
+		emailCount, err := models.CountSentEmails(contact.SendLog, reissuanceReminder, timeWindow)
 		if err != nil {
 			sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("could not retrieve email count from email log")
 			continue
@@ -472,9 +465,10 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 			sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("error sending reissuance reminder email")
 			continue
 		}
-		if err = models.AppendEmailLog(contact, reissuanceReminder, msg.Subject); err != nil {
-			sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("error appending to email log")
-		}
+
+		// Update the email contact with the sent email log entry
+		// Ensure that the caller saves the contact back to the database!
+		contact.Log(reissuanceReminder, msg.Subject)
 	}
 	return nil
 }
@@ -484,32 +478,25 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 //  1. Send to the Technical contact if verified, else
 //  2. Send to the Administrative contact if verified, else
 //  3. Send to all other verified contacts
-func getContactsToNotify(contacts *pb.Contacts) (contactsToNotify []*pb.Contact, err error) {
-	if verified, err := models.ContactIsVerified(contacts.Technical); err != nil {
-		return nil, err
-	} else if verified {
-		return []*pb.Contact{contacts.Technical}, nil
+func getContactsToNotify(contacts *models.Contacts) []*models.Email {
+	if contacts.IsVerified(models.TechnicalContact) {
+		return []*models.Email{contacts.Get(models.TechnicalContact).Email}
 	}
 
-	if verified, err := models.ContactIsVerified(contacts.Administrative); err != nil {
-		return nil, err
-	} else if verified {
-		return []*pb.Contact{contacts.Administrative}, nil
+	if contacts.IsVerified(models.AdministrativeContact) {
+		return []*models.Email{contacts.Get(models.AdministrativeContact).Email}
 	}
 
-	if verified, err := models.ContactIsVerified(contacts.Legal); err != nil {
-		return nil, err
-	} else if verified {
-		contactsToNotify = append(contactsToNotify, contacts.Legal)
+	contactsToNotify := make([]*models.Email, 0, 2)
+	if contacts.IsVerified(models.LegalContact) {
+		contactsToNotify = append(contactsToNotify, contacts.Get(models.LegalContact).Email)
 	}
 
-	if verified, err := models.ContactIsVerified(contacts.Billing); err != nil {
-		return nil, err
-	} else if verified {
-		contactsToNotify = append(contactsToNotify, contacts.Billing)
+	if contacts.IsVerified(models.BillingContact) {
+		contactsToNotify = append(contactsToNotify, contacts.Get(models.BillingContact).Email)
 	}
 
-	return contactsToNotify, nil
+	return contactsToNotify
 }
 
 // SendReissuanceReminder sends a reminder to all verified contacts that their identity

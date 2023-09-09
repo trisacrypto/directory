@@ -3,8 +3,6 @@ package models
 import (
 	"errors"
 	"fmt"
-	"net/mail"
-	"strings"
 	"time"
 
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
@@ -18,6 +16,11 @@ const (
 	BillingContact          = "billing"
 	VerificationTokenLength = 48
 )
+
+// Returns true if the contact kind is one of the recognized strings.
+func ContactKindIsValid(kind string) bool {
+	return kind == TechnicalContact || kind == AdministrativeContact || kind == LegalContact || kind == BillingContact
+}
 
 // Contacts wraps a VASPs contacts with their email records for easier access to
 // contact records, including iteration over contact records. This type of record is
@@ -36,65 +39,19 @@ type ContactRecord struct {
 	Email   *Email      // the email record associated with the contact
 }
 
-// Returns True if a Contact is nil or is empty.
-func ContactIsZero(contact *pb.Contact) bool {
-	return contact == nil || contact.IsZero()
+// Returns true if the contact record has an email and it has been verified.
+func (c *ContactRecord) IsVerified() bool {
+	return c.Email != nil && c.Email.Verified
 }
 
-// Returns True if a Contact is not nil and has an email address.
-func ContactHasEmail(contact *pb.Contact) bool {
-	return contact != nil && contact.Email != ""
+// Return true if the contact is nil or is completely zero-valued.
+func (c *ContactRecord) IsZero() bool {
+	return c.Contact == nil || c.Contact.IsZero()
 }
 
-// Validate that the email record is complete and ensure the email and name are
-// normalized correctly to ensure that the email record is handled uniformly.
-func (c *Email) Validate() error {
-	// Parse the name from the email if the name is not set
-	if c.Name == "" {
-		if addr, err := mail.ParseAddress(c.Email); err == nil {
-			c.Name = addr.Name
-		}
-	}
-
-	// Normalize the email address
-	c.Email = NormalizeEmail(c.Email)
-
-	// Ensure the email exists
-	if c.Email == "" {
-		return ErrNoEmailAddress
-	}
-
-	if c.Verified {
-		if c.VerifiedOn == "" || c.Token != "" {
-			return ErrVerifiedInvalid
-		}
-	} else {
-		if c.VerifiedOn != "" || c.Token == "" {
-			return ErrUnverifiedInvalid
-		}
-	}
-
-	return nil
-}
-
-// Returns True if a Contact is verified.
-func ContactIsVerified(contact *pb.Contact) (verified bool, err error) {
-	if _, verified, err = GetContactVerification(contact); err != nil {
-		return false, err
-	}
-	return verified, nil
-}
-
-// Returns True if the contact kind is one of the recognized strings.
-func ContactKindIsValid(kind string) bool {
-	kinds := map[string]struct{}{
-		AdministrativeContact: {},
-		BillingContact:        {},
-		LegalContact:          {},
-		TechnicalContact:      {},
-	}
-	_, ok := kinds[kind]
-	return ok
+// Returns true if a Contact is not nil and has an email address.
+func (c *ContactRecord) HasEmail() bool {
+	return c.Contact != nil && c.Contact.Email != ""
 }
 
 // Returns the corresponding contact object for the given contact type.
@@ -146,6 +103,22 @@ func DeleteContact(vasp *pb.VASP, kind string) error {
 	return nil
 }
 
+// Has returns true if the conact for the specified kind is not nil or zero.
+func (c *Contacts) Has(kind string) bool {
+	switch kind {
+	case TechnicalContact:
+		return c.Contacts.Technical != nil && !c.Contacts.Technical.IsZero()
+	case AdministrativeContact:
+		return c.Contacts.Administrative != nil && !c.Contacts.Administrative.IsZero()
+	case LegalContact:
+		return c.Contacts.Legal != nil && !c.Contacts.Legal.IsZero()
+	case BillingContact:
+		return c.Contacts.Billing != nil && !c.Contacts.Billing.IsZero()
+	default:
+		panic(fmt.Errorf("invalid contact kind %q", kind))
+	}
+}
+
 // Get returns the contact for the specified kind if the contact on the VASP is nil then
 // a nil contact is returned, otherwise the contact record is constructed and returned.
 // This method panics if the specified kind is invalid.
@@ -164,7 +137,7 @@ func (c *Contacts) Get(kind string) *ContactRecord {
 		panic(fmt.Errorf("invalid contact kind %q", kind))
 	}
 
-	// Return a nil record if the VASP contact is nil
+	// Return a nil record if the VASP contact is nil but returns a zero-valued contact.
 	if record.Contact == nil {
 		return nil
 	}
@@ -198,6 +171,16 @@ func (c *Contacts) Index(i int) *ContactRecord {
 	default:
 		panic(fmt.Errorf("index %d is not in range of contacts", i))
 	}
+}
+
+// IsVerified returns true if the contact kind is not nil or zero and has a verified
+// email address record in the database.
+func (c *Contacts) IsVerified(kind string) bool {
+	contact := c.Get(kind)
+	if contact == nil {
+		return false
+	}
+	return contact.Email != nil && contact.Email.Verified
 }
 
 type ContactsIterator struct {
@@ -279,7 +262,7 @@ func (i *ContactsIterator) Next() bool {
 	}
 
 	// Filter if email required
-	if i.skipNoEmail && !ContactHasEmail(current.Contact) {
+	if i.skipNoEmail && !current.HasEmail() {
 		return i.Next()
 	}
 
@@ -290,12 +273,12 @@ func (i *ContactsIterator) Next() bool {
 	}
 
 	// Filter if verified is required
-	if i.skipUnverified && !current.Email.Verified {
+	if i.skipUnverified && !current.IsVerified() {
 		return i.Next()
 	}
 
 	// Filter if unverified is required
-	if i.skipVerified && current.Email.Verified {
+	if i.skipVerified && current.IsVerified() {
 		return i.Next()
 	}
 
@@ -373,6 +356,18 @@ func (c *Contacts) ContactVerifications() (contacts map[string]bool) {
 	return contacts
 }
 
+// Length returns the number of contact records that would be returned from the iterator
+// given the specified iteration constraints. This method can be used to count the
+// number of verified or unverified contacts, the number of unduplicated contacts, etc.
+func (c *Contacts) Length(opts ...ContactIterOption) int {
+	n := 0
+	iter := c.NewIterator(opts...)
+	for iter.Next() {
+		n++
+	}
+	return n
+}
+
 // GetEmailLog from the extra data on the Contact record.
 func GetEmailLog(contact *pb.Contact) (_ []*EmailLogEntry, err error) {
 	// If the extra data is nil, return nil (no email log).
@@ -438,14 +433,4 @@ func (c ContactIterator) Error() error {
 
 func NewContactIterator(*pb.Contacts, ...ContactIterOption) *ContactIterator {
 	return &ContactIterator{}
-}
-
-// Normalize an email address to just the user@domain component.
-func NormalizeEmail(email string) string {
-	if addr, err := mail.ParseAddress(email); err == nil {
-		return strings.ToLower(strings.TrimSpace(addr.Address))
-	}
-
-	// Otherwise just return the string lowercased without spaces
-	return strings.ToLower(strings.TrimSpace(email))
 }

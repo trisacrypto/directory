@@ -786,7 +786,13 @@ vaspsLoop:
 		// NOTE: the SendContactReissuanceReminder will not send emails more than
 		// once to a contact.
 		case daysBeforeExpiration <= 7:
-			if err = c.email.SendContactReissuanceReminder(vasp, 7, reissuanceDate); err != nil {
+			var contacts *models.Contacts
+			if contacts, err = c.db.VASPContacts(ctx, vasp); err != nil {
+				sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("could not retrieve vasp contacts")
+				continue vaspsLoop
+			}
+
+			if err = c.email.SendContactReissuanceReminder(vasp, contacts, 7, reissuanceDate); err != nil {
 				sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("error sending seven day reissuance reminder")
 				continue vaspsLoop
 			}
@@ -818,8 +824,14 @@ vaspsLoop:
 
 		// Thirty days before expiration, send the reissuance reminder to the VASP and the TRISA admin.
 		case daysBeforeExpiration <= 30:
+			var contacts *models.Contacts
+			if contacts, err = c.db.VASPContacts(ctx, vasp); err != nil {
+				sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("could not retrieve vasp contacts")
+				continue vaspsLoop
+			}
+
 			// If the reminder fails do not stop processing and attempt to send reminder to admins
-			if err = c.email.SendContactReissuanceReminder(vasp, 30, reissuanceDate); err != nil {
+			if err = c.email.SendContactReissuanceReminder(vasp, contacts, 30, reissuanceDate); err != nil {
 				sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("error sending thirty day reissuance reminder")
 			}
 

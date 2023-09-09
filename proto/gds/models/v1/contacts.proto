@@ -45,6 +45,9 @@ message Email {
     // RFC3339 Timestamp for when the contact was verified
     string verified_on = 6;
 
+    // A log of all emails sent to this contact record
+    repeated EmailLogEntry send_log = 13;
+
     // Logging information timestamps
     string created = 14;
     string modified = 15;
