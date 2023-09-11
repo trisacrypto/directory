@@ -86,24 +86,17 @@ func (m *EmailManager) Send(message *sgmail.SGMailV3) (err error) {
 // list and sends them the verification email with instructions on how to verify their
 // email address. Caller must update the VASP record on the data store after calling
 // this function.
-func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP, contacts map[string]*models.Contact) (sent int, err error) {
+func (m *EmailManager) SendVerifyContacts(contacts *models.Contacts) (sent int, err error) {
 	// Attempt at least one delivery, don't give up just because one email failed
 	// Track how many emails and errors occurred during delivery.
 	var nErrors int
-	iter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail(), models.SkipDuplicates())
+	iter := contacts.NewIterator(models.SkipNoEmail(), models.SkipDuplicates())
 	for iter.Next() {
-		contact, kind := iter.Value()
-		card, ok := contacts[contact.Email]
-		if !ok {
-			nErrors++
-			sentry.Error(nil).Err(err).Str("email", contact.Email).Str("vasp", vasp.Id).Msg("unable to find contact model for VASP contact")
-			continue
-		}
-
-		if !card.Verified {
-			if err := m.SendVerifyContact(vasp, card); err != nil {
+		contact := iter.Contact()
+		if !contact.Email.Verified {
+			if err := m.SendVerifyContact(contacts.VASP, contact); err != nil {
 				nErrors++
-				sentry.Error(nil).Err(err).Str("vasp", vasp.Id).Str("contact", kind).Msg("failed to send verify contact email")
+				sentry.Error(nil).Err(err).Str("vasp", contacts.VASP).Str("contact", contact.Kind).Msg("failed to send verify contact email")
 			} else {
 				sent++
 			}
@@ -118,28 +111,28 @@ func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP, contacts map[string]*mo
 }
 
 // SendVerifyContact sends a verification email to a contact.
-func (m *EmailManager) SendVerifyContact(vasp *pb.VASP, contact *models.Contact) (err error) {
+func (m *EmailManager) SendVerifyContact(vaspID string, contact *models.ContactRecord) (err error) {
 	ctx := VerifyContactData{
-		Name:        contact.Name,
-		VID:         vasp.Id,
+		Name:        contact.Contact.Name,
+		VID:         vaspID,
 		BaseURL:     m.conf.VerifyContactBaseURL,
 		DirectoryID: m.conf.DirectoryID,
-		Token:       contact.Token,
+		Token:       contact.Email.Token,
 	}
 
 	if ctx.Token == "" {
 		err = errors.New("cannot send verify contact: no verification token available")
-		sentry.Error(nil).Err(err).Str("vasp", vasp.Id).Str("contact", contact.Email).Msg("no email verification token available")
+		sentry.Error(nil).Err(err).Str("vasp", vaspID).Str("contact", contact.Email.Email).Msg("no email verification token available")
 		return err
 	}
 
-	if contact.Verified {
-		sentry.Error(nil).Err(err).Str("vasp", vasp.Id).Str("contact", contact.Email).Msg("verification email being sent to a verified contact")
+	if contact.Email.Verified {
+		sentry.Error(nil).Err(err).Str("vasp", vaspID).Str("contact", contact.Email.Email).Msg("verification email being sent to a verified contact")
 	}
 
 	msg, err := VerifyContactEmail(
 		m.serviceEmail.Name, m.serviceEmail.Address,
-		contact.Name, contact.Email,
+		contact.Email.Name, contact.Email.Email,
 		ctx,
 	)
 
@@ -153,7 +146,7 @@ func (m *EmailManager) SendVerifyContact(vasp *pb.VASP, contact *models.Contact)
 		return err
 	}
 
-	contact.AppendEmailLog(string(admin.ResendVerifyContact), msg.Subject)
+	contact.Email.Log(string(admin.ResendVerifyContact), msg.Subject)
 	return nil
 }
 

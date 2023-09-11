@@ -492,20 +492,19 @@ func (s *certTestSuite) updateVaspIdentityCert(vasp *pb.VASP, daysUntilExpiratio
 }
 
 func (s *certTestSuite) setupVASP(vasp *pb.VASP) *pb.VASP {
-	models.AddContact(vasp, "technical", &pb.Contact{
+	vasp.Contacts.Technical = &pb.Contact{
 		Name:  "technical",
 		Email: "technical@notmyemail.com",
-	})
-	models.SetContactVerification(vasp.Contacts.Technical, "", true)
+	}
 
-	models.AddContact(vasp, "administrative", &pb.Contact{
+	vasp.Contacts.Administrative = &pb.Contact{
 		Name:  "administrative",
 		Email: "administrative@notmyemail.com",
-	})
-	models.SetContactVerification(vasp.Contacts.Administrative, "", true)
-	vasp.VerificationStatus = pb.VerificationState_VERIFIED
+	}
 
 	s.db.CreateVASP(context.Background(), vasp)
+	s.db.CreateEmail(context.Background(), &models.Email{Name: "technical", Email: "technical@notmyemail.com", Verified: true, VerifiedOn: time.Now().Format(time.RFC3339)})
+	s.db.CreateEmail(context.Background(), &models.Email{Name: "administrative", Email: "administrative@notmyemail.com", Verified: true, VerifiedOn: time.Now().Format(time.RFC3339)})
 	return vasp
 }
 

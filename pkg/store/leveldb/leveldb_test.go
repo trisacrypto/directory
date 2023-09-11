@@ -916,6 +916,7 @@ func (s *leveldbTestSuite) TestDirectoryContactStore() {
 	s.Run("VASPContacts", func() {
 		contacts, err := s.db.VASPContacts(ctx, vasp)
 		require.NoError(err, "could not get vasp contacts for darlene")
+		require.Equal(vasp.Id, contacts.VASP, "expected the vasp ID to be on the contacts")
 		require.Equal(vasp.Contacts, contacts.Contacts, "expected the contacts to match the VASP")
 		require.Len(contacts.Emails, 4, "expected two emails retrieved")
 	})
@@ -923,6 +924,7 @@ func (s *leveldbTestSuite) TestDirectoryContactStore() {
 	s.Run("RetrieveVASPContacts", func() {
 		contacts, err := s.db.RetrieveVASPContacts(ctx, vaspID)
 		require.NoError(err, "could not retrieve vasp contacts for darlene")
+		require.Equal(vasp.Id, contacts.VASP, "expected the vasp ID to be on the contacts")
 		require.True(proto.Equal(vasp.Contacts, contacts.Contacts), "expected the contacts to match the VASP")
 		require.Len(contacts.Emails, 4, "expected two emails retrieved")
 	})

@@ -27,6 +27,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/gds/tokens"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/store"
+	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
 	"github.com/trisacrypto/directory/pkg/utils"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
@@ -1531,8 +1532,9 @@ func (s *Admin) ListCertificates(c *gin.Context) {
 func (s *Admin) ReplaceContact(c *gin.Context) {
 	var (
 		in           *admin.ReplaceContactRequest
-		contact      *pb.Contact
+		contact      *models.ContactRecord
 		vasp         *pb.VASP
+		email        *models.Email
 		emailUpdated bool
 		err          error
 	)
@@ -1587,6 +1589,14 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 		return
 	}
 
+	// Retrieve the VASP contacts from the database
+	var contacts *models.Contacts
+	if contacts, err = s.db.VASPContacts(ctx, vasp); err != nil {
+		sentry.Error(c).Err(err).Msg("could not retrieve contacts for VASP")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve VASP contacts"))
+		return
+	}
+
 	// Remarshal the JSON contact data
 	update := &pb.Contact{}
 	if err = wire.Unwire(in.Contact, update); err != nil {
@@ -1595,37 +1605,18 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 		return
 	}
 
-	if contact = models.ContactFromType(vasp.Contacts, kind); contact == nil {
-		// If the contact doesn't exist then create it
-		if err = models.AddContact(vasp, kind, update); err != nil {
-			sentry.Warn(c).Err(err).Msg("could not add contact to VASP")
-			c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact kind provided"))
-			return
-		}
-		contact = update
-		emailUpdated = true
+	// Verify that updated contact has data
+	if update.IsZero() {
+		c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact data: missing required fields"))
+		return
+	}
 
-		if contact.IsZero() {
-			sentry.Warn(c).Msg("cannot create empty contact on update")
-			c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact data: missing required fields"))
-			return
-		}
-
+	if contact = contacts.Get(kind); contact == nil {
+		// If the contact does not exist on the VASP then create it
+		email, emailUpdated = contacts.Add(kind, update)
 	} else {
 		// Otherwise replace the existing contact info
-		contact.Name = update.Name
-		contact.Phone = update.Phone
-		contact.Person = update.Person
-		if contact.Email != update.Email {
-			contact.Email = update.Email
-			emailUpdated = true
-		}
-
-		if contact.IsZero() {
-			sentry.Warn(c).Msg("invalid contact record after update")
-			c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact data: missing required fields"))
-			return
-		}
+		email, emailUpdated = contact.Update(update)
 	}
 
 	// New VASP record must be valid
@@ -1636,20 +1627,47 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 	}
 
 	if emailUpdated {
-		// BUG: this only sets the verification token on the VASP contact, not the contacts database
-		// The email address changed, so the contact needs to be verified
-		if err = models.SetContactVerification(contact, secrets.CreateToken(models.VerificationTokenLength), false); err != nil {
-			sentry.Error(c).Err(err).Msg("could not set contact verification")
-			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not update verification status for the indicated contact"))
-			return
-		}
+		// Attempt to retrieve the email from the database if it exists
+		var emailRecord *models.Email
+		if emailRecord, err = s.db.RetrieveEmail(ctx, email.Email); err != nil {
+			// If this is not a not found error then something else went wrong
+			if !errors.Is(err, storeerrors.ErrEntityNotFound) {
+				sentry.Error(c).Err(err).Msg("could not retrieve email from database")
+				c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
+				return
+			}
 
-		// Send the verification email
-		// HACK: need to put in a models.Contact instead of nil here to avoid a panic.
-		if err = s.svc.email.SendVerifyContact(vasp, nil); err != nil {
-			sentry.Error(c).Err(err).Msg("could not send verification email")
-			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not send verification email to the new contact"))
-			return
+			// If the email record does not exist in the database create it
+			email.Token = secrets.CreateToken(models.VerificationTokenLength)
+			email.Verified = false
+			if _, err = s.db.CreateEmail(ctx, email); err != nil {
+				sentry.Error(c).Err(err).Msg("could not create email")
+				c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
+				return
+			}
+
+			// Send the email verification request
+			if err = s.svc.email.SendVerifyContact(vasp.Id, contact); err != nil {
+				sentry.Error(c).Err(err).Msg("could not send verification email")
+				c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not send verification email to the new contact"))
+				return
+			}
+
+			// Update the email record with the send log after sending contact verification.
+			if err = s.db.UpdateEmail(ctx, emailRecord); err != nil {
+				sentry.Error(c).Err(err).Msg("could not save updated email")
+			}
+		} else {
+			// Update the email record with the vaspID and new name if it exists.
+			if email.Name != "" {
+				emailRecord.Name = email.Name
+			}
+			emailRecord.AddVASP(vasp.Id)
+			if err = s.db.UpdateEmail(ctx, emailRecord); err != nil {
+				sentry.Error(c).Err(err).Msg("could not save updated email")
+				c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
+				return
+			}
 		}
 	}
 
@@ -1686,16 +1704,21 @@ func (s *Admin) DeleteContact(c *gin.Context) {
 
 	// Kind must be one of the accepted values
 	if !models.ContactKindIsValid(kind) {
-		sentry.Warn(c).Str("kind", kind).Msg("invalid contact kind")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact kind provided"))
 		return
 	}
 
-	// Delete the contact from the VASP
-	if err = models.DeleteContact(vasp, kind); err != nil {
-		sentry.Warn(c).Err(err).Msg("could not delete contact from VASP")
-		c.JSON(http.StatusBadRequest, admin.ErrorResponse("invalid contact kind provided"))
+	var contacts *models.Contacts
+	if contacts, err = s.db.VASPContacts(ctx, vasp); err != nil {
+		sentry.Error(c).Err(err).Msg("could not retrieve vasp contacts")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse(err))
 		return
+	}
+
+	if email, emailUpdated := contacts.Delete(kind); emailUpdated {
+		if err = s.db.UpdateEmail(ctx, email); err != nil {
+			sentry.Error(c).Err(err).Msg("could not update contact to remove vaspID")
+		}
 	}
 
 	// New VASP record must be valid
@@ -2330,16 +2353,14 @@ func (s *Admin) Resend(c *gin.Context) {
 	out = &admin.ResendReply{}
 	switch in.Action {
 	case admin.ResendVerifyContact:
-		// TODO: have the contact cards come the VASP on load; not from the database here
-		var contacts map[string]*models.Contact
-		if contacts, err = s.loadContacts(ctx, vasp); err != nil {
-			sentry.Error(c).Err(err).Msg("could not load contact cards from database")
+		var contacts *models.Contacts
+		if contacts, err = s.db.VASPContacts(ctx, vasp); err != nil {
+			sentry.Error(c).Err(err).Msg("could not load contact information from database")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse(fmt.Errorf("could not resend contact verification emails: %s", err)))
-			return
 		}
 
 		// Send Verify Contacts needs to include not just the VASPs but also the contacts from the database
-		if out.Sent, err = s.svc.email.SendVerifyContacts(vasp, contacts); err != nil {
+		if out.Sent, err = s.svc.email.SendVerifyContacts(contacts); err != nil {
 			sentry.Error(c).Err(err).Int("sent", out.Sent).Msg("could not resend verify contacts emails")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse(fmt.Errorf("could not resend contact verification emails: %s", err)))
 			return
@@ -2398,22 +2419,6 @@ func (s *Admin) Resend(c *gin.Context) {
 
 	log.Info().Str("id", vasp.Id).Int("sent", out.Sent).Str("resend_type", string(in.Action)).Msg("resend request complete")
 	c.JSON(http.StatusOK, out)
-}
-
-func (s *Admin) loadContacts(ctx context.Context, vasp *pb.VASP) (_ map[string]*models.Contact, err error) {
-	contacts := make(map[string]*models.Contact, 4)
-	iter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail(), models.SkipDuplicates())
-	for iter.Next() {
-		var card *models.Contact
-		contact, _ := iter.Value()
-
-		if card, err = s.db.RetrieveContact(ctx, contact.Email); err != nil {
-			return nil, err
-		}
-		contacts[contact.Email] = card
-	}
-
-	return contacts, nil
 }
 
 const (

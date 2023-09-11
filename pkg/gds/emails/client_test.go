@@ -57,8 +57,8 @@ func TestClientSend(t *testing.T) {
 
 	vasp, contacts := makeClientFixtures(t, recipient)
 	resetLogs := func(t *testing.T) {
-		for _, contact := range contacts {
-			contact.EmailLog = make([]*models.EmailLogEntry, 0)
+		for _, contact := range contacts.Emails {
+			contact.SendLog = make([]*models.EmailLogEntry, 0)
 		}
 
 		iter := models.NewContactIterator(vasp.Contacts)
@@ -88,40 +88,19 @@ func TestClientSend(t *testing.T) {
 	t.Run("VerifyContacts", func(t *testing.T) {
 		defer resetLogs(t)
 
-		sent, err := email.SendVerifyContacts(vasp, contacts)
+		sent, err := email.SendVerifyContacts(contacts)
 		require.NoError(t, err)
 		require.Equal(t, 1, sent)
 
-		// Make sure that the VASP pointer was not modified
-		token, verified, err := models.GetContactVerification(vasp.Contacts.Technical)
-		require.NoError(t, err)
-		require.False(t, verified)
-		require.Equal(t, "12345token1234", token)
-
-		token, verified, err = models.GetContactVerification(vasp.Contacts.Administrative)
-		require.NoError(t, err)
-		require.True(t, verified)
-		require.Equal(t, "", token)
-
-		token, verified, err = models.GetContactVerification(vasp.Contacts.Legal)
-		require.NoError(t, err)
-		require.False(t, verified)
-		require.Equal(t, "12345token1234", token)
-
-		token, verified, err = models.GetContactVerification(vasp.Contacts.Billing)
-		require.NoError(t, err)
-		require.False(t, verified)
-		require.Equal(t, "", token)
-
 		// Make sure that the contact pointer was not modified
-		require.False(t, contacts[recipient.Address].Verified)
-		require.NotEmpty(t, contacts[recipient.Address].Token)
+		require.False(t, contacts.Emails[0].Verified)
+		require.NotEmpty(t, contacts.Emails[0].Token)
 
 		// No email logs should be stored on the VASP contact
 		assertVASPEmailLogsEmpty(t)
 
 		// The contacts email log contain one item
-		emailLog := contacts[recipient.Address].EmailLog
+		emailLog := contacts.Emails[0].SendLog
 		require.Len(t, emailLog, 1)
 		require.Equal(t, string(admin.ResendVerifyContact), emailLog[0].Reason)
 		require.Equal(t, emails.VerifyContactRE, emailLog[0].Subject)
@@ -252,8 +231,8 @@ func TestClientSend(t *testing.T) {
 	})
 }
 
-func makeClientFixtures(t *testing.T, recipient *mail.Address) (vasp *pb.VASP, contacts map[string]*models.Contact) {
-	vasp = &pb.VASP{
+func makeClientFixtures(t *testing.T, recipient *mail.Address) (*pb.VASP, *models.Contacts) {
+	vasp := &pb.VASP{
 		Id:            uuid.NewString(),
 		CommonName:    "test.example.com",
 		TrisaEndpoint: "test.example.com:443",
@@ -287,26 +266,24 @@ func makeClientFixtures(t *testing.T, recipient *mail.Address) (vasp *pb.VASP, c
 		},
 	}
 
-	contacts = map[string]*models.Contact{
-		recipient.Address: {
-			Name:       recipient.Name,
-			Email:      recipient.Address,
-			Token:      "12345token1234",
-			Verified:   false,
-			VerifiedOn: "",
-			EmailLog:   make([]*models.EmailLogEntry, 0),
-			Created:    "2023-09-01T08:46:16-05:00",
-			Modified:   "2023-09-01T08:46:16-05:00",
+	contacts := &models.Contacts{
+		VASP:     vasp.Id,
+		Contacts: vasp.Contacts,
+		Emails: []*models.Email{
+			{
+				Name:       recipient.Name,
+				Email:      recipient.Address,
+				Token:      "12345token1234",
+				Verified:   false,
+				VerifiedOn: "",
+				SendLog:    make([]*models.EmailLogEntry, 0),
+				Created:    "2023-09-01T08:46:16-05:00",
+				Modified:   "2023-09-01T08:46:16-05:00",
+			},
 		},
 	}
 
 	err := models.SetAdminVerificationToken(vasp, "12345token1234")
-	require.NoError(t, err)
-	err = models.SetContactVerification(vasp.Contacts.Technical, "12345token1234", false)
-	require.NoError(t, err)
-	err = models.SetContactVerification(vasp.Contacts.Administrative, "", true)
-	require.NoError(t, err)
-	err = models.SetContactVerification(vasp.Contacts.Legal, "12345token1234", false)
 	require.NoError(t, err)
 
 	return vasp, contacts

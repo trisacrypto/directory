@@ -1027,6 +1027,7 @@ func (s *Store) VASPContacts(ctx context.Context, vasp *pb.VASP) (_ *models.Cont
 
 	// Create the contacts record to return.
 	contacts := &models.Contacts{
+		VASP:     vasp.Id,
 		Contacts: vcards,
 		Emails:   make([]*models.Email, 0, len(emails)),
 	}

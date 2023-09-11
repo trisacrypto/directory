@@ -245,31 +245,6 @@ func (c *Contact) AppendEmailLog(reason, subject string) {
 	c.EmailLog = append(c.EmailLog, entry)
 }
 
-// Counts emails within the given EmailLogEntry slice for the given reason within the given time frame.
-func CountSentEmails(emailLog []*EmailLogEntry, reason string, timeWindowDays int) (sent int, err error) {
-	if reason == "" {
-		return 0, errors.New("cannot match on empty reason string")
-	}
-	if timeWindowDays < 0 {
-		return 0, errors.New("time window must be a positive number of days")
-	}
-
-	for _, value := range emailLog {
-		var timestamp time.Time
-		if timestamp, err = time.Parse(time.RFC3339, value.Timestamp); err != nil {
-			return 0, fmt.Errorf("error parsing timestamp: %v", err)
-		}
-
-		matchedReason := reason == value.Reason
-		withinTimeWindow := timestamp.After(time.Now().AddDate(0, 0, -timeWindowDays))
-
-		if matchedReason && withinTimeWindow {
-			sent++
-		}
-	}
-	return sent, nil
-}
-
 // GetCertReqIDs returns the list of associated CertificateRequest IDs for the VASP record.
 func GetCertReqIDs(vasp *pb.VASP) (_ []string, err error) {
 	// If the extra data is nil, return nil (no certificate requests).

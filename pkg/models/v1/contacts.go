@@ -27,6 +27,7 @@ func ContactKindIsValid(kind string) bool {
 // often created from database records, and acts as a join record between the VASPs
 // table and the emails table to prevent duplicate emails from being sent.
 type Contacts struct {
+	VASP     string
 	Contacts *pb.Contacts
 	Emails   []*Email
 }
@@ -54,53 +55,25 @@ func (c *ContactRecord) HasEmail() bool {
 	return c.Contact != nil && c.Contact.Email != ""
 }
 
-// Returns the corresponding contact object for the given contact type.
-func ContactFromType(contacts *pb.Contacts, kind string) *pb.Contact {
-	switch kind {
-	case AdministrativeContact:
-		return contacts.Administrative
-	case BillingContact:
-		return contacts.Billing
-	case LegalContact:
-		return contacts.Legal
-	case TechnicalContact:
-		return contacts.Technical
+// Update a contact record with the other contact data and return a new email address
+// if the email address has changed along with a bool indicating if it has to be saved.
+func (c *ContactRecord) Update(contact *pb.Contact) (*Email, bool) {
+	contactEmail := NormalizeEmail(contact.Email)
+	c.Contact = contact
+	if c.Email == nil {
+		return &Email{Name: contact.Name, Email: contactEmail}, true
 	}
-	return nil
-}
 
-// Adds a contact on the VASP object.
-func AddContact(vasp *pb.VASP, kind string, contact *pb.Contact) error {
-	switch kind {
-	case AdministrativeContact:
-		vasp.Contacts.Administrative = contact
-	case BillingContact:
-		vasp.Contacts.Billing = contact
-	case LegalContact:
-		vasp.Contacts.Legal = contact
-	case TechnicalContact:
-		vasp.Contacts.Technical = contact
-	default:
-		return fmt.Errorf("invalid contact type: %s", kind)
-	}
-	return nil
-}
+	if c.Email.Email != contactEmail {
+		if contact.Name != "" {
+			c.Email.Name = contact.Name
+		}
 
-// Deletes a contact on the VASP object by setting it to nil.
-func DeleteContact(vasp *pb.VASP, kind string) error {
-	switch kind {
-	case AdministrativeContact:
-		vasp.Contacts.Administrative = nil
-	case BillingContact:
-		vasp.Contacts.Billing = nil
-	case LegalContact:
-		vasp.Contacts.Legal = nil
-	case TechnicalContact:
-		vasp.Contacts.Technical = nil
-	default:
-		return fmt.Errorf("invalid contact type: %s", kind)
+		c.Email.Email = contactEmail
+		return c.Email, true
 	}
-	return nil
+
+	return c.Email, false
 }
 
 // Has returns true if the conact for the specified kind is not nil or zero.
@@ -143,8 +116,9 @@ func (c *Contacts) Get(kind string) *ContactRecord {
 	}
 
 	// Find the email for the given contact
+	contactEmail := NormalizeEmail(record.Contact.Email)
 	for _, email := range c.Emails {
-		if email.Email == record.Contact.Email {
+		if email.Email == contactEmail {
 			record.Email = email
 			break
 		}
@@ -171,6 +145,77 @@ func (c *Contacts) Index(i int) *ContactRecord {
 	default:
 		panic(fmt.Errorf("index %d is not in range of contacts", i))
 	}
+}
+
+// Adds a contact on the VASP object. Returns the email address record associated with
+// the contact and returns true if the email address needs to be created or updated.
+func (c *Contacts) Add(kind string, contact *pb.Contact) (*Email, bool) {
+	switch kind {
+	case TechnicalContact:
+		c.Contacts.Technical = contact
+	case AdministrativeContact:
+		c.Contacts.Administrative = contact
+	case LegalContact:
+		c.Contacts.Legal = contact
+	case BillingContact:
+		c.Contacts.Billing = contact
+	default:
+		panic(fmt.Errorf("invalid contact kind %q", kind))
+	}
+
+	// Determine if another contact already has this email; if so we don't have to
+	// create or update the email since it was already stored for another contact.
+	contactEmail := NormalizeEmail(contact.Email)
+	for _, email := range c.Emails {
+		if email.Email == contactEmail {
+			return email, false
+		}
+	}
+
+	// If we didn't find the email on the contacts, then it needs to be created and a
+	// verification email sent or updated with the vaspID or the specified record.
+	return &Email{Name: contact.Name, Email: contactEmail}, true
+}
+
+// Deletes a contact on the VASP object by setting it to nil. Returns the email address
+// record associated with the contact and true if the email address needs to be saved.
+func (c *Contacts) Delete(kind string) (*Email, bool) {
+	contact := c.Get(kind)
+	if contact == nil {
+		return nil, false
+	}
+
+	switch kind {
+	case TechnicalContact:
+		c.Contacts.Technical = nil
+	case AdministrativeContact:
+		c.Contacts.Administrative = nil
+	case LegalContact:
+		c.Contacts.Legal = nil
+	case BillingContact:
+		c.Contacts.Billing = nil
+	default:
+		panic(fmt.Errorf("invalid contact kind %q", kind))
+	}
+
+	// Check if any of the other contacts have the same email
+	found := false
+	iter := c.NewIterator(SkipNoEmail())
+	for iter.Next() {
+		other := iter.Contact()
+		if other.Kind != kind && other.Email.Email == contact.Contact.Email {
+			found = true
+		}
+	}
+
+	// If we did not find another contact with the same email, we should remove the
+	// vaspID from the email address and return true that it needs to be saved.
+	if !found {
+		contact.Email.RmVASP(c.VASP)
+		return contact.Email, true
+	}
+
+	return nil, false
 }
 
 // IsVerified returns true if the contact kind is not nil or zero and has a verified
