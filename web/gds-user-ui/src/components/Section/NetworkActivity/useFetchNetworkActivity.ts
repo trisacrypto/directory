@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { networkActivity } from "./service";
 
 const useFetchNetworkActivity = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [data, setData] = useState<any>(null);
     const [error, setError] = useState<any>(null);
+    console.log("data", data);
     
     const fetchNetworkActivity = async () => {
         setIsLoading(true);
@@ -22,7 +23,11 @@ const useFetchNetworkActivity = () => {
             setIsLoading(false);
         }
     };
-    fetchNetworkActivity();
+
+   useEffect(() => {
+         fetchNetworkActivity();
+    }, []);
+
     return { data, isLoading, error };
 };
 
