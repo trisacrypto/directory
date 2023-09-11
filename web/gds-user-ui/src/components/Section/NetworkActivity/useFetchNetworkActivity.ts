@@ -5,7 +5,6 @@ const useFetchNetworkActivity = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [data, setData] = useState<any>(null);
     const [error, setError] = useState<any>(null);
-    console.log("data", data);
     
     const fetchNetworkActivity = async () => {
         setIsLoading(true);
