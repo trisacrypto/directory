@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { networkActivity } from "./service";
 
 const useFetchNetworkActivity = () => {
@@ -22,7 +22,11 @@ const useFetchNetworkActivity = () => {
             setIsLoading(false);
         }
     };
-    fetchNetworkActivity();
+
+   useEffect(() => {
+         fetchNetworkActivity();
+    }, []);
+
     return { data, isLoading, error };
 };
 
