@@ -167,13 +167,6 @@ func (m *EmailManager) SendReviewRequest(vasp *pb.VASP) (sent int, err error) {
 	clone := proto.Clone(vasp).(*pb.VASP)
 	models.SetAdminVerificationToken(clone, "[REDACTED]")
 
-	iter := models.NewContactIterator(clone.Contacts)
-	for iter.Next() {
-		contact, _ := iter.Value()
-		_, verified, _ := models.GetContactVerification(contact)
-		models.SetContactVerification(contact, "[REDACTED]", verified)
-	}
-
 	// Marshal the VASP struct for review in the email.
 	jsonpb := protojson.MarshalOptions{
 		Multiline:       false,

@@ -413,21 +413,6 @@ func (c *Contacts) Length(opts ...ContactIterOption) int {
 	return n
 }
 
-// GetEmailLog from the extra data on the Contact record.
-func GetEmailLog(contact *pb.Contact) (_ []*EmailLogEntry, err error) {
-	// If the extra data is nil, return nil (no email log).
-	if contact == nil || contact.Extra == nil {
-		return nil, nil
-	}
-
-	// Unmarshal the extra data field on the VASP.
-	extra := &GDSContactExtraData{}
-	if err = contact.Extra.UnmarshalTo(extra); err != nil {
-		return nil, err
-	}
-	return extra.GetEmailLog(), nil
-}
-
 // Create and add a new entry to the EmailLog on the extra data on the Contact record.
 func AppendEmailLog(contact *pb.Contact, reason, subject string) (err error) {
 	// Contact must be non-nil.
@@ -459,23 +444,4 @@ func AppendEmailLog(contact *pb.Contact, reason, subject string) (err error) {
 		return err
 	}
 	return nil
-}
-
-// TODO: remove below since tests will no longer pass
-type ContactIterator struct{}
-
-func (c ContactIterator) Next() bool {
-	return false
-}
-
-func (c ContactIterator) Value() (*pb.Contact, string) {
-	return nil, ""
-}
-
-func (c ContactIterator) Error() error {
-	return errors.New("no longer implemented")
-}
-
-func NewContactIterator(*pb.Contacts, ...ContactIterOption) *ContactIterator {
-	return &ContactIterator{}
 }

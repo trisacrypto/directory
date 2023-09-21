@@ -567,7 +567,13 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 	contactEmail := ""
 
 	// Search through the contacts to determine the contacts verified by the supplied token.
-	iter := models.NewContactIterator(vasp.Contacts)
+	var contacts *models.Contacts
+	if contacts, err = s.db.VASPContacts(ctx, vasp); err != nil {
+		sentry.Error(ctx).Err(err).Str("id", in.Id).Msg("could not retrieve vasp contacts")
+		return nil, status.Error(codes.Internal, "unable to complete contact verification")
+	}
+
+	iter := contacts.NewIterator(models.SkipDuplicates(). )
 	for iter.Next() {
 		vaspContact, kind := iter.Value()
 		var contact *models.Contact
@@ -697,10 +703,20 @@ func (s *GDS) Status(ctx context.Context, in *api.HealthCheck) (out *api.Service
 
 // Get a valid email address and name from the contacts on a VASP.
 func GetContactEmail(vasp *pb.VASP) string {
-	iter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail())
-	for iter.Next() {
-		contact, _ := iter.Value()
-		return contact.Email
+	if vasp.Contacts.Technical != nil && vasp.Contacts.Technical.Email != "" {
+		return vasp.Contacts.Technical.Email
+	}
+
+	if vasp.Contacts.Administrative != nil && vasp.Contacts.Administrative.Email != "" {
+		return vasp.Contacts.Administrative.Email
+	}
+
+	if vasp.Contacts.Legal != nil && vasp.Contacts.Legal.Email != "" {
+		return vasp.Contacts.Legal.Email
+	}
+
+	if vasp.Contacts.Billing != nil && vasp.Contacts.Billing.Email != "" {
+		return vasp.Contacts.Billing.Email
 	}
 	return ""
 }

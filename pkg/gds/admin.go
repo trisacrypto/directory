@@ -1047,12 +1047,12 @@ func (s *Admin) prepareVASPDetail(ctx context.Context, vasp *pb.VASP, logctx *se
 
 	// Remove extra data from the VASP
 	// Must be done after verified contacts is computed
-	// WARNING: This is safe because nothing is saved back to the database!
+	// Note: This is safe because nothing is saved back to the database!
 	vasp.Extra = nil
-	iter := models.NewContactIterator(vasp.Contacts)
-	for iter.Next() {
-		contact, _ := iter.Value()
-		contact.Extra = nil
+	for _, contact := range []*pb.Contact{vasp.Contacts.Technical, vasp.Contacts.Administrative, vasp.Contacts.Legal, vasp.Contacts.Billing} {
+		if contact != nil {
+			contact.Extra = nil
+		}
 	}
 
 	// Rewire the VASP from protocol buffers to specific JSON serialization context

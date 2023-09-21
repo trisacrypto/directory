@@ -1805,6 +1805,7 @@ func (s *gdsTestSuite) TestReviewReject() {
 	_, err = s.svc.GetStore().RetrieveCertReq(context.Background(), xray.Id)
 	require.Error(err)
 
+	// Administrative contact should have been sent the email
 	emailLog, err := models.GetEmailLog(v.Contacts.Administrative)
 	require.NoError(err)
 	require.Len(emailLog, 1)

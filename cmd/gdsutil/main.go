@@ -545,11 +545,13 @@ func migrateEmails(c *cli.Context) (err error) {
 			return cli.Exit(err, 1)
 		}
 
-		// Iterate through all contacts on the vasp
-		contacts := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail())
-		for contacts.Next() {
-			vaspContact, _ := contacts.Value()
+		vaspContacts := []*pb.Contact{
+			vasp.Contacts.Technical, vasp.Contacts.Administrative,
+			vasp.Contacts.Legal, vasp.Contacts.Billing,
+		}
 
+		// Iterate through all contacts on the vasp
+		for _, vaspContact := range vaspContacts {
 			var contact *models.Contact
 			if contact, err = db.RetrieveContact(context.Background(), vaspContact.Email); err != nil {
 				if errors.Is(err, storerr.ErrEntityNotFound) {
