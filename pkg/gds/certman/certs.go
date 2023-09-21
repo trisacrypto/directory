@@ -887,7 +887,7 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) (err err
 
 	// Create a new certificate request.
 	if certreq, err = models.NewCertificateRequest(vasp); err != nil {
-		return err
+		return fmt.Errorf("error creating certificate request for vasp %s: %w", vasp.Id, err)
 	}
 
 	// Update the cert req to be ready for submission.
@@ -897,7 +897,7 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) (err err
 		"automated certificate reissuance",
 		"automated",
 	); err != nil {
-		return err
+		return fmt.Errorf("error updating certificate request for vasp %s: %w", vasp.Id, err)
 	}
 
 	// Generate a new PKCS12 password
@@ -910,35 +910,35 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) (err err
 
 	// Create a new secret using the secret manager.
 	if err = c.secret.With(certreq.Id).CreateSecret(ctx, secretType); err != nil {
-		return err
+		return fmt.Errorf("error creating password secret for vasp %s: %w", vasp.Id, err)
 	}
 	if err = c.secret.With(certreq.Id).AddSecretVersion(ctx, secretType, []byte(pkcs12password)); err != nil {
-		return err
+		return fmt.Errorf("error creating password version for vasp %s: %w", vasp.Id, err)
 	}
 
 	// Using the whisper utility, create a whisper link to be sent with the ReissuanceStarted email.
 	if whisperLink, err = whisper.CreateSecretLink(fmt.Sprintf(whisperPasswordTemplate, pkcs12password), "", 3, time.Now().AddDate(0, 0, 7)); err != nil {
-		return err
+		return fmt.Errorf("error creating whisper link for vasp %s: %w", vasp.Id, err)
 	}
 
 	// Send the notification email that certificate reissuance is forthcoming and provide whisper link to the PKCS12 password.
 	if _, err = c.email.SendReissuanceStarted(vasp, whisperLink); err != nil {
-		return err
+		return fmt.Errorf("error sending reissuance started email for vasp %s: %w", vasp.Id, err)
 	}
 
 	// Update the certificate request in the datastore.
 	if err = c.db.UpdateCertReq(ctx, certreq); err != nil {
-		return err
+		return fmt.Errorf("error updating certificate request for vasp %s: %w", vasp.Id, err)
 	}
 
 	// Save the certificate request on the VASP.
 	if err = models.AppendCertReqID(vasp, certreq.Id); err != nil {
-		return err
+		return fmt.Errorf("error appending certificate request to vasp %s: %w", vasp.Id, err)
 	}
 
 	// Update the VASP information in the datastore.
 	if err = c.db.UpdateVASP(ctx, vasp); err != nil {
-		return err
+		return fmt.Errorf("error updating vasp %s in the certman store: %w", vasp.Id, err)
 	}
 	return nil
 }
