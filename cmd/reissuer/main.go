@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/trisacrypto/courier/pkg/api/v1"
 	"github.com/trisacrypto/directory/pkg"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
@@ -113,6 +114,16 @@ func main() {
 					Name:    "dns-names",
 					Aliases: []string{"sans", "d"},
 					Usage:   "specify additional DNS names to add to the request",
+				},
+				&cli.StringFlag{
+					Name:    "webhook",
+					Aliases: []string{"w"},
+					Usage:   "specify a webhook to use to deliver certs",
+				},
+				&cli.BoolFlag{
+					Name:    "no-email",
+					Aliases: []string{"E"},
+					Usage:   "do not deliver certificates by email",
 				},
 			},
 		},
@@ -404,6 +415,15 @@ func reissueCerts(c *cli.Context) (err error) {
 		certreq.DnsNames = append(certreq.DnsNames, dnsNames...)
 	}
 
+	// Override the certificate delivery webhook if specified
+	var webhook string
+	if webhook = c.String("webhook"); webhook != "" {
+		certreq.Webhook = webhook
+	}
+
+	// Override the email delivery preference
+	certreq.NoEmailDelivery = true
+
 	// Step 2c: mark the certificate request as ready to submit for CertMan
 	if err = models.UpdateCertificateRequestStatus(
 		certreq,
@@ -414,38 +434,60 @@ func reissueCerts(c *cli.Context) (err error) {
 		return cli.Exit(fmt.Errorf("could not mark certificate request ready to submit: %s", err), 1)
 	}
 
-	// Step 3: Create a PKCS12 password and print it out
-	var sm *secrets.SecretManager
-	if sm, err = secrets.New(conf.Secrets); err != nil {
-		return cli.Exit(fmt.Errorf("could not connect to secret manager: %s", err), 1)
-	}
-
-	secretType := "password"
 	pkcs12password = secrets.CreateToken(16)
 
-	if err = sm.With(certreq.Id).CreateSecret(ctx, secretType); err != nil {
-		return cli.Exit(fmt.Errorf("could not create password secret: %s", err), 1)
-	}
-	if err = sm.With(certreq.Id).AddSecretVersion(ctx, secretType, []byte(pkcs12password)); err != nil {
-		return cli.Exit(fmt.Errorf("could not create password version: %s", err), 1)
+	if !certreq.NoEmailDelivery {
+		// If email delivery is enabled, create the whisper link to send via email
+		var sm *secrets.SecretManager
+		if sm, err = secrets.New(conf.Secrets); err != nil {
+			return cli.Exit(fmt.Errorf("could not connect to secret manager: %s", err), 1)
+		}
+
+		secretType := "password"
+
+		if err = sm.With(certreq.Id).CreateSecret(ctx, secretType); err != nil {
+			return cli.Exit(fmt.Errorf("could not create password secret: %s", err), 1)
+		}
+		if err = sm.With(certreq.Id).AddSecretVersion(ctx, secretType, []byte(pkcs12password)); err != nil {
+			return cli.Exit(fmt.Errorf("could not create password version: %s", err), 1)
+		}
+
+		// Create a Whisper link for the provided PKCS12 password.
+		if whisperLink, err = whisper.CreateSecretLink(fmt.Sprintf(whisperPasswordTemplate, pkcs12password), "", 3, weekFromNow()); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		// Create the email manager.
+		if emailer, err = emails.New(conf.Email); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		// Send the notification email that certificate reissuance is forthcoming and provide whisper link to the PKCS12 password.
+		if nsent, err = emailer.SendReissuanceStarted(vasp, whisperLink); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		fmt.Printf("successfully sent %d Whisper password notifications for PKCS12 password %q\n", nsent, pkcs12password)
 	}
 
-	// Create a Whisper link for the provided PKCS12 password.
-	if whisperLink, err = whisper.CreateSecretLink(fmt.Sprintf(whisperPasswordTemplate, pkcs12password), "", 3, weekFromNow()); err != nil {
-		return cli.Exit(err, 1)
-	}
+	if certreq.Webhook != "" {
+		// Store the password using the webhook
+		var client api.CourierClient
+		if client, err = api.New(certreq.Webhook); err != nil {
+			return cli.Exit(fmt.Errorf("could not create courier client: %s", err), 1)
+		}
 
-	// Create the email manager.
-	if emailer, err = emails.New(conf.Email); err != nil {
-		return cli.Exit(err, 1)
-	}
+		// Store the password with the webhook
+		req := &api.StorePasswordRequest{
+			ID:       certreq.Id,
+			Password: pkcs12password,
+		}
+		if err = client.StoreCertificatePassword(ctx, req); err != nil {
+			return cli.Exit(fmt.Errorf("could not store password with webhook: %s", err), 1)
+		}
 
-	// Send the notification email that certificate reissuance is forthcoming and provide whisper link to the PKCS12 password.
-	if nsent, err = emailer.SendReissuanceStarted(vasp, whisperLink); err != nil {
-		return cli.Exit(err, 1)
+		fmt.Printf("successfully sent PKCS12 password to webhook %q\n", certreq.Webhook)
 	}
-
-	fmt.Printf("successfully sent %d Whisper password notifications for PKCS12 password %q\n", nsent, pkcs12password)
 
 	// Save certificate request to database
 	if err = db.UpdateCertReq(ctx, certreq); err != nil {

@@ -748,6 +748,43 @@ func TestUpdateCertificateRequestStatus(t *testing.T) {
 	require.Equal(t, "automated", request.AuditLog[1].Source)
 }
 
+func TestUpdateCertificateRequestDelivery(t *testing.T) {
+	t.Run("NilRequest", func(t *testing.T) {
+		err := UpdateCertificateRequestDelivery(nil, &pb.VASP{})
+		require.Error(t, err, "expected error when request is nil")
+	})
+
+	t.Run("NilVASP", func(t *testing.T) {
+		err := UpdateCertificateRequestDelivery(&CertificateRequest{}, nil)
+		require.Error(t, err, "expected error when vasp is nil")
+	})
+
+	t.Run("NoExtra", func(t *testing.T) {
+		request := &CertificateRequest{}
+		err := UpdateCertificateRequestDelivery(request, &pb.VASP{})
+		require.NoError(t, err, "expected no error when request and vasp are empty")
+		require.Empty(t, request.Webhook, "expected webhook URL to be empty")
+		require.False(t, request.NoEmailDelivery, "expected no email delivery to be false")
+	})
+
+	t.Run("CopyFromVASP", func(t *testing.T) {
+		request := &CertificateRequest{}
+		vasp := &pb.VASP{}
+		extra := &GDSExtraData{
+			CertificateWebhook: "https://example.com/webhook",
+			NoEmailDelivery:    true,
+		}
+		var err error
+		vasp.Extra, err = anypb.New(extra)
+		require.NoError(t, err, "expected no error when creating extra data")
+
+		err = UpdateCertificateRequestDelivery(request, vasp)
+		require.NoError(t, err, "expected no error for valid request and vasp")
+		require.Equal(t, extra.CertificateWebhook, request.Webhook, "expected webhook URL to be copied from vasp")
+		require.Equal(t, extra.NoEmailDelivery, request.NoEmailDelivery, "expected no email delivery to be copied from vasp")
+	})
+}
+
 func TestIsTraveler(t *testing.T) {
 	vasp := &pb.VASP{CommonName: "trisa.example.com"}
 	require.False(t, IsTraveler(vasp))
