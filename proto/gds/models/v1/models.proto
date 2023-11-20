@@ -128,12 +128,6 @@ message GDSExtraData {
 
     // Log which records emails sent to the TRISA admins regarding this VASP
     repeated EmailLogEntry email_log = 6;
-
-    // Optional webhook for certificate delivery
-    string certificate_webhook = 7;
-
-    // Don't deliver certificates by email
-    bool no_email_delivery = 8;
 }
 
 // AuditLogEntry contains information about an event relevant to a VASP

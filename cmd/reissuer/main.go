@@ -422,7 +422,7 @@ func reissueCerts(c *cli.Context) (err error) {
 	}
 
 	// Override the email delivery preference
-	certreq.NoEmailDelivery = true
+	certreq.NoEmailDelivery = c.Bool("no-email")
 
 	// Step 2c: mark the certificate request as ready to submit for CertMan
 	if err = models.UpdateCertificateRequestStatus(
@@ -434,24 +434,24 @@ func reissueCerts(c *cli.Context) (err error) {
 		return cli.Exit(fmt.Errorf("could not mark certificate request ready to submit: %s", err), 1)
 	}
 
+	// Step 3: Create a PKCS12 password
+	var sm *secrets.SecretManager
+	if sm, err = secrets.New(conf.Secrets); err != nil {
+		return cli.Exit(fmt.Errorf("could not connect to secret manager: %s", err), 1)
+	}
+
+	secretType := "password"
 	pkcs12password = secrets.CreateToken(16)
 
+	if err = sm.With(certreq.Id).CreateSecret(ctx, secretType); err != nil {
+		return cli.Exit(fmt.Errorf("could not create password secret: %s", err), 1)
+	}
+
+	if err = sm.With(certreq.Id).AddSecretVersion(ctx, secretType, []byte(pkcs12password)); err != nil {
+		return cli.Exit(fmt.Errorf("could not create password version: %s", err), 1)
+	}
+
 	if !certreq.NoEmailDelivery {
-		// If email delivery is enabled, create the whisper link to send via email
-		var sm *secrets.SecretManager
-		if sm, err = secrets.New(conf.Secrets); err != nil {
-			return cli.Exit(fmt.Errorf("could not connect to secret manager: %s", err), 1)
-		}
-
-		secretType := "password"
-
-		if err = sm.With(certreq.Id).CreateSecret(ctx, secretType); err != nil {
-			return cli.Exit(fmt.Errorf("could not create password secret: %s", err), 1)
-		}
-		if err = sm.With(certreq.Id).AddSecretVersion(ctx, secretType, []byte(pkcs12password)); err != nil {
-			return cli.Exit(fmt.Errorf("could not create password version: %s", err), 1)
-		}
-
 		// Create a Whisper link for the provided PKCS12 password.
 		if whisperLink, err = whisper.CreateSecretLink(fmt.Sprintf(whisperPasswordTemplate, pkcs12password), "", 3, weekFromNow()); err != nil {
 			return cli.Exit(err, 1)
@@ -471,19 +471,19 @@ func reissueCerts(c *cli.Context) (err error) {
 	}
 
 	if certreq.Webhook != "" {
-		// Store the password using the webhook
+		// Create a courier client to deliver the pkcs12 password to the TRISA member
 		var client api.CourierClient
 		if client, err = api.New(certreq.Webhook); err != nil {
 			return cli.Exit(fmt.Errorf("could not create courier client: %s", err), 1)
 		}
 
-		// Store the password with the webhook
+		// Deliver the pkcs12 password via the webhook
 		req := &api.StorePasswordRequest{
 			ID:       certreq.Id,
 			Password: pkcs12password,
 		}
 		if err = client.StoreCertificatePassword(ctx, req); err != nil {
-			return cli.Exit(fmt.Errorf("could not store password with webhook: %s", err), 1)
+			return cli.Exit(fmt.Errorf("could not deliver pkcs12 password with webhook: %s", err), 1)
 		}
 
 		fmt.Printf("successfully sent PKCS12 password to webhook %q\n", certreq.Webhook)

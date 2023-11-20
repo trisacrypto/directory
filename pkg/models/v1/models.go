@@ -479,6 +479,7 @@ func NewCertificateRequest(vasp *pb.VASP) (certRequest *CertificateRequest, err 
 		return nil, errors.New("must supply a VASP object for certificate request creation")
 	}
 
+	// TODO: Copy the certificate delivery preferences from the VASP to the certificate request
 	certRequest = &CertificateRequest{
 		Id:         uuid.New().String(),
 		Vasp:       vasp.Id,
@@ -506,11 +507,6 @@ func NewCertificateRequest(vasp *pb.VASP) (certRequest *CertificateRequest, err 
 		UpdateCertificateRequestParams(certRequest, sectigo.ParamCountryName, countryName)
 	} else {
 		log.Debug().Str("vasp_id", vasp.Id).Str("certreq_id", certRequest.Id).Msg("location information not found or incomplete")
-	}
-
-	// Update certificate delivery method with the method on the VASP
-	if err = UpdateCertificateRequestDelivery(certRequest, vasp); err != nil {
-		return nil, err
 	}
 
 	return certRequest, nil
@@ -541,35 +537,6 @@ func UpdateCertificateRequestStatus(request *CertificateRequest, state Certifica
 
 	// Set the new state on the CertificateRequest.
 	request.Status = state
-	return nil
-}
-
-// UpdateCertificateRequestDelivery updates the delivery method on the certificate
-// request with the configured method on the VASP.
-func UpdateCertificateRequestDelivery(request *CertificateRequest, vasp *pb.VASP) (err error) {
-	// CertificateRequest must be non-nil
-	if request == nil {
-		return errors.New("cannot set certificate request delivery on a nil CertificateRequest")
-	}
-
-	// VASP must be non-nil
-	if vasp == nil {
-		return errors.New("cannot set certificate request delivery on a nil VASP")
-	}
-
-	// Use default settings if there is no VASP extra
-	if vasp.Extra == nil {
-		return nil
-	}
-
-	// Get the certificate delivery configuration from the VASP extra
-	extra := &GDSExtraData{}
-	if err = vasp.Extra.UnmarshalTo(extra); err != nil {
-		return fmt.Errorf("could not deserialize previous extra: %s", err)
-	}
-
-	request.Webhook = extra.CertificateWebhook
-	request.NoEmailDelivery = extra.NoEmailDelivery
 	return nil
 }
 
