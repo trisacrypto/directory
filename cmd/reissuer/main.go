@@ -416,8 +416,7 @@ func reissueCerts(c *cli.Context) (err error) {
 	}
 
 	// Override the certificate delivery webhook if specified
-	var webhook string
-	if webhook = c.String("webhook"); webhook != "" {
+	if webhook := c.String("webhook"); webhook != "" {
 		certreq.Webhook = webhook
 	}
 
