@@ -72,6 +72,12 @@ message CertificateRequest {
 
     // The certificate ID downloaded from the request, if completed successfully
     string certificate = 18;
+
+    // Webhook for certificate delivery
+    string webhook = 19;
+
+    // Don't deliver certificates by email
+    bool no_email_delivery = 20;
 }
 
 enum CertificateRequestState {

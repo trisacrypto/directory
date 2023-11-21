@@ -479,6 +479,7 @@ func NewCertificateRequest(vasp *pb.VASP) (certRequest *CertificateRequest, err 
 		return nil, errors.New("must supply a VASP object for certificate request creation")
 	}
 
+	// TODO: Copy the certificate delivery preferences from the VASP to the certificate request
 	certRequest = &CertificateRequest{
 		Id:         uuid.New().String(),
 		Vasp:       vasp.Id,
