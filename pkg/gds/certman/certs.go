@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	courier "github.com/trisacrypto/courier/pkg/api/v1"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
@@ -586,11 +588,22 @@ func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateReq
 		return
 	}
 
-	// Email the certificates to the technical contacts
-	if _, err = c.email.SendDeliverCertificates(vasp, path); err != nil {
-		// If there is an error delivering emails, return here so we don't mark as completed
-		sentry.Error(nil).Err(err).Msg("could not deliver certificates to technical contact")
-		return
+	var deliveryErr error
+	if r.Webhook != "" {
+		// Deliver the certificates payload using the configured webhook.
+		if deliveryErr = c.deliverCertificatePayload(ctx, r, payload); deliveryErr != nil {
+			log.Error().Err(deliveryErr).Str("webhook", r.Webhook).Str("vasp", vasp.Id).Msg("error delivering certificate via webhook")
+		}
+	}
+
+	// If the user has not specifically turned off email delivery or if webhook
+	// delivery failed, send the certificates via email.
+	if !r.NoEmailDelivery || deliveryErr != nil {
+		if _, err = c.email.SendDeliverCertificates(vasp, path); err != nil {
+			// If there is an error delivering emails, return here so we don't mark as completed
+			sentry.Error(nil).Err(err).Msg("could not deliver certificates to technical contact")
+			return
+		}
 	}
 
 	if err = c.db.UpdateVASP(ctx, vasp); err != nil {
@@ -916,14 +929,24 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) (err err
 		return fmt.Errorf("error creating password version for vasp %s: %w", vasp.Id, err)
 	}
 
-	// Using the whisper utility, create a whisper link to be sent with the ReissuanceStarted email.
-	if whisperLink, err = whisper.CreateSecretLink(fmt.Sprintf(whisperPasswordTemplate, pkcs12password), "", 3, time.Now().AddDate(0, 0, 7)); err != nil {
-		return fmt.Errorf("error creating whisper link for vasp %s: %w", vasp.Id, err)
+	var deliveryErr error
+	if certreq.Webhook != "" {
+		// Deliver the PKCS12 password using the configured webhook.
+		if deliveryErr = c.deliverCertificatePassword(ctx, certreq, pkcs12password); deliveryErr != nil {
+			log.Error().Err(deliveryErr).Str("webhook", certreq.Webhook).Str("vasp", vasp.Id).Msg("error delivering pkcs12 password via webhook")
+		}
 	}
 
-	// Send the notification email that certificate reissuance is forthcoming and provide whisper link to the PKCS12 password.
-	if _, err = c.email.SendReissuanceStarted(vasp, whisperLink); err != nil {
-		return fmt.Errorf("error sending reissuance started email for vasp %s: %w", vasp.Id, err)
+	// If the user has not specifically turned off email delivery or if there was an
+	// error in webhook delivery, send the pkcs12 password in a whisper via email.
+	if !certreq.NoEmailDelivery || deliveryErr != nil {
+		if whisperLink, err = whisper.CreateSecretLink(fmt.Sprintf(whisperPasswordTemplate, pkcs12password), "", 3, time.Now().AddDate(0, 0, 7)); err != nil {
+			return fmt.Errorf("error creating whisper link for vasp %s: %w", vasp.Id, err)
+		}
+
+		if _, err = c.email.SendReissuanceStarted(vasp, whisperLink); err != nil {
+			return fmt.Errorf("error sending reissuance started email for vasp %s: %w", vasp.Id, err)
+		}
 	}
 
 	// Update the certificate request in the datastore.
@@ -941,4 +964,78 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) (err err
 		return fmt.Errorf("error updating vasp %s in the certman store: %w", vasp.Id, err)
 	}
 	return nil
+}
+
+// Attempt to deliver a certificate password by webhook using the configured backoff
+// strategy or return an error if the maximum number of retries was exceeded.
+func (c *CertificateManager) deliverCertificatePassword(ctx context.Context, certreq *models.CertificateRequest, password string) (err error) {
+	// Create the client to deliver the password.
+	var client courier.CourierClient
+	if client, err = courier.New(certreq.Webhook); err != nil {
+		return fmt.Errorf("could not create courier client for pkcs12 password delivery: %s", err)
+	}
+
+	req := &courier.StorePasswordRequest{
+		ID:       certreq.Id,
+		Password: password,
+	}
+
+	// Attempt to deliver the password using the configured backoff strategy.
+	wait := c.conf.DeliveryBackoff.Ticker()
+	defer wait.Stop()
+
+	// Wait for the context to be cancelled or the password to be delivered.
+	var retries int
+	for retries = 0; retries < c.conf.DeliveryBackoff.MaxRetries+1; retries++ {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-wait.C:
+			if err = client.StoreCertificatePassword(ctx, req); err != nil {
+				log.Warn().Err(err).Int("attempts", retries+1).Str("webhook", certreq.Webhook).Msg("could not deliver certificate password, retrying")
+				continue
+			}
+			return nil
+		}
+	}
+
+	// Exceeded the maximum number of retries
+	return fmt.Errorf("could not deliver certificate password after %d retries", retries)
+}
+
+// Deliver a certificate payload by webhook using the configured backoff strategy or
+// return an error if the maximum number of retries was exceeded.
+func (c *CertificateManager) deliverCertificatePayload(ctx context.Context, certreq *models.CertificateRequest, payload []byte) (err error) {
+	// Create the client to deliver the password.
+	var client courier.CourierClient
+	if client, err = courier.New(certreq.Webhook); err != nil {
+		return fmt.Errorf("could not create courier client for certificate delivery: %s", err)
+	}
+
+	req := &courier.StoreCertificateRequest{
+		ID:                certreq.Id,
+		Base64Certificate: base64.StdEncoding.EncodeToString(payload),
+	}
+
+	// Attempt to deliver the password using the configured backoff strategy.
+	wait := c.conf.DeliveryBackoff.Ticker()
+	defer wait.Stop()
+
+	// Wait for the context to be cancelled or the password to be delivered.
+	var retries int
+	for retries = 0; retries < c.conf.DeliveryBackoff.MaxRetries+1; retries++ {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-wait.C:
+			if err = client.StoreCertificate(ctx, req); err != nil {
+				log.Warn().Err(err).Int("attempts", retries+1).Str("webhook", certreq.Webhook).Msg("could not deliver encrypted certificate, retrying")
+				continue
+			}
+			return nil
+		}
+	}
+
+	// Exceeded the maximum number of retries
+	return fmt.Errorf("could not deliver encrypted certificate after %d retries", retries)
 }

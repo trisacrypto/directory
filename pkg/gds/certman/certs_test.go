@@ -3,6 +3,7 @@ package certman_test
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"sync"
@@ -43,6 +44,7 @@ type certTestSuite struct {
 	db       store.Store
 	secret   *secrets.SecretManager
 	certman  *certman.CertificateManager
+	courier  *httptest.Server
 }
 
 func TestCertManLevelDB(t *testing.T) {
@@ -214,6 +216,250 @@ func (s *certTestSuite) TestCertManager() {
 	require.Equal(models.CertificateRequestState_DOWNLOADED, certReq.AuditLog[5].PreviousState)
 	require.Equal(models.CertificateRequestState_COMPLETED, certReq.AuditLog[5].CurrentState)
 	require.Equal("automated", certReq.AuditLog[5].Source)
+}
+
+func setupCertWebhook(s *certTestSuite, certreq *models.CertificateRequest) {
+	require := s.Require()
+	ctx := context.Background()
+
+	// Setup the database for certificate delivery with the webhook
+	certreq.Webhook = s.courier.URL
+	require.NoError(s.db.UpdateCertReq(ctx, certreq))
+
+	// Create a secret that the certificate manager can retrieve
+	sm := s.secret.With(certreq.Id)
+	require.NoError(sm.CreateSecret(ctx, "password"))
+	require.NoError(sm.AddSecretVersion(ctx, "password", []byte("qDhAwnfMjgDEzzUC")))
+}
+
+func (s *certTestSuite) TestCertManagerWebhook() {
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
+	defer s.teardownCertManager()
+	defer s.fixtures.LoadReferenceFixtures()
+	require := s.Require()
+	ctx := context.Background()
+
+	s.Run("ValidWebhook", func() {
+		defer s.fixtures.ResetDB()
+		defer emailmock.PurgeEmails()
+
+		echoVASP, err := s.fixtures.GetVASP("echo")
+		require.NoError(err, "could not get echo VASP")
+		require.NoError(fixtures.ClearContactEmailLogs(echoVASP), "could not clear contact email logs")
+		require.NoError(s.db.UpdateVASP(ctx, echoVASP))
+		quebecCertReq, err := s.fixtures.GetCertReq("quebec")
+		require.NoError(err, "could not get quebec certreq")
+		setupCertWebhook(s, quebecCertReq)
+
+		// Let the certificate manager submit the certificate request
+		sent := time.Now()
+		s.certman.HandleCertificateRequests()
+
+		// VASP state should be changed to ISSUING_CERTIFICATE
+		v, err := s.db.RetrieveVASP(ctx, echoVASP.Id)
+		require.NoError(err)
+		require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
+
+		// Certificate request should be updated
+		certReq, err := s.db.RetrieveCertReq(ctx, quebecCertReq.Id)
+		require.NoError(err)
+		require.Greater(int(certReq.AuthorityId), 0)
+
+		// Let the certificate manager process the Sectigo response
+		s.certman.HandleCertificateRequests()
+
+		// VASP should contain the new certificate
+		v, err = s.db.RetrieveVASP(ctx, echoVASP.Id)
+		require.NoError(err)
+		require.NotNil(v.IdentityCertificate)
+
+		// Certificate request should be updated
+		certReq, err = s.db.RetrieveCertReq(ctx, quebecCertReq.Id)
+		require.NoError(err)
+		require.Equal(models.CertificateRequestState_COMPLETED, certReq.Status)
+
+		// Email should be set to one of the contacts
+		messages := []*emails.EmailMeta{
+			{
+				Contact:   v.Contacts.Legal,
+				To:        v.Contacts.Legal.Email,
+				From:      s.conf.Email.ServiceEmail,
+				Subject:   emails.DeliverCertsRE,
+				Reason:    "deliver_certs",
+				Timestamp: sent,
+			},
+		}
+		emails.CheckEmails(s.T(), messages)
+	})
+
+	s.Run("WebhookRetries", func() {
+		defer s.fixtures.ResetDB()
+		defer emailmock.PurgeEmails()
+
+		// Configure the webhook to fail the first three times
+		attempts := 0
+		s.useCourierHandler(func(w http.ResponseWriter, r *http.Request) {
+			attempts++
+			if attempts < 3 {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusNoContent)
+		})
+		defer s.resetCourierHandler()
+
+		echoVASP, err := s.fixtures.GetVASP("echo")
+		require.NoError(err, "could not get echo VASP")
+		require.NoError(fixtures.ClearContactEmailLogs(echoVASP), "could not clear contact email logs")
+		require.NoError(s.db.UpdateVASP(ctx, echoVASP))
+		quebecCertReq, err := s.fixtures.GetCertReq("quebec")
+		require.NoError(err, "could not get quebec certreq")
+		setupCertWebhook(s, quebecCertReq)
+
+		// Let the certificate manager submit the certificate request
+		sent := time.Now()
+		s.certman.HandleCertificateRequests()
+
+		// VASP state should be changed to ISSUING_CERTIFICATE
+		v, err := s.db.RetrieveVASP(ctx, echoVASP.Id)
+		require.NoError(err)
+		require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
+
+		// Certificate request should be updated
+		certReq, err := s.db.RetrieveCertReq(ctx, quebecCertReq.Id)
+		require.NoError(err)
+		require.Greater(int(certReq.AuthorityId), 0)
+
+		// Let the certificate manager process the Sectigo response
+		s.certman.HandleCertificateRequests()
+
+		// VASP should contain the new certificate
+		v, err = s.db.RetrieveVASP(ctx, echoVASP.Id)
+		require.NoError(err)
+		require.NotNil(v.IdentityCertificate)
+
+		// Certificate request should be updated
+		certReq, err = s.db.RetrieveCertReq(ctx, quebecCertReq.Id)
+		require.NoError(err)
+		require.Equal(models.CertificateRequestState_COMPLETED, certReq.Status)
+
+		// Email should be set to one of the contacts
+		messages := []*emails.EmailMeta{
+			{
+				Contact:   v.Contacts.Legal,
+				To:        v.Contacts.Legal.Email,
+				From:      s.conf.Email.ServiceEmail,
+				Subject:   emails.DeliverCertsRE,
+				Reason:    "deliver_certs",
+				Timestamp: sent,
+			},
+		}
+		emails.CheckEmails(s.T(), messages)
+	})
+
+	s.Run("WebhookMaxRetries", func() {
+		defer s.fixtures.ResetDB()
+		defer emailmock.PurgeEmails()
+
+		// Configure the webhook to fail
+		s.useCourierHandler(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+		defer s.resetCourierHandler()
+
+		echoVASP, err := s.fixtures.GetVASP("echo")
+		require.NoError(err, "could not get echo VASP")
+		require.NoError(fixtures.ClearContactEmailLogs(echoVASP), "could not clear contact email logs")
+		require.NoError(s.db.UpdateVASP(ctx, echoVASP))
+		quebecCertReq, err := s.fixtures.GetCertReq("quebec")
+		require.NoError(err, "could not get quebec certreq")
+		quebecCertReq.NoEmailDelivery = true
+		setupCertWebhook(s, quebecCertReq)
+
+		// Let the certificate manager submit the certificate request
+		sent := time.Now()
+		s.certman.HandleCertificateRequests()
+
+		// VASP state should be changed to ISSUING_CERTIFICATE
+		v, err := s.db.RetrieveVASP(ctx, echoVASP.Id)
+		require.NoError(err)
+		require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
+
+		// Certificate request should be updated
+		certReq, err := s.db.RetrieveCertReq(ctx, quebecCertReq.Id)
+		require.NoError(err)
+		require.Greater(int(certReq.AuthorityId), 0)
+
+		// Let the certificate manager process the Sectigo response
+		s.certman.HandleCertificateRequests()
+
+		// VASP should contain the new certificate
+		v, err = s.db.RetrieveVASP(ctx, echoVASP.Id)
+		require.NoError(err)
+		require.NotNil(v.IdentityCertificate)
+
+		// Certificate request should be updated
+		certReq, err = s.db.RetrieveCertReq(ctx, quebecCertReq.Id)
+		require.NoError(err)
+		require.Equal(models.CertificateRequestState_COMPLETED, certReq.Status)
+
+		// Email should be sent even though the webhook failed, even if NoEmailDelivery
+		// is set on the certificate request.
+		messages := []*emails.EmailMeta{
+			{
+				Contact:   v.Contacts.Legal,
+				To:        v.Contacts.Legal.Email,
+				From:      s.conf.Email.ServiceEmail,
+				Subject:   emails.DeliverCertsRE,
+				Reason:    "deliver_certs",
+				Timestamp: sent,
+			},
+		}
+		emails.CheckEmails(s.T(), messages)
+	})
+
+	s.Run("WebhookNoEmail", func() {
+		defer s.fixtures.ResetDB()
+
+		echoVASP, err := s.fixtures.GetVASP("echo")
+		require.NoError(err, "could not get echo VASP")
+		require.NoError(fixtures.ClearContactEmailLogs(echoVASP), "could not clear contact email logs")
+		require.NoError(s.db.UpdateVASP(ctx, echoVASP))
+		quebecCertReq, err := s.fixtures.GetCertReq("quebec")
+		require.NoError(err, "could not get quebec certreq")
+		quebecCertReq.NoEmailDelivery = true
+		setupCertWebhook(s, quebecCertReq)
+
+		// Let the certificate manager submit the certificate request
+		s.certman.HandleCertificateRequests()
+
+		// VASP state should be changed to ISSUING_CERTIFICATE
+		v, err := s.db.RetrieveVASP(ctx, echoVASP.Id)
+		require.NoError(err)
+		require.Equal(pb.VerificationState_ISSUING_CERTIFICATE, v.VerificationStatus)
+
+		// Certificate request should be updated
+		certReq, err := s.db.RetrieveCertReq(ctx, quebecCertReq.Id)
+		require.NoError(err)
+		require.Greater(int(certReq.AuthorityId), 0)
+
+		// Let the certificate manager process the Sectigo response
+		s.certman.HandleCertificateRequests()
+
+		// VASP should contain the new certificate
+		v, err = s.db.RetrieveVASP(ctx, echoVASP.Id)
+		require.NoError(err)
+		require.NotNil(v.IdentityCertificate)
+
+		// Certificate request should be updated
+		certReq, err = s.db.RetrieveCertReq(ctx, quebecCertReq.Id)
+		require.NoError(err)
+		require.Equal(models.CertificateRequestState_COMPLETED, certReq.Status)
+
+		// No emails should be sent since NoEmailDelivery is set on the certificate
+		// request
+		emails.CheckEmails(s.T(), []*emails.EmailMeta{})
+	})
 }
 
 func (s *certTestSuite) TestCertManagerThirtyDayReissuanceReminder() {
@@ -482,6 +728,275 @@ func (s *certTestSuite) TestCertManagerReissuance() {
 
 	// TODO: add additional testing for the email send logic in emails.getContactsToNotify()
 	emails.CheckEmails(s.T(), messages)
+}
+
+func setupVASPWebhook(s *certTestSuite, vasp *pb.VASP) {
+	require := s.Require()
+	vasp.CertificateWebhook = s.courier.URL
+	_ = s.setupVASP(vasp)
+
+	// Set other VASPs in the fixtures.Small set's verification status
+	// to REJECTED so that it does not get triggered for reissuance.
+	deltaVASP, err := s.fixtures.GetVASP("delta")
+	require.NoError(err)
+	deltaVASP.VerificationStatus = pb.VerificationState_REJECTED
+	require.NoError(s.db.UpdateVASP(context.Background(), deltaVASP))
+	hotelVASP, err := s.fixtures.GetVASP("hotel")
+	require.NoError(err)
+	hotelVASP.VerificationStatus = pb.VerificationState_REJECTED
+	require.NoError(s.db.UpdateVASP(context.Background(), hotelVASP))
+}
+
+func (s *certTestSuite) TestCertManagerReissuanceWebhook() {
+	require := s.Require()
+	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Small)
+	defer s.teardownCertManager()
+	defer s.fixtures.LoadReferenceFixtures()
+
+	s.Run("ValidWebhook", func() {
+		defer s.fixtures.ResetDB()
+		defer emailmock.PurgeEmails()
+
+		charlieVASP, err := s.fixtures.GetVASP("charliebank")
+		require.NoError(err, "could not get charlie VASP")
+		setupVASPWebhook(s, charlieVASP)
+
+		// Capture the number of certificate requests on the charlie VASP
+		// before reissuance is triggered.
+		previousReqIds, err := models.GetCertReqIDs(charlieVASP)
+		require.NoError(err)
+		previousNumberOfReqs := len(previousReqIds)
+
+		// Call the certman function at 8 days, which should
+		// reissue the VASP's identity certificate, send the
+		// email with the created pkcs12 password and send
+		// the whisper link, as well as notifying the TRISA
+		// admin that reissuance has started.
+		s.updateVaspIdentityCert(charlieVASP, 8)
+		callTime := time.Now()
+		s.certman.HandleCertificateReissuance()
+
+		v, err := s.db.RetrieveVASP(context.Background(), charlieVASP.Id)
+		require.NoError(err)
+
+		reqIDs, err := models.GetCertReqIDs(v)
+		require.NoError(err)
+		require.Len(reqIDs, previousNumberOfReqs+1)
+
+		// Certificate request should be ready to submit
+		certReqId := reqIDs[len(reqIDs)-1]
+		certReq, err := s.db.RetrieveCertReq(context.Background(), certReqId)
+		require.NoError(err)
+		require.Equal(certReq.Status, models.CertificateRequestState_READY_TO_SUBMIT)
+
+		// Ensure that the expected email has been sent, using
+		// the mock email client.
+		messages := []*emails.EmailMeta{
+			{
+				To:        v.Contacts.Technical.Email,
+				From:      s.conf.Email.ServiceEmail,
+				Subject:   emails.ReissuanceStartedRE,
+				Reason:    "reissuance_started",
+				Timestamp: callTime,
+			},
+			{
+				To:        s.conf.Email.AdminEmail,
+				From:      s.conf.Email.ServiceEmail,
+				Subject:   emails.ReissuanceAdminNotificationRE,
+				Reason:    "reissuance_admin_notification",
+				Timestamp: callTime,
+			},
+		}
+
+		emails.CheckEmails(s.T(), messages)
+	})
+
+	s.Run("WebhookRetries", func() {
+		defer s.fixtures.ResetDB()
+		defer emailmock.PurgeEmails()
+
+		// Setup the webhook to fail the first three times
+		attempts := 0
+		s.useCourierHandler(func(w http.ResponseWriter, r *http.Request) {
+			attempts++
+			if attempts < 3 {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusNoContent)
+		})
+		defer s.resetCourierHandler()
+
+		charlieVASP, err := s.fixtures.GetVASP("charliebank")
+		require.NoError(err, "could not get charlie VASP")
+		setupVASPWebhook(s, charlieVASP)
+
+		// Capture the number of certificate requests on the charlie VASP
+		// before reissuance is triggered.
+		previousReqIds, err := models.GetCertReqIDs(charlieVASP)
+		require.NoError(err)
+		previousNumberOfReqs := len(previousReqIds)
+
+		// Call the certman function at 8 days, which should
+		// reissue the VASP's identity certificate, send the
+		// email with the created pkcs12 password and send
+		// the whisper link, as well as notifying the TRISA
+		// admin that reissuance has started.
+		s.updateVaspIdentityCert(charlieVASP, 8)
+		callTime := time.Now()
+		s.certman.HandleCertificateReissuance()
+
+		v, err := s.db.RetrieveVASP(context.Background(), charlieVASP.Id)
+		require.NoError(err)
+
+		reqIDs, err := models.GetCertReqIDs(v)
+		require.NoError(err)
+		require.Len(reqIDs, previousNumberOfReqs+1)
+
+		// Certificate request should be ready to submit
+		certReqId := reqIDs[len(reqIDs)-1]
+		certReq, err := s.db.RetrieveCertReq(context.Background(), certReqId)
+		require.NoError(err)
+		require.Equal(certReq.Status, models.CertificateRequestState_READY_TO_SUBMIT)
+
+		// Ensure that the expected email has been sent, using
+		// the mock email client.
+		messages := []*emails.EmailMeta{
+			{
+				To:        v.Contacts.Technical.Email,
+				From:      s.conf.Email.ServiceEmail,
+				Subject:   emails.ReissuanceStartedRE,
+				Reason:    "reissuance_started",
+				Timestamp: callTime,
+			},
+			{
+				To:        s.conf.Email.AdminEmail,
+				From:      s.conf.Email.ServiceEmail,
+				Subject:   emails.ReissuanceAdminNotificationRE,
+				Reason:    "reissuance_admin_notification",
+				Timestamp: callTime,
+			},
+		}
+
+		emails.CheckEmails(s.T(), messages)
+	})
+
+	s.Run("WebhookMaxRetries", func() {
+		defer s.fixtures.ResetDB()
+		defer emailmock.PurgeEmails()
+
+		// Setup the webhook to always fail
+		s.useCourierHandler(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+		defer s.resetCourierHandler()
+
+		charlieVASP, err := s.fixtures.GetVASP("charliebank")
+		require.NoError(err, "could not get charlie VASP")
+		charlieVASP.NoEmailDelivery = true
+		setupVASPWebhook(s, charlieVASP)
+
+		// Capture the number of certificate requests on the charlie VASP
+		// before reissuance is triggered.
+		previousReqIds, err := models.GetCertReqIDs(charlieVASP)
+		require.NoError(err)
+		previousNumberOfReqs := len(previousReqIds)
+
+		// Call the certman function at 8 days, which should
+		// reissue the VASP's identity certificate, send the
+		// email with the created pkcs12 password and send
+		// the whisper link, as well as notifying the TRISA
+		// admin that reissuance has started.
+		s.updateVaspIdentityCert(charlieVASP, 8)
+		callTime := time.Now()
+		s.certman.HandleCertificateReissuance()
+
+		v, err := s.db.RetrieveVASP(context.Background(), charlieVASP.Id)
+		require.NoError(err)
+
+		reqIDs, err := models.GetCertReqIDs(v)
+		require.NoError(err)
+		require.Len(reqIDs, previousNumberOfReqs+1)
+
+		// Certificate request should be ready to submit
+		certReqId := reqIDs[len(reqIDs)-1]
+		certReq, err := s.db.RetrieveCertReq(context.Background(), certReqId)
+		require.NoError(err)
+		require.Equal(certReq.Status, models.CertificateRequestState_READY_TO_SUBMIT)
+
+		// Email should still be sent even though the webhook failed, even if NoEmailDelivery
+		// is set on the VASP.
+		messages := []*emails.EmailMeta{
+			{
+				To:        v.Contacts.Technical.Email,
+				From:      s.conf.Email.ServiceEmail,
+				Subject:   emails.ReissuanceStartedRE,
+				Reason:    "reissuance_started",
+				Timestamp: callTime,
+			},
+			{
+				To:        s.conf.Email.AdminEmail,
+				From:      s.conf.Email.ServiceEmail,
+				Subject:   emails.ReissuanceAdminNotificationRE,
+				Reason:    "reissuance_admin_notification",
+				Timestamp: callTime,
+			},
+		}
+
+		emails.CheckEmails(s.T(), messages)
+	})
+
+	s.Run("WebhookNoEmail", func() {
+		defer s.fixtures.ResetDB()
+		defer emailmock.PurgeEmails()
+
+		charlieVASP, err := s.fixtures.GetVASP("charliebank")
+		require.NoError(err, "could not get charlie VASP")
+		charlieVASP.NoEmailDelivery = true
+		setupVASPWebhook(s, charlieVASP)
+
+		// Capture the number of certificate requests on the charlie VASP
+		// before reissuance is triggered.
+		previousReqIds, err := models.GetCertReqIDs(charlieVASP)
+		require.NoError(err)
+		previousNumberOfReqs := len(previousReqIds)
+
+		// Call the certman function at 8 days, which should
+		// reissue the VASP's identity certificate, send the
+		// email with the created pkcs12 password and send
+		// the whisper link, as well as notifying the TRISA
+		// admin that reissuance has started.
+		s.updateVaspIdentityCert(charlieVASP, 8)
+		callTime := time.Now()
+		s.certman.HandleCertificateReissuance()
+
+		v, err := s.db.RetrieveVASP(context.Background(), charlieVASP.Id)
+		require.NoError(err)
+
+		reqIDs, err := models.GetCertReqIDs(v)
+		require.NoError(err)
+		require.Len(reqIDs, previousNumberOfReqs+1)
+
+		// Certificate request should be ready to submit
+		certReqId := reqIDs[len(reqIDs)-1]
+		certReq, err := s.db.RetrieveCertReq(context.Background(), certReqId)
+		require.NoError(err)
+		require.Equal(certReq.Status, models.CertificateRequestState_READY_TO_SUBMIT)
+
+		// The pkcs12 password email should not be sent since NoEmailDelivery is set on the
+		// VASP.
+		messages := []*emails.EmailMeta{
+			{
+				To:        s.conf.Email.AdminEmail,
+				From:      s.conf.Email.ServiceEmail,
+				Subject:   emails.ReissuanceAdminNotificationRE,
+				Reason:    "reissuance_admin_notification",
+				Timestamp: callTime,
+			},
+		}
+
+		emails.CheckEmails(s.T(), messages)
+	})
 }
 
 func (s *certTestSuite) updateVaspIdentityCert(vasp *pb.VASP, daysUntilExpiration time.Duration) {
@@ -1011,6 +1526,12 @@ func (s *certTestSuite) setupCertManager(profile string, fType fixtures.FixtureT
 	s.conf.CertMan.Storage = certPath
 	s.conf.CertMan.RequestInterval = time.Millisecond
 	s.conf.CertMan.Sectigo.Profile = profile
+	s.conf.CertMan.DeliveryBackoff.InitialInterval = time.Millisecond
+	s.conf.CertMan.DeliveryBackoff.MaxInterval = 10 * time.Millisecond
+	s.conf.CertMan.DeliveryBackoff.MaxElapsedTime = 100 * time.Millisecond
+	s.conf.CertMan.DeliveryBackoff.Multiplier = 1.5
+	s.conf.CertMan.DeliveryBackoff.RandomizationFactor = 0.5
+	s.conf.CertMan.DeliveryBackoff.MaxRetries = 3
 
 	// Initialize the configured store
 	switch s.fixtures.StoreType() {
@@ -1035,6 +1556,9 @@ func (s *certTestSuite) setupCertManager(profile string, fType fixtures.FixtureT
 	email, err := emails.New(s.conf.Email)
 	require.NoError(err, "could not create email manager")
 
+	// Initialize the courier server
+	s.resetCourierHandler()
+
 	// Initialize the certificate manager
 	require.NoError(os.MkdirAll(s.conf.CertMan.Storage, 0755))
 	service, err := certman.New(s.conf.CertMan, s.db, s.secret, email)
@@ -1042,11 +1566,25 @@ func (s *certTestSuite) setupCertManager(profile string, fType fixtures.FixtureT
 	s.certman = service.(*certman.CertificateManager)
 }
 
+func (s *certTestSuite) useCourierHandler(handler http.HandlerFunc) {
+	if s.courier != nil {
+		s.courier.Close()
+	}
+	s.courier = httptest.NewServer(handler)
+}
+
+func (s *certTestSuite) resetCourierHandler() {
+	s.useCourierHandler(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
+}
+
 func (s *certTestSuite) teardownCertManager() {
 	require := s.Require()
 	emailmock.PurgeEmails()
 	s.db.Close()
 	s.fixtures.Reset()
+	s.courier.Close()
 	require.NoError(os.RemoveAll(s.conf.CertMan.Storage))
 }
 
