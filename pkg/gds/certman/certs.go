@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"github.com/trisacrypto/courier/pkg/api/v1"
+	courier "github.com/trisacrypto/courier/pkg/api/v1"
 	"github.com/trisacrypto/directory/pkg/gds/config"
 	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/secrets"
@@ -590,14 +590,15 @@ func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateReq
 
 	var deliveryErr error
 	if r.Webhook != "" {
-		// Deliver the PKCS12 password using the configured webhook.
+		// Deliver the certificates payload using the configured webhook.
 		if deliveryErr = c.deliverCertificatePayload(ctx, r, payload); deliveryErr != nil {
 			log.Error().Err(deliveryErr).Str("webhook", r.Webhook).Str("vasp", vasp.Id).Msg("error delivering certificate via webhook")
 		}
 	}
 
+	// If the user has not specifically turned off email delivery or if webhook
+	// delivery failed, send the certificates via email.
 	if !r.NoEmailDelivery || deliveryErr != nil {
-		// Ensure that the certificate is sent by email if the webhook fails
 		if _, err = c.email.SendDeliverCertificates(vasp, path); err != nil {
 			// If there is an error delivering emails, return here so we don't mark as completed
 			sentry.Error(nil).Err(err).Msg("could not deliver certificates to technical contact")
@@ -936,13 +937,13 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) (err err
 		}
 	}
 
+	// If the user has not specifically turned off email delivery or if there was an
+	// error in webhook delivery, send the pkcs12 password in a whisper via email.
 	if !certreq.NoEmailDelivery || deliveryErr != nil {
-		// Ensure the password is sent by email even if the webhook fails.
 		if whisperLink, err = whisper.CreateSecretLink(fmt.Sprintf(whisperPasswordTemplate, pkcs12password), "", 3, time.Now().AddDate(0, 0, 7)); err != nil {
 			return fmt.Errorf("error creating whisper link for vasp %s: %w", vasp.Id, err)
 		}
 
-		// Send the notification email that certificate reissuance is forthcoming and provide whisper link to the PKCS12 password.
 		if _, err = c.email.SendReissuanceStarted(vasp, whisperLink); err != nil {
 			return fmt.Errorf("error sending reissuance started email for vasp %s: %w", vasp.Id, err)
 		}
@@ -969,12 +970,12 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) (err err
 // strategy or return an error if the maximum number of retries was exceeded.
 func (c *CertificateManager) deliverCertificatePassword(ctx context.Context, certreq *models.CertificateRequest, password string) (err error) {
 	// Create the client to deliver the password.
-	var client api.CourierClient
-	if client, err = api.New(certreq.Webhook); err != nil {
+	var client courier.CourierClient
+	if client, err = courier.New(certreq.Webhook); err != nil {
 		return fmt.Errorf("could not create courier client for pkcs12 password delivery: %s", err)
 	}
 
-	req := &api.StorePasswordRequest{
+	req := &courier.StorePasswordRequest{
 		ID:       certreq.Id,
 		Password: password,
 	}
@@ -1006,12 +1007,12 @@ func (c *CertificateManager) deliverCertificatePassword(ctx context.Context, cer
 // return an error if the maximum number of retries was exceeded.
 func (c *CertificateManager) deliverCertificatePayload(ctx context.Context, certreq *models.CertificateRequest, payload []byte) (err error) {
 	// Create the client to deliver the password.
-	var client api.CourierClient
-	if client, err = api.New(certreq.Webhook); err != nil {
+	var client courier.CourierClient
+	if client, err = courier.New(certreq.Webhook); err != nil {
 		return fmt.Errorf("could not create courier client for certificate delivery: %s", err)
 	}
 
-	req := &api.StoreCertificateRequest{
+	req := &courier.StoreCertificateRequest{
 		ID:                certreq.Id,
 		Base64Certificate: base64.StdEncoding.EncodeToString(payload),
 	}
