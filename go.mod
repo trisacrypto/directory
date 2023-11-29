@@ -5,6 +5,7 @@ go 1.19
 require (
 	cloud.google.com/go/secretmanager v1.11.2
 	github.com/auth0/go-jwt-middleware/v2 v2.1.0
+	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/getsentry/sentry-go v0.22.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-contrib/cors v1.4.0
@@ -35,7 +36,7 @@ require (
 	github.com/swaggo/swag v1.16.1
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/trisacrypto/courier v0.0.0-20231106194613-8a8d8b5a1d91
-	github.com/trisacrypto/trisa v0.4.1-0.20231128161148-4bca000b2a54
+	github.com/trisacrypto/trisa v0.4.1
 	github.com/urfave/cli v1.22.14
 	github.com/urfave/cli/v2 v2.25.7
 	github.com/vmihailenco/msgpack/v5 v5.3.5
@@ -54,7 +55,6 @@ require (
 	github.com/PuerkitoBio/rehttp v1.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.9.2 // indirect
-	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
