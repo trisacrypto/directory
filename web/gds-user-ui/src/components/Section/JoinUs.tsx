@@ -95,10 +95,27 @@ const JoinUsSection: React.FC = () => {
                 </Box>
               ))}
             </SimpleGrid>
-            <Box alignItems="center" textAlign="center">
+            <Stack 
+              justifyContent={"center"}
+              alignItems={"center"} 
+              direction={['column', 'row']} 
+              spacing={4}
+              >
               <RouterLink to={'/guide'}>
                 <Button
                   bg="#FF7A59"
+                  color="white"
+                  borderColor="white"
+                  py={6}
+                  width="190px"
+                  borderRadius="0px"
+                  border="2px solid #fff"
+                  _hover={{ bg: '#FF7A77' }}>
+                  <Trans id="Join Today">Join Today</Trans>
+                </Button>
+              </RouterLink>
+                <Button
+                  bg="#60C4CA"
                   color="white"
                   borderColor="white"
                   py={6}
@@ -106,11 +123,13 @@ const JoinUsSection: React.FC = () => {
                   width="100%"
                   borderRadius="0px"
                   border="2px solid #fff"
-                  _hover={{ bg: '#FF7A77' }}>
-                  <Trans id="Join Today">Join Today</Trans>
+                  _hover={{ bg: '#24a9df' }}
+                  as="a"
+                  href="https://trisa.io/members/"
+                  target="_blank">
+                  <Trans id="View Member List">View Member List</Trans>
                 </Button>
-              </RouterLink>
-            </Box>
+            </Stack>
           </Stack>
           <Flex flex={1} />
         </Stack>
