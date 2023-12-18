@@ -448,10 +448,12 @@ func NewCertificateRequest(vasp *pb.VASP) (certRequest *CertificateRequest, err 
 	}
 
 	certRequest = &CertificateRequest{
-		Id:         uuid.New().String(),
-		Vasp:       vasp.Id,
-		CommonName: vasp.CommonName,
-		Params:     make(map[string]string),
+		Id:              uuid.New().String(),
+		Vasp:            vasp.Id,
+		CommonName:      vasp.CommonName,
+		Params:          make(map[string]string),
+		Webhook:         vasp.CertificateWebhook,
+		NoEmailDelivery: vasp.NoEmailDelivery,
 	}
 
 	// Populate the organization name, if available.

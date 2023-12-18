@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/gin-gonic/gin"
 	"github.com/rotationalio/confire"
 	"github.com/rs/zerolog"
@@ -87,8 +88,18 @@ type CertManConfig struct {
 	RequestInterval    time.Duration `split_words:"true" default:"10m"`
 	ReissuanceInterval time.Duration `split_words:"true" default:"24h"`
 	Storage            string        `split_words:"true" required:"false"`
+	DeliveryBackoff    BackoffConfig `split_words:"true"`
 	DirectoryID        string        `envconfig:"GDS_DIRECTORY_ID" default:"vaspdirectory.net"`
 	Sectigo            sectigo.Config
+}
+
+type BackoffConfig struct {
+	InitialInterval     time.Duration `split_words:"true" default:"1s"`
+	RandomizationFactor float64       `split_words:"true" default:"0.5"`
+	Multiplier          float64       `split_words:"true" default:"1.5"`
+	MaxInterval         time.Duration `split_words:"true" default:"15s"`
+	MaxElapsedTime      time.Duration `split_words:"true" default:"1m"`
+	MaxRetries          int           `split_words:"true" default:"5"`
 }
 
 type BackupConfig struct {
@@ -241,4 +252,45 @@ func (c CertManConfig) Validate() (err error) {
 	}
 
 	return nil
+}
+
+func (c *BackoffConfig) Validate() error {
+	if c.InitialInterval < 0 {
+		return errors.New("invalid configuration: initial interval must be greater than or equal to 0")
+	}
+
+	if c.RandomizationFactor < 0 {
+		return errors.New("invalid configuration: randomization factor must be greater than or equal to 0")
+	}
+
+	if c.Multiplier < 0 {
+		return errors.New("invalid configuration: multiplier must be greater than or equal to 0")
+	}
+
+	if c.MaxInterval < 0 {
+		return errors.New("invalid configuration: max interval must be greater than or equal to 0")
+	}
+
+	if c.MaxElapsedTime < 0 {
+		return errors.New("invalid configuration: max elapsed time must be greater than or equal to 0")
+	}
+
+	if c.MaxRetries < 0 {
+		return errors.New("invalid configuration: max retries must be greater than or equal to 0")
+	}
+
+	return nil
+}
+
+func (c BackoffConfig) Ticker() *backoff.Ticker {
+	b := &backoff.ExponentialBackOff{
+		InitialInterval:     c.InitialInterval,
+		RandomizationFactor: c.RandomizationFactor,
+		Multiplier:          c.Multiplier,
+		MaxInterval:         c.MaxInterval,
+		MaxElapsedTime:      c.MaxElapsedTime,
+		Clock:               backoff.SystemClock,
+	}
+	b.Reset()
+	return backoff.NewTicker(b)
 }

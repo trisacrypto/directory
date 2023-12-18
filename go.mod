@@ -3,8 +3,9 @@ module github.com/trisacrypto/directory
 go 1.19
 
 require (
-	cloud.google.com/go/secretmanager v1.11.1
+	cloud.google.com/go/secretmanager v1.11.2
 	github.com/auth0/go-jwt-middleware/v2 v2.1.0
+	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/getsentry/sentry-go v0.24.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-contrib/cors v1.4.0
@@ -24,7 +25,7 @@ require (
 	github.com/rotationalio/go-ensign v0.9.1
 	github.com/rotationalio/honu v0.4.0
 	github.com/rotationalio/whisper v1.2.1
-	github.com/rs/zerolog v1.29.1
+	github.com/rs/zerolog v1.31.0
 	github.com/segmentio/ksuid v1.0.4
 	github.com/sendgrid/rest v2.6.9+incompatible
 	github.com/sendgrid/sendgrid-go v3.12.0+incompatible
@@ -34,11 +35,12 @@ require (
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.1
 	github.com/syndtr/goleveldb v1.0.0
-	github.com/trisacrypto/trisa v0.4.0
+	github.com/trisacrypto/courier v0.0.0-20231106194613-8a8d8b5a1d91
+	github.com/trisacrypto/trisa v0.4.1
 	github.com/urfave/cli v1.22.14
 	github.com/urfave/cli/v2 v2.25.7
 	github.com/vmihailenco/msgpack/v5 v5.3.5
-	golang.org/x/net v0.15.0
+	golang.org/x/net v0.17.0
 	google.golang.org/api v0.131.0
 	google.golang.org/grpc v1.58.0
 	google.golang.org/protobuf v1.31.0
@@ -53,7 +55,6 @@ require (
 	github.com/PuerkitoBio/rehttp v1.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.9.2 // indirect
-	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
@@ -131,10 +132,10 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/prometheus/common v0.44.0 // indirect
-	golang.org/x/crypto v0.13.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
 	golang.org/x/exp/typeparams v0.0.0-20230711153332-06a737ee72cb // indirect
-	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
 	honnef.co/go/tools v0.4.3 // indirect
 	software.sslmate.com/src/go-pkcs12 v0.2.1 // indirect
 )
