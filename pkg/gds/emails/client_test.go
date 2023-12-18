@@ -17,7 +17,6 @@ import (
 	"github.com/trisacrypto/directory/pkg/utils/emails/mock"
 	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func TestClientSend(t *testing.T) {
@@ -60,28 +59,13 @@ func TestClientSend(t *testing.T) {
 		for _, contact := range contacts.Emails {
 			contact.SendLog = make([]*models.EmailLogEntry, 0)
 		}
-
-		iter := models.NewContactIterator(vasp.Contacts)
-		for iter.Next() {
-			contact, _ := iter.Value()
-
-			extra := &models.GDSContactExtraData{}
-			err := contact.Extra.UnmarshalTo(extra)
-			require.NoError(t, err, "could not unmarshal contact extra")
-
-			extra.EmailLog = make([]*models.EmailLogEntry, 0)
-			contact.Extra, err = anypb.New(extra)
-			require.NoError(t, err, "could not marshal contact extra")
-		}
 	}
 
 	assertVASPEmailLogsEmpty := func(t *testing.T) {
-		iter := models.NewContactIterator(vasp.Contacts)
+		iter := contacts.NewIterator()
 		for iter.Next() {
-			contact, kind := iter.Value()
-			emailLog, err := models.GetEmailLog(contact)
-			require.NoError(t, err, "could not get log for %s contact", kind)
-			require.Empty(t, emailLog, "email log for %s contact was not empty", kind)
+			contact := iter.Contact()
+			require.Empty(t, contact.Logs(), "email log for %s contact was not empty", contact.Kind)
 		}
 	}
 
@@ -125,7 +109,7 @@ func TestClientSend(t *testing.T) {
 	t.Run("RejectRegistration", func(t *testing.T) {
 		defer resetLogs(t)
 
-		sent, err := email.SendRejectRegistration(vasp, "this is a test rejection from the test runner")
+		sent, err := email.SendRejectRegistration(vasp, contacts, "this is a test rejection from the test runner")
 		require.NoError(t, err)
 		require.Equal(t, 1, sent)
 
@@ -206,8 +190,8 @@ func TestClientSend(t *testing.T) {
 		t.Skip("not this one")
 		// Administrative is the first verified contact so it should get Rejection, Deliver
 		// Certs, Reissue Reminder, and Reissuance Started after the reminder
-		emailLog, err := models.GetEmailLog(vasp.Contacts.Administrative)
-		require.NoError(t, err)
+		emailLog := contacts.Logs(models.AdministrativeContact)
+
 		require.Len(t, emailLog, 4)
 		require.Equal(t, string(admin.ResendRejection), emailLog[0].Reason)
 		require.Equal(t, emails.RejectRegistrationRE, emailLog[0].Subject)
@@ -218,15 +202,13 @@ func TestClientSend(t *testing.T) {
 		require.Equal(t, string(admin.ReissuanceStarted), emailLog[3].Reason)
 		require.Equal(t, emails.ReissuanceStartedRE, emailLog[3].Subject)
 
-		// Legal is not verified and it has the same email as Administrative so it should
-		// not get any emails
-		emailLog, err = models.GetEmailLog(vasp.Contacts.Legal)
-		require.NoError(t, err)
+		// Legal is not verified and it has the same email as Administrative so it
+		// should not get any emails
+		emailLog = contacts.Logs(models.LegalContact)
 		require.Len(t, emailLog, 0)
 
 		// Billing doesn't have an associated email so shouldn't get anything
-		emailLog, err = models.GetEmailLog(vasp.Contacts.Billing)
-		require.NoError(t, err)
+		emailLog = contacts.Logs(models.BillingContact)
 		require.Len(t, emailLog, 0)
 	})
 }

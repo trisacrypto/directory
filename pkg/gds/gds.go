@@ -573,64 +573,38 @@ func (s *GDS) VerifyContact(ctx context.Context, in *api.VerifyContactRequest) (
 		return nil, status.Error(codes.Internal, "unable to complete contact verification")
 	}
 
-	iter := contacts.NewIterator(models.SkipDuplicates(). )
+	iter := contacts.NewIterator(models.SkipDuplicates())
 	for iter.Next() {
-		vaspContact, kind := iter.Value()
-		var contact *models.Contact
-		if contact, err = s.db.RetrieveContact(ctx, vaspContact.Email); err != nil {
-			sentry.Warn(ctx).Err(err).Str("contact", contactEmail).Msg("could not retrieve contact")
-			return nil, status.Error(codes.NotFound, "could not find associated contact record by email")
-		}
-
-		// Get the verification status
-		var token string
-		var verified bool
-		token, verified, err = models.GetContactVerification(vaspContact)
-		if err != nil {
-			sentry.Error(ctx).Err(err).Msg("could not retrieve verification from contact extra data field")
-			return nil, status.Error(codes.Aborted, "could not verify contact")
-		}
+		contact := iter.Contact()
 
 		// If the model contact is verified make sure the vasp contact is verified
 		// BUG: if a previous contact is verified this will not return a 404 because
 		// found is being set to true; this check has to happen after token == in.Token
-		if contact.Verified {
+		if contact.IsVerified() {
 			found = true
 			prevVerified++
-			if err = models.SetContactVerification(vaspContact, "", true); err != nil {
-				sentry.Error(ctx).Err(err).Str("contact", kind).Str("vasp", vasp.Id).Msg("could not set contact verification token")
-				return nil, status.Error(codes.Aborted, "could not verify contact")
-			}
 			continue
 		}
 
 		// Perform token check and if token matches, mark contact as verified
-		if token == in.Token {
+		if contact.Email.Token == in.Token {
 			found = true
 
 			// Verify and update the models contact
-			contact.Verified = true
-			contact.VerifiedOn = time.Now().Format(time.RFC3339Nano)
-			contact.Token = ""
-			if err = s.db.UpdateContact(ctx, contact); err != nil {
-				sentry.Error(ctx).Err(err).Str("contact", contact.Email).Msg("could not update email logs on contact")
+			contact.Email.Verified = true
+			contact.Email.VerifiedOn = time.Now().Format(time.RFC3339Nano)
+			contact.Email.Token = ""
+
+			if err = s.db.UpdateEmail(ctx, contact.Email); err != nil {
+				sentry.Error(ctx).Err(err).Str("contact", contact.Email.Email).Msg("could not update contact verification status")
 				return nil, status.Error(codes.Aborted, "could not update contact record")
 			}
 
-			// Verify the vasp contact
-			if err = models.SetContactVerification(vaspContact, "", true); err != nil {
-				sentry.Error(ctx).Err(err).Str("contact", kind).Str("vasp", vasp.Id).Msg("could not set contact verification token")
-				return nil, status.Error(codes.Aborted, "could not verify contact")
-			}
-
 			// Record the contact as verified in the audit log
-			if err := models.UpdateVerificationStatus(vasp, vasp.VerificationStatus, "contact verified", contact.Email); err != nil {
+			if err := models.UpdateVerificationStatus(vasp, vasp.VerificationStatus, "contact verified", contact.Email.Email); err != nil {
 				sentry.Warn(ctx).Err(err).Msg("could not append contact verification to VASP audit log")
 				return nil, status.Error(codes.Aborted, "could not add new entry to VASP audit log")
 			}
-		} else if verified {
-			found = true
-			prevVerified++
 		}
 	}
 

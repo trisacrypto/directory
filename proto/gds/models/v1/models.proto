@@ -49,6 +49,7 @@ message AuditLogEntry {
 }
 
 // GDSContactExtraData contains all GDS-specific extra data for a Contact record.
+// Deprecated: use the Contact model instead
 message GDSContactExtraData {
     // Token for email verification
     bool verified = 1;

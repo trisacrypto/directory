@@ -2065,11 +2065,12 @@ func (s *Admin) ReviewToken(c *gin.Context) {
 // sent to the technical contact.
 func (s *Admin) Review(c *gin.Context) {
 	var (
-		err    error
-		in     *admin.ReviewRequest
-		out    *admin.ReviewReply
-		vasp   *pb.VASP
-		vaspID string
+		err      error
+		in       *admin.ReviewRequest
+		out      *admin.ReviewReply
+		vasp     *pb.VASP
+		vaspID   string
+		contacts *models.Contacts
 	)
 
 	// Get vaspID from the URL
@@ -2112,6 +2113,13 @@ func (s *Admin) Review(c *gin.Context) {
 		return
 	}
 
+	// Lookup the contacts records associated with the VASP
+	if contacts, err = s.db.VASPContacts(ctx, vasp); err != nil {
+		sentry.Warn(c).Err(err).Str("id", vaspID).Msg("could not retrieve vasp contacts")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve vasp contacts"))
+		return
+	}
+
 	// Check that the administration verification token is correct
 	var adminVerificationToken string
 	if adminVerificationToken, err = models.GetAdminVerificationToken(vasp); err != nil {
@@ -2144,7 +2152,7 @@ func (s *Admin) Review(c *gin.Context) {
 			return
 		}
 	} else {
-		if out.Message, err = s.rejectRegistration(vasp, in.RejectReason, claims, logctx); err != nil {
+		if out.Message, err = s.rejectRegistration(vasp, contacts, in.RejectReason, claims, logctx); err != nil {
 			sentry.Error(c).Err(err).Msg("could not reject VASP registration")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("unable to reject VASP registration request"))
 			return
@@ -2235,7 +2243,7 @@ func (s *Admin) acceptRegistration(vasp *pb.VASP, claims *tokens.Claims, logctx 
 }
 
 // Reject the VASP registration and notify the contacts of the result.
-func (s *Admin) rejectRegistration(vasp *pb.VASP, reason string, claims *tokens.Claims, logctx *sentry.Logger) (msg string, err error) {
+func (s *Admin) rejectRegistration(vasp *pb.VASP, contacts *models.Contacts, reason string, claims *tokens.Claims, logctx *sentry.Logger) (msg string, err error) {
 	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
@@ -2299,7 +2307,7 @@ func (s *Admin) rejectRegistration(vasp *pb.VASP, reason string, claims *tokens.
 	}
 
 	// Notify the VASP contacts that the registration request has been rejected.
-	if _, err = s.svc.email.SendRejectRegistration(vasp, reason); err != nil {
+	if _, err = s.svc.email.SendRejectRegistration(vasp, contacts, reason); err != nil {
 		return "", err
 	}
 
@@ -2314,11 +2322,12 @@ func (s *Admin) rejectRegistration(vasp *pb.VASP, reason string, claims *tokens.
 // Resend emails in case they went to spam or the initial email send failed.
 func (s *Admin) Resend(c *gin.Context) {
 	var (
-		err    error
-		in     *admin.ResendRequest
-		out    *admin.ResendReply
-		vasp   *pb.VASP
-		vaspID string
+		err      error
+		in       *admin.ResendRequest
+		out      *admin.ResendReply
+		vasp     *pb.VASP
+		vaspID   string
+		contacts *models.Contacts
 	)
 
 	// Get vaspID from the URL
@@ -2349,16 +2358,17 @@ func (s *Admin) Resend(c *gin.Context) {
 		return
 	}
 
+	// Lookup the contacts records associated with the VASP
+	if contacts, err = s.db.VASPContacts(ctx, vasp); err != nil {
+		sentry.Error(c).Err(err).Str("id", vaspID).Msg("could not retrieve vasp contacts")
+		c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not retrieve vasp contacts"))
+		return
+	}
+
 	// Handle different resend request types
 	out = &admin.ResendReply{}
 	switch in.Action {
 	case admin.ResendVerifyContact:
-		var contacts *models.Contacts
-		if contacts, err = s.db.VASPContacts(ctx, vasp); err != nil {
-			sentry.Error(c).Err(err).Msg("could not load contact information from database")
-			c.JSON(http.StatusInternalServerError, admin.ErrorResponse(fmt.Errorf("could not resend contact verification emails: %s", err)))
-		}
-
 		// Send Verify Contacts needs to include not just the VASPs but also the contacts from the database
 		if out.Sent, err = s.svc.email.SendVerifyContacts(contacts); err != nil {
 			sentry.Error(c).Err(err).Int("sent", out.Sent).Msg("could not resend verify contacts emails")
@@ -2398,7 +2408,7 @@ func (s *Admin) Resend(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, admin.ErrorResponse("must specify reason for rejection to resend email"))
 			return
 		}
-		if out.Sent, err = s.svc.email.SendRejectRegistration(vasp, in.Reason); err != nil {
+		if out.Sent, err = s.svc.email.SendRejectRegistration(vasp, contacts, in.Reason); err != nil {
 			sentry.Error(c).Err(err).Int("sent", out.Sent).Msg("could not resend rejection emails")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse(fmt.Errorf("could not resend rejection emails: %s", err)))
 			return

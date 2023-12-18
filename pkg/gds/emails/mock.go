@@ -41,7 +41,7 @@ func CheckEmails(t *testing.T, messages []*EmailMeta) {
 	}
 
 	for i, msg := range messages {
-		// If the email was sent to a contact, check the audit log
+		// If the email was sent to a contact, check the sent email log
 		if msg.Contact != nil {
 			log, err := models.GetEmailLog(msg.Contact)
 			require.NoError(t, err)

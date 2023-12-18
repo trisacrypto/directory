@@ -1700,6 +1700,9 @@ func (s *gdsTestSuite) TestReviewReject() {
 	defer s.ResetFixtures()
 	defer mock.PurgeEmails()
 
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
@@ -1712,9 +1715,9 @@ func (s *gdsTestSuite) TestReviewReject() {
 
 	// Clear email logs to make testing easier
 	require.NoError(fixtures.ClearContactEmailLogs(charlie), "could not clear contact email logs")
-	require.NoError(s.svc.GetStore().UpdateVASP(context.Background(), charlie))
+	require.NoError(s.svc.GetStore().UpdateVASP(ctx, charlie))
 	require.NoError(fixtures.ClearContactEmailLogs(julietVASP), "could not clear contact email logs")
-	require.NoError(s.svc.GetStore().UpdateVASP(context.Background(), julietVASP))
+	require.NoError(s.svc.GetStore().UpdateVASP(ctx, julietVASP))
 
 	// Test when VASP does not have admin verification token
 	request := &httpRequest{
@@ -1802,12 +1805,14 @@ func (s *gdsTestSuite) TestReviewReject() {
 	require.Len(ids, 0)
 
 	// Certificate request should be deleted
-	_, err = s.svc.GetStore().RetrieveCertReq(context.Background(), xray.Id)
+	_, err = s.svc.GetStore().RetrieveCertReq(ctx, xray.Id)
 	require.Error(err)
 
+	contacts, err := s.svc.GetStore().VASPContacts(ctx, v)
+	require.NoError(err, "could not fetch contacts from database")
+
 	// Administrative contact should have been sent the email
-	emailLog, err := models.GetEmailLog(v.Contacts.Administrative)
-	require.NoError(err)
+	emailLog := contacts.Logs(models.AdministrativeContact)
 	require.Len(emailLog, 1)
 
 	// Rejection emails should be sent to the verified contacts

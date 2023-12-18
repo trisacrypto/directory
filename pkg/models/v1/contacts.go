@@ -22,6 +22,10 @@ func ContactKindIsValid(kind string) bool {
 	return kind == TechnicalContact || kind == AdministrativeContact || kind == LegalContact || kind == BillingContact
 }
 
+//=====================================================================================
+// Contacts and ContactRecords
+//=====================================================================================
+
 // Contacts wraps a VASPs contacts with their email records for easier access to
 // contact records, including iteration over contact records. This type of record is
 // often created from database records, and acts as a join record between the VASPs
@@ -55,6 +59,14 @@ func (c *ContactRecord) HasEmail() bool {
 	return c.Contact != nil && c.Contact.Email != ""
 }
 
+// Returns the sent email logs if they're on the contact email address otherwise nil.
+func (c *ContactRecord) Logs() []*EmailLogEntry {
+	if c.Email != nil {
+		return c.Email.SendLog
+	}
+	return nil
+}
+
 // Update a contact record with the other contact data and return a new email address
 // if the email address has changed along with a bool indicating if it has to be saved.
 func (c *ContactRecord) Update(contact *pb.Contact) (*Email, bool) {
@@ -75,6 +87,10 @@ func (c *ContactRecord) Update(contact *pb.Contact) (*Email, bool) {
 
 	return c.Email, false
 }
+
+//=====================================================================================
+// Contacts Methods
+//=====================================================================================
 
 // Has returns true if the conact for the specified kind is not nil or zero.
 func (c *Contacts) Has(kind string) bool {
@@ -228,6 +244,56 @@ func (c *Contacts) IsVerified(kind string) bool {
 	return contact.Email != nil && contact.Email.Verified
 }
 
+// Logs returns the email logs for the specified contact kind. If the specified contact
+// is not found or the contact does not have an email then an empty log is returned.
+func (c *Contacts) Logs(kind string) []*EmailLogEntry {
+	var contact *ContactRecord
+	if contact = c.Get(kind); contact == nil {
+		return nil
+	}
+	return contact.Logs()
+}
+
+// VerifiedContacts returns a map of contact type to email address for all verified
+// contacts, omitting any contacts that are not verified or do not exist.
+func (c *Contacts) VerifiedContacts() (contacts map[string]string) {
+	contacts = make(map[string]string)
+	iter := c.NewIterator(SkipUnverified())
+	for iter.Next() {
+		contact := iter.Contact()
+		contacts[contact.Kind] = contact.Email.Email
+	}
+	return contacts
+}
+
+// ContactVerifications returns a map of contact type to verified status, omitting any
+// contacts that do not exist.
+func (c *Contacts) ContactVerifications() (contacts map[string]bool) {
+	contacts = make(map[string]bool)
+	iter := c.NewIterator()
+	for iter.Next() {
+		contact := iter.Contact()
+		contacts[contact.Kind] = contact.Email.Verified
+	}
+	return contacts
+}
+
+// Length returns the number of contact records that would be returned from the iterator
+// given the specified iteration constraints. This method can be used to count the
+// number of verified or unverified contacts, the number of unduplicated contacts, etc.
+func (c *Contacts) Length(opts ...ContactIterOption) int {
+	n := 0
+	iter := c.NewIterator(opts...)
+	for iter.Next() {
+		n++
+	}
+	return n
+}
+
+//=====================================================================================
+// ContactsIterator
+//=====================================================================================
+
 type ContactsIterator struct {
 	skipNoEmail    bool
 	skipUnverified bool
@@ -339,7 +405,13 @@ func (i *ContactsIterator) Contact() *ContactRecord {
 	return nil
 }
 
+//=====================================================================================
+// Deprecrated
+//=====================================================================================
+
 // GetContactVerification token and verified status from the extra data field on the Contact.
+//
+// Deprecated: Use the emails model to manage email verification state.
 func GetContactVerification(contact *pb.Contact) (_ string, _ bool, err error) {
 	// Return zero-valued defaults with no error if extra is nil.
 	if contact == nil || contact.Extra == nil {
@@ -355,6 +427,8 @@ func GetContactVerification(contact *pb.Contact) (_ string, _ bool, err error) {
 }
 
 // SetContactVerification token and verified status on the Contact record.
+//
+// Deprecated: Use the emails model to manage email verification state.
 func SetContactVerification(contact *pb.Contact, token string, verified bool) (err error) {
 	if contact == nil || contact.IsZero() {
 		return errors.New("cannot set verification on nil contact")
@@ -377,43 +451,9 @@ func SetContactVerification(contact *pb.Contact, token string, verified bool) (e
 	return nil
 }
 
-// VerifiedContacts returns a map of contact type to email address for all verified
-// contacts, omitting any contacts that are not verified or do not exist.
-func (c *Contacts) VerifiedContacts() (contacts map[string]string) {
-	contacts = make(map[string]string)
-	iter := c.NewIterator(SkipUnverified())
-	for iter.Next() {
-		contact := iter.Contact()
-		contacts[contact.Kind] = contact.Email.Email
-	}
-	return contacts
-}
-
-// ContactVerifications returns a map of contact type to verified status, omitting any
-// contacts that do not exist.
-func (c *Contacts) ContactVerifications() (contacts map[string]bool) {
-	contacts = make(map[string]bool)
-	iter := c.NewIterator()
-	for iter.Next() {
-		contact := iter.Contact()
-		contacts[contact.Kind] = contact.Email.Verified
-	}
-	return contacts
-}
-
-// Length returns the number of contact records that would be returned from the iterator
-// given the specified iteration constraints. This method can be used to count the
-// number of verified or unverified contacts, the number of unduplicated contacts, etc.
-func (c *Contacts) Length(opts ...ContactIterOption) int {
-	n := 0
-	iter := c.NewIterator(opts...)
-	for iter.Next() {
-		n++
-	}
-	return n
-}
-
 // Create and add a new entry to the EmailLog on the extra data on the Contact record.
+//
+// Deprecated: Use the emails model to manage email logs.
 func AppendEmailLog(contact *pb.Contact, reason, subject string) (err error) {
 	// Contact must be non-nil.
 	if contact == nil || contact.IsZero() {
