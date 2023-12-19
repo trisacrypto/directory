@@ -178,71 +178,54 @@ func AppendAdminEmailLog(vasp *pb.VASP, reason string, subject string) (err erro
 }
 
 // GetVASPEmailLog computes a unified email log which is a time ordered representation
-// of all the emails sent to a VASP's contacts.
-func GetVASPEmailLog(vasp *pb.VASP) (emails []*EmailLogEntry, err error) {
+// of all the emails sent to a VASP's contacts. If contacts is nil, or there are no
+// contacts then an empty email log is returned.
+func GetVASPEmailLog(contacts *Contacts) (emails []*EmailLogEntry, err error) {
 	emails = make([]*EmailLogEntry, 0)
-
-	// // Iterate over all the contacts on the VASP, this skips any nil contacts.
-	// iter := NewContactIterator(vasp.Contacts)
-	// for iter.Next() {
-	// 	contact, _ := iter.Value()
-	// 	var contactLog []*EmailLogEntry
-	// 	if contactLog, err = GetEmailLog(contact); err != nil {
-	// 		return nil, err
-	// 	}
-
-	// 	// Merge the contact log into the unified log while maintaining timestamp order
-	// 	i, j := 0, 0
-	// 	for i < len(emails) && j < len(contactLog) {
-	// 		var logTime, contactTime time.Time
-	// 		if logTime, err = time.Parse(time.RFC3339, emails[i].Timestamp); err != nil {
-	// 			return nil, err
-	// 		}
-
-	// 		if contactTime, err = time.Parse(time.RFC3339, contactLog[j].Timestamp); err != nil {
-	// 			return nil, err
-	// 		}
-
-	// 		if contactTime.Before(logTime) {
-	// 			emails = append(emails, nil)
-	// 			copy(emails[i+1:], emails[i:])
-	// 			emails[i] = contactLog[j]
-	// 			j++
-	// 		} else {
-	// 			i++
-	// 		}
-	// 	}
-
-	// 	// Append any remaining entries
-	// 	for j < len(contactLog) {
-	// 		emails = append(emails, contactLog[j])
-	// 		j++
-	// 	}
-	// }
-
-	return emails, errors.New("this is not implemented yet")
-}
-
-// Create and add a new entry to the EmailLog on the extra data on the Contact record.
-func (c *Contact) AppendEmailLog(reason, subject string) {
-	// Contact must be non-nil.
-	if c == nil {
-		return
+	if contacts == nil {
+		return emails, nil
 	}
 
-	// Create the EmailLog if it is nil.
-	if c.EmailLog == nil {
-		c.EmailLog = make([]*EmailLogEntry, 0, 1)
+	// Iterate over all the contacts on the VASP, this skips any nil contacts.
+	iter := contacts.NewIterator(SkipNoEmail(), SkipDuplicates())
+	for iter.Next() {
+		contact := iter.Contact()
+
+		var contactLog []*EmailLogEntry
+		if contact.Email != nil {
+			contactLog = contact.Email.SendLog
+		}
+
+		// Merge the contact log into the unified log while maintaining timestamp order
+		i, j := 0, 0
+		for i < len(emails) && j < len(contactLog) {
+			var logTime, contactTime time.Time
+			if logTime, err = time.Parse(time.RFC3339, emails[i].Timestamp); err != nil {
+				return nil, err
+			}
+
+			if contactTime, err = time.Parse(time.RFC3339, contactLog[j].Timestamp); err != nil {
+				return nil, err
+			}
+
+			if contactTime.Before(logTime) {
+				emails = append(emails, nil)
+				copy(emails[i+1:], emails[i:])
+				emails[i] = contactLog[j]
+				j++
+			} else {
+				i++
+			}
+		}
+
+		// Append any remaining entries
+		for j < len(contactLog) {
+			emails = append(emails, contactLog[j])
+			j++
+		}
 	}
 
-	// Append entry to the previous log.
-	entry := &EmailLogEntry{
-		Timestamp: time.Now().Format(time.RFC3339),
-		Reason:    reason,
-		Subject:   subject,
-		Recipient: c.Email,
-	}
-	c.EmailLog = append(c.EmailLog, entry)
+	return emails, nil
 }
 
 // GetCertReqIDs returns the list of associated CertificateRequest IDs for the VASP record.

@@ -55,17 +55,26 @@ func TestClientSend(t *testing.T) {
 	require.NoError(t, err)
 
 	vasp, contacts := makeClientFixtures(t, recipient)
+
+	// Helper Functions
 	resetLogs := func(t *testing.T) {
 		for _, contact := range contacts.Emails {
 			contact.SendLog = make([]*models.EmailLogEntry, 0)
 		}
 	}
 
-	assertVASPEmailLogsEmpty := func(t *testing.T) {
+	verifyContact := func(kind string) {
+		contact := contacts.Get(kind)
+		contact.Email.Verified = true
+		contact.Email.VerifiedOn = "2023-12-19T09:08:42Z"
+	}
+
+	resetContacts := func(t *testing.T) {
 		iter := contacts.NewIterator()
 		for iter.Next() {
 			contact := iter.Contact()
-			require.Empty(t, contact.Logs(), "email log for %s contact was not empty", contact.Kind)
+			contact.Email.Verified = false
+			contact.Email.VerifiedOn = ""
 		}
 	}
 
@@ -80,11 +89,9 @@ func TestClientSend(t *testing.T) {
 		require.False(t, contacts.Emails[0].Verified)
 		require.NotEmpty(t, contacts.Emails[0].Token)
 
-		// No email logs should be stored on the VASP contact
-		assertVASPEmailLogsEmpty(t)
-
-		// The contacts email log contain one item
-		emailLog := contacts.Emails[0].SendLog
+		// The contacts email log should contain one item
+		emailLog, err := models.GetVASPEmailLog(contacts)
+		require.NoError(t, err, "could not get email log")
 		require.Len(t, emailLog, 1)
 		require.Equal(t, string(admin.ResendVerifyContact), emailLog[0].Reason)
 		require.Equal(t, emails.VerifyContactRE, emailLog[0].Subject)
@@ -102,32 +109,52 @@ func TestClientSend(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "12345token1234", token)
 
-		// No email logs should be stored on the VASP contact
-		assertVASPEmailLogsEmpty(t)
+		// Ensure that there are no email logs since this should have been sent to an admin
+		emailLog, err := models.GetVASPEmailLog(contacts)
+		require.NoError(t, err, "could not get email log")
+		require.Len(t, emailLog, 0)
 	})
 
 	t.Run("RejectRegistration", func(t *testing.T) {
 		defer resetLogs(t)
+		defer resetContacts(t)
 
+		// Cannot send an email if there are no verified contacts
 		sent, err := email.SendRejectRegistration(vasp, contacts, "this is a test rejection from the test runner")
+		require.Error(t, err, "expected no email sent if no verified contacts")
+		require.Equal(t, 0, sent)
+
+		// Verify the technical contact
+		verifyContact(models.TechnicalContact)
+		sent, err = email.SendRejectRegistration(vasp, contacts, "this is a test rejection from the test runner")
 		require.NoError(t, err)
 		require.Equal(t, 1, sent)
 
-		// No email logs should be stored on the VASP contact
-		// TODO: this emailer is still storing logs on the vasp contact
-		// assertVASPEmailLogsEmpty(t)
+		// Ensure that at least one email was sent
+		emailLog, err := models.GetVASPEmailLog(contacts)
+		require.NoError(t, err, "could not get email log")
+		require.Len(t, emailLog, 1)
 	})
 
 	t.Run("DeliverCertificates", func(t *testing.T) {
 		defer resetLogs(t)
+		defer resetContacts(t)
 
+		// Cannot send an email if there are no verified contacts
 		sent, err := email.SendDeliverCertificates(vasp, contacts, "testdata/foo.zip")
+		require.Error(t, err, "expected no emails sent if no verified contacts")
+		require.Equal(t, 0, sent)
+
+		// Verify the administrative contact
+		verifyContact(models.AdministrativeContact)
+		sent, err = email.SendDeliverCertificates(vasp, contacts, "testdata/foo.zip")
 		require.NoError(t, err)
 		require.Equal(t, 1, sent)
 
-		// No email logs should be stored on the VASP contact
-		// TODO: this emailer is still storing logs on the vasp contact
-		// assertVASPEmailLogsEmpty(t)
+		// Ensure that at least one email was sent
+		emailLog, err := models.GetVASPEmailLog(contacts)
+		require.NoError(t, err, "could not get email log")
+		require.Len(t, emailLog, 1)
 	})
 
 	t.Run("ExpiresAdminNotification", func(t *testing.T) {
@@ -142,33 +169,53 @@ func TestClientSend(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 0, sent, "should not have sent duplicate expiration email to the admin")
 
-		// No email logs should be stored on the VASP contact
-		assertVASPEmailLogsEmpty(t)
+		// Ensure that there are no email logs since this should have been sent to an admin
+		emailLog, err := models.GetVASPEmailLog(contacts)
+		require.NoError(t, err, "could not get email log")
+		require.Len(t, emailLog, 0)
 	})
 
 	t.Run("ReissuanceReminder", func(t *testing.T) {
 		defer resetLogs(t)
+		defer resetContacts(t)
 
+		// Cannot send reminder if there are no verified contacts
 		reissueDate := time.Date(2022, time.July, 25, 12, 0, 0, 0, time.Local)
 		sent, err := email.SendReissuanceReminder(vasp, contacts, reissueDate)
+		require.Error(t, err, "expected no emails sent if no verified contacts")
+		require.Equal(t, 0, sent)
+
+		// Verify the technical contact
+		verifyContact(models.TechnicalContact)
+		sent, err = email.SendReissuanceReminder(vasp, contacts, reissueDate)
 		require.NoError(t, err)
 		require.Equal(t, 1, sent)
 
-		// No email logs should be stored on the VASP contact
-		// TODO: this emailer is still storing logs on the vasp contact
-		// assertVASPEmailLogsEmpty(t)
+		// Ensure that at least one email was sent
+		emailLog, err := models.GetVASPEmailLog(contacts)
+		require.NoError(t, err, "could not get email log")
+		require.Len(t, emailLog, 1)
 	})
 
 	t.Run("ReissuanceStarted", func(t *testing.T) {
 		defer resetLogs(t)
+		defer resetContacts(t)
 
+		// Cannot send reissuance started if there are no verified contacts
 		sent, err := email.SendReissuanceStarted(vasp, contacts, "https://whisper.dev/supersecret")
+		require.Error(t, err, "expected no emails sent if no verified contacts")
+		require.Equal(t, 0, sent)
+
+		// Verify legal contact
+		verifyContact(models.LegalContact)
+		sent, err = email.SendReissuanceStarted(vasp, contacts, "https://whisper.dev/supersecret")
 		require.NoError(t, err)
 		require.Equal(t, 1, sent)
 
-		// No email logs should be stored on the VASP contact
-		// TODO: this emailer is still storing logs on the vasp contact
-		// assertVASPEmailLogsEmpty(t)
+		// Ensure that at least one email was sent
+		emailLog, err := models.GetVASPEmailLog(contacts)
+		require.NoError(t, err, "could not get email log")
+		require.Len(t, emailLog, 1)
 	})
 
 	t.Run("ReissuanceAdminNotification", func(t *testing.T) {
@@ -182,33 +229,9 @@ func TestClientSend(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 0, sent, "should not have sent duplicate reissuance email to the admin")
 
-		// No email logs should be stored on the VASP contact
-		assertVASPEmailLogsEmpty(t)
-	})
-
-	t.Run("EmailLogs", func(t *testing.T) {
-		t.Skip("not this one")
-		// Administrative is the first verified contact so it should get Rejection, Deliver
-		// Certs, Reissue Reminder, and Reissuance Started after the reminder
-		emailLog := contacts.Logs(models.AdministrativeContact)
-
-		require.Len(t, emailLog, 4)
-		require.Equal(t, string(admin.ResendRejection), emailLog[0].Reason)
-		require.Equal(t, emails.RejectRegistrationRE, emailLog[0].Subject)
-		require.Equal(t, string(admin.ResendDeliverCerts), emailLog[1].Reason)
-		require.Equal(t, emails.DeliverCertsRE, emailLog[1].Subject)
-		require.Equal(t, string(admin.ReissuanceReminder), emailLog[2].Reason)
-		require.Equal(t, emails.ReissuanceReminderRE, emailLog[2].Subject)
-		require.Equal(t, string(admin.ReissuanceStarted), emailLog[3].Reason)
-		require.Equal(t, emails.ReissuanceStartedRE, emailLog[3].Subject)
-
-		// Legal is not verified and it has the same email as Administrative so it
-		// should not get any emails
-		emailLog = contacts.Logs(models.LegalContact)
-		require.Len(t, emailLog, 0)
-
-		// Billing doesn't have an associated email so shouldn't get anything
-		emailLog = contacts.Logs(models.BillingContact)
+		// Ensure that there are no email logs since this should have been sent to an admin
+		emailLog, err := models.GetVASPEmailLog(contacts)
+		require.NoError(t, err, "could not get email log")
 		require.Len(t, emailLog, 0)
 	})
 }

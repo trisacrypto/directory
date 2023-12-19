@@ -197,26 +197,19 @@ func (s *gdsTestSuite) TestRegister() {
 }
 
 func (s *gdsTestSuite) TestRegisterAlreadyVerified() {
-	s.T().Skip("requires updates to fixtures")
-
 	// Load the fixtures and start the GDS server
 	s.LoadSmallFixtures()
 	s.SetupGDS()
+
 	defer s.ResetFixtures()
 	defer s.fixtures.LoadReferenceFixtures()
 	defer mock.PurgeEmails()
+
 	require := s.Require()
 	ctx := context.Background()
-	charlie, _, err := s.fixtures.GetVASP("charliebank")
-	require.NoError(err)
 
-	// Ensure that the contact fixtures were loaded
-	adam, err := s.fixtures.GetContact("adam@example.com")
-	require.NoError(err, "missing contact fixture for adam@example.com")
-	require.False(adam.Verified, "expected contact adam@example.com to be unverified, have the fixtures changed?")
-	bruce, err := s.fixtures.GetContact("bruce@example.com")
-	require.NoError(err, "missing contact fixture for bruce@example.com")
-	require.True(bruce.Verified, "expected contact bruce@example.com to be verified, have the fixtures changed?")
+	charlie, contacts, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err)
 
 	// Start the gRPC client
 	require.NoError(s.grpc.Connect(ctx))
@@ -226,35 +219,35 @@ func (s *gdsTestSuite) TestRegisterAlreadyVerified() {
 	// Emails need to be filled in for a valid VASP registration. Note: This modifies
 	// the contacts on the original fixtures so LoadReferenceFixtures() must be
 	// deferred in order to restore them before the next test.
-	contacts := charlie.Contacts
-	if contacts.Administrative == nil {
-		contacts.Administrative = &pb.Contact{}
-	}
-	contacts.Administrative.Name = adam.Name
-	contacts.Administrative.Email = adam.Email
+	// contacts := charlie.Contacts
+	// if contacts.Administrative == nil {
+	// 	contacts.Administrative = &pb.Contact{}
+	// }
+	// contacts.Administrative.Name = adam.Name
+	// contacts.Administrative.Email = adam.Email
 
-	if contacts.Billing == nil {
-		contacts.Billing = &pb.Contact{}
-	}
-	contacts.Billing.Name = bruce.Name
-	contacts.Billing.Email = bruce.Email
+	// if contacts.Billing == nil {
+	// 	contacts.Billing = &pb.Contact{}
+	// }
+	// contacts.Billing.Name = bruce.Name
+	// contacts.Billing.Email = bruce.Email
 
-	if contacts.Legal == nil {
-		contacts.Legal = &pb.Contact{}
-	}
-	contacts.Legal.Name = "Legal Person"
-	contacts.Legal.Email = "billingandlegal@example.com"
+	// if contacts.Legal == nil {
+	// 	contacts.Legal = &pb.Contact{}
+	// }
+	// contacts.Legal.Name = "Legal Person"
+	// contacts.Legal.Email = "billingandlegal@example.com"
 
-	if contacts.Technical == nil {
-		contacts.Technical = &pb.Contact{}
-	}
-	contacts.Technical.Name = "Technical Person"
-	contacts.Technical.Email = "technical@example.com"
+	// if contacts.Technical == nil {
+	// 	contacts.Technical = &pb.Contact{}
+	// }
+	// contacts.Technical.Name = "Technical Person"
+	// contacts.Technical.Email = "technical@example.com"
 
 	// Valid register request with a verified contact
 	request := &api.RegisterRequest{
 		Entity:           charlie.Entity,
-		Contacts:         contacts,
+		Contacts:         contacts.Contacts,
 		Website:          charlie.Website,
 		BusinessCategory: charlie.BusinessCategory,
 		VaspCategories:   charlie.VaspCategories,
@@ -262,6 +255,7 @@ func (s *gdsTestSuite) TestRegisterAlreadyVerified() {
 		Trixo:            charlie.Trixo,
 		TrisaEndpoint:    "trisatest.net:443",
 	}
+
 	sent := time.Now()
 	reply, err := client.Register(ctx, request)
 	require.NoError(err)
@@ -272,11 +266,13 @@ func (s *gdsTestSuite) TestRegisterAlreadyVerified() {
 	require.Equal(pb.VerificationState_PENDING_REVIEW, reply.Status)
 	require.Contains(reply.Message, "verification code has been sent")
 	require.NotEmpty(reply.Pkcs12Password)
+
 	// VASP should be in the database
 	v, err := s.svc.GetStore().RetrieveVASP(context.Background(), reply.Id)
 	require.NoError(err)
 	require.Equal(reply.Id, v.Id)
 	require.Equal(pb.VerificationState_PENDING_REVIEW, v.VerificationStatus)
+
 	// Certificate request should be created
 	ids, err := models.GetCertReqIDs(v)
 	require.NoError(err)
@@ -286,18 +282,22 @@ func (s *gdsTestSuite) TestRegisterAlreadyVerified() {
 	require.Equal(v.Id, certReq.Vasp)
 	require.Equal(v.CommonName, certReq.CommonName)
 	require.Equal(models.CertificateRequestState_INITIALIZED, certReq.Status)
+
 	// Audit log should contain SUBMITTED, EMAIL_VERIFIED, and PENDING_REVIEW
 	log, err := models.GetAuditLog(v)
 	require.NoError(err)
 	require.Len(log, 3)
 	require.Equal(pb.VerificationState_SUBMITTED, log[0].CurrentState)
+
 	// Audit log prioritizes Technical contact as the submission source
+	techContact := contacts.Get(models.TechnicalContact)
 	require.Equal(v.Contacts.Technical.Email, log[0].Source)
+
 	// The verified email should be used for the other two entries
 	require.Equal(pb.VerificationState_EMAIL_VERIFIED, log[1].CurrentState)
-	require.Equal(bruce.Email, log[1].Source)
+	require.Equal(techContact.Email.Email, log[1].Source)
 	require.Equal(pb.VerificationState_PENDING_REVIEW, log[2].CurrentState)
-	require.Equal(bruce.Email, log[2].Source)
+	require.Equal(techContact.Email.Email, log[2].Source)
 
 	// Should not be able to register an identical VASP
 	_, err = client.Register(ctx, request)

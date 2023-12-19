@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # fakerize.py
 # Clean and fakerize the contents of the GDS database to produce safe test data
 #
@@ -11,26 +12,31 @@
 ##########################################################################
 
 import os
-import sys
 import json
 import uuid
+import lorem
 import base64
 import random
 import shutil
 import secrets
 import tarfile
 import datetime
+import argparse
 
-import lorem
 from faker import Faker
+
 
 ##########################################################################
 # Global Variables
 ##########################################################################
 
-OUTPUT_DIRECTORY = os.path.join("fixtures", "datagen", "synthetic")
+OUTPUT_DIRECTORY = os.path.realpath(
+    os.path.join(os.path.dirname(__file__), "synthetic")
+)
+
 COUNTRIES = ["US", "CA", "CN", "CI", "GR", "GY", "MG", "MA", "DE", "SG"]
 DOMAINS = [".com", ".net", ".io", ".ai", ".org"]
+
 VASP_CATEGORIES = [
     "Exchange",
     "DEX",
@@ -46,10 +52,7 @@ VASP_CATEGORIES = [
     "Individual",
     "Other",
 ]
-FAKE_CONTACTS = {
-    "adam@example.com": False,
-    "bruce@example.com": True,
-}
+
 FAKE_VASPS = {
     "CharlieBank": "SUBMITTED",
     "Delta Assets": "APPEALED",
@@ -66,6 +69,7 @@ FAKE_VASPS = {
     "Romeo Montague Labs LLC": "VERIFIED",
     "Oscar Inc": "PENDING_REVIEW",
 }
+
 VASP_STATE_CHANGES = {
     "SUBMITTED": {
         "previous_state": "NO_VERIFICATION",
@@ -124,6 +128,7 @@ VASP_STATE_CHANGES = {
 }
 
 NETWORKS = ["trisatest.net", "vaspdirectory.net"]
+
 URLWORDS = [
     "cacao",
     "pepper",
@@ -147,6 +152,7 @@ URLWORDS = [
     "philosophers",
     "hellenic",
 ]
+
 FAKE_CERTS = {
     "Papa": "INITIALIZED",
     "Quebec": "READY_TO_SUBMIT",
@@ -224,6 +230,7 @@ VASP_CERTREQ_RELATIONSHIPS = {
     "Hotel Corp": ["Uniform", "Victor", "Zulu"],
 }
 
+
 ##########################################################################
 # Helper Methods - Used by subsequent functions to synthesize VASP records
 ##########################################################################
@@ -268,11 +275,13 @@ def fake_address(country):
         "country": country,
     }
 
+
 def make_bytes(rng):
     """
     Generate a random byte array using the given random generator.
     """
     return bytes(rng.getrandbits(8) for _ in range(16))
+
 
 def make_uuid(rng):
     """
@@ -280,38 +289,42 @@ def make_uuid(rng):
     """
     return str(uuid.UUID(bytes=make_bytes(rng), version=4))
 
+
 def make_serial(rng):
     """
     Generate a capital hex encoded string using the given random generator.
     """
     return "".join(make_bytes(rng).hex()).upper()
 
-def make_person(vasp, verified=True, token="", rng=random.Random()):
+
+def make_person(vasp, vaspID, verified=True, token="", rng=random.Random()):
     """
     Given a string representing a VASP's name, return a valid
     dictionary for a representative of that VASP including faked name
     and contact information.
+
+    Returns both the pb.Contact and the models.Email structs.
     """
     fake = Faker()
     name = fake.name()
     domain = rng.choice(DOMAINS)
     email = name.lower().split()[0].split(".")[0] + "@" + vasp.replace(" ", "").lower() + domain
-    dates = make_dates(rng=rng)
+    dates = make_dates(rng=rng, count=5)
     email_log = [{
-        "timestamp": dates[0],
+        "timestamp": dates[1],
         "reason": "verify_contact",
         "subject": "TRISA: Please verify your email address",
         "recipient": email,
     }]
     if verified:
         email_log.append({
-            "timestamp": dates[1],
+            "timestamp": dates[3],
             "reason": "deliver_certs",
             "subject": "Welcome to the TRISA network!",
             "recipient": email,
         })
         email_log.append({
-            "timestamp": dates[2],
+            "timestamp": dates[4],
             "reason": "reissuance_reminder",
             "subject": "TRISA Identity Certificate Expiration",
             "recipient": email,
@@ -320,12 +333,16 @@ def make_person(vasp, verified=True, token="", rng=random.Random()):
         "name": name,
         "email": email,
         "phone": fake.phone_number(),
-        "extra": {
-            "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
-            "verified": verified,
-            "token": token,
-            "email_log": email_log,
-        },
+    }, {
+        "name": name,
+        "email": email,
+        "vasps": [vaspID],
+        "verified": verified,
+        "token": token if not verified else "",
+        "verified_on": dates[2] if verified else "",
+        "send_log": email_log,
+        "created": dates[0],
+        "modified": dates[4],
     }
 
 
@@ -387,11 +404,13 @@ def make_notes(rng=random.Random()):
         }
     }
 
+
 def make_trisa_cert(record, rng=random.Random()):
     """
     Make a fake trisa.gds.models.v1beta1.Certificate that can be used in a VASP record
     as an identity or signing certificate.
     """
+
 
 def synthesize_secrets(record, rng=random.Random()):
     """
@@ -418,11 +437,13 @@ def synthesize_secrets(record, rng=random.Random()):
 
     return record
 
+
 def shorten(name):
     """
     Return a shortened version of a name so it can be used in a file path.
     """
     return name.split(" ")[0].lower()
+
 
 def store(fakes, kind="vasps", directory=OUTPUT_DIRECTORY):
     """
@@ -441,47 +462,31 @@ def store(fakes, kind="vasps", directory=OUTPUT_DIRECTORY):
 
     return directory
 
+
 def replace_fixtures():
     """
-    Creates a new fakes.tgz file containing the generated fixtures and replaces the
-    existing fakes.tgz in the pkg/gds/testdata directory with the new one.
+    Creates a new fakes.tgz file containing the generated fixtures and replaces
+    the existing fakes.tgz in the pkg/gds/testdata directory with the new one.
     """
     with tarfile.open("fakes.tgz", "w:gz") as tar:
         tar.add(OUTPUT_DIRECTORY, arcname="synthetic")
     shutil.move("fakes.tgz", os.path.join("pkg", "gds", "testdata", "fakes.tgz"))
 
-##########################################################################
-# Contact Creation Functions
-##########################################################################
 
-def make_contact(email, verified):
+def deduplicate_emails(emails):
     """
-    Create a fake contact model from an email address.
+    Deduplicates emails, keeping verified emails over unverified ones.
     """
-    contact = {
-        "email": email,
-        "name": email.split("@")[0],
-        "verified": verified,
-    }
+    deduped = {}
+    for email in emails:
+        if email["email"] in deduped:
+            if not deduped[email["email"]]["verified"]:
+                deduped[email["email"]] = email
+        else:
+            deduped[email["email"]] = email
 
-    dates = make_dates()
-    contact["created"] = dates[0]
-    contact["modified"] = dates[1]
-    if verified:
-        contact["verified_on"] = dates[1]
+    return deduped
 
-    return contact
-
-def augment_contacts(fake_contacts=FAKE_CONTACTS):
-    """
-    Make fake contacts for the contacts store.
-    """
-    contacts = {}
-    for email, verified in fake_contacts.items():
-        contact = make_contact(email, verified)
-        contacts[contact["email"]] = contact
-
-    return contacts
 
 ##########################################################################
 # VASP Creation Functions
@@ -496,6 +501,7 @@ def make_verified(vasp, idx, template="fixtures/datagen/templates/verified.json"
         record = json.load(f)
 
     state = "VERIFIED"
+    emails = []
     rng_country = random.Random(vasp+"country")
     country = rng_country.choice(COUNTRIES)
 
@@ -509,12 +515,20 @@ def make_verified(vasp, idx, template="fixtures/datagen/templates/verified.json"
     # filled in for a legal person.
     record["entity"]["country_of_registration"] = country
     rng_person = random.Random(vasp+"person")
-    record["contacts"]["legal"] = make_person(vasp, token="legal_token", rng=rng_person)
+
+    legalPerson, legalEmail = make_person(vasp, idx, token="legal_token", rng=rng_person)
+    record["contacts"]["legal"] = legalPerson
+    emails.append(legalEmail)
+
     rng_contact = random.Random(vasp+"contact")
     other = rng_contact.choice(
         ["administrative", "technical"]
     )  # billing always unverified for demo purposes
-    record["contacts"][other] = make_person(vasp, token=other+"_token", rng=rng_person)
+
+    otherPerson, otherEmail = make_person(vasp, idx, token=other+"_token", rng=rng_person)
+    record["contacts"][other] = otherPerson
+    emails.append(otherEmail)
+
     common_name = "trisa." + vasp.lower().split()[0]
     record["common_name"] = common_name + ".io"
     record["identity_certificate"]["subject"]["common_name"] = common_name + ".io"
@@ -537,11 +551,15 @@ def make_verified(vasp, idx, template="fixtures/datagen/templates/verified.json"
     rng_notes = random.Random(vasp+"notes")
     record["extra"]["review_notes"] = make_notes(rng=rng_notes)
 
-    return record
+    return record, emails
 
 
 def make_unverified(
-    vasp, idx, state="ERRORED", template="fixtures/datagen/templates/no_cert.json"):
+    vasp,
+    idx,
+    state="ERRORED",
+    template="fixtures/datagen/templates/no_cert.json"
+):
     """
     Make an unverified record according to the `state`;
     this will be used to create synthetic records for all states other than VERIFIED
@@ -552,6 +570,7 @@ def make_unverified(
     # A VASP that is not at least EMAIL_VERIFIED cannot have verified contacts
     email_verified = (state != "SUBMITTED")
 
+    emails = []
     rng_country = random.Random(vasp)
     country = rng_country.choice(COUNTRIES)
 
@@ -565,10 +584,17 @@ def make_unverified(
     # filled in for a legal person.
     record["entity"]["country_of_registration"] = country
     rng_person = random.Random(vasp+"person")
-    record["contacts"]["legal"] = make_person(vasp, verified=email_verified, token="legal_token", rng=rng_person)
+    legalPerson, legalEmail = make_person(vasp, idx, verified=email_verified, token="legal_token", rng=rng_person)
+    record["contacts"]["legal"] = legalPerson
+    emails.append(legalEmail)
+
     rng_contact = random.Random(vasp+"contact")
     other = rng_contact.choice(["billing", "administrative", "technical"])
-    record["contacts"][other] = make_person(vasp, verified=email_verified, token=other+"_token", rng=rng_person)
+
+    otherPerson, otherEmail = make_person(vasp, idx, verified=email_verified, token=other+"_token", rng=rng_person)
+    record["contacts"][other] = otherPerson
+    emails.append(otherEmail)
+
     common_name = "trisa." + vasp.lower().split()[0]
     record["common_name"] = common_name + ".io"
     record["trisa_endpoint"] = common_name + ".io" + ":123"
@@ -592,8 +618,7 @@ def make_unverified(
     else:
         record["extra"]["admin_verification_token"] = ""
 
-
-    return record
+    return record, emails
 
 
 def make_submitted(vasp, idx):
@@ -635,12 +660,14 @@ def make_pending(vasp, idx):
     """
     return make_unverified(vasp, idx, state="PENDING_REVIEW")
 
+
 def make_reviewed(vasp, idx):
     """
     Populate variable fields in a reviewed record
     uses `fixtures/datagen/templates/no_cert.json` as template
     """
     return make_unverified(vasp, idx, state="REVIEWED")
+
 
 def make_issuing(vasp, idx):
     """
@@ -649,49 +676,54 @@ def make_issuing(vasp, idx):
     """
     return make_unverified(vasp, idx, state="ISSUING_CERTIFICATE")
 
+
 def augment_vasps(fake_names=FAKE_VASPS):
     """
-    Generate new records from keys of FAKE_VASPS, using values to set VASP state
-    The remaining data is random. Add review comments to each record
+    Generate new records from keys of FAKE_VASPS, using values to set VASP
+    state. The remaining data is random. Add review comments to each record
     Returns synthetic records as a single dictionary
     """
     rng = random.Random("vasps")
     synthetic_vasps = dict()
+    synthetic_emails = []
 
     for vasp, state in fake_names.items():
         idx = make_uuid(rng)
         if state == "VERIFIED":
-            synthetic_vasps[vasp] = make_verified(vasp, idx)
+            record, emails = make_verified(vasp, idx)
         elif state == "ERRORED":
-            synthetic_vasps[vasp] = make_errored(vasp, idx)
+            record, emails = make_errored(vasp, idx)
         elif state == "PENDING_REVIEW":
-            synthetic_vasps[vasp] = make_pending(vasp, idx)
+            record, emails = make_pending(vasp, idx)
         elif state == "REVIEWED":
-            synthetic_vasps[vasp] = make_reviewed(vasp, idx)
+            record, emails = make_reviewed(vasp, idx)
         elif state == "ISSUING_CERTIFICATE":
-            synthetic_vasps[vasp] = make_issuing(vasp, idx)
+            record, emails = make_issuing(vasp, idx)
         elif state == "APPEALED":
-            synthetic_vasps[vasp] = make_appealed(vasp, idx)
+            record, emails = make_appealed(vasp, idx)
         elif state == "REJECTED":
-            synthetic_vasps[vasp] = make_rejected(vasp, idx)
+            record, emails = make_rejected(vasp, idx)
         elif state == "SUBMITTED":
-            synthetic_vasps[vasp] = make_submitted(vasp, idx)
+            record, emails = make_submitted(vasp, idx)
         else:
             print("Skipping unrecognized state: %s", state)
 
-    return synthetic_vasps
+        synthetic_vasps[vasp] = record
+        synthetic_emails += emails
+
+    return synthetic_vasps, synthetic_emails
 
 
 ##########################################################################
 # CertReq Creation Functions
 ##########################################################################
 
-
 def make_common_name(cert, rng=random.Random()):
     """
     Make a synthetic but well-structured common name
     """
     return cert.lower() + "." + rng.choice(URLWORDS) + rng.choice(DOMAINS)
+
 
 def make_dns_names(cert, rng=random.Random()):
     """
@@ -701,6 +733,7 @@ def make_dns_names(cert, rng=random.Random()):
     for _ in range(rng.randint(1, 4)):
         dns_names.append(cert.lower() + "." + rng.choice(URLWORDS) + rng.choice(DOMAINS))
     return dns_names
+
 
 def make_completed(cert, idx, template="fixtures/datagen/templates/cert_req.json", rng=random.Random()):
     """
@@ -730,6 +763,7 @@ def make_completed(cert, idx, template="fixtures/datagen/templates/cert_req.json
     record["audit_log"] = make_cert_log("COMPLETED", start, end)
     return record
 
+
 def make_certificate(cert, status="ISSUED", template="fixtures/datagen/templates/cert.json", rng=random.Random()):
     """
     Make a certificate record in the given state.
@@ -747,6 +781,7 @@ def make_certificate(cert, status="ISSUED", template="fixtures/datagen/templates
     record["details"]["not_after"] = end
     record["details"]["revoked"] = status == "REVOKED"
     return record
+
 
 def make_initialized(cert, idx, template="fixtures/datagen/templates/cert_req.json", rng=random.Random()):
     """
@@ -767,6 +802,7 @@ def make_initialized(cert, idx, template="fixtures/datagen/templates/cert_req.js
     record["audit_log"] = make_cert_log("INITIALIZED", start, start)
     return record
 
+
 def make_ready_to_submit(cert, idx, template="fixtures/datagen/templates/cert_req.json", rng=random.Random()):
     """
     Make a cert req in the READY_TO_SUBMIT state
@@ -785,6 +821,7 @@ def make_ready_to_submit(cert, idx, template="fixtures/datagen/templates/cert_re
     record["modified"] = end
     record["audit_log"] = make_cert_log("READY_TO_SUBMIT", start, end)
     return record
+
 
 def make_processing(cert, idx, template="fixtures/datagen/templates/cert_req.json", rng=random.Random()):
     """
@@ -806,6 +843,7 @@ def make_processing(cert, idx, template="fixtures/datagen/templates/cert_req.jso
     record["modified"] = end
     record["audit_log"] = make_cert_log("PROCESSING", start, end)
     return record
+
 
 def make_cr_errored(cert, idx, template="fixtures/datagen/templates/cert_req.json", rng=random.Random()):
     """
@@ -882,7 +920,6 @@ def make_cert_log(state, start, end):
             else:
                 current_state = prior_state
 
-
     dates = make_dates(first=start, last=end, count=len(states))
 
     for st, dt in zip(states, dates):
@@ -931,6 +968,7 @@ def augment_certs(fake_names=FAKE_CERTS):
 
     return synthetic_certreqs, synthetic_certs
 
+
 def add_vasp_cert_relationships(vasps, certreqs, certs):
     """
     Add predefined relationships between VASPs and certificate requests.
@@ -956,33 +994,40 @@ def add_vasp_cert_relationships(vasps, certreqs, certs):
         vasps[vasp_name]["extra"]["certificate_requests"] = certreq_ids
         vasps[vasp_name]["extra"]["certificates"] = cert_ids
 
-if __name__ == "__main__":
-    replace = False
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "--help":
-            print("Usage: python fixtures/datagen/fakerize.py [--help|--replace]")
-            print("  --help: print this message")
-            print("  --replace: generate and replace existing fixtures in pkg/gds/testdata")
-            sys.exit(0)
-        elif sys.argv[1] == "--replace":
-            replace = True
-        else:
-            print("Unknown argument: %s", sys.argv[1])
-            sys.exit(1)
 
-    if os.path.exists(OUTPUT_DIRECTORY):
-        shutil.rmtree(OUTPUT_DIRECTORY)
+def main(args):
+    if os.path.exists(args.out):
+        shutil.rmtree(args.out)
 
-    fake_contacts = augment_contacts()
-    fake_vasps = augment_vasps()
+    fake_vasps, fake_emails = augment_vasps()
+    fake_emails = deduplicate_emails(fake_emails)
     fake_certreqs, fake_certs = augment_certs()
     add_vasp_cert_relationships(fake_vasps, fake_certreqs, fake_certs)
 
-    store(fake_contacts, kind="contacts")
+    store(fake_emails, kind="emails")
     store(fake_vasps, kind="vasps")
     store(fake_certreqs, kind="certreqs")
     store(fake_certs, kind="certs")
 
-    if replace:
+    if args.replace:
         replace_fixtures()
         print("Successfully replaced pkg/gds/testdata/fakes.tgz")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="generates fixtures for testing the GDS",
+        epilog="ensure you pip install the requirements",
+    )
+
+    parser.add_argument(
+        "-R", "--replace", action="store_true", default=False,
+        help="replace existing fixture in pkg/gds/testdata"
+    )
+    parser.add_argument(
+        "-o", "--out", type=str, default=OUTPUT_DIRECTORY,
+        help="directory to write generated fixtures to",
+    )
+
+    args = parser.parse_args()
+    main(args)

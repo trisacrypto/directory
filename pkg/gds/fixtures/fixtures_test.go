@@ -28,8 +28,8 @@ func TestFixtures(t *testing.T) {
 
 	expected := map[fixtures.FixtureType]map[string]int{
 		fixtures.Empty: {},
-		fixtures.Small: {wire.NamespaceContacts: 2, wire.NamespaceVASPs: 3},
-		fixtures.Full:  {wire.NamespaceContacts: 2, wire.NamespaceVASPs: 14, wire.NamespaceCerts: 3, wire.NamespaceCertReqs: 10},
+		fixtures.Small: {wire.NamespaceEmails: 6, wire.NamespaceVASPs: 3},
+		fixtures.Full:  {wire.NamespaceEmails: 28, wire.NamespaceVASPs: 14, wire.NamespaceCerts: 3, wire.NamespaceCertReqs: 10},
 	}
 
 	// Load the leveldb fixtures and verify everything was loaded correctly
@@ -50,15 +50,17 @@ func TestFixtures(t *testing.T) {
 func verifyFixtures(t *testing.T, lib *fixtures.Library, expected map[fixtures.FixtureType]map[string]int) {
 	// Test the reference fixtures
 	refs := lib.Fixtures()
-	require.Len(t, refs, 4, "unexpected number of namespaces in fixtures")
+	require.Len(t, refs, 5, "unexpected number of namespaces in fixtures")
 	require.Contains(t, refs, wire.NamespaceContacts)
 	require.Contains(t, refs, wire.NamespaceVASPs)
 	require.Contains(t, refs, wire.NamespaceCerts)
 	require.Contains(t, refs, wire.NamespaceCertReqs)
+	require.Contains(t, refs, wire.NamespaceEmails)
 	require.Len(t, refs[wire.NamespaceContacts], expected[fixtures.Full][wire.NamespaceContacts])
 	require.Len(t, refs[wire.NamespaceVASPs], expected[fixtures.Full][wire.NamespaceVASPs])
 	require.Len(t, refs[wire.NamespaceCerts], expected[fixtures.Full][wire.NamespaceCerts])
 	require.Len(t, refs[wire.NamespaceCertReqs], expected[fixtures.Full][wire.NamespaceCertReqs])
+	require.Len(t, refs[wire.NamespaceEmails], expected[fixtures.Full][wire.NamespaceEmails])
 
 	// Validate VASP fixtures
 	for name, obj := range refs[wire.NamespaceVASPs] {
@@ -107,8 +109,8 @@ func countLevelDBFixtures(t *testing.T, lib *fixtures.Library) (counts map[strin
 		// Ensure we can unmarshal the fixture
 		var obj interface{}
 		switch prefix := key[0]; prefix {
-		case wire.NamespaceContacts:
-			contact := &models.Contact{}
+		case wire.NamespaceEmails:
+			contact := &models.Email{}
 			require.NoError(t, proto.Unmarshal(iter.Value(), contact))
 			obj = contact
 		case wire.NamespaceVASPs:
@@ -126,7 +128,7 @@ func countLevelDBFixtures(t *testing.T, lib *fixtures.Library) (counts map[strin
 		case wire.NamespaceIndices:
 			continue
 		default:
-			require.Fail(t, "unrecognized object for namespace %q", prefix)
+			require.Failf(t, "unrecognized object for namespace %q", prefix)
 		}
 
 		// Count occurrence of the key
@@ -154,16 +156,7 @@ func countHonuFixtures(t *testing.T, lib *fixtures.Library) (counts map[string]i
 
 	counts = make(map[string]int)
 
-	iter, err := db.Iter(nil, options.WithNamespace(wire.NamespaceContacts))
-	require.NoError(t, err, "could not create Honu contacts iterator")
-	for iter.Next() {
-		contact := &models.Contact{}
-		require.NoError(t, proto.Unmarshal(iter.Value(), contact))
-		counts[wire.NamespaceContacts]++
-		lib.CompareFixture(wire.NamespaceContacts, string(iter.Key()), contact, false)
-	}
-
-	iter, err = db.Iter(nil, options.WithNamespace(wire.NamespaceVASPs))
+	iter, err := db.Iter(nil, options.WithNamespace(wire.NamespaceVASPs))
 	require.NoError(t, err, "could not create Honu vasp iterator")
 	for iter.Next() {
 		vasp := &pb.VASP{}
@@ -173,6 +166,15 @@ func countHonuFixtures(t *testing.T, lib *fixtures.Library) (counts map[string]i
 	}
 	require.NoError(t, iter.Error())
 	iter.Release()
+
+	iter, err = db.Iter(nil, options.WithNamespace(wire.NamespaceEmails))
+	require.NoError(t, err, "could not create Honu contacts iterator")
+	for iter.Next() {
+		contact := &models.Email{}
+		require.NoError(t, proto.Unmarshal(iter.Value(), contact))
+		counts[wire.NamespaceEmails]++
+		lib.CompareFixture(wire.NamespaceEmails, string(iter.Key()), contact, false)
+	}
 
 	iter, err = db.Iter(nil, options.WithNamespace(wire.NamespaceCerts))
 	require.NoError(t, err, "could not create Honu certs iterator")

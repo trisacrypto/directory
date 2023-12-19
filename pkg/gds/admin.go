@@ -140,12 +140,18 @@ func (s *Admin) Shutdown() (err error) {
 
 func (s *Admin) setupRoutes() (err error) {
 	var (
-		tags      gin.HandlerFunc
-		tracing   gin.HandlerFunc
-		adminTags map[string]string
+		sentryRecover gin.HandlerFunc
+		tags          gin.HandlerFunc
+		tracing       gin.HandlerFunc
+		adminTags     map[string]string
 	)
 
 	if s.svc.conf.Sentry.UseSentry() {
+		sentryRecover = sentrygin.New(sentrygin.Options{
+			Repanic:         true,
+			WaitForDelivery: false,
+		})
+
 		adminTags = map[string]string{"service": "admin"}
 		tags = sentry.UseTags(adminTags)
 	}
@@ -163,10 +169,7 @@ func (s *Admin) setupRoutes() (err error) {
 
 		// Panic recovery middleware; note: gin middleware needs to be added before sentry
 		gin.Recovery(),
-		sentrygin.New(sentrygin.Options{
-			Repanic:         true,
-			WaitForDelivery: false,
-		}),
+		sentryRecover,
 
 		// Add searchable tags to the sentry context.
 		tags,
@@ -1028,7 +1031,7 @@ func (s *Admin) prepareVASPDetail(ctx context.Context, vasp *pb.VASP, logctx *se
 	}
 
 	// Add a unified email log to the response
-	if emailLog, err := models.GetVASPEmailLog(vasp); err != nil {
+	if emailLog, err := models.GetVASPEmailLog(contacts); err != nil {
 		logctx.Warn().Err(err).Msg("could not get email log for VASP detail")
 	} else {
 		out.EmailLog = make([]map[string]interface{}, 0)

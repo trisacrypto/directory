@@ -204,6 +204,7 @@ func (x *AuditLogEntry) GetSource() string {
 }
 
 // GDSContactExtraData contains all GDS-specific extra data for a Contact record.
+// Deprecated: use the Contact model instead
 type GDSContactExtraData struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
