@@ -3,8 +3,8 @@ package gds_test
 import (
 	"context"
 
-	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	members "github.com/trisacrypto/directory/pkg/gds/members/v1alpha1"
+	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
 )
@@ -66,7 +66,7 @@ func (s *gdsTestSuite) TestMembersSummary() {
 	require.Equal(int32(0), out.NewMembers, "unexpected new members count from Summary; have the fixtures changed?")
 
 	// Test retrieving VASP details
-	charlie, err := s.fixtures.GetVASP("charliebank")
+	charlie, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err)
 	name, err := charlie.Name()
 	require.NoError(err)
@@ -138,7 +138,7 @@ func (s *gdsTestSuite) TestMembersDetails() {
 	s.StatusError(err, codes.NotFound, "requested VASP not found")
 
 	// Test with a valid VASP
-	charlie, err := s.fixtures.GetVASP("charliebank")
+	charlie, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err, "could not get charliebank VASP")
 	name, err := charlie.Name()
 	require.NoError(err)
@@ -166,10 +166,10 @@ func (s *gdsTestSuite) TestMembersDetails() {
 	require.True(proto.Equal(charlie.Trixo, out.Trixo), "VASP trixo form mismatch")
 
 	// Check contacts return is correct
-	contacts := []struct{
+	contacts := []struct {
 		expected *pb.Contact
-		actual *pb.Contact
-		name string
+		actual   *pb.Contact
+		name     string
 	}{
 		{charlie.Contacts.Administrative, out.Contacts.Administrative, "administrative"},
 		{charlie.Contacts.Technical, out.Contacts.Technical, "technical"},

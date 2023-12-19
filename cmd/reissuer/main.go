@@ -323,6 +323,7 @@ func notify(c *cli.Context) (err error) {
 	var (
 		nsent       int
 		vasp        *pb.VASP
+		contacts    *models.Contacts
 		emailer     *emails.EmailManager
 		reissueDate time.Time
 	)
@@ -333,7 +334,7 @@ func notify(c *cli.Context) (err error) {
 	ctx, cancel := utils.WithDeadline(context.Background())
 	defer cancel()
 
-	// Step 1: Fetch the VASP record
+	// Step 1a: Fetch the VASP record
 	if vasp, err = db.RetrieveVASP(ctx, vaspID); err != nil {
 		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
 	}
@@ -344,6 +345,11 @@ func notify(c *cli.Context) (err error) {
 		if !askForConfirmation("continue sending reissuance reminder emails?") {
 			return cli.Exit(fmt.Errorf("canceled by user"), 1)
 		}
+	}
+
+	// Step 1b: Fetch contacts for the VASP record
+	if contacts, err = db.VASPContacts(ctx, vasp); err != nil {
+		return cli.Exit(fmt.Errorf("could not retrieve VASP contacts: %w", err), 1)
 	}
 
 	// Step 2: Parse reissuance date or get date 1 week from today
@@ -357,7 +363,7 @@ func notify(c *cli.Context) (err error) {
 	}
 
 	// Send reissuance reminder emails
-	if nsent, err = emailer.SendReissuanceReminder(vasp, reissueDate); err != nil {
+	if nsent, err = emailer.SendReissuanceReminder(vasp, contacts, reissueDate); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -368,6 +374,7 @@ func notify(c *cli.Context) (err error) {
 func reissueCerts(c *cli.Context) (err error) {
 	var (
 		vasp           *pb.VASP
+		contacts       *models.Contacts
 		certreq        *models.CertificateRequest
 		pkcs12password string
 		emailer        *emails.EmailManager
@@ -384,6 +391,10 @@ func reissueCerts(c *cli.Context) (err error) {
 	// Step 1: Fetch the VASP record
 	if vasp, err = db.RetrieveVASP(ctx, vaspID); err != nil {
 		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
+	}
+
+	if contacts, err = db.VASPContacts(ctx, vasp); err != nil {
+		return cli.Exit(fmt.Errorf("could not get VASP contacts: %s", err), 1)
 	}
 
 	// Check with the user if we should continue with the certificate reissuance
@@ -462,7 +473,7 @@ func reissueCerts(c *cli.Context) (err error) {
 		}
 
 		// Send the notification email that certificate reissuance is forthcoming and provide whisper link to the PKCS12 password.
-		if nsent, err = emailer.SendReissuanceStarted(vasp, whisperLink); err != nil {
+		if nsent, err = emailer.SendReissuanceStarted(vasp, contacts, whisperLink); err != nil {
 			return cli.Exit(err, 1)
 		}
 

@@ -84,13 +84,14 @@ func (s *certTestSuite) TestCertManager() {
 	defer s.teardownCertManager()
 	require := s.Require()
 
-	echoVASP, err := s.fixtures.GetVASP("echo")
+	echoVASP, echoContacts, err := s.fixtures.GetVASP("echo")
 	require.NoError(err, "could not get echo VASP")
+
 	quebecCertReq, err := s.fixtures.GetCertReq("quebec")
 	require.NoError(err, "could not get quebec certreq")
 
 	// Ensure that the email logs are cleared before the test
-	require.NoError(fixtures.ClearContactEmailLogs(echoVASP), "could not clear contact email logs")
+	require.NoError(fixtures.ClearContactEmailLogs(echoContacts), "could not clear contact email logs")
 	require.NoError(s.db.UpdateVASP(context.Background(), echoVASP), "could not update echo VASP")
 
 	// Create a secret that the certificate manager can retrieve
@@ -243,9 +244,9 @@ func (s *certTestSuite) TestCertManagerWebhook() {
 		defer s.fixtures.ResetDB()
 		defer emailmock.PurgeEmails()
 
-		echoVASP, err := s.fixtures.GetVASP("echo")
+		echoVASP, echoContacts, err := s.fixtures.GetVASP("echo")
 		require.NoError(err, "could not get echo VASP")
-		require.NoError(fixtures.ClearContactEmailLogs(echoVASP), "could not clear contact email logs")
+		require.NoError(fixtures.ClearContactEmailLogs(echoContacts), "could not clear contact email logs")
 		require.NoError(s.db.UpdateVASP(ctx, echoVASP))
 		quebecCertReq, err := s.fixtures.GetCertReq("quebec")
 		require.NoError(err, "could not get quebec certreq")
@@ -308,9 +309,9 @@ func (s *certTestSuite) TestCertManagerWebhook() {
 		})
 		defer s.resetCourierHandler()
 
-		echoVASP, err := s.fixtures.GetVASP("echo")
+		echoVASP, echoContacts, err := s.fixtures.GetVASP("echo")
 		require.NoError(err, "could not get echo VASP")
-		require.NoError(fixtures.ClearContactEmailLogs(echoVASP), "could not clear contact email logs")
+		require.NoError(fixtures.ClearContactEmailLogs(echoContacts), "could not clear contact email logs")
 		require.NoError(s.db.UpdateVASP(ctx, echoVASP))
 		quebecCertReq, err := s.fixtures.GetCertReq("quebec")
 		require.NoError(err, "could not get quebec certreq")
@@ -367,9 +368,9 @@ func (s *certTestSuite) TestCertManagerWebhook() {
 		})
 		defer s.resetCourierHandler()
 
-		echoVASP, err := s.fixtures.GetVASP("echo")
+		echoVASP, echoContacts, err := s.fixtures.GetVASP("echo")
 		require.NoError(err, "could not get echo VASP")
-		require.NoError(fixtures.ClearContactEmailLogs(echoVASP), "could not clear contact email logs")
+		require.NoError(fixtures.ClearContactEmailLogs(echoContacts), "could not clear contact email logs")
 		require.NoError(s.db.UpdateVASP(ctx, echoVASP))
 		quebecCertReq, err := s.fixtures.GetCertReq("quebec")
 		require.NoError(err, "could not get quebec certreq")
@@ -421,9 +422,9 @@ func (s *certTestSuite) TestCertManagerWebhook() {
 	s.Run("WebhookNoEmail", func() {
 		defer s.fixtures.ResetDB()
 
-		echoVASP, err := s.fixtures.GetVASP("echo")
+		echoVASP, echoContacts, err := s.fixtures.GetVASP("echo")
 		require.NoError(err, "could not get echo VASP")
-		require.NoError(fixtures.ClearContactEmailLogs(echoVASP), "could not clear contact email logs")
+		require.NoError(fixtures.ClearContactEmailLogs(echoContacts), "could not clear contact email logs")
 		require.NoError(s.db.UpdateVASP(ctx, echoVASP))
 		quebecCertReq, err := s.fixtures.GetCertReq("quebec")
 		require.NoError(err, "could not get quebec certreq")
@@ -469,12 +470,12 @@ func (s *certTestSuite) TestCertManagerThirtyDayReissuanceReminder() {
 	require := s.Require()
 
 	// setup the datastore to contain the modified charlieVASP
-	charlieVASP, err := s.fixtures.GetVASP("charliebank")
+	charlieVASP, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err, "could not get charlie VASP")
 	charlieVASP = s.setupVASP(charlieVASP)
 
 	// Prevent emails from being sent to hotelVASP
-	hotelVASP, err := s.fixtures.GetVASP("hotel")
+	hotelVASP, _, err := s.fixtures.GetVASP("hotel")
 	require.NoError(err, "could not get hotel VASP")
 	hotelVASP.VerificationStatus = pb.VerificationState_REJECTED
 	require.NoError(s.db.UpdateVASP(context.Background(), hotelVASP))
@@ -520,11 +521,11 @@ func (s *certTestSuite) TestCertManagerSevenDayReissuanceReminder() {
 	require := s.Require()
 
 	// setup the datastore to contain the modified charlieVASP
-	charlieVASP, err := s.fixtures.GetVASP("charliebank")
+	charlieVASP, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err, "could not get charlie VASP")
 	charlieVASP = s.setupVASP(charlieVASP)
 
-	hotelVASP, err := s.fixtures.GetVASP("hotel")
+	hotelVASP, _, err := s.fixtures.GetVASP("hotel")
 	require.NoError(err, "could not get hotel VASP")
 	hotelVASP = s.setupVASP(hotelVASP)
 
@@ -572,7 +573,7 @@ func (s *certTestSuite) TestCertManagerExpiration() {
 	require := s.Require()
 
 	// setup the datastore to contain the modified hotelVASP
-	hotelVASP, err := s.fixtures.GetVASP("hotel")
+	hotelVASP, _, err := s.fixtures.GetVASP("hotel")
 	require.NoError(err, "could not get hotel VASP")
 	hotelVASP = s.setupVASP(hotelVASP)
 
@@ -602,17 +603,17 @@ func (s *certTestSuite) TestCertManagerReissuance() {
 	defer s.teardownCertManager()
 	defer s.fixtures.LoadReferenceFixtures()
 
-	charlieVASP, err := s.fixtures.GetVASP("charliebank")
+	charlieVASP, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err, "could not get charlie VASP")
 	charlieVASP = s.setupVASP(charlieVASP)
 
 	// Set other VASPs in the fixtures.Small set's verification status
 	// to REJECTED so that it does not get triggered for reissuance.
-	deltaVASP, err := s.fixtures.GetVASP("delta")
+	deltaVASP, _, err := s.fixtures.GetVASP("delta")
 	require.NoError(err)
 	deltaVASP.VerificationStatus = pb.VerificationState_REJECTED
 	require.NoError(s.db.UpdateVASP(context.Background(), deltaVASP))
-	hotelVASP, err := s.fixtures.GetVASP("hotel")
+	hotelVASP, _, err := s.fixtures.GetVASP("hotel")
 	require.NoError(err)
 	hotelVASP.VerificationStatus = pb.VerificationState_REJECTED
 	require.NoError(s.db.UpdateVASP(context.Background(), hotelVASP))
@@ -737,11 +738,11 @@ func setupVASPWebhook(s *certTestSuite, vasp *pb.VASP) {
 
 	// Set other VASPs in the fixtures.Small set's verification status
 	// to REJECTED so that it does not get triggered for reissuance.
-	deltaVASP, err := s.fixtures.GetVASP("delta")
+	deltaVASP, _, err := s.fixtures.GetVASP("delta")
 	require.NoError(err)
 	deltaVASP.VerificationStatus = pb.VerificationState_REJECTED
 	require.NoError(s.db.UpdateVASP(context.Background(), deltaVASP))
-	hotelVASP, err := s.fixtures.GetVASP("hotel")
+	hotelVASP, _, err := s.fixtures.GetVASP("hotel")
 	require.NoError(err)
 	hotelVASP.VerificationStatus = pb.VerificationState_REJECTED
 	require.NoError(s.db.UpdateVASP(context.Background(), hotelVASP))
@@ -757,7 +758,7 @@ func (s *certTestSuite) TestCertManagerReissuanceWebhook() {
 		defer s.fixtures.ResetDB()
 		defer emailmock.PurgeEmails()
 
-		charlieVASP, err := s.fixtures.GetVASP("charliebank")
+		charlieVASP, _, err := s.fixtures.GetVASP("charliebank")
 		require.NoError(err, "could not get charlie VASP")
 		setupVASPWebhook(s, charlieVASP)
 
@@ -827,7 +828,7 @@ func (s *certTestSuite) TestCertManagerReissuanceWebhook() {
 		})
 		defer s.resetCourierHandler()
 
-		charlieVASP, err := s.fixtures.GetVASP("charliebank")
+		charlieVASP, _, err := s.fixtures.GetVASP("charliebank")
 		require.NoError(err, "could not get charlie VASP")
 		setupVASPWebhook(s, charlieVASP)
 
@@ -891,7 +892,7 @@ func (s *certTestSuite) TestCertManagerReissuanceWebhook() {
 		})
 		defer s.resetCourierHandler()
 
-		charlieVASP, err := s.fixtures.GetVASP("charliebank")
+		charlieVASP, _, err := s.fixtures.GetVASP("charliebank")
 		require.NoError(err, "could not get charlie VASP")
 		charlieVASP.NoEmailDelivery = true
 		setupVASPWebhook(s, charlieVASP)
@@ -950,7 +951,7 @@ func (s *certTestSuite) TestCertManagerReissuanceWebhook() {
 		defer s.fixtures.ResetDB()
 		defer emailmock.PurgeEmails()
 
-		charlieVASP, err := s.fixtures.GetVASP("charliebank")
+		charlieVASP, _, err := s.fixtures.GetVASP("charliebank")
 		require.NoError(err, "could not get charlie VASP")
 		charlieVASP.NoEmailDelivery = true
 		setupVASPWebhook(s, charlieVASP)
@@ -1030,7 +1031,7 @@ func (s *certTestSuite) TestCertManagerBadState() {
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
 
-	echoVASP, err := s.fixtures.GetVASP("echo")
+	echoVASP, _, err := s.fixtures.GetVASP("echo")
 	require.NoError(err, "could not get echo VASP")
 	quebecCertReq, err := s.fixtures.GetCertReq("quebec")
 	require.NoError(err, "could not get quebec VASP")
@@ -1093,7 +1094,7 @@ func (s *certTestSuite) TestCertManagerEndEntityProfile() {
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
 
-	echoVASP, err := s.fixtures.GetVASP("echo")
+	echoVASP, _, err := s.fixtures.GetVASP("echo")
 	require.NoError(err, "could not get echo VASP")
 	quebecCertReq, err := s.fixtures.GetCertReq("quebec")
 	require.NoError(err, "could not get quebec VASP")
@@ -1136,7 +1137,7 @@ func (s *certTestSuite) TestCertManagerCipherTraceEEProfile() {
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
 
-	echoVASP, err := s.fixtures.GetVASP("echo")
+	echoVASP, _, err := s.fixtures.GetVASP("echo")
 	require.NoError(err, "could not get echo VASP")
 	quebecCertReq, err := s.fixtures.GetCertReq("quebec")
 	require.NoError(err, "could not get quebec VASP")
@@ -1176,7 +1177,7 @@ func (s *certTestSuite) TestSubmitNoBalance() {
 		c.JSON(http.StatusOK, 0)
 	})
 
-	echoVASP, err := s.fixtures.GetVASP("echo")
+	echoVASP, _, err := s.fixtures.GetVASP("echo")
 	require.NoError(err, "could not get echo VASP")
 	quebecCertReq, err := s.fixtures.GetCertReq("quebec")
 	require.NoError(err, "could not get quebec VASP")
@@ -1209,7 +1210,7 @@ func (s *certTestSuite) TestSubmitNoPassword() {
 	defer s.teardownCertManager()
 	require := s.Require()
 
-	echoVASP, err := s.fixtures.GetVASP("echo")
+	echoVASP, _, err := s.fixtures.GetVASP("echo")
 	require.NoError(err, "could not get echo VASP")
 	quebecCertReq, err := s.fixtures.GetCertReq("quebec")
 	require.NoError(err, "could not get quebec VASP")
@@ -1243,7 +1244,7 @@ func (s *certTestSuite) TestSubmitBatchError() {
 	defer s.fixtures.LoadReferenceFixtures()
 	require := s.Require()
 
-	echoVASP, err := s.fixtures.GetVASP("echo")
+	echoVASP, _, err := s.fixtures.GetVASP("echo")
 	require.NoError(err, "could not get echo VASP")
 	quebecCertReq, err := s.fixtures.GetCertReq("quebec")
 	require.NoError(err, "could not get quebec VASP")
@@ -1296,7 +1297,7 @@ func (s *certTestSuite) TestProcessBatchDetailError() {
 	defer s.teardownCertManager()
 	require := s.Require()
 
-	foxtrot, err := s.fixtures.GetVASP("foxtrot")
+	foxtrot, _, err := s.fixtures.GetVASP("foxtrot")
 	require.NoError(err, "could not get foxtrot VASP")
 
 	// Batch detail returns an error
@@ -1337,7 +1338,7 @@ func (s *certTestSuite) TestProcessActiveBatch() {
 	defer s.teardownCertManager()
 	require := s.Require()
 
-	foxtrot, err := s.fixtures.GetVASP("foxtrot")
+	foxtrot, _, err := s.fixtures.GetVASP("foxtrot")
 	require.NoError(err, "could not get foxtrot VASP")
 	sierra, err := s.fixtures.GetCertReq("sierra")
 	require.NoError(err, "could not get sierra VASP")
@@ -1377,7 +1378,7 @@ func (s *certTestSuite) TestProcessRejected() {
 	defer s.teardownCertManager()
 	require := s.Require()
 
-	foxtrot, err := s.fixtures.GetVASP("foxtrot")
+	foxtrot, _, err := s.fixtures.GetVASP("foxtrot")
 	require.NoError(err, "could not get foxtrot VASP")
 	sierra, err := s.fixtures.GetCertReq("sierra")
 	require.NoError(err, "could not get sierra VASP")
@@ -1423,7 +1424,7 @@ func (s *certTestSuite) TestProcessBatchError() {
 	defer s.teardownCertManager()
 	require := s.Require()
 
-	foxtrot, err := s.fixtures.GetVASP("foxtrot")
+	foxtrot, _, err := s.fixtures.GetVASP("foxtrot")
 	require.NoError(err, "could not get foxtrot VASP")
 	sierra, err := s.fixtures.GetCertReq("sierra")
 	require.NoError(err, "could not get sierra VASP")
@@ -1470,7 +1471,7 @@ func (s *certTestSuite) TestProcessBatchNoSuccess() {
 	defer s.teardownCertManager()
 	require := s.Require()
 
-	foxtrot, err := s.fixtures.GetVASP("foxtrot")
+	foxtrot, _, err := s.fixtures.GetVASP("foxtrot")
 	require.NoError(err, "could not get foxtrot VASP")
 	sierra, err := s.fixtures.GetCertReq("sierra")
 	require.NoError(err, "could not get sierra VASP")

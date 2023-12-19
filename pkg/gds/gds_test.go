@@ -41,7 +41,7 @@ func (s *gdsTestSuite) TestRegister() {
 	defer mock.PurgeEmails()
 	require := s.Require()
 	ctx := context.Background()
-	charlie, err := s.fixtures.GetVASP("charliebank")
+	charlie, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err)
 
 	// Start the gRPC client
@@ -207,7 +207,7 @@ func (s *gdsTestSuite) TestRegisterAlreadyVerified() {
 	defer mock.PurgeEmails()
 	require := s.Require()
 	ctx := context.Background()
-	charlie, err := s.fixtures.GetVASP("charliebank")
+	charlie, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err)
 
 	// Ensure that the contact fixtures were loaded
@@ -376,7 +376,7 @@ func (s *gdsTestSuite) TestLookup() {
 	s.Run("VerifiedRequired", func() {
 		// The VASP must be verified or it is not found
 		require := s.Require()
-		charlieVASP, err := s.fixtures.GetVASP("charliebank")
+		charlieVASP, _, err := s.fixtures.GetVASP("charliebank")
 		require.NoError(err)
 		require.NotEqual(charlieVASP.VerificationStatus, pb.VerificationState_VERIFIED, "expected fixture to not be in verified state")
 
@@ -390,7 +390,7 @@ func (s *gdsTestSuite) TestLookup() {
 	s.Run("Found", func() {
 		// Expect lookup to succeed
 		require := s.Require()
-		hotelVASP, err := s.fixtures.GetVASP("hotel")
+		hotelVASP, _, err := s.fixtures.GetVASP("hotel")
 		require.NoError(err)
 		require.Equal(hotelVASP.VerificationStatus, pb.VerificationState_VERIFIED, "expected fixture to be in verified state")
 
@@ -431,15 +431,15 @@ func (s *gdsTestSuite) TestSearch() {
 	client := api.NewTRISADirectoryClient(s.grpc.Conn)
 
 	// Collect some fixtures
-	charlieVASP, err := s.fixtures.GetVASP("charliebank")
+	charlieVASP, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err)
 	require.NotEqual(charlieVASP.VerificationStatus, pb.VerificationState_VERIFIED, "expected fixture to not be in verified state")
 
-	hotelVASP, err := s.fixtures.GetVASP("hotel")
+	hotelVASP, _, err := s.fixtures.GetVASP("hotel")
 	require.NoError(err)
 	require.Equal(hotelVASP.VerificationStatus, pb.VerificationState_VERIFIED, "expected fixture to be in verified state")
 
-	novemberVASP, err := s.fixtures.GetVASP("novembercash")
+	novemberVASP, _, err := s.fixtures.GetVASP("novembercash")
 	require.NoError(err)
 	require.Equal(novemberVASP.VerificationStatus, pb.VerificationState_VERIFIED, "expected fixture to be in verified state")
 
@@ -618,7 +618,7 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	defer s.grpc.Close()
 	client := api.NewTRISADirectoryClient(s.grpc.Conn)
 
-	charlie, err := s.fixtures.GetVASP("charliebank")
+	charlie, contacts, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err)
 
 	// Cannot verify contact without a token
@@ -642,11 +642,11 @@ func (s *gdsTestSuite) TestVerifyContact() {
 	_, err = client.VerifyContact(ctx, request)
 	require.Error(err)
 
-	iter := models.NewContactIterator(charlie.Contacts)
+	iter := contacts.NewIterator()
 	for iter.Next() {
-		contact, _ := iter.Value()
+		contact := iter.Contact()
 		s.svc.GetStore().CreateContact(ctx, &models.Contact{
-			Email: contact.Email,
+			Email: contact.Email.Email,
 			Token: "administrative_token",
 		})
 	}
@@ -706,7 +706,7 @@ func (s *gdsTestSuite) TestVerification() {
 	require := s.Require()
 	ctx := context.Background()
 
-	charlie, err := s.fixtures.GetVASP("charliebank")
+	charlie, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err)
 
 	// Start the gRPC client

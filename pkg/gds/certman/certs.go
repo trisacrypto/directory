@@ -470,8 +470,14 @@ func (c *CertificateManager) checkCertificateRequest(r *models.CertificateReques
 		return nil
 	}
 
+	// Fetch the VASP contacts
+	var contacts *models.Contacts
+	if contacts, err = c.db.VASPContacts(ctx, vasp); err != nil {
+		return fmt.Errorf("could not retrieve vasp contacts: %s", err)
+	}
+
 	// Send off downloader go routine to fetch the certs and notify the user
-	c.downloadCertificateRequest(r, vasp)
+	c.downloadCertificateRequest(r, vasp, contacts)
 	return nil
 }
 
@@ -497,7 +503,7 @@ func (c *CertificateManager) findCertAuthority() (id int, err error) {
 
 // a go routine that downloads the certificate in the background, then sends the certs
 // as an attachment to the technical contact if available.
-func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateRequest, vasp *pb.VASP) {
+func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateRequest, vasp *pb.VASP, contacts *models.Contacts) {
 	var (
 		err        error
 		path       string
@@ -599,15 +605,22 @@ func (c *CertificateManager) downloadCertificateRequest(r *models.CertificateReq
 	// If the user has not specifically turned off email delivery or if webhook
 	// delivery failed, send the certificates via email.
 	if !r.NoEmailDelivery || deliveryErr != nil {
-		if _, err = c.email.SendDeliverCertificates(vasp, path); err != nil {
+		if _, err = c.email.SendDeliverCertificates(vasp, contacts, path); err != nil {
 			// If there is an error delivering emails, return here so we don't mark as completed
 			sentry.Error(nil).Err(err).Msg("could not deliver certificates to technical contact")
 			return
 		}
 	}
 
+	// Update VASP
 	if err = c.db.UpdateVASP(ctx, vasp); err != nil {
 		sentry.Error(nil).Err(err).Msg("could not update VASP email logs")
+		return
+	}
+
+	// Update contacts
+	if err = c.db.UpdateVASPContacts(ctx, vasp.Id, contacts); err != nil {
+		sentry.Error(nil).Err(err).Msg("could not update contact email logs")
 		return
 	}
 
@@ -822,8 +835,14 @@ vaspsLoop:
 				continue vaspsLoop
 			}
 
+			var contacts *models.Contacts
+			if contacts, err = c.db.VASPContacts(ctx, vasp); err != nil {
+				sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("could not retrieve vasp contacts")
+				continue vaspsLoop
+			}
+
 			// Start the reissuance process for this VASP by creating a new certificate request
-			if err = c.reissueIdentityCertificates(vasp); err != nil {
+			if err = c.reissueIdentityCertificates(vasp, contacts); err != nil {
 				sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Msg("could not start reissuance process")
 				continue vaspsLoop
 			}
@@ -904,7 +923,7 @@ func (c *CertificateManager) reissuanceInProgress(vasp *pb.VASP) (_ bool, err er
 
 // Helper function for HandleCertificateReissuance that reissues identity certificates
 // for the given vasp.
-func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) (err error) {
+func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP, contacts *models.Contacts) (err error) {
 	var (
 		certreq     *models.CertificateRequest
 		whisperLink string
@@ -956,7 +975,7 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) (err err
 			return fmt.Errorf("error creating whisper link for vasp %s: %w", vasp.Id, err)
 		}
 
-		if _, err = c.email.SendReissuanceStarted(vasp, whisperLink); err != nil {
+		if _, err = c.email.SendReissuanceStarted(vasp, contacts, whisperLink); err != nil {
 			return fmt.Errorf("error sending reissuance started email for vasp %s: %w", vasp.Id, err)
 		}
 	}
@@ -975,6 +994,11 @@ func (c *CertificateManager) reissueIdentityCertificates(vasp *pb.VASP) (err err
 	if err = c.db.UpdateVASP(ctx, vasp); err != nil {
 		return fmt.Errorf("error updating vasp %s in the certman store: %w", vasp.Id, err)
 	}
+
+	if err = c.db.UpdateVASPContacts(ctx, vasp.Id, contacts); err != nil {
+		return fmt.Errorf("erro updating contacts in the certman store: %w", err)
+	}
+
 	return nil
 }
 

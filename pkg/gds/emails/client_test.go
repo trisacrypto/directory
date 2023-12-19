@@ -121,7 +121,7 @@ func TestClientSend(t *testing.T) {
 	t.Run("DeliverCertificates", func(t *testing.T) {
 		defer resetLogs(t)
 
-		sent, err := email.SendDeliverCertificates(vasp, "testdata/foo.zip")
+		sent, err := email.SendDeliverCertificates(vasp, contacts, "testdata/foo.zip")
 		require.NoError(t, err)
 		require.Equal(t, 1, sent)
 
@@ -150,7 +150,7 @@ func TestClientSend(t *testing.T) {
 		defer resetLogs(t)
 
 		reissueDate := time.Date(2022, time.July, 25, 12, 0, 0, 0, time.Local)
-		sent, err := email.SendReissuanceReminder(vasp, reissueDate)
+		sent, err := email.SendReissuanceReminder(vasp, contacts, reissueDate)
 		require.NoError(t, err)
 		require.Equal(t, 1, sent)
 
@@ -162,7 +162,7 @@ func TestClientSend(t *testing.T) {
 	t.Run("ReissuanceStarted", func(t *testing.T) {
 		defer resetLogs(t)
 
-		sent, err := email.SendReissuanceStarted(vasp, "https://whisper.dev/supersecret")
+		sent, err := email.SendReissuanceStarted(vasp, contacts, "https://whisper.dev/supersecret")
 		require.NoError(t, err)
 		require.Equal(t, 1, sent)
 

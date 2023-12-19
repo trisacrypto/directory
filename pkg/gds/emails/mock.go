@@ -2,6 +2,7 @@ package emails
 
 import (
 	"encoding/json"
+	"errors"
 	"net/mail"
 	"testing"
 	"time"
@@ -43,7 +44,10 @@ func CheckEmails(t *testing.T, messages []*EmailMeta) {
 	for i, msg := range messages {
 		// If the email was sent to a contact, check the sent email log
 		if msg.Contact != nil {
-			log, err := models.GetEmailLog(msg.Contact)
+			// log, err := models.GetEmailLog(msg.Contact)
+			var log []*models.EmailLogEntry
+			err := errors.New("need to update *EmailMeta with a new contact structure")
+
 			require.NoError(t, err)
 			require.GreaterOrEqual(t, len(log), 1, "contact %s is expected to have at least one email log", msg.Contact.Email)
 			require.Equal(t, msg.Reason, log[0].Reason)

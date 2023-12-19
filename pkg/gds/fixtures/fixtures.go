@@ -25,7 +25,6 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -118,13 +117,48 @@ func (lib *Library) GetEmail(name string) (contact *models.Email, _ error) {
 	return contact, nil
 }
 
-func (lib *Library) GetVASP(name string) (vasp *pb.VASP, err error) {
+func (lib *Library) GetVASP(name string) (vasp *pb.VASP, contacts *models.Contacts, err error) {
 	var ok bool
 	if vasp, ok = lib.fixtures[wire.NamespaceVASPs][name].(*pb.VASP); !ok {
-		return nil, fmt.Errorf("could not retrieve VASP %s from fixtures", name)
+		return nil, nil, fmt.Errorf("could not retrieve VASP %s from fixtures", name)
 	}
 
-	return vasp, nil
+	// Identify all the normalized, unique emails that need to be retrieved.
+	emails := make(map[string]struct{})
+	vcards := vasp.Contacts
+
+	if vcards.Administrative != nil && vcards.Administrative.Email != "" {
+		emails[models.NormalizeEmail(vcards.Administrative.Email)] = struct{}{}
+	}
+
+	if vcards.Technical != nil && vcards.Technical.Email != "" {
+		emails[models.NormalizeEmail(vcards.Technical.Email)] = struct{}{}
+	}
+
+	if vcards.Legal != nil && vcards.Legal.Email != "" {
+		emails[models.NormalizeEmail(vcards.Legal.Email)] = struct{}{}
+	}
+
+	if vcards.Billing != nil && vcards.Billing.Email != "" {
+		emails[models.NormalizeEmail(vcards.Billing.Email)] = struct{}{}
+	}
+
+	// Create the contacts record to return.
+	contacts = &models.Contacts{
+		VASP:     vasp.Id,
+		Contacts: vcards,
+		Emails:   make([]*models.Email, 0, len(emails)),
+	}
+
+	for email := range emails {
+		var contact *models.Email
+		if contact, err = lib.GetEmail(email); err != nil {
+			return nil, nil, err
+		}
+		contacts.Emails = append(contacts.Emails, contact)
+	}
+
+	return vasp, contacts, nil
 }
 
 func (lib *Library) GetCert(name string) (cert *models.Certificate, err error) {
@@ -444,7 +478,7 @@ func (lib *Library) GenerateDB(ftype FixtureType) (err error) {
 // CompareFixture returns True if the given object matches the object in the fixtures
 // library. This is used in tests to verify the correctness of the reference library,
 // and to verify endpoints that return unmodified objects from the database.
-func (lib *Library) CompareFixture(namespace, key string, obj interface{}, removeExtra, removeSerials bool) (matches bool, err error) {
+func (lib *Library) CompareFixture(namespace, key string, obj interface{}, removeSerials bool) (matches bool, err error) {
 	var (
 		ok bool
 	)
@@ -500,21 +534,6 @@ func (lib *Library) CompareFixture(namespace, key string, obj interface{}, remov
 
 		// Remove time fields for comparison
 		a.LastUpdated, b.LastUpdated = "", ""
-
-		if removeExtra {
-			a.Extra, b.Extra = nil, nil
-			iter := models.NewContactIterator(a.Contacts)
-			for iter.Next() {
-				contact, _ := iter.Value()
-				contact.Extra = nil
-			}
-
-			iter = models.NewContactIterator(b.Contacts)
-			for iter.Next() {
-				contact, _ := iter.Value()
-				contact.Extra = nil
-			}
-		}
 
 		if removeSerials {
 			a.IdentityCertificate.SerialNumber, b.IdentityCertificate.SerialNumber = nil, nil
@@ -653,21 +672,11 @@ func RemarshalProto(namespace string, obj map[string]interface{}) (_ protoreflec
 // ClearContactEmailLogs clears the contact email logs on a VASP object. Tests which
 // assert against state on the contact email logs should call this method to ensure
 // that the logs are empty before reaching the test point.
-func ClearContactEmailLogs(vasp *pb.VASP) (err error) {
-	contacts := vasp.Contacts
-	iter := models.NewContactIterator(contacts)
+func ClearContactEmailLogs(contacts *models.Contacts) (err error) {
+	iter := contacts.NewIterator()
 	for iter.Next() {
-		contact, _ := iter.Value()
-		extra := &models.GDSContactExtraData{}
-		if contact.Extra != nil {
-			if err = contact.Extra.UnmarshalTo(extra); err != nil {
-				return err
-			}
-			extra.EmailLog = nil
-			if contact.Extra, err = anypb.New(extra); err != nil {
-				return err
-			}
-		}
+		contact := iter.Contact()
+		contact.Email.SendLog = make([]*models.EmailLogEntry, 0)
 	}
 	return nil
 }
