@@ -13,75 +13,69 @@ import (
 )
 
 var testEnv = map[string]string{
-	"GDS_MAINTENANCE":                                   "false",
-	"GDS_DIRECTORY_ID":                                  "testdirectory.org",
-	"GDS_SECRET_KEY":                                    "theeaglefliesatmidnight",
-	"GDS_LOG_LEVEL":                                     "debug",
-	"GDS_CONSOLE_LOG":                                   "true",
-	"GDS_API_ENABLED":                                   "true",
-	"GDS_BIND_ADDR":                                     ":443",
-	"GDS_ADMIN_ENABLED":                                 "true",
-	"GDS_ADMIN_BIND_ADDR":                               ":444",
-	"GDS_ADMIN_MODE":                                    "debug",
-	"GDS_ADMIN_TOKEN_KEYS":                              "1y9fT85qWaIvAAORW7DKxtpz9FB:testdata/key1.pem,1y9fVjaUlsVdFFDUWlvRq2PLkw3:testdata/key2.pem",
-	"GDS_ADMIN_OAUTH_GOOGLE_AUDIENCE":                   "abc-1234.example.fakegoogleusercontent.com",
-	"GDS_ADMIN_OAUTH_AUTHORIZED_EMAIL_DOMAINS":          "trisa.io,vaspdirectory.net,trisatest.net",
-	"GDS_ADMIN_ALLOW_ORIGINS":                           "https://admin.trisatest.net",
-	"GDS_ADMIN_COOKIE_DOMAIN":                           "admin.trisatest.net",
-	"GDS_ADMIN_AUDIENCE":                                "https://api.admin.trisatest.net",
-	"GDS_MEMBERS_ENABLED":                               "true",
-	"GDS_MEMBERS_BIND_ADDR":                             ":445",
-	"GDS_MEMBERS_INSECURE":                              "true",
-	"GDS_MEMBERS_CERTS":                                 "fixtures/creds/gds.gz",
-	"GDS_MEMBERS_CERT_POOL":                             "fixtures/creds/pool.gz",
-	"GDS_DATABASE_URL":                                  "trtl://trtl.test:4436",
-	"GDS_DATABASE_REINDEX_ON_BOOT":                      "false",
-	"GDS_DATABASE_INSECURE":                             "true",
-	"GDS_DATABASE_CERT_PATH":                            "fixtures/creds/certs.pem",
-	"GDS_DATABASE_POOL_PATH":                            "fixtures/creds/pool.zip",
-	"SECTIGO_USERNAME":                                  "foo",
-	"SECTIGO_PASSWORD":                                  "supersecret",
-	"SECTIGO_PROFILE":                                   "17",
-	"SECTIGO_ENVIRONMENT":                               "staging",
-	"SECTIGO_ENDPOINT":                                  "https://cathy.io",
-	"GDS_SERVICE_EMAIL":                                 "test@example.com",
-	"GDS_ADMIN_EMAIL":                                   "admin@example.com",
-	"SENDGRID_API_KEY":                                  "bar1234",
-	"GDS_VERIFY_CONTACT_URL":                            "http://localhost:3000/verify",
-	"GDS_ADMIN_REVIEW_URL":                              "http://localhost:3001/vasps/",
-	"GDS_EMAIL_TESTING":                                 "true",
-	"GDS_EMAIL_STORAGE":                                 "fixtures/emails",
-	"GDS_CERTMAN_ENABLED":                               "false",
-	"GDS_CERTMAN_REQUEST_INTERVAL":                      "60s",
-	"GDS_CERTMAN_REISSUANCE_INTERVAL":                   "90s",
-	"GDS_CERTMAN_STORAGE":                               "fixtures/certs",
-	"GDS_CERTMAN_DELIVERY_BACKOFF_INITIAL_INTERVAL":     "1s",
-	"GDS_CERTMAN_DELIVERY_BACKOFF_RANDOMIZATION_FACTOR": "0.5",
-	"GDS_CERTMAN_DELIVERY_BACKOFF_MULTIPLIER":           "2",
-	"GDS_CERTMAN_DELIVERY_BACKOFF_MAX_INTERVAL":         "1m",
-	"GDS_CERTMAN_DELIVERY_BACKOFF_MAX_ELAPSED_TIME":     "5m",
-	"GDS_CERTMAN_DELIVERY_BACKOFF_MAX_RETRIES":          "5",
-	"GDS_BACKUP_ENABLED":                                "true",
-	"GDS_BACKUP_INTERVAL":                               "36h",
-	"GDS_BACKUP_STORAGE":                                "fixtures/backups",
-	"GDS_BACKUP_KEEP":                                   "7",
-	"GOOGLE_APPLICATION_CREDENTIALS":                    "test.json",
-	"GOOGLE_PROJECT_NAME":                               "test",
-	"GDS_SECRETS_TESTING":                               "true",
-	"GDS_SENTRY_DSN":                                    "https://something.ingest.sentry.io",
-	"GDS_SENTRY_ENVIRONMENT":                            "test",
-	"GDS_SENTRY_RELEASE":                                "1.4",
-	"GDS_SENTRY_DEBUG":                                  "true",
-	"GDS_SENTRY_TRACK_PERFORMANCE":                      "true",
-	"GDS_SENTRY_SAMPLE_RATE":                            "0.2",
-	"GDS_ACTIVITY_ENABLED":                              "true",
-	"GDS_ACTIVITY_TOPIC":                                "gds-activity",
-	"GDS_ACTIVITY_AGGREGATION_WINDOW":                   "10m",
-	"GDS_ACTIVITY_ENSIGN_CLIENT_ID":                     "client-id",
-	"GDS_ACTIVITY_ENSIGN_CLIENT_SECRET":                 "client-secret",
-	"GDS_ACTIVITY_ENSIGN_ENDPOINT":                      "api.ensign.world:443",
-	"GDS_ACTIVITY_ENSIGN_AUTH_URL":                      "https://auth.ensign.world",
-	"GDS_ACTIVITY_ENSIGN_INSECURE":                      "true",
+	"GDS_MAINTENANCE":                          "false",
+	"GDS_DIRECTORY_ID":                         "testdirectory.org",
+	"GDS_SECRET_KEY":                           "theeaglefliesatmidnight",
+	"GDS_LOG_LEVEL":                            "debug",
+	"GDS_CONSOLE_LOG":                          "true",
+	"GDS_API_ENABLED":                          "true",
+	"GDS_BIND_ADDR":                            ":443",
+	"GDS_ADMIN_ENABLED":                        "true",
+	"GDS_ADMIN_BIND_ADDR":                      ":444",
+	"GDS_ADMIN_MODE":                           "debug",
+	"GDS_ADMIN_TOKEN_KEYS":                     "1y9fT85qWaIvAAORW7DKxtpz9FB:testdata/key1.pem,1y9fVjaUlsVdFFDUWlvRq2PLkw3:testdata/key2.pem",
+	"GDS_ADMIN_OAUTH_GOOGLE_AUDIENCE":          "abc-1234.example.fakegoogleusercontent.com",
+	"GDS_ADMIN_OAUTH_AUTHORIZED_EMAIL_DOMAINS": "trisa.io,vaspdirectory.net,trisatest.net",
+	"GDS_ADMIN_ALLOW_ORIGINS":                  "https://admin.trisatest.net",
+	"GDS_ADMIN_COOKIE_DOMAIN":                  "admin.trisatest.net",
+	"GDS_ADMIN_AUDIENCE":                       "https://api.admin.trisatest.net",
+	"GDS_MEMBERS_ENABLED":                      "true",
+	"GDS_MEMBERS_BIND_ADDR":                    ":445",
+	"GDS_MEMBERS_INSECURE":                     "true",
+	"GDS_MEMBERS_CERTS":                        "fixtures/creds/gds.gz",
+	"GDS_MEMBERS_CERT_POOL":                    "fixtures/creds/pool.gz",
+	"GDS_DATABASE_URL":                         "trtl://trtl.test:4436",
+	"GDS_DATABASE_REINDEX_ON_BOOT":             "false",
+	"GDS_DATABASE_INSECURE":                    "true",
+	"GDS_DATABASE_CERT_PATH":                   "fixtures/creds/certs.pem",
+	"GDS_DATABASE_POOL_PATH":                   "fixtures/creds/pool.zip",
+	"SECTIGO_USERNAME":                         "foo",
+	"SECTIGO_PASSWORD":                         "supersecret",
+	"SECTIGO_PROFILE":                          "17",
+	"SECTIGO_ENVIRONMENT":                      "staging",
+	"SECTIGO_ENDPOINT":                         "https://cathy.io",
+	"GDS_SERVICE_EMAIL":                        "test@example.com",
+	"GDS_ADMIN_EMAIL":                          "admin@example.com",
+	"SENDGRID_API_KEY":                         "bar1234",
+	"GDS_VERIFY_CONTACT_URL":                   "http://localhost:3000/verify",
+	"GDS_ADMIN_REVIEW_URL":                     "http://localhost:3001/vasps/",
+	"GDS_EMAIL_TESTING":                        "true",
+	"GDS_EMAIL_STORAGE":                        "fixtures/emails",
+	"GDS_CERTMAN_ENABLED":                      "false",
+	"GDS_CERTMAN_REQUEST_INTERVAL":             "60s",
+	"GDS_CERTMAN_REISSUANCE_INTERVAL":          "90s",
+	"GDS_CERTMAN_STORAGE":                      "fixtures/certs",
+	"GDS_BACKUP_ENABLED":                       "true",
+	"GDS_BACKUP_INTERVAL":                      "36h",
+	"GDS_BACKUP_STORAGE":                       "fixtures/backups",
+	"GDS_BACKUP_KEEP":                          "7",
+	"GOOGLE_APPLICATION_CREDENTIALS":           "test.json",
+	"GOOGLE_PROJECT_NAME":                      "test",
+	"GDS_SECRETS_TESTING":                      "true",
+	"GDS_SENTRY_DSN":                           "https://something.ingest.sentry.io",
+	"GDS_SENTRY_ENVIRONMENT":                   "test",
+	"GDS_SENTRY_RELEASE":                       "1.4",
+	"GDS_SENTRY_DEBUG":                         "true",
+	"GDS_SENTRY_TRACK_PERFORMANCE":             "true",
+	"GDS_SENTRY_SAMPLE_RATE":                   "0.2",
+	"GDS_ACTIVITY_ENABLED":                     "true",
+	"GDS_ACTIVITY_TOPIC":                       "gds-activity",
+	"GDS_ACTIVITY_AGGREGATION_WINDOW":          "10m",
+	"GDS_ACTIVITY_ENSIGN_CLIENT_ID":            "client-id",
+	"GDS_ACTIVITY_ENSIGN_CLIENT_SECRET":        "client-secret",
+	"GDS_ACTIVITY_ENSIGN_ENDPOINT":             "api.ensign.world:443",
+	"GDS_ACTIVITY_ENSIGN_AUTH_URL":             "https://auth.ensign.world",
+	"GDS_ACTIVITY_ENSIGN_INSECURE":             "true",
 }
 
 func TestConfig(t *testing.T) {
@@ -146,12 +140,6 @@ func TestConfig(t *testing.T) {
 	require.Equal(t, 1*time.Minute, conf.CertMan.RequestInterval)
 	require.Equal(t, 90*time.Second, conf.CertMan.ReissuanceInterval)
 	require.Equal(t, testEnv["GDS_CERTMAN_STORAGE"], conf.CertMan.Storage)
-	require.Equal(t, 1*time.Second, conf.CertMan.DeliveryBackoff.InitialInterval)
-	require.Equal(t, .5, conf.CertMan.DeliveryBackoff.RandomizationFactor)
-	require.Equal(t, 2.0, conf.CertMan.DeliveryBackoff.Multiplier)
-	require.Equal(t, 1*time.Minute, conf.CertMan.DeliveryBackoff.MaxInterval)
-	require.Equal(t, 5*time.Minute, conf.CertMan.DeliveryBackoff.MaxElapsedTime)
-	require.Equal(t, 5, conf.CertMan.DeliveryBackoff.MaxRetries)
 	require.Equal(t, testEnv["GDS_DIRECTORY_ID"], conf.CertMan.DirectoryID)
 	require.Equal(t, true, conf.Backup.Enabled)
 	require.Equal(t, 36*time.Hour, conf.Backup.Interval)
@@ -342,62 +330,6 @@ func TestMembersConfigValidation(t *testing.T) {
 	conf.Insecure = false
 	err = conf.Validate()
 	require.EqualError(t, err, "invalid configuration: serving mTLS requires the path to certs and the cert pool")
-}
-
-func TestBackoffConfigValidation(t *testing.T) {
-	t.Run("NegativeInitialInterval", func(t *testing.T) {
-		conf := config.BackoffConfig{
-			InitialInterval: -1 * time.Second,
-		}
-		require.EqualError(t, conf.Validate(), "invalid configuration: initial interval must be greater than or equal to 0")
-	})
-
-	t.Run("NegativeRandomizationFactor", func(t *testing.T) {
-		conf := config.BackoffConfig{
-			RandomizationFactor: -0.5,
-		}
-		require.EqualError(t, conf.Validate(), "invalid configuration: randomization factor must be greater than or equal to 0")
-	})
-
-	t.Run("NegativeMultiplier", func(t *testing.T) {
-		conf := config.BackoffConfig{
-			Multiplier: -1,
-		}
-		require.EqualError(t, conf.Validate(), "invalid configuration: multiplier must be greater than or equal to 0")
-	})
-
-	t.Run("NegativeMaxInterval", func(t *testing.T) {
-		conf := config.BackoffConfig{
-			MaxInterval: -1 * time.Second,
-		}
-		require.EqualError(t, conf.Validate(), "invalid configuration: max interval must be greater than or equal to 0")
-	})
-
-	t.Run("NegativeMaxElapsedTime", func(t *testing.T) {
-		conf := config.BackoffConfig{
-			MaxElapsedTime: -1 * time.Second,
-		}
-		require.EqualError(t, conf.Validate(), "invalid configuration: max elapsed time must be greater than or equal to 0")
-	})
-
-	t.Run("NegativeMaxRetries", func(t *testing.T) {
-		conf := config.BackoffConfig{
-			MaxRetries: -1,
-		}
-		require.EqualError(t, conf.Validate(), "invalid configuration: max retries must be greater than or equal to 0")
-	})
-
-	t.Run("ValidConfig", func(t *testing.T) {
-		conf := config.BackoffConfig{
-			InitialInterval:     1 * time.Second,
-			RandomizationFactor: 0.5,
-			Multiplier:          2,
-			MaxInterval:         1 * time.Minute,
-			MaxElapsedTime:      5 * time.Minute,
-			MaxRetries:          5,
-		}
-		require.NoError(t, conf.Validate())
-	})
 }
 
 // Returns the current environment for the specified keys, or if no keys are specified
