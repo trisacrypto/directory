@@ -98,7 +98,6 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                       <AutoCompleteInput
                         variant="outline"
                         placeholder="Common name or VASP ID"
-                        autoFocus
                       />
 
                       <AutoCompleteList>
@@ -112,7 +111,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                               setSearch(oid);
                               handleSubmit(e, oid);
                             }}
-                            textTransform="capitalize">
+                            >
                             {oid}
                           </AutoCompleteItem>
                         ))}
