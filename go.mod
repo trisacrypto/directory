@@ -1,8 +1,6 @@
 module github.com/trisacrypto/directory
 
-go 1.21
-
-toolchain go1.21.1
+go 1.19
 
 require (
 	cloud.google.com/go/secretmanager v1.11.2
@@ -36,7 +34,7 @@ require (
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.1
 	github.com/syndtr/goleveldb v1.0.0
-	github.com/trisacrypto/courier v0.1.0
+	github.com/trisacrypto/courier v0.1.0+incompatible
 	github.com/trisacrypto/trisa v0.4.1
 	github.com/urfave/cli v1.22.14
 	github.com/urfave/cli/v2 v2.25.7
