@@ -6,8 +6,16 @@ import (
 	"time"
 )
 
+func init() {
+	random = rand.New(rand.NewSource(time.Now().UnixNano()))
+}
+
 const (
 	lambda = -0.004
+)
+
+var (
+	random *rand.Rand
 )
 
 // TimeProbability returns an exponentially decaying probability between 0 and 1 that
@@ -21,5 +29,9 @@ func TimeProbability(ts time.Time) float64 {
 // ReplicateObjectRoulette performs a roulette roll to see if the object should be
 // replicated basesd on its TimeProbability.
 func ReplicateObjectRoulette(ts time.Time) bool {
-	return rand.Float64() < TimeProbability(ts)
+	return random.Float64() < TimeProbability(ts)
+}
+
+func Seed(seed int64) {
+	random = rand.New(rand.NewSource(seed))
 }
