@@ -130,7 +130,7 @@ const CollaboratorsSection: React.FC = () => {
     onClose();
   };
   return (
-    <FormLayout overflowX={'scroll'}>
+    <FormLayout overflowX={'auto'}>
       <Table variant="simple">
         <TableCaption placement="top" textAlign="end" p={0} m={0} mb={3} fontSize={20}>
           <Tooltip
