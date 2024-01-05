@@ -1,7 +1,6 @@
 import { WarningIcon } from '@chakra-ui/icons';
-import { Heading, Text } from '@chakra-ui/react';
+import { Heading, Stack, Text } from '@chakra-ui/react';
 import InputFormControl from 'components/ui/InputFormControl';
-import FormLayout from 'layouts/FormLayout';
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { getDomain } from 'utils/utils';
@@ -61,7 +60,7 @@ const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({
   const domain = getValues('website') && getDomain(getValues('website'));
 
   return (
-    <FormLayout>
+    <Stack pb={5}>
       <Heading size="md">{headerText}</Heading>
       <InputFormControl
         label={t`TRISA Endpoint`}
@@ -84,7 +83,7 @@ const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({
         controlId="certificateCommonName"
         {...register(`${name}.common_name`)}
       />
-    </FormLayout>
+    </Stack>
   );
 };
 
