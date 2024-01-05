@@ -98,7 +98,6 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                       <AutoCompleteInput
                         variant="outline"
                         placeholder="Common name or VASP ID"
-                        autoFocus
                       />
 
                       <AutoCompleteList>
@@ -112,7 +111,7 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                               setSearch(oid);
                               handleSubmit(e, oid);
                             }}
-                            textTransform="capitalize">
+                            >
                             {oid}
                           </AutoCompleteItem>
                         ))}
@@ -180,6 +179,14 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
             <Box>
               <Tabs colorScheme="blue">
                 <TabList border={'1px solid #eee'}>
+                <Tab
+                    sx={{ width: '100%' }}
+                    _focus={{ outline: 'none' }}
+                    _selected={{ bg: colors.system.blue, color: 'white', fontWeight: 'semibold' }}>
+                    <Text fontSize={['x-small', 'medium']}>
+                      <Trans id="MAINNET DIRECTORY RECORD">MAINNET DIRECTORY RECORD</Trans>
+                    </Text>
+                  </Tab>
                   <Tab
                     sx={{ width: '100%' }}
                     _focus={{ outline: 'none' }}
@@ -188,82 +195,9 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                       <Trans id="TESTNET DIRECTORY RECORD">TESTNET DIRECTORY RECORD</Trans>
                     </Text>
                   </Tab>
-                  <Tab
-                    sx={{ width: '100%' }}
-                    _focus={{ outline: 'none' }}
-                    _selected={{ bg: colors.system.blue, color: 'white', fontWeight: 'semibold' }}>
-                    <Text fontSize={['x-small', 'medium']}>
-                      <Trans id="MAINNET DIRECTORY RECORD">MAINNET DIRECTORY RECORD</Trans>
-                    </Text>
-                  </Tab>
                 </TabList>
                 <TabPanels>
-                  <TabPanel p={0} border="1px solid #eee">
-                    <TableContainer>
-                      <Table
-                        variant="simple"
-                        sx={{ 'td:first-child': { fontWeight: 'semibold', width: '50%' } }}>
-                        <Tbody>
-                          <Tr>
-                            <Td>
-                              <Trans id="Organization Name">Organization Name</Trans>
-                            </Td>
-                            <Td colSpan={2}>{result?.testnet?.name || 'N/A'}</Td>
-                          </Tr>
-                          <Tr>
-                            <Td>
-                              <Trans id="Common Name">Common Name</Trans>
-                            </Td>
-                            <Td>{result?.testnet?.common_name || 'N/A'}</Td>
-                          </Tr>
-                          <Tr>
-                            <Td>
-                              <Trans id="TRISA Service Endpoint">TRISA Service Endpoint</Trans>
-                            </Td>
-                            <Td>{result?.testnet?.endpoint || 'N/A'}</Td>
-                          </Tr>
-                          <Tr>
-                            <Td>
-                              <Trans id="Registered Directory">Registered Directory</Trans>
-                            </Td>
-                            <Td>{result?.testnet?.registered_directory || 'N/A'}</Td>
-                          </Tr>
-                          <Tr>
-                            <Td>
-                              <Trans id="TRISA Member ID">TRISA Member ID</Trans>
-                            </Td>
-                            <Td>{result?.testnet?.id || 'N/A'}</Td>
-                          </Tr>
-                          <Tr>
-                            <Td>
-                              <Trans id="Country">Country</Trans>
-                            </Td>
-                            <Td>
-                              {getCountryName(result?.testnet?.country as IsoCountryCode)}
-                              {'  '}
-                              {countryCodeEmoji(result?.testnet?.country) || 'N/A'}
-                            </Td>
-                          </Tr>
-
-                          <Tr>
-                            <Td>
-                              <Trans id="TRISA Verification">TRISA Verification</Trans>
-                            </Td>
-                            {result?.testnet?.verified_on ? (
-                              <Td>
-                                {' '}
-                                <Trans id="VERIFIED ON">VERIFIED ON</Trans>{' '}
-                                {result?.testnet?.verified_on}{' '}
-                              </Td>
-                            ) : (
-                              <Td>N/A</Td>
-                            )}
-                          </Tr>
-                        </Tbody>
-                      </Table>
-                    </TableContainer>
-                  </TabPanel>
-                  <TabPanel p={0} border="1px solid #eee">
+                <TabPanel p={0} border="1px solid #eee">
                     <TableContainer>
                       <Table
                         variant="simple"
@@ -323,6 +257,71 @@ const SearchDirectory: React.FC<TSearchDirectory> = ({
                                 {' '}
                                 <Trans id="VERIFIED ON">VERIFIED ON</Trans>{' '}
                                 {result?.mainnet?.verified_on}{' '}
+                              </Td>
+                            ) : (
+                              <Td>N/A</Td>
+                            )}
+                          </Tr>
+                        </Tbody>
+                      </Table>
+                    </TableContainer>
+                  </TabPanel>
+                  <TabPanel p={0} border="1px solid #eee">
+                    <TableContainer>
+                      <Table
+                        variant="simple"
+                        sx={{ 'td:first-child': { fontWeight: 'semibold', width: '50%' } }}>
+                        <Tbody>
+                          <Tr>
+                            <Td>
+                              <Trans id="Organization Name">Organization Name</Trans>
+                            </Td>
+                            <Td colSpan={2}>{result?.testnet?.name || 'N/A'}</Td>
+                          </Tr>
+                          <Tr>
+                            <Td>
+                              <Trans id="Common Name">Common Name</Trans>
+                            </Td>
+                            <Td>{result?.testnet?.common_name || 'N/A'}</Td>
+                          </Tr>
+                          <Tr>
+                            <Td>
+                              <Trans id="TRISA Service Endpoint">TRISA Service Endpoint</Trans>
+                            </Td>
+                            <Td>{result?.testnet?.endpoint || 'N/A'}</Td>
+                          </Tr>
+                          <Tr>
+                            <Td>
+                              <Trans id="Registered Directory">Registered Directory</Trans>
+                            </Td>
+                            <Td>{result?.testnet?.registered_directory || 'N/A'}</Td>
+                          </Tr>
+                          <Tr>
+                            <Td>
+                              <Trans id="TRISA Member ID">TRISA Member ID</Trans>
+                            </Td>
+                            <Td>{result?.testnet?.id || 'N/A'}</Td>
+                          </Tr>
+                          <Tr>
+                            <Td>
+                              <Trans id="Country">Country</Trans>
+                            </Td>
+                            <Td>
+                              {getCountryName(result?.testnet?.country as IsoCountryCode)}
+                              {'  '}
+                              {countryCodeEmoji(result?.testnet?.country) || 'N/A'}
+                            </Td>
+                          </Tr>
+
+                          <Tr>
+                            <Td>
+                              <Trans id="TRISA Verification">TRISA Verification</Trans>
+                            </Td>
+                            {result?.testnet?.verified_on ? (
+                              <Td>
+                                {' '}
+                                <Trans id="VERIFIED ON">VERIFIED ON</Trans>{' '}
+                                {result?.testnet?.verified_on}{' '}
                               </Td>
                             ) : (
                               <Td>N/A</Td>
