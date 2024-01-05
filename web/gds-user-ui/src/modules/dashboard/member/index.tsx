@@ -15,7 +15,7 @@ const MemberPage: React.FC = () => {
       </Heading>
       <Suspense fallback={<Loader />}>
         <DirectoryNotification />
-        <FormLayout overflowX={'scroll'}>
+        <FormLayout overflowX={'auto'}>
           <MemberHeader />
           <MemberSelectNetwork />
           <MemberTable />
