@@ -46,7 +46,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) =
   };
 
   return (
-    <Stack pb={5}>
+    <Stack>
       <Heading size="md" data-testid="title">
         {title}
       </Heading>

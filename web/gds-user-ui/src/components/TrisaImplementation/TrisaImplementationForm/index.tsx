@@ -60,7 +60,7 @@ const TrisaImplementationForm: React.FC<TrisaImplementationFormProps> = ({
   const domain = getValues('website') && getDomain(getValues('website'));
 
   return (
-    <Stack pb={5}>
+    <Stack>
       <Heading size="md">{headerText}</Heading>
       <InputFormControl
         label={t`TRISA Endpoint`}
