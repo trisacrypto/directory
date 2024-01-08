@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, SetStateAction, Dispatch } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { t } from '@lingui/macro';
-import { chakra, useDisclosure } from '@chakra-ui/react';
+import { Box, chakra, useDisclosure } from '@chakra-ui/react';
 import StepButtons from 'components/StepsButtons';
 import ContactForm from 'components/Contacts/ContactForm';
 import useCertificateStepper from 'hooks/useCertificateStepper';
@@ -163,7 +163,8 @@ const ContactsForm: React.FC<ContactsFormProps> = ({ data, shouldResetForm, onRe
             title={t`Billing Contact (optional)`}
             description={t`Billing contact for your organization to handle account and invoice requests or queries relating to the operation of the TRISA network.`}
           />
-          <StepButtons
+          <Box pt={5}>
+            <StepButtons
             handlePreviousStep={handlePreviousStepClick}
             handleNextStep={handleNextStepClick}
             onResetModalClose={handleResetClick}
@@ -173,7 +174,8 @@ const ContactsForm: React.FC<ContactsFormProps> = ({ data, shouldResetForm, onRe
             onClosed={onCloseModalHandler}
             handleResetClick={handleResetClick}
             shouldShowResetFormModal={shouldShowResetFormModal}
-          />
+            />
+          </Box>
         </chakra.form>
         {!isProdEnv ? <DevTool control={methods.control} /> : null}
       </FormProvider>
