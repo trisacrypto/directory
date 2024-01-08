@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, Dispatch, SetStateAction } from 'react';
-import { chakra, useDisclosure } from '@chakra-ui/react';
+import { Box, chakra, useDisclosure } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
 import FormLayout from 'layouts/FormLayout';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -143,11 +143,13 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
             name="testnet"
             headerText={t`TRISA Endpoint: TestNet`}
           />
-          <TrisaImplementationForm
+          <Box pt={5}>
+            <TrisaImplementationForm
             type="MainNet"
             name="mainnet"
             headerText={t`TRISA Endpoint: MainNet`}
-          />
+            />
+          </Box>
           <StepButtons
             handlePreviousStep={handlePreviousStepClick}
             handleNextStep={handleNextStepClick}

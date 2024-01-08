@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Heading, Link, Text } from '@chakra-ui/react';
+import { Heading, Link, Stack, Text } from '@chakra-ui/react';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getCountriesOptions } from 'constants/countries';
@@ -7,7 +7,6 @@ import {
   getNationalIdentificationOptions,
   disabledIdentifiers,
 } from 'constants/national-identification';
-import FormLayout from 'layouts/FormLayout';
 import { Controller, useFormContext } from 'react-hook-form';
 import {
   getRegistrationAuthorities,
@@ -110,7 +109,7 @@ useEffect(() => {
   }, [NationalIdentificationType]);
 
   return (
-    <FormLayout data-testid="legal-name-identification">
+    <Stack pt={5} data-testid="legal-name-identification">
       <Heading size="md">
         <Trans id="National Identification">National Identification</Trans>
       </Heading>
@@ -208,7 +207,7 @@ useEffect(() => {
           />
         </>
       )}
-    </FormLayout>
+    </Stack>
   );
 };
 
