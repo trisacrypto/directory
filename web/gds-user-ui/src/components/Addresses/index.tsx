@@ -1,12 +1,11 @@
-import { Heading, Text } from '@chakra-ui/react';
+import { Heading, Stack, Text } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
-import FormLayout from 'layouts/FormLayout';
 import React from 'react';
 import AddressList from './AddressList';
 
 const Addresses: React.FC = () => {
   return (
-    <FormLayout>
+    <Stack pt={5}>
       <Heading size="md">
         <Trans id="Addresses">Addresses</Trans>
       </Heading>
@@ -18,7 +17,7 @@ const Addresses: React.FC = () => {
         </Trans>
       </Text>
       <AddressList />
-    </FormLayout>
+    </Stack>
   );
 };
 

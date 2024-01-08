@@ -49,26 +49,6 @@ const TrisaImplementation: React.FC<TrisaImplementationProps> = ({ data }) => {
               }}>
               <Tr pt={'1rem !important'}>
                 <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
-                  <Trans id="TestNet">TestNet</Trans>
-                </Td>
-              </Tr>
-              <Tr>
-                <Td pt={'1rem !important'} pl={'1rem !important'}>
-                  <Trans id="Endpoint">Endpoint</Trans>
-                </Td>
-                <Td>{data?.testnet?.endpoint || 'N/A'}</Td>
-              </Tr>
-              <Tr>
-                <Td pl={'1rem !important'}>
-                  <Trans id="Common Name">Common Name</Trans>
-                </Td>
-                <Td>{data?.testnet?.common_name || 'N/A'}</Td>
-              </Tr>
-              <Tr>
-                <Td colSpan={2}></Td>
-              </Tr>
-              <Tr>
-                <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
                   <Trans id="MainNet">MainNet</Trans>
                 </Td>
               </Tr>
@@ -83,6 +63,26 @@ const TrisaImplementation: React.FC<TrisaImplementationProps> = ({ data }) => {
                   <Trans id="Common Name">Common Name</Trans>
                 </Td>
                 <Td>{data?.mainnet?.common_name || 'N/A'}</Td>
+              </Tr>
+              <Tr>
+                <Td colSpan={2}></Td>
+              </Tr>
+              <Tr>
+                <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+                  <Trans id="TestNet">TestNet</Trans>
+                </Td>
+              </Tr>
+              <Tr>
+                <Td pt={'1rem !important'} pl={'1rem !important'}>
+                  <Trans id="Endpoint">Endpoint</Trans>
+                </Td>
+                <Td>{data?.testnet?.endpoint || 'N/A'}</Td>
+              </Tr>
+              <Tr>
+                <Td pl={'1rem !important'}>
+                  <Trans id="Common Name">Common Name</Trans>
+                </Td>
+                <Td>{data?.testnet?.common_name || 'N/A'}</Td>
               </Tr>
             </Tbody>
           </Table>

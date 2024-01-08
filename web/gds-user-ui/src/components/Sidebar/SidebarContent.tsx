@@ -147,7 +147,7 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
         textAlign={'center'}
         color="white"
         width="100%">
-        <Text>REV: {appGitVersion || 'N/A'}</Text>
+        <Text>App: {appGitVersion || 'N/A'}</Text>
         <HDivider />
         <Text>BFF & GDS: {bffAndGdsVersion || 'N/A'}</Text>
       </HStack>

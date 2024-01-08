@@ -143,11 +143,13 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
             name="testnet"
             headerText={t`TRISA Endpoint: TestNet`}
           />
-          <TrisaImplementationForm
+          <Box pt={5}>
+            <TrisaImplementationForm
             type="MainNet"
             name="mainnet"
             headerText={t`TRISA Endpoint: MainNet`}
-          />
+            />
+          </Box>
           <Box pt={5}>
             <StepButtons
             handlePreviousStep={handlePreviousStepClick}

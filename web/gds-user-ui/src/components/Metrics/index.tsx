@@ -17,7 +17,7 @@ const Metrics = ({ data, type }: MetricsProps) => {
           fallback={
             <Text color={'red'} pt={20}>{t`An error has occurred to load ${type} metric`}</Text>
           }>
-          <SimpleGrid columns={{ base: 4, sm: 2, lg: 4, md: 4 }} spacingX="30px">
+          <SimpleGrid columns={{ base: 4, sm: 2, lg: 4 }} spacingX="30px">
             <StatusCard isOnline={data?.status || 'UNKNOWN'} />
             <StatCard title={t`Verified VASPs`} number={data?.vasps} />
             <StatCard title={t`Identity Certificates`} number={data?.certificates_issued} />
