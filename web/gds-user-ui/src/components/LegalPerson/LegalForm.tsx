@@ -3,7 +3,7 @@ import { chakra, useDisclosure } from '@chakra-ui/react';
 import CountryOfRegistration from 'components/CountryOfRegistration';
 import FormLayout from 'layouts/FormLayout';
 import NameIdentifiers from '../NameIdentifiers';
-import NationalIdentification from '../NameIdentification';
+import NationalIdentification from '../NationalIdentification';
 import Address from 'components/Addresses';
 import { FormProvider, useForm } from 'react-hook-form';
 import StepButtons from 'components/StepsButtons';
@@ -71,7 +71,7 @@ const LegalForm: React.FC<LegalFormProps> = ({ data, shouldResetForm, onResetFor
     resetForm(updatedCertificateStep?.form, {
       keepValues: false
     });
-    console.log('[] prev updatedCertificateStep', updatedCertificateStep);
+    // console.log('[] prev updatedCertificateStep', updatedCertificateStep);
     previousStepRef.current = false;
     previousStep(updatedCertificateStep);
   }
@@ -109,7 +109,7 @@ const LegalForm: React.FC<LegalFormProps> = ({ data, shouldResetForm, onResetFor
           state: currentState()
         } as any
       };
-      console.log('[] isDirty  payload', payload);
+      // console.log('[] isDirty  payload', payload);
 
       updateCertificateStep(payload);
       previousStepRef.current = true;
