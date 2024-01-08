@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, Dispatch, SetStateAction } from 'react';
-import { chakra, useDisclosure } from '@chakra-ui/react';
+import { Box, chakra, useDisclosure } from '@chakra-ui/react';
 import CountryOfRegistration from 'components/CountryOfRegistration';
 import FormLayout from 'layouts/FormLayout';
 import NameIdentifiers from '../NameIdentifiers';
@@ -155,7 +155,8 @@ const LegalForm: React.FC<LegalFormProps> = ({ data, shouldResetForm, onResetFor
           <Address />
           <CountryOfRegistration />
           <NationalIdentification />
-          <StepButtons
+          <Box pt={5}>
+            <StepButtons
             handlePreviousStep={handlePreviousStepClick}
             handleNextStep={handleNextStepClick}
             onResetModalClose={handleResetClick}
@@ -165,7 +166,8 @@ const LegalForm: React.FC<LegalFormProps> = ({ data, shouldResetForm, onResetFor
             onClosed={onCloseModalHandler}
             handleResetClick={handleResetClick}
             shouldShowResetFormModal={shouldShowResetFormModal}
-          />
+            />
+          </Box>
         </chakra.form>
         {!isProdEnv ? <DevTool control={methods.control} /> : null}
       </FormProvider>

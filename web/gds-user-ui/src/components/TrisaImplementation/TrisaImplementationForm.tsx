@@ -150,7 +150,8 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
             headerText={t`TRISA Endpoint: MainNet`}
             />
           </Box>
-          <StepButtons
+          <Box pt={5}>
+            <StepButtons
             handlePreviousStep={handlePreviousStepClick}
             handleNextStep={handleNextStepClick}
             onResetModalClose={handleResetClick}
@@ -160,7 +161,8 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
             onClosed={onCloseModalHandler}
             handleResetClick={handleResetClick}
             shouldShowResetFormModal={shouldShowResetFormModal}
-          />
+            />
+          </Box>
         </chakra.form>
         {!isProdEnv ? <DevTool control={methods.control} /> : null}
       </FormProvider>

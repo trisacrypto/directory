@@ -6,6 +6,7 @@ body {
   height: '100%';
   font-family: 'Open sans', sans-serif;
   scroll-behavior: smooth;
+  overflow-anchor: none;
 }
 body {
   background-color: '#F7F8FC' !important;
