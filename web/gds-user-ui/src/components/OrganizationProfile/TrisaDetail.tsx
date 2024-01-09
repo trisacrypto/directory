@@ -38,20 +38,19 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data, type }) => {
       color={'#252733'}
       fontSize={18}
       p={4}
-      mb={10}
-      mt={10}
+      my={10}
       px={7}>
       <Stack width={'100%'}>
-        <Heading as={'h1'} fontSize={19} pb={7} pt={4}>
+        <Heading as={'h1'} fontSize={19} py={4} mb={2}>
           {t`Your TRISA ${type} Details`}
         </Heading>
         <Stack fontSize={18}>
           <Table
             sx={{
               thead: { fontWeight: 'bold' },
-              Tr: {
+              /* Tr: {
                 borderStyle: 'hidden'
-              }
+              } */
             }}>
             <Thead
               sx={{
@@ -60,7 +59,7 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data, type }) => {
                 }
               }}>
               <Tr>
-                <Td pt={'1rem !important'}>
+                <Td>
                   <Trans id="ID">ID</Trans>
                 </Td>
                 <Td>
@@ -80,9 +79,6 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data, type }) => {
             <Tbody
               sx={{
                 '*': {
-                  fontSize: '1rem',
-
-                  'td:first-child': {},
                   td: {
                     paddingInlineStart: 0.5
                   }
