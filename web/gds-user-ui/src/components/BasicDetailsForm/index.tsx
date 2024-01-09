@@ -112,8 +112,8 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({
   return (
     <FormLayout spacing={5}>
       <FormProvider {...methods}>
-        <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
-          <VStack align="start" spacing={4} w="100%">
+        <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)} width={'100%'}>
+          <VStack spacing={4}>
             <InputFormControl
               controlId="organization_name"
               data-testid="organization_name"

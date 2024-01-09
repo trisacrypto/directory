@@ -25,7 +25,6 @@ const Contacts: React.FC = () => {
 
   useEffect(() => {
     if (isContactsStepDeleted) {
-      console.log('[] isContactsStepDeleted', isContactsStepDeleted);
       const payload = {
         step: StepEnum.CONTACTS,
         isDeleted: false
