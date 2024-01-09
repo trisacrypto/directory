@@ -44,7 +44,7 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data, type }) => {
         <Heading as={'h1'} fontSize={19} pt={4} mb={2}>
           {t`Your TRISA ${type} Details`}
         </Heading>
-        <Stack fontSize={18} pb={4}>
+        <Stack fontSize={18} pb={4} overflow={'auto'}>
           <Table
             sx={{
               thead: { fontWeight: 'bold' },
