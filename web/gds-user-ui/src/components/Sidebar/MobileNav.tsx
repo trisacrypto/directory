@@ -39,7 +39,6 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
   const { setDefaultNetwork } = useMemberState();
   const dispatch = useDispatch();
   const { user } = useSelector(userSelector);
-  console.log('user', user);
   const navigate = useNavigate();
   const handleLogout = (e: any) => {
     e.preventDefault();
