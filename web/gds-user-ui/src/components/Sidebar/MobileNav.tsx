@@ -55,9 +55,8 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
 
   return (
     <Flex
-      ml={{ base: 0, md: 60 }}
-      px={{ base: 4, md: 4 }}
-      height="20"
+      ml={{ base: 0, md: 64 }}
+      px={{ base: 0, md: 4 }}
       alignItems="center"
       bg={useColorModeValue('white', 'gray.900')}
       borderBottomWidth="1px"
@@ -72,9 +71,8 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
         icon={<FiMenu />}
       />
       <HStack
-        spacing={{ base: '0', md: '6' }}
+        spacing={{ base: 1, lg: 2, xl: 4 }}
         w={{ base: '100%', md: 'none' }}
-        gap={{ base: 4, md: 0 }}
         justifyContent="end">
         <HStack>
           <LanguagesDropdown />
