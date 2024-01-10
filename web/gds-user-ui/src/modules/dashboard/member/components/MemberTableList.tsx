@@ -11,7 +11,6 @@ const MemberTableList = () => {
 
   // if network changes, we need to refetch members
   useEffect(() => {
-    // console.log('network changed');
     getMembers();
   }, [network, getMembers]);
 

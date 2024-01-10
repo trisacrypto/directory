@@ -28,7 +28,6 @@ import { getStepNumber } from 'components/BasicDetailsForm/util';
 const useCertificateStepper = () => {
   const dispatch = useDispatch();
   const currentStep: number = useSelector(getCurrentStep);
-  console.log('[useCertificateStepper] currentStep', currentStep);
 
   const removeMissingFields = (steps: TStep[]) => {
     return steps.map((step: TStep) => {
@@ -50,16 +49,13 @@ const useCertificateStepper = () => {
   };
 
   const nextStep = (data?: any) => {
-    console.log('[nextStep] data', data);
     const errorFields = data?.errors;
     const stepNumber = getStepNumber(data?.step) || currentStep;
-    console.log('[nextStep] errorFields', errorFields);
 
     if (data && errorFields && Object.keys(errorFields).length > 0) {
       dispatch(setStepStatus({ step: stepNumber, status: LSTATUS.ERROR }));
     } else {
       // setInitialState(data?.form);
-      console.log('[nextStep] setStepStatus', stepNumber);
       dispatch(setStepStatus({ step: stepNumber, status: LSTATUS.COMPLETE }));
     }
     if (currentStep === 5) {
@@ -122,7 +118,6 @@ const useCertificateStepper = () => {
       mainnetSubmitted: value?.state?.mainnetSubmitted || false,
       deletedSteps: []
     };
-    console.log('[setInitialState] state', state);
     dispatch(setInitialValue(state));
   };
 
@@ -223,14 +218,12 @@ const useCertificateStepper = () => {
     const elm = Store.getState().stepper.deletedSteps;
     const found = elm.filter((s: TDeleteStep) => s.step === step);
     if (!found.length) {
-      console.log('![updateDeleteStepState] add new step', values);
       const payload = {
         step,
         isDeleted: true
       };
       dispatch(setDeletedSteps(payload));
     } else {
-      console.log('[updateDeleteStepState] add new step', values);
       // change the status to true
       dispatch(setDeletedStepValue({ step, isDeleted }));
     }

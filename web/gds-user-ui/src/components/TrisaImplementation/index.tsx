@@ -28,7 +28,6 @@ const TrisaImplementation: React.FC = () => {
 
   useEffect(() => {
     if (isTrisaStepDeleted) {
-      console.log('[] isTrisaStepDeleted', isTrisaStepDeleted);
       const payload = {
         step: StepEnum.TRISA,
         isDeleted: false

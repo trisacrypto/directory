@@ -69,7 +69,6 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
     resetMutation();
     // reset the form with the new values
     resetForm(updatedCertificateStep?.form);
-    console.log('[] prev updatedCertificateStep', updatedCertificateStep);
     previousStepRef.current = false;
     previousStep(updatedCertificateStep);
   }
@@ -136,6 +135,7 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
     <FormLayout>
       <FormProvider {...methods}>
         <chakra.form
+          width={'100%'}
           onSubmit={methods.handleSubmit(handleNextStepClick)}
           data-testid="trisa-implementation-form">
           <TrisaImplementationForm
