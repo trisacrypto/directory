@@ -54,6 +54,7 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
           closeOnOverlayClick={false}
           isOpen={isOpen}
           onClose={onClose}
+          size="lg"
           data-testid="member-modal">
           <ModalOverlay />
           <ModalContent width={'100%'} maxHeight={'1000px'}>

@@ -16,7 +16,7 @@ const TrisaImplementation: React.FC<TrisaImplementationProps> = ({ data }) => {
       mb={7}
       px={7}>
       <Stack width={'100%'}>
-        <Heading as={'h1'} fontSize={19} pb={2} pt={4}>
+        <Heading as={'h1'} fontSize={19} pb={2} pt={2}>
           <Trans id="TRISA Implementations">TRISA Implementations</Trans>
         </Heading>
         <Text pb={7}>
