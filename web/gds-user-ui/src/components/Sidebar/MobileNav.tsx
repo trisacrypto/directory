@@ -39,6 +39,7 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
   const { setDefaultNetwork } = useMemberState();
   const dispatch = useDispatch();
   const { user } = useSelector(userSelector);
+  console.log('user', user);
   const navigate = useNavigate();
   const handleLogout = (e: any) => {
     e.preventDefault();
@@ -56,7 +57,7 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
   return (
     <Flex
       ml={{ base: 0, md: 64 }}
-      px={{ base: 0, md: 4 }}
+      px={{ base: 2, md: 4 }}
       alignItems="center"
       bg={useColorModeValue('white', 'gray.900')}
       borderBottomWidth="1px"
@@ -84,7 +85,9 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
             </Text>
           </Tooltip>
         </HStack>
-        <Divider orientation="vertical" height={8} />
+        <Show above="lg">
+          <Divider orientation="vertical" height={8} />
+        </Show>
         <Menu>
           <MenuButton data-testid="menu" transition="all 0.3s" _focus={{ boxShadow: 'none' }}>
             <HStack>
