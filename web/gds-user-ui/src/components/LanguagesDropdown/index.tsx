@@ -1,5 +1,4 @@
-import { HStack, Select, Tooltip } from '@chakra-ui/react';
-import { t } from '@lingui/macro';
+import { Select } from '@chakra-ui/react';
 import { isDashLocale } from 'application/config';
 import { useLanguageProvider } from 'contexts/LanguageContext';
 
@@ -47,13 +46,9 @@ const LanguagesDropdown: React.FC = () => {
     setLanguage(e.target.value);
   };
   return (
-    <HStack>
-      <Tooltip label={t`Select language`} hasArrow>
-        <Select w="100%" ml={2} value={language as string} onChange={handleLanguageClick}>
-          <LanguageOptions />
-        </Select>
-      </Tooltip>
-    </HStack>
+    <Select w="100%" ml={2} value={language as string} onChange={handleLanguageClick}>
+      <LanguageOptions />
+    </Select>
   );
 };
 
