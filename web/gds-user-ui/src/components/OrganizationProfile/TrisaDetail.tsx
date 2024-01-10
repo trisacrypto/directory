@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heading, Stack, Table, Tbody, Tr, Td, Thead, Tag } from '@chakra-ui/react';
+import { Heading, Stack, Table, Tbody, Tr, Td, Thead, Tag, Th } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import { splitAndDisplay, format2ShortDate } from 'utils/utils';
 import { t } from '@lingui/macro';
@@ -12,36 +12,35 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data, type }) => {
     switch (data?.status) {
       case 'NO_VERIFICATION':
         return (
-          <Tag bg={'orange'} color={'white'} size={'sm'}>
+          <Tag bg={'orange'} color={'white'}>
             <Trans id="Not Verified">Not Verified</Trans>
           </Tag>
         );
       case 'VERIFIED':
         return (
-          <Tag colorScheme="green" size={'sm'}>
+          <Tag colorScheme="green">
             <Trans id="Verified">Verified</Trans>
           </Tag>
         );
       case 'REJECTED' || 'ERRORED':
-        return <Tag colorScheme="red" size={'sm'}>{t`${splitAndDisplay(data?.status, '_')}`}</Tag>;
+        return <Tag colorScheme="red">{t`${splitAndDisplay(data?.status, '_')}`}</Tag>;
       default:
         return (
-          <Tag colorScheme="yellow" size={'sm'}>{t`${splitAndDisplay(data?.status, '_')}`}</Tag>
+          <Tag colorScheme="yellow">{t`${splitAndDisplay(data?.status, '_')}`}</Tag>
         );
     }
   };
   return (
     <Stack
       border="1px solid #DFE0EB"
-      fontFamily={'Open Sans'}
       bg={'white'}
       color={'#252733'}
       fontSize={18}
       p={4}
-      my={10}
-      px={7}>
+      my={8}
+      >
       <Stack width={'100%'}>
-        <Heading as={'h1'} fontSize={19} pt={4} mb={2}>
+        <Heading as={'h1'} fontSize={19} pt={4} mb={2} pl={5}>
           {t`Your TRISA ${type} Details`}
         </Heading>
         <Stack fontSize={18} pb={4} overflow={'auto'}>
@@ -49,38 +48,26 @@ const TrisaDetail: React.FC<TrisaDetailProps> = ({ data, type }) => {
             sx={{
               thead: { fontWeight: 'bold' },
             }}>
-            <Thead
-              sx={{
-                td: {
-                  paddingInlineStart: 0.5
-                }
-              }}>
+            <Thead>
               <Tr>
-                <Td>
+                <Th>
                   <Trans id="ID">ID</Trans>
-                </Td>
-                <Td>
+                </Th>
+                <Th>
                   <Trans id="First Listed">First Listed</Trans>
-                </Td>
-                <Td>
+                </Th>
+                <Th>
                   <Trans id="Verified On">Verified On</Trans>
-                </Td>
-                <Td>
+                </Th>
+                <Th>
                   <Trans id="Last Updated">Last Updated</Trans>
-                </Td>
-                <Td>
+                </Th>
+                <Th>
                   <Trans id="Status">Status</Trans>
-                </Td>
+                </Th>
               </Tr>
             </Thead>
-            <Tbody
-              sx={{
-                '*': {
-                  td: {
-                    paddingInlineStart: 0.5
-                  }
-                }
-              }}>
+            <Tbody>
               <Tr>
                 <Td>{data?.id || 'N/A'}</Td>
                 <Td>{data?.first_listed ? format2ShortDate(data?.first_listed) : 'N/A'}</Td>

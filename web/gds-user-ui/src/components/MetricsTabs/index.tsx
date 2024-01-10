@@ -17,7 +17,7 @@ function MetricsTabs() {
   }
 
   return (
-    <Tabs my={'10'}>
+    <Tabs mt={8}>
       <TabList>
         <Tab
           bg={'#E5EDF1'}

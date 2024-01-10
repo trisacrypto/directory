@@ -4,9 +4,6 @@ import type { ComponentStyleConfig } from '@chakra-ui/theme';
 // a single part component: ComponentSingleStyleConfig
 const Table: ComponentStyleConfig = {
   // The styles all button have in common
-  baseStyle: {
-    // fontFamily: 'Open Sans, serif'
-  },
   sizes: {},
   variants: {
     simple: {
@@ -14,10 +11,11 @@ const Table: ComponentStyleConfig = {
         color: '#000',
         textTransform: 'capitalize',
         fontWeight: 700,
-        fontSize: 'sm'
+        fontSize: 'sm',
+        fontFamily: 'Open Sans, serif',
       },
       td: {
-        fontSize: 14
+        fontSize: 'sm',
       }
     }
   },

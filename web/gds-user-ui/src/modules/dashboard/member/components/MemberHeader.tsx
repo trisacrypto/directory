@@ -8,7 +8,7 @@ const MemberHeader = () => {
 
   return (
     <Stack width={'100%'}>
-      <HStack justify={'space-between'} mb={'10'}>
+      <HStack justify={'space-between'} mb="24px">
         <Heading size="md" color={'black'}>
           <Trans>Member List</Trans>
         </Heading>
