@@ -9,7 +9,6 @@ interface TrixoReviewProps {
   data?: any;
 }
 function TrixoReviewDataTable({ data }: TrixoReviewProps) {
-  console.log('[] TRIXO FORM DATA TABLE PAGE', data);
   const getConductsCustomerKYC = (conductsCustomerKYC: boolean) => {
     return conductsCustomerKYC ? t`Yes` : t`No`;
   };

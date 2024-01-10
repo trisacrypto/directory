@@ -15,8 +15,6 @@ const TrixoReview: React.FC = () => {
 
   const [trixoData, setTrixoData] = useState([]);
 
-  console.log('[] TRIXO FORM REVIEW PAGE', certificateStep?.form?.trixo);
-
   const hasErrors = certificateStep?.errors;
 
   useEffect(() => {

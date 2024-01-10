@@ -12,7 +12,7 @@ const MemberDetail = ({ member }: MemberDetailProps) => {
   return (
     <>
       <Stack w="full" pb={5}>
-        <SimpleGrid minChildWidth="280px" spacing="20px" maxH={'700px'} overflowY={'scroll'}>
+        <SimpleGrid spacing="20px" maxH={'700px'} overflowY={'auto'}>
           <List>
             <ListItem fontWeight={'bold'}>
               <Trans>Website</Trans>
