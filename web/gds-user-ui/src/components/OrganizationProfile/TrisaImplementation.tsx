@@ -36,7 +36,7 @@ const TrisaImplementation: React.FC<TrisaImplementationProps> = ({ data }) => {
             <Tbody
               sx={{
                 '*': {
-                  fontSize: 'md',
+                  fontSize: '16px',
                   'td:first-child': {
                     width: '50%'
                   },

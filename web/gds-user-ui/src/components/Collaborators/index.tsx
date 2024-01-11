@@ -13,7 +13,6 @@ import {
   Tag,
   Tooltip,
   useDisclosure,
-  Box
 } from '@chakra-ui/react';
 import React, { useState } from 'react';
 import { Trans, t } from '@lingui/macro';
@@ -130,7 +129,7 @@ const CollaboratorsSection: React.FC = () => {
     onClose();
   };
   return (
-    <Box 
+    <Stack 
     border="2px solid #E5EDF1"
     borderRadius="10px"
     bg={'white'}
@@ -145,7 +144,7 @@ const CollaboratorsSection: React.FC = () => {
           <Tooltip
             label={t`you do not have permission to invite a collaborator`}
             isDisabled={canInviteCollaborator()}>
-            <Button mb={2} minW="170px" onClick={modalHandler} isDisabled={!canInviteCollaborator()}>
+            <Button mb={3} minW="170px" onClick={modalHandler} isDisabled={!canInviteCollaborator()}>
               <Trans>Add Contact</Trans>
             </Button>
           </Tooltip>
@@ -185,7 +184,7 @@ const CollaboratorsSection: React.FC = () => {
           <TableRows />
         </Tbody>
       </Table>
-    </Box>
+    </Stack>
   );
 };
 export default CollaboratorsSection;
