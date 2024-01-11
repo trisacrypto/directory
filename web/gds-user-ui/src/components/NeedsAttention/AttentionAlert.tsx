@@ -86,9 +86,8 @@ const AttentionAlert = ({ severity, message, action, onClick }: AttentionAlertPr
               <Box>
                 <Button
                   onClick={onClick}
-                  width={142}
                   border={'1px solid white'}
-                  px={8}
+                  px={6}
                   as={'a'}
                   borderRadius={0}
                   background="#000"

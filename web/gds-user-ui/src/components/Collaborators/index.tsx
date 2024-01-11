@@ -12,9 +12,8 @@ import {
   chakra,
   Tag,
   Tooltip,
-  useDisclosure
+  useDisclosure,
 } from '@chakra-ui/react';
-import FormLayout from 'layouts/FormLayout';
 import React, { useState } from 'react';
 import { Trans, t } from '@lingui/macro';
 import { FiMail } from 'react-icons/fi';
@@ -130,13 +129,22 @@ const CollaboratorsSection: React.FC = () => {
     onClose();
   };
   return (
-    <FormLayout overflowX={'auto'}>
+    <Stack 
+    border="2px solid #E5EDF1"
+    borderRadius="10px"
+    bg={'white'}
+    color={'#252733'}
+    fontSize={18}
+    p={4}
+    pb={6}
+    my={8} 
+    overflowX={'auto'}>
       <Table variant="simple">
-        <TableCaption placement="top" textAlign="end" p={0} m={0} mb={3} fontSize={20}>
+        <TableCaption placement="top" textAlign="end" m={0} fontSize={20}>
           <Tooltip
             label={t`you do not have permission to invite a collaborator`}
             isDisabled={canInviteCollaborator()}>
-            <Button minW="170px" onClick={modalHandler} isDisabled={!canInviteCollaborator()}>
+            <Button mb={3} minW="170px" onClick={modalHandler} isDisabled={!canInviteCollaborator()}>
               <Trans>Add Contact</Trans>
             </Button>
           </Tooltip>
@@ -176,7 +184,7 @@ const CollaboratorsSection: React.FC = () => {
           <TableRows />
         </Tbody>
       </Table>
-    </FormLayout>
+    </Stack>
   );
 };
 export default CollaboratorsSection;

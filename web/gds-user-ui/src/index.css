@@ -4,20 +4,11 @@
 html,
 body {
   height: '100%';
-  font-family: 'Open sans', sans-serif;
   scroll-behavior: smooth;
   overflow-anchor: none;
 }
 body {
   background-color: '#F7F8FC' !important;
-}
-
-.heading {
-  font-family: 'Roboto Slab', serif !important;
-}
-
-p {
-  font-family: 'Open sans', sans-serif;
 }
 
 .chakra-alert__title {

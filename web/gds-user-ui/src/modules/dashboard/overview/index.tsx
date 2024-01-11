@@ -26,7 +26,7 @@ const Overview: React.FC = () => {
 
   return (
     <>
-      <Heading marginBottom="30px">Overview</Heading>
+      <Heading marginBottom="32px">Overview</Heading>
       <Suspense fallback="">
         <NeedsAttention
           text={t`Start Certificate Registration`}

@@ -1,6 +1,7 @@
 import { extendTheme } from '@chakra-ui/react';
 import colors from './colors';
 import fontSizes from './fontSizes';
+import fonts from './fonts';
 import breakpoints from './breakpoints';
 import * as Components from './components';
 
@@ -15,6 +16,7 @@ const config = {
 const theme = extendTheme({
   colors,
   fontSizes,
+  fonts,
   breakpoints,
   config,
   components: {
