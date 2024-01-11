@@ -15,7 +15,7 @@ const Table: ComponentStyleConfig = {
         fontFamily: 'Open Sans, serif',
       },
       td: {
-        fontSize: 'sm',
+        fontSize: '14',
       }
     }
   },
