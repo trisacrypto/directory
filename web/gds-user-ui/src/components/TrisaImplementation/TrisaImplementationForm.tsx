@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, Dispatch, SetStateAction } from 'react';
-import { chakra, useDisclosure } from '@chakra-ui/react';
+import { Box, chakra, useDisclosure } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
 import FormLayout from 'layouts/FormLayout';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -69,7 +69,6 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
     resetMutation();
     // reset the form with the new values
     resetForm(updatedCertificateStep?.form);
-    console.log('[] prev updatedCertificateStep', updatedCertificateStep);
     previousStepRef.current = false;
     previousStep(updatedCertificateStep);
   }
@@ -136,6 +135,7 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
     <FormLayout>
       <FormProvider {...methods}>
         <chakra.form
+          width={'100%'}
           onSubmit={methods.handleSubmit(handleNextStepClick)}
           data-testid="trisa-implementation-form">
           <TrisaImplementationForm
@@ -143,12 +143,15 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
             name="testnet"
             headerText={t`TRISA Endpoint: TestNet`}
           />
-          <TrisaImplementationForm
+          <Box pt={5}>
+            <TrisaImplementationForm
             type="MainNet"
             name="mainnet"
             headerText={t`TRISA Endpoint: MainNet`}
-          />
-          <StepButtons
+            />
+          </Box>
+          <Box pt={5}>
+            <StepButtons
             handlePreviousStep={handlePreviousStepClick}
             handleNextStep={handleNextStepClick}
             onResetModalClose={handleResetClick}
@@ -158,7 +161,8 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
             onClosed={onCloseModalHandler}
             handleResetClick={handleResetClick}
             shouldShowResetFormModal={shouldShowResetFormModal}
-          />
+            />
+          </Box>
         </chakra.form>
         {!isProdEnv ? <DevTool control={methods.control} /> : null}
       </FormProvider>

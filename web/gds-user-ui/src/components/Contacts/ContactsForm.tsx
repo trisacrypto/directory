@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, SetStateAction, Dispatch } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { t } from '@lingui/macro';
-import { chakra, useDisclosure } from '@chakra-ui/react';
+import { Box, chakra, useDisclosure } from '@chakra-ui/react';
 import StepButtons from 'components/StepsButtons';
 import ContactForm from 'components/Contacts/ContactForm';
 import useCertificateStepper from 'hooks/useCertificateStepper';
@@ -68,7 +68,7 @@ const ContactsForm: React.FC<ContactsFormProps> = ({ data, shouldResetForm, onRe
     resetForm(updatedCertificateStep?.form, {
       keepValues: false
     });
-    console.log('[] prev updatedCertificateStep', updatedCertificateStep);
+    // console.log('[] prev updatedCertificateStep', updatedCertificateStep);
     previousStepRef.current = false;
     previousStep(updatedCertificateStep);
   }
@@ -148,22 +148,29 @@ const ContactsForm: React.FC<ContactsFormProps> = ({ data, shouldResetForm, onRe
             title={t`Legal/ Compliance Contact (required)`}
             description={t`Compliance officer or legal contact for requests about the compliance requirements and legal status of your organization. A business phone number is required to complete physical verification for MainNet registration. Please provide a phone number where the Legal/ Compliance contact can be contacted.`}
           />
-          <ContactForm
+          <Box pt={5}>
+            <ContactForm
             name="contacts.technical"
             title={t`Technical Contact (required)`}
             description={t`Primary contact for handling technical queries about the operation and status of your service participating in the TRISA network. Can be a group or admin email.`}
-          />
-          <ContactForm
+            />
+          </Box>
+          <Box pt={5}>
+            <ContactForm
             name="contacts.administrative"
             title={t`Administrative Contact (optional)`}
             description={t`Administrative or executive contact for your organization to field high-level requests or queries. (Strongly recommended)`}
-          />
-          <ContactForm
+            />
+          </Box>
+          <Box pt={5}>
+            <ContactForm
             name="contacts.billing"
             title={t`Billing Contact (optional)`}
             description={t`Billing contact for your organization to handle account and invoice requests or queries relating to the operation of the TRISA network.`}
-          />
-          <StepButtons
+            />
+          </Box>
+          <Box pt={5}>
+            <StepButtons
             handlePreviousStep={handlePreviousStepClick}
             handleNextStep={handleNextStepClick}
             onResetModalClose={handleResetClick}
@@ -173,7 +180,8 @@ const ContactsForm: React.FC<ContactsFormProps> = ({ data, shouldResetForm, onRe
             onClosed={onCloseModalHandler}
             handleResetClick={handleResetClick}
             shouldShowResetFormModal={shouldShowResetFormModal}
-          />
+            />
+          </Box>
         </chakra.form>
         {!isProdEnv ? <DevTool control={methods.control} /> : null}
       </FormProvider>

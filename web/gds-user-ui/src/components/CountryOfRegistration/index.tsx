@@ -1,9 +1,8 @@
-import { Heading } from '@chakra-ui/react';
+import { Heading, Stack } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getCountriesOptions } from 'constants/countries';
-import FormLayout from 'layouts/FormLayout';
 import { Controller, useFormContext } from 'react-hook-form';
 
 const CountryOfRegistration: React.FC = () => {
@@ -14,7 +13,7 @@ const CountryOfRegistration: React.FC = () => {
   const countries = getCountriesOptions();
 
   return (
-    <FormLayout data-testid="legal-country-of-registration">
+    <Stack pt={5} data-testid="legal-country-of-registration">
       <Heading size="md">
         <Trans id="Country of Registration">Country of Registration</Trans>
       </Heading>
@@ -36,7 +35,7 @@ const CountryOfRegistration: React.FC = () => {
           />
         )}
       />
-    </FormLayout>
+    </Stack>
   );
 };
 

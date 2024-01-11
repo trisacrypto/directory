@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, Dispatch, SetStateAction } from 'react';
-import { Grid, GridItem, Heading, Text, VStack, chakra, useDisclosure } from '@chakra-ui/react';
+import { Box, Grid, GridItem, Heading, Text, VStack, chakra, useDisclosure } from '@chakra-ui/react';
 import OtherJuridictions from 'components/OtherJuridictions';
 import Regulations from 'components/Regulations';
 import SwitchFormControl from 'components/SwitchFormControl';
@@ -141,7 +141,6 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
           state: currentState()
         } as any
       };
-      console.log('[] isDirty  payload Trixo', payload);
 
       updateCertificateStep(payload);
       previousStepRef.current = true;
@@ -455,7 +454,8 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
               />
             </VStack>
           </VStack>
-          <StepButtons
+          <Box pt={5}>
+            <StepButtons
             handleNextStep={handleNextStepClick}
             handlePreviousStep={handlePreviousStepClick}
             onResetModalClose={handleResetClick}
@@ -465,7 +465,8 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
             onClosed={onCloseModalHandler}
             handleResetClick={handleResetClick}
             shouldShowResetFormModal={shouldShowResetFormModal}
-          />
+            />
+          </Box>
         </chakra.form>
         {!isProdEnv ? <DevTool control={methods.control} /> : null}
       </FormProvider>

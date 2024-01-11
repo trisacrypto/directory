@@ -46,7 +46,7 @@ const LanguagesDropdown: React.FC = () => {
     setLanguage(e.target.value);
   };
   return (
-    <Select w="100%" maxW="100" ml={3} value={language as string} onChange={handleLanguageClick}>
+    <Select w="100%" ml={2} value={language as string} onChange={handleLanguageClick}>
       <LanguageOptions />
     </Select>
   );

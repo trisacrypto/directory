@@ -1,7 +1,6 @@
-import { Heading, Text } from '@chakra-ui/react';
+import { Heading, Stack, Text } from '@chakra-ui/react';
 import InputFormControl from 'components/ui/InputFormControl';
 import PhoneNumberInput from 'components/ui/PhoneNumberInput';
-import FormLayout from 'layouts/FormLayout';
 import { Controller, useFormContext } from 'react-hook-form';
 import get from 'lodash/get';
 import { t } from '@lingui/macro';
@@ -47,7 +46,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) =
   };
 
   return (
-    <FormLayout>
+    <Stack>
       <Heading size="md" data-testid="title">
         {title}
       </Heading>
@@ -100,7 +99,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ title, description, name }) =
           );
         }}
       />
-    </FormLayout>
+    </Stack>
   );
 };
 

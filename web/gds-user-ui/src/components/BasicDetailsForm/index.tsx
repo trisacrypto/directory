@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { VStack, chakra, useDisclosure } from '@chakra-ui/react';
+import { Box, VStack, chakra, useDisclosure } from '@chakra-ui/react';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getBusinessCategoryOptions, vaspCategories } from 'constants/basic-details';
@@ -112,8 +112,8 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({
   return (
     <FormLayout spacing={5}>
       <FormProvider {...methods}>
-        <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)}>
-          <VStack align="start" spacing={4} w="100%">
+        <chakra.form onSubmit={methods.handleSubmit(handleNextStepClick)} width={'100%'}>
+          <VStack spacing={4}>
             <InputFormControl
               controlId="organization_name"
               data-testid="organization_name"
@@ -191,7 +191,8 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({
               )}
             />
           </VStack>
-          <StepButtons
+          <Box pt={5}>
+            <StepButtons
             handleNextStep={handleNextStepClick}
             isFirstStep={true}
             onResetModalClose={handleResetClick}
@@ -201,7 +202,8 @@ const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({
             onClosed={onCloseModalHandler}
             handleResetClick={handleResetClick}
             shouldShowResetFormModal={shouldShowResetFormModal}
-          />
+            />
+          </Box>
         </chakra.form>
         {!isProdEnv ? <DevTool control={methods.control} /> : null}
       </FormProvider>
