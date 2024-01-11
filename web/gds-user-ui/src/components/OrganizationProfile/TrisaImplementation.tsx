@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heading, Stack, Table, Tbody, Tr, Td, Text } from '@chakra-ui/react';
+import { Heading, Stack, Table, Tbody, Tr, Td, Text, Th } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 type TrisaImplementationProps = {
   data: any;
@@ -36,7 +36,6 @@ const TrisaImplementation: React.FC<TrisaImplementationProps> = ({ data }) => {
             <Tbody
               sx={{
                 '*': {
-                  fontSize: '16px',
                   'td:first-child': {
                     width: '50%'
                   },
@@ -48,40 +47,40 @@ const TrisaImplementation: React.FC<TrisaImplementationProps> = ({ data }) => {
                 }
               }}>
               <Tr pt={'1rem !important'}>
-                <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+                <Td colSpan={2} background="#E5EDF1" fontWeight="bold" fontSize={'md'} pl={'1rem !important'}>
                   <Trans id="MainNet">MainNet</Trans>
                 </Td>
               </Tr>
               <Tr>
-                <Td pt={'1rem !important'} pl={'1rem !important'}>
+                <Th pt={'1rem !important'} pl={'1rem !important'}>
                   <Trans id="Endpoint">Endpoint</Trans>
-                </Td>
+                </Th>
                 <Td>{data?.mainnet?.endpoint || 'N/A'}</Td>
               </Tr>
               <Tr>
-                <Td pl={'1rem !important'}>
+                <Th pl={'1rem !important'}>
                   <Trans id="Common Name">Common Name</Trans>
-                </Td>
+                </Th>
                 <Td>{data?.mainnet?.common_name || 'N/A'}</Td>
               </Tr>
               <Tr>
                 <Td colSpan={2}></Td>
               </Tr>
               <Tr>
-                <Td colSpan={2} background="#E5EDF1" fontWeight="bold" pl={'1rem !important'}>
+                <Td colSpan={2} background="#E5EDF1" fontWeight="bold" fontSize={'md'} pl={'1rem !important'}>
                   <Trans id="TestNet">TestNet</Trans>
                 </Td>
               </Tr>
               <Tr>
-                <Td pt={'1rem !important'} pl={'1rem !important'}>
+                <Th pt={'1rem !important'} pl={'1rem !important'}>
                   <Trans id="Endpoint">Endpoint</Trans>
-                </Td>
+                </Th>
                 <Td>{data?.testnet?.endpoint || 'N/A'}</Td>
               </Tr>
               <Tr>
-                <Td pl={'1rem !important'}>
+                <Th pl={'1rem !important'}>
                   <Trans id="Common Name">Common Name</Trans>
-                </Td>
+                </Th>
                 <Td>{data?.testnet?.common_name || 'N/A'}</Td>
               </Tr>
             </Tbody>
