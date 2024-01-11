@@ -50,13 +50,11 @@ func TestFixtures(t *testing.T) {
 func verifyFixtures(t *testing.T, lib *fixtures.Library, expected map[fixtures.FixtureType]map[string]int) {
 	// Test the reference fixtures
 	refs := lib.Fixtures()
-	require.Len(t, refs, 5, "unexpected number of namespaces in fixtures")
-	require.Contains(t, refs, wire.NamespaceContacts)
+	require.Len(t, refs, 4, "unexpected number of namespaces in fixtures")
 	require.Contains(t, refs, wire.NamespaceVASPs)
 	require.Contains(t, refs, wire.NamespaceCerts)
 	require.Contains(t, refs, wire.NamespaceCertReqs)
 	require.Contains(t, refs, wire.NamespaceEmails)
-	require.Len(t, refs[wire.NamespaceContacts], expected[fixtures.Full][wire.NamespaceContacts])
 	require.Len(t, refs[wire.NamespaceVASPs], expected[fixtures.Full][wire.NamespaceVASPs])
 	require.Len(t, refs[wire.NamespaceCerts], expected[fixtures.Full][wire.NamespaceCerts])
 	require.Len(t, refs[wire.NamespaceCertReqs], expected[fixtures.Full][wire.NamespaceCertReqs])

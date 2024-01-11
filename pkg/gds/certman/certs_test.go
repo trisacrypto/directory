@@ -237,7 +237,7 @@ func (s *certTestSuite) TestCertManagerWebhook() {
 	s.setupCertManager(sectigo.ProfileCipherTraceEE, fixtures.Full)
 	defer s.teardownCertManager()
 	defer s.fixtures.LoadReferenceFixtures()
-	require := s.Require()
+	require := s.Assert()
 	ctx := context.Background()
 
 	s.Run("ValidWebhook", func() {
@@ -277,7 +277,10 @@ func (s *certTestSuite) TestCertManagerWebhook() {
 		// Certificate request should be updated
 		certReq, err = s.db.RetrieveCertReq(ctx, quebecCertReq.Id)
 		require.NoError(err)
-		require.Equal(models.CertificateRequestState_COMPLETED, certReq.Status)
+		require.Equal(
+			models.CertificateRequestState_COMPLETED, certReq.Status,
+			"expected certificate request status %s but got %s", models.CertificateRequestState_COMPLETED, certReq.Status,
+		)
 
 		// Email should be set to one of the contacts
 		messages := []*emails.EmailMeta{

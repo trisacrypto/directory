@@ -56,12 +56,12 @@ var (
 			"hotel":       {},
 		},
 		wire.NamespaceEmails: {
-			"heather@charliebank.org":  {},
-			"kirk@charliebank.ai":      {},
-			"lee@deltaassets.io":       {},
-			"victoria@deltaassets.net": {},
-			"david@hotelcorp.org":      {},
-			"justin@hotelcorp.io":      {},
+			"joseph@charliebank.org":   {},
+			"katherine@charliebank.ai": {},
+			"deborah@deltaassets.net":  {},
+			"lauren@deltaassets.io":    {},
+			"paul@hotelcorp.org":       {},
+			"jonathan@hotelcorp.io":    {},
 		},
 	}
 )
@@ -304,7 +304,7 @@ func (lib *Library) LoadReferenceFixtures() (err error) {
 
 	// Create the reference fixtures map
 	lib.fixtures = make(map[string]map[string]interface{})
-	for _, namespace := range []string{wire.NamespaceContacts, wire.NamespaceVASPs, wire.NamespaceCerts, wire.NamespaceCertReqs, wire.NamespaceEmails} {
+	for _, namespace := range []string{wire.NamespaceVASPs, wire.NamespaceCerts, wire.NamespaceCertReqs, wire.NamespaceEmails} {
 		lib.fixtures[namespace] = make(map[string]interface{})
 	}
 
@@ -330,12 +330,6 @@ func (lib *Library) LoadReferenceFixtures() (err error) {
 		}
 
 		switch prefix {
-		case wire.NamespaceContacts:
-			contact := &models.Contact{}
-			if err = protojson.Unmarshal(data, contact); err != nil {
-				return err
-			}
-			lib.fixtures[wire.NamespaceContacts][key] = contact
 		case wire.NamespaceVASPs:
 			vasp := &pb.VASP{}
 			if err = protojson.Unmarshal(data, vasp); err != nil {
