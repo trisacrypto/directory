@@ -1526,12 +1526,6 @@ func (s *certTestSuite) setupCertManager(profile string, fType fixtures.FixtureT
 	s.conf.CertMan.Storage = certPath
 	s.conf.CertMan.RequestInterval = time.Millisecond
 	s.conf.CertMan.Sectigo.Profile = profile
-	s.conf.CertMan.DeliveryBackoff.InitialInterval = time.Millisecond
-	s.conf.CertMan.DeliveryBackoff.MaxInterval = 10 * time.Millisecond
-	s.conf.CertMan.DeliveryBackoff.MaxElapsedTime = 100 * time.Millisecond
-	s.conf.CertMan.DeliveryBackoff.Multiplier = 1.5
-	s.conf.CertMan.DeliveryBackoff.RandomizationFactor = 0.5
-	s.conf.CertMan.DeliveryBackoff.MaxRetries = 3
 
 	// Initialize the configured store
 	switch s.fixtures.StoreType() {
