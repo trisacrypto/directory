@@ -15,6 +15,6 @@ export function useUpdateCollaborator(): UpdateCollaboratorMutation {
         hasCollaboratorFailed: mutation.isError,
         wasCollaboratorUpdated: mutation.isSuccess,
         isUpdating: mutation.isLoading,
-        errorMessage: mutation.error?.response.data?.error || mutation.error,
+        errorMessage: mutation.error,
     };
 }
