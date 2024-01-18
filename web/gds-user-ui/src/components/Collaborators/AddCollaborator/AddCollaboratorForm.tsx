@@ -67,7 +67,7 @@ const AddCollaboratorForm: FC<Props> = (props) => {
         toast({
             position: 'top-right',
             title: t`Unable to add collaborator`,
-            description: t`${errorMessage}`,
+            description: t`${errorMessage?.data?.error}`,
             isClosable: true,
             duration: 9000,
             status: 'error'
