@@ -7,7 +7,6 @@ import { Button, Stack, Text, VStack, chakra, useToast } from '@chakra-ui/react'
 import { DevTool } from '@hookform/devtools';
 import { isProdEnv } from 'application/config';
 import InputFormControl from 'components/ui/InputFormControl';
-import CustomToast from 'components/ui/CustomToast';
 import CheckboxFormControl from 'components/ui/CheckboxFormControl';
 import { t, Trans } from '@lingui/macro';
 import { useFetchCollaborators } from 'components/Collaborators/useFetchCollaborator';
@@ -62,17 +61,19 @@ const AddCollaboratorForm: FC<Props> = (props) => {
     // set collaborators in global state
   };
 
-  if (hasCollaboratorFailed) {
-    return (
-      <Stack data-test="collaborator-failed">
-        <CustomToast
-          title="Fail to add a new collaborator"
-          description={errorMessage}
-          status="error"
-        />
-      </Stack>
-    );
-  }
+  useEffect(() => {
+    if (hasCollaboratorFailed) {
+        onCloseModal();
+        toast({
+            position: 'top-right',
+            title: t`Unable to add collaborator`,
+            description: t`${errorMessage}`,
+            isClosable: true,
+            duration: 9000,
+            status: 'error'
+        });
+    }
+  }, [hasCollaboratorFailed, onCloseModal, errorMessage, toast]);
 
   return (
     <chakra.form onSubmit={handleSubmit(onSubmit)}>
