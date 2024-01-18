@@ -12,6 +12,7 @@ import { t, Trans } from '@lingui/macro';
 import { useFetchCollaborators } from 'components/Collaborators/useFetchCollaborator';
 import { useSelector } from 'react-redux';
 import { userSelector } from 'modules/auth/login/user.slice';
+import { upperCaseFirstLetter } from 'utils/utils';
 type Props = {
   onCloseModal: () => void;
 };
@@ -67,7 +68,7 @@ const AddCollaboratorForm: FC<Props> = (props) => {
         toast({
             position: 'top-right',
             title: t`Unable to add collaborator`,
-            description: t`${errorMessage?.data?.error}`,
+            description: t`${upperCaseFirstLetter(errorMessage?.data?.error)}`,
             isClosable: true,
             duration: 9000,
             status: 'error'
