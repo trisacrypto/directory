@@ -24,6 +24,7 @@ import React, { useEffect, useState } from 'react';
 import { t } from '@lingui/macro';
 import { USER_PERMISSION } from 'types/enums';
 import { useSafeDisableIconButton } from 'components/Collaborators/useSafeDisableIconButton';
+import { upperCaseFirstLetter } from 'utils/utils';
 
 interface Props {
   collaboratorId: string;
@@ -112,7 +113,7 @@ function EditCollaboratorModal(props: Props) {
       //   t`An error occurred while updating the collaborator, please try again or contact support at support@trisa.io`;
       toast({
         title: t`Collaborator is not updated`,
-        description: errorMessage || t`The collaborator has not been updated`,
+        description: t`${upperCaseFirstLetter(errorMessage?.data?.error)}` || t`The collaborator has not been updated`,
         status: 'error',
         duration: 9000,
         isClosable: true,
