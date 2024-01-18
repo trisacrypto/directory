@@ -74,7 +74,7 @@ const AddCollaboratorForm: FC<Props> = (props) => {
         status: 'error'
       });
     }
-  }, [hasCollaboratorFailed, onCloseModal, toast, errorMessage])
+  }, [hasCollaboratorFailed, onCloseModal, toast, errorMessage]);
 
   return (
     <chakra.form onSubmit={handleSubmit(onSubmit)}>
