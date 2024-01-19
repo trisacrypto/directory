@@ -10,7 +10,7 @@ const useExportMembers = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const LOADING_TIMEOUT = 500;
 
-  const isUnverified = error && error?.response?.status === 451;
+  const isUnverified = error && error?.status === 451;
   const isMemberEmpty = !members?.vasps?.length;
   const hasError = !isUnverified && error; // if error is not 451, then it's a real error
 
@@ -23,13 +23,11 @@ const useExportMembers = () => {
         setIsLoading(false);
       }, LOADING_TIMEOUT);
     } catch (er: any) {
-      console.log('[useExportMembers] error: ', er);
     }
   };
 
   useEffect(() => {
     if (isLoading) {
-      console.log('[ExportButton]');
       getMembers();
     }
   }, [isLoading, getMembers, error]);
