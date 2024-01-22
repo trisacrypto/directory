@@ -189,26 +189,29 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
               <Stack
                 alignContent={'center'}
                 justifyContent={'center'}
+                height="100%"
                 mx="auto"
-                pb={4}
+                pt="2"
+                px="6"
+                pb="6"
                 alignItems={'center'}>
                 <Button
                   bgColor="#ff7a59f0"
                   color="#fff"
-                  isDisabled={testnet || isTestnetNetworkFieldsIncomplete}
-                  data-testid="testnet-submit-btn"
                   size="lg"
-                  py={["null", "2.5rem", "2.8rem", "1.5rem"]}
-                  isLoading={isTestNetSubmitting}
                   whiteSpace="normal"
-                  maxW={[200, 250, 385]}
+                  mt="auto"
+                  py={{ base: '1rem', lg: '1.75rem' }}
                   width="100%"
                   boxShadow="lg"
-                  onClick={(e) => {
-                    onSubmitHandler(e, STEPPER_NETWORK.TESTNET);
-                  }}
                   _hover={{
                     bgColor: '#f55c35'
+                  }}
+                  isLoading={isTestNetSubmitting}
+                  isDisabled={testnet || isTestnetNetworkFieldsIncomplete}
+                  data-testid="testnet-submit-btn"
+                  onClick={(e) => {
+                    onSubmitHandler(e, STEPPER_NETWORK.TESTNET);
                   }}>
                   {t`Submit TestNet Registration`}
                 </Button>
@@ -279,27 +282,31 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
               <Stack
                 alignContent={'center'}
                 justifyContent={'center'}
+                height="100%"
                 mx="auto"
+                pt="2"
                 alignItems={'center'}
-                pb={4}>
+                pb="6"
+                px="6">
                 <Button
                   bgColor="#23a7e0e8"
                   color="#fff"
                   size="lg"
-                  py={["null", "2.5rem", "2.8rem", "1.5rem"]}
+                  mt="auto"
+                  py={{ base: '1rem', lg: '1.75rem' }}
+                  width="100%"
+                  _hover={{
+                    bgColor: '#189fda'
+                  }}
                   isLoading={isMainNetSubmitting}
                   isDisabled={mainnet || isMainnetNetworkIncomplete}
                   whiteSpace="normal"
                   boxShadow="lg"
                   data-testid="mainnet-submit-btn"
-                  maxW={[200, 250, 385]}
                   onClick={(e) => {
                     onSubmitHandler(e, STEPPER_NETWORK.MAINNET);
                   }}
-                  width="100%"
-                  _hover={{
-                    bgColor: '#189fda'
-                  }}>
+                  >
                   {t`Submit MainNet Registration`}
                 </Button>
               </Stack>
@@ -308,10 +315,8 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
 
           <Box alignSelf={'flex-start'} textAlign="center" mx={'auto'}>
             <Button
-              data-cy="back-to-review-section"
               bgColor="#fff"
               color="#1026F0"
-              onClick={handleJumpToLastStep}
               size="lg"
               py="2rem"
               whiteSpace="normal"
@@ -320,7 +325,9 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
               width="100%"
               _hover={{
                 bgColor: '#E6E6E6'
-              }}>
+              }}
+              data-cy="back-to-review-section"
+              onClick={handleJumpToLastStep}>
               {t`Back to Review section`}
             </Button>
           </Box>
