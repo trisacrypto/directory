@@ -842,6 +842,10 @@ exports[`TrixoQuestionnaire should render 1`] = `
 }
 
 .emotion-108 {
+  padding-top: var(--chakra-space-5);
+}
+
+.emotion-109 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -863,87 +867,13 @@ exports[`TrixoQuestionnaire should render 1`] = `
   row-gap: var(--chakra-space-2);
 }
 
-.emotion-108>*:not(style)~*:not(style) {
+.emotion-109>*:not(style)~*:not(style) {
   margin-top: 0px;
   -webkit-margin-end: 0px;
   margin-inline-end: 0px;
   margin-bottom: 0px;
   -webkit-margin-start: var(--chakra-space-8);
   margin-inline-start: var(--chakra-space-8);
-}
-
-.emotion-109 {
-  display: -webkit-inline-box;
-  display: -webkit-inline-flex;
-  display: -ms-inline-flexbox;
-  display: inline-flex;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  -ms-appearance: none;
-  appearance: none;
-  -webkit-align-items: center;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  -webkit-box-pack: center;
-  -ms-flex-pack: center;
-  -webkit-justify-content: center;
-  justify-content: center;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  position: relative;
-  white-space: nowrap;
-  vertical-align: middle;
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  width: auto;
-  line-height: 1.2;
-  border-radius: var(--chakra-radii-md);
-  font-weight: var(--chakra-fontWeights-semibold);
-  transition-property: var(--chakra-transition-property-common);
-  transition-duration: var(--chakra-transition-duration-normal);
-  height: var(--chakra-sizes-10);
-  min-width: var(--chakra-sizes-10);
-  font-size: var(--chakra-fontSizes-md);
-  -webkit-padding-start: var(--chakra-space-4);
-  padding-inline-start: var(--chakra-space-4);
-  -webkit-padding-end: var(--chakra-space-4);
-  padding-inline-end: var(--chakra-space-4);
-  background: var(--chakra-colors-gray-100);
-}
-
-.emotion-109:focus,
-.emotion-109[data-focus] {
-  box-shadow: var(--chakra-shadows-outline);
-}
-
-.emotion-109[disabled],
-.emotion-109[aria-disabled=true],
-.emotion-109[data-disabled] {
-  opacity: 0.4;
-  cursor: not-allowed;
-  box-shadow: var(--chakra-shadows-none);
-}
-
-.emotion-109:hover,
-.emotion-109[data-hover] {
-  background: var(--chakra-colors-gray-200);
-}
-
-.emotion-109:hover[disabled],
-.emotion-109[data-hover][disabled],
-.emotion-109:hover[aria-disabled=true],
-.emotion-109[data-hover][aria-disabled=true],
-.emotion-109:hover[data-disabled],
-.emotion-109[data-hover][data-disabled] {
-  background: var(--chakra-colors-gray-100);
-}
-
-.emotion-109:active,
-.emotion-109[data-active] {
-  background: var(--chakra-colors-gray-300);
 }
 
 .emotion-110 {
@@ -985,6 +915,7 @@ exports[`TrixoQuestionnaire should render 1`] = `
   padding-inline-start: var(--chakra-space-4);
   -webkit-padding-end: var(--chakra-space-4);
   padding-inline-end: var(--chakra-space-4);
+  background: var(--chakra-colors-gray-100);
 }
 
 .emotion-110:focus,
@@ -1000,12 +931,85 @@ exports[`TrixoQuestionnaire should render 1`] = `
   box-shadow: var(--chakra-shadows-none);
 }
 
+.emotion-110:hover,
+.emotion-110[data-hover] {
+  background: var(--chakra-colors-gray-200);
+}
+
 .emotion-110:hover[disabled],
 .emotion-110[data-hover][disabled],
 .emotion-110:hover[aria-disabled=true],
 .emotion-110[data-hover][aria-disabled=true],
 .emotion-110:hover[data-disabled],
 .emotion-110[data-hover][data-disabled] {
+  background: var(--chakra-colors-gray-100);
+}
+
+.emotion-110:active,
+.emotion-110[data-active] {
+  background: var(--chakra-colors-gray-300);
+}
+
+.emotion-111 {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  vertical-align: middle;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: var(--chakra-radii-md);
+  font-weight: var(--chakra-fontWeights-semibold);
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-normal);
+  height: var(--chakra-sizes-10);
+  min-width: var(--chakra-sizes-10);
+  font-size: var(--chakra-fontSizes-md);
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+}
+
+.emotion-111:focus,
+.emotion-111[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-111[disabled],
+.emotion-111[aria-disabled=true],
+.emotion-111[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: var(--chakra-shadows-none);
+}
+
+.emotion-111:hover[disabled],
+.emotion-111[data-hover][disabled],
+.emotion-111:hover[aria-disabled=true],
+.emotion-111[data-hover][aria-disabled=true],
+.emotion-111:hover[data-disabled],
+.emotion-111[data-hover][data-disabled] {
   background: initial;
 }
 
@@ -1655,27 +1659,31 @@ Counterparty/Customer Due Diligence (KYC/CDD) and Sanctions standards per the re
         </div>
       </div>
       <div
-        class="chakra-stack emotion-108"
-        data-testid="step-buttons"
+        class="emotion-108"
       >
-        <button
-          class="chakra-button emotion-109"
-          type="button"
+        <div
+          class="chakra-stack emotion-109"
+          data-testid="step-buttons"
         >
-          Save & Previous
-        </button>
-        <button
-          class="chakra-button emotion-110"
-          type="button"
-        >
-          Save & Next
-        </button>
-        <button
-          class="chakra-button emotion-109"
-          type="button"
-        >
-          Clear & Reset Section
-        </button>
+          <button
+            class="chakra-button emotion-110"
+            type="button"
+          >
+            Save & Previous
+          </button>
+          <button
+            class="chakra-button emotion-111"
+            type="button"
+          >
+            Save & Next
+          </button>
+          <button
+            class="chakra-button emotion-110"
+            type="button"
+          >
+            Clear & Reset Section
+          </button>
+        </div>
       </div>
     </form>
   </div>

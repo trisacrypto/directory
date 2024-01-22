@@ -34,6 +34,29 @@ exports[`TrisaImplementation should render 1`] = `
   }
 }
 
+.emotion-1 {
+  width: 100%;
+}
+
+.emotion-2 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+.emotion-2>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
 .emotion-3 {
   font-family: var(--chakra-fonts-heading);
   font-weight: var(--chakra-fontWeights-bold);
@@ -140,7 +163,11 @@ exports[`TrisaImplementation should render 1`] = `
   font-size: var(--chakra-fontSizes-sm);
 }
 
-.emotion-26 {
+.emotion-14 {
+  padding-top: var(--chakra-space-5);
+}
+
+.emotion-28 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -162,7 +189,7 @@ exports[`TrisaImplementation should render 1`] = `
   row-gap: var(--chakra-space-2);
 }
 
-.emotion-26>*:not(style)~*:not(style) {
+.emotion-28>*:not(style)~*:not(style) {
   margin-top: 0px;
   -webkit-margin-end: 0px;
   margin-inline-end: 0px;
@@ -171,7 +198,7 @@ exports[`TrisaImplementation should render 1`] = `
   margin-inline-start: var(--chakra-space-8);
 }
 
-.emotion-27 {
+.emotion-29 {
   display: -webkit-inline-box;
   display: -webkit-inline-flex;
   display: -ms-inline-flexbox;
@@ -213,39 +240,39 @@ exports[`TrisaImplementation should render 1`] = `
   background: var(--chakra-colors-gray-100);
 }
 
-.emotion-27:focus,
-.emotion-27[data-focus] {
+.emotion-29:focus,
+.emotion-29[data-focus] {
   box-shadow: var(--chakra-shadows-outline);
 }
 
-.emotion-27[disabled],
-.emotion-27[aria-disabled=true],
-.emotion-27[data-disabled] {
+.emotion-29[disabled],
+.emotion-29[aria-disabled=true],
+.emotion-29[data-disabled] {
   opacity: 0.4;
   cursor: not-allowed;
   box-shadow: var(--chakra-shadows-none);
 }
 
-.emotion-27:hover,
-.emotion-27[data-hover] {
+.emotion-29:hover,
+.emotion-29[data-hover] {
   background: var(--chakra-colors-gray-200);
 }
 
-.emotion-27:hover[disabled],
-.emotion-27[data-hover][disabled],
-.emotion-27:hover[aria-disabled=true],
-.emotion-27[data-hover][aria-disabled=true],
-.emotion-27:hover[data-disabled],
-.emotion-27[data-hover][data-disabled] {
+.emotion-29:hover[disabled],
+.emotion-29[data-hover][disabled],
+.emotion-29:hover[aria-disabled=true],
+.emotion-29[data-hover][aria-disabled=true],
+.emotion-29:hover[data-disabled],
+.emotion-29[data-hover][data-disabled] {
   background: var(--chakra-colors-gray-100);
 }
 
-.emotion-27:active,
-.emotion-27[data-active] {
+.emotion-29:active,
+.emotion-29[data-active] {
   background: var(--chakra-colors-gray-300);
 }
 
-.emotion-28 {
+.emotion-30 {
   display: -webkit-inline-box;
   display: -webkit-inline-flex;
   display: -ms-inline-flexbox;
@@ -286,25 +313,25 @@ exports[`TrisaImplementation should render 1`] = `
   padding-inline-end: var(--chakra-space-4);
 }
 
-.emotion-28:focus,
-.emotion-28[data-focus] {
+.emotion-30:focus,
+.emotion-30[data-focus] {
   box-shadow: var(--chakra-shadows-outline);
 }
 
-.emotion-28[disabled],
-.emotion-28[aria-disabled=true],
-.emotion-28[data-disabled] {
+.emotion-30[disabled],
+.emotion-30[aria-disabled=true],
+.emotion-30[data-disabled] {
   opacity: 0.4;
   cursor: not-allowed;
   box-shadow: var(--chakra-shadows-none);
 }
 
-.emotion-28:hover[disabled],
-.emotion-28[data-hover][disabled],
-.emotion-28:hover[aria-disabled=true],
-.emotion-28[data-hover][aria-disabled=true],
-.emotion-28:hover[data-disabled],
-.emotion-28[data-hover][data-disabled] {
+.emotion-30:hover[disabled],
+.emotion-30[data-hover][disabled],
+.emotion-30:hover[aria-disabled=true],
+.emotion-30[data-hover][aria-disabled=true],
+.emotion-30:hover[data-disabled],
+.emotion-30[data-hover][data-disabled] {
   background: initial;
 }
 
@@ -317,7 +344,7 @@ exports[`TrisaImplementation should render 1`] = `
       data-testid="trisa-implementation-form"
     >
       <div
-        class="chakra-stack emotion-0"
+        class="chakra-stack emotion-2"
       >
         <h2
           class="chakra-heading emotion-3"
@@ -386,96 +413,104 @@ exports[`TrisaImplementation should render 1`] = `
         </div>
       </div>
       <div
-        class="chakra-stack emotion-0"
+        class="emotion-14"
       >
-        <h2
-          class="chakra-heading emotion-3"
-        >
-          TRISA Endpoint: MainNet
-        </h2>
         <div
-          class="chakra-form-control emotion-4"
-          role="group"
+          class="chakra-stack emotion-2"
         >
-          <label
-            class="chakra-form__label emotion-5"
-            for="trisaEndpoint"
-            id="field-3-label"
+          <h2
+            class="chakra-heading emotion-3"
           >
-            TRISA Endpoint
-          </label>
+            TRISA Endpoint: MainNet
+          </h2>
           <div
-            class="chakra-input__group emotion-6"
+            class="chakra-form-control emotion-4"
+            role="group"
           >
-            <input
-              aria-describedby="field-3-helptext"
-              class="chakra-input emotion-7"
-              id="trisaEndpoint"
-              name="mainnet.endpoint"
-              placeholder="trisa.undefined:443"
-              type="text"
-            />
+            <label
+              class="chakra-form__label emotion-5"
+              for="trisaEndpoint"
+              id="field-3-label"
+            >
+              TRISA Endpoint
+            </label>
+            <div
+              class="chakra-input__group emotion-6"
+            >
+              <input
+                aria-describedby="field-3-helptext"
+                class="chakra-input emotion-7"
+                id="trisaEndpoint"
+                name="mainnet.endpoint"
+                placeholder="trisa.undefined:443"
+                type="text"
+              />
+            </div>
+            <div
+              class="chakra-form__helper-text emotion-8"
+              id="field-3-helptext"
+            >
+              The address and port of the TRISA endpoint for partner VASPs to connect on via gRPC.
+            </div>
           </div>
           <div
-            class="chakra-form__helper-text emotion-8"
-            id="field-3-helptext"
+            class="chakra-form-control emotion-4"
+            role="group"
           >
-            The address and port of the TRISA endpoint for partner VASPs to connect on via gRPC.
-          </div>
-        </div>
-        <div
-          class="chakra-form-control emotion-4"
-          role="group"
-        >
-          <label
-            class="chakra-form__label emotion-5"
-            for="certificateCommonName"
-            id="field-4-label"
-          >
-            Certificate Common Name
-          </label>
-          <div
-            class="chakra-input__group emotion-6"
-          >
-            <input
-              aria-describedby="field-4-helptext"
-              class="chakra-input emotion-7"
-              id="certificateCommonName"
-              name="mainnet.common_name"
-              placeholder="trisa.undefined"
-              type="text"
-            />
-          </div>
-          <div
-            class="chakra-form__helper-text emotion-8"
-            id="field-4-helptext"
-          >
-            The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases.
+            <label
+              class="chakra-form__label emotion-5"
+              for="certificateCommonName"
+              id="field-4-label"
+            >
+              Certificate Common Name
+            </label>
+            <div
+              class="chakra-input__group emotion-6"
+            >
+              <input
+                aria-describedby="field-4-helptext"
+                class="chakra-input emotion-7"
+                id="certificateCommonName"
+                name="mainnet.common_name"
+                placeholder="trisa.undefined"
+                type="text"
+              />
+            </div>
+            <div
+              class="chakra-form__helper-text emotion-8"
+              id="field-4-helptext"
+            >
+              The common name for the mTLS certificate. This should match the TRISA endpoint without the port in most cases.
+            </div>
           </div>
         </div>
       </div>
       <div
-        class="chakra-stack emotion-26"
-        data-testid="step-buttons"
+        class="emotion-14"
       >
-        <button
-          class="chakra-button emotion-27"
-          type="button"
+        <div
+          class="chakra-stack emotion-28"
+          data-testid="step-buttons"
         >
-          Save & Previous
-        </button>
-        <button
-          class="chakra-button emotion-28"
-          type="button"
-        >
-          Save & Next
-        </button>
-        <button
-          class="chakra-button emotion-27"
-          type="button"
-        >
-          Clear & Reset Section
-        </button>
+          <button
+            class="chakra-button emotion-29"
+            type="button"
+          >
+            Save & Previous
+          </button>
+          <button
+            class="chakra-button emotion-30"
+            type="button"
+          >
+            Save & Next
+          </button>
+          <button
+            class="chakra-button emotion-29"
+            type="button"
+          >
+            Clear & Reset Section
+          </button>
+        </div>
       </div>
     </form>
   </div>
