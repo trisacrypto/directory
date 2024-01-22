@@ -8,7 +8,8 @@ import {
   useDisclosure,
   Box,
   Flex,
-  Link
+  Link,
+  SimpleGrid,
 } from '@chakra-ui/react';
 import FormLayout from 'layouts/FormLayout';
 import ConfirmationModal from 'components/ReviewSubmit/ConfirmationModal';
@@ -115,8 +116,8 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
               </Text>
             </Text>
           </FormLayout>
-          <Stack
-            direction={['column', 'row']}
+          <SimpleGrid
+            columns={{ base: 1, sm: 1, lg: 2 }}
             justifyContent="space-around"
             py={14}
             width="100%"
@@ -303,7 +304,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                 </Button>
               </Stack>
             </Stack>
-          </Stack>
+          </SimpleGrid>
 
           <Box alignSelf={'flex-start'} textAlign="center" mx={'auto'}>
             <Button
