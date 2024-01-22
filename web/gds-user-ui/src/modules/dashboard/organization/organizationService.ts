@@ -1,5 +1,5 @@
 import axiosInstance from 'utils/axios';
-export const getAllOrganisations = async (name: string, page: number, pageSize: number) => {
+export const getAllOrganizations = async (name: string, page: number, pageSize: number) => {
   const urlParams =
     name && name.length > 0
       ? `?name=${encodeURIComponent(name)}&page=${page}&page_size=${pageSize}`
@@ -10,19 +10,17 @@ export const getAllOrganisations = async (name: string, page: number, pageSize: 
   return response;
 };
 
-// rename all the functions to camelCase and remove the 'Organisation' spelling later
-
-export const GetOrganisation = async (id: string) => {
+export const getOrganization = async (id: string) => {
   const response = await axiosInstance.get(`/organizations/${id}`);
   return response;
 };
 
-export const CreateOrganisation = async (data: any) => {
+export const createOrganization = async (data: any) => {
   const response = await axiosInstance.post(`/organizations`, data);
   return response;
 };
 
-export const UpdateOrganisation = async (id: string, data: any) => {
+export const updateOrganization = async (id: string, data: any) => {
   const response = await axiosInstance.put(`/organizations/${id}`, data);
   return response;
 };

@@ -7,7 +7,7 @@ const MemberTableList = () => {
   const network = useSelector(memberSelector).members.network;
 
   const { error, members, isFetchingMembers, getMembers } = useFetchMembers(network);
-  const isUnverified = error && error?.response?.status === 451;
+  const isUnverified = error && error?.status === 451;
 
   // if network changes, we need to refetch members
   useEffect(() => {
