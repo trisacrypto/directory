@@ -12,6 +12,8 @@ function AddressList() {
 
   const handleAddressClick = () => {
     append({
+      /* Set the default address type value for additional any addresses 
+      to match the default address type provided by backend. */
       address_type: 'ADDRESS_TYPE_CODE_BIZZ',
       address_line: ['', '', ''],
       country: ''
