@@ -1,6 +1,6 @@
-import { CreateOrganisation } from './organizationService';
 import { useMutation } from '@tanstack/react-query';
+import { createOrganization } from './organizationService';
 
 export function usePostOrganizations() {
-  return useMutation<any, any>(CreateOrganisation);
+  return useMutation<any, any>(createOrganization);
 }
