@@ -12,7 +12,7 @@ function AddressList() {
 
   const handleAddressClick = () => {
     append({
-      address_type: '',
+      address_type: 'ADDRESS_TYPE_CODE_BIZZ',
       address_line: ['', '', ''],
       country: ''
     });
