@@ -117,7 +117,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
             </Text>
           </FormLayout>
           <SimpleGrid
-            columns={{ base: 1, sm: 1, lg: 2 }}
+            columns={{ base: 1, lg: 2 }}
             justifyContent="space-around"
             py={14}
             width="100%"
