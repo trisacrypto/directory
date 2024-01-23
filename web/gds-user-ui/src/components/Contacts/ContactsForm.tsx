@@ -15,6 +15,7 @@ import FormLayout from 'layouts/FormLayout';
 import { StepsIndexes } from 'constants/steps';
 import { isProdEnv } from 'application/config';
 import { DevTool } from '@hookform/devtools';
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 interface ContactsFormProps {
   data?: any;
   isLoading?: boolean;
@@ -25,13 +26,16 @@ const ContactsForm: React.FC<ContactsFormProps> = ({ data, shouldResetForm, onRe
   const { isOpen, onClose, onOpen } = useDisclosure();
   const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
+  const { certificateStep } = useFetchCertificateStep({
+    key: StepEnum.CONTACTS
+  });
 
   const {
     updateCertificateStep,
     updatedCertificateStep,
     wasCertificateStepUpdated,
     isUpdatingCertificateStep,
-    reset: resetMutation
+    reset
   } = useUpdateCertificateStep();
   const previousStepRef = useRef<any>(false);
   const nextStepRef = useRef<any>(false);
@@ -53,17 +57,17 @@ const ContactsForm: React.FC<ContactsFormProps> = ({ data, shouldResetForm, onRe
   }, [isDirty, updateIsDirty]);
 
   if (wasCertificateStepUpdated && nextStepRef.current) {
-    resetMutation();
+    reset();
     // reset the form with the new values
     resetForm(updatedCertificateStep?.form, {
       keepValues: false
     });
-    nextStep(updatedCertificateStep);
+    nextStep(certificateStep);
     nextStepRef.current = false;
   }
 
   if (wasCertificateStepUpdated && previousStepRef.current && !isUpdatingCertificateStep) {
-    resetMutation();
+    reset();
     // reset the form with the new values
     resetForm(updatedCertificateStep?.form, {
       keepValues: false
@@ -85,7 +89,7 @@ const ContactsForm: React.FC<ContactsFormProps> = ({ data, shouldResetForm, onRe
       updateCertificateStep(payload);
       previousStepRef.current = true;
     }
-    previousStep(data);
+    previousStep(certificateStep);
   };
 
   useEffect(() => {
@@ -102,13 +106,7 @@ const ContactsForm: React.FC<ContactsFormProps> = ({ data, shouldResetForm, onRe
 
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep({
-        step: StepEnum.CONTACTS,
-        form: {
-          ...methods.getValues(),
-          state: currentState()
-        } as any
-      });
+      nextStep(certificateStep);
     } else {
       const payload = {
         step: StepEnum.CONTACTS,

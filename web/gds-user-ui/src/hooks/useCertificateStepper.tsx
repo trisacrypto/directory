@@ -46,13 +46,11 @@ const useCertificateStepper = () => {
       steps: removeMissingFields(updatedState.steps),
       ready_to_submit: updatedState.hasReachSubmitStep
     };
-    console.log('currentFormatState', formatState);
     return formatState;
   };
 
   const nextStep = (data?: any) => {
     const errorFields = data?.errors;
-    console.log('errorFields', errorFields);
     const stepNumber = getStepNumber(data?.step) || currentStep;
 
     if (data && errorFields && Object.keys(errorFields).length > 0) {
@@ -70,6 +68,7 @@ const useCertificateStepper = () => {
 
   const previousStep = (data?: any) => {
     const errorFields = data?.errors;
+    console.log('previous errorFields', errorFields);
     const stepNumber = getStepNumber(data?.step) || currentStep; // get step number from step name
     if (data && errorFields && Object.keys(errorFields).length > 0) {
       dispatch(setStepStatus({ step: stepNumber, status: LSTATUS.ERROR }));
