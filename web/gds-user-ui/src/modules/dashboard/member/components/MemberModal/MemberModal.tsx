@@ -35,10 +35,10 @@ const MemberModal = ({ isOpen, onClose, member: memberId }: MemberModalProps) =>
   const toast = useToast();
 
   useEffect(() => {
-    if (error && error?.response?.status !== 451) {
+    if (error && error?.status !== 451) {
       onClose();
       toast({
-        description: error?.response?.data?.error,
+        description: error?.data?.error,
         status: 'error',
         duration: 5000,
         position: 'top-right',

@@ -12,6 +12,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/csv"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -198,6 +199,15 @@ func main() {
 			Usage:    "list the contacts in the current database",
 			Category: "contact",
 			Action:   contactList,
+			Before:   connectDB,
+			After:    closeDB,
+			Flags:    []cli.Flag{},
+		},
+		{
+			Name:     "contact:export",
+			Usage:    "export the VASP contacts in the current database",
+			Category: "contact",
+			Action:   contactExport,
 			Before:   connectDB,
 			After:    closeDB,
 			Flags:    []cli.Flag{},
@@ -706,6 +716,51 @@ func contactList(c *cli.Context) (err error) {
 	}
 
 	w.Flush()
+	return nil
+}
+
+func contactExport(c *cli.Context) (err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	vasps := db.ListVASPs(ctx)
+
+	w := csv.NewWriter(os.Stdout)
+	defer w.Flush()
+
+	w.Write([]string{"ID", "VASP", "Administrative", "Technical", "Legal", "Billing"})
+
+	for vasps.Next() {
+		vasp, err := vasps.VASP()
+		if err != nil {
+			continue
+		}
+
+		row := make([]string, 6)
+		row[0] = vasp.Id
+		row[1], _ = vasp.Name()
+
+		contacts := vasp.Contacts
+
+		if contacts.Administrative != nil {
+			row[2] = fmt.Sprintf("%q <%s>", contacts.Administrative.Name, contacts.Administrative.Email)
+		}
+
+		if contacts.Technical != nil {
+			row[3] = fmt.Sprintf("%q <%s>", contacts.Technical.Name, contacts.Technical.Email)
+		}
+
+		if contacts.Legal != nil {
+			row[4] = fmt.Sprintf("%q <%s>", contacts.Legal.Name, contacts.Legal.Email)
+		}
+
+		if contacts.Billing != nil {
+			row[5] = fmt.Sprintf("%q <%s>", contacts.Billing.Name, contacts.Billing.Email)
+		}
+
+		w.Write(row)
+	}
+
 	return nil
 }
 

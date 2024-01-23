@@ -70,7 +70,6 @@ axiosInstance.interceptors.response.use(
           axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
           axiosInstance.defaults.headers.common['X-CSRF-Token'] = csrfToken;
           originalRequest._retry += 1;
-          console.log('retrying request', originalRequest);
           return axiosInstance(originalRequest);
         }
       } else {
@@ -121,7 +120,7 @@ axiosInstance.interceptors.response.use(
       }
     }
 
-    return Promise.reject(error);
+    return Promise.reject(error.response);
 
     // }
   }

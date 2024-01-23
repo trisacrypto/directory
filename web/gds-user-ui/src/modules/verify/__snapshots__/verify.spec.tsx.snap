@@ -203,8 +203,7 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
   height: -moz-fit-content;
   height: fit-content;
   position: relative;
-  max-width: 100px;
-  margin-left: var(--chakra-space-3);
+  margin-left: var(--chakra-space-2);
 }
 
 .emotion-12 {
@@ -687,11 +686,6 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
                       value="ja"
                     >
                       🇯🇵 JA
-                    </option>
-                    <option
-                      value="en-dh"
-                    >
-                      - DH
                     </option>
                   </select>
                   <div

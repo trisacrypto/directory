@@ -18,6 +18,7 @@ import { queryClient } from 'utils/react-query';
 import { FETCH_ORGANIZATION } from 'constants/query-keys';
 import { canCreateOrganization } from 'utils/permission';
 import AddNewVaspForm from '../AddNewVaspForm/AddNewVaspForm';
+import { upperCaseFirstLetter } from 'utils/utils';
 
 const validationSchema = Yup.object().shape({
   name: Yup.string().required(t`The VASP Name is required.`),
@@ -48,7 +49,6 @@ function AddNewVaspModal() {
   const onSubmit = (values: any) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { accept, ...payload } = values;
-    console.log('[mutate] payload', payload);
 
     mutate(payload, {
       onSuccess() {
@@ -57,9 +57,9 @@ function AddNewVaspModal() {
         closeModal();
       },
       onError: (error) => {
-        console.log('[mutate] error', error.response?.data.error);
         toast({
-          title: error.response?.data?.error || error.message,
+          title: t`Unable to add VASP`,
+          description: t`${upperCaseFirstLetter(error?.data?.error)}`,
           status: 'error',
           position: 'top-right'
         });
