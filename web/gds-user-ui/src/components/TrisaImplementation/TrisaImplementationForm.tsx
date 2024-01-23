@@ -78,7 +78,9 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
   }
 
   const handlePreviousStepClick = () => {
-    if (isDirty) {
+    if (!isDirty) {
+      previousStep(certificateStep);
+    } else {
       const payload = {
         step: StepEnum.TRISA,
         form: {
@@ -89,7 +91,6 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
       updateCertificateStep(payload);
       previousStepRef.current = true;
     }
-    previousStep(certificateStep);
   };
 
   const handleNextStepClick = () => {

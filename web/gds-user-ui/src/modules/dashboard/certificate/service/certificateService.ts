@@ -15,7 +15,6 @@ export const postCertificateStepService = async (payload: any) => {
       ...payload
     }
   });
-  console.log('response', response);
   return response.data;
 };
 export const deleteCertificateStepService = async (payload: any) => {

@@ -75,7 +75,6 @@ const LegalForm: React.FC<LegalFormProps> = ({ data, shouldResetForm, onResetFor
    resetForm(updatedCertificateStep?.form, {
       keepValues: false
     });
-    // console.log('[] prev updatedCertificateStep', updatedCertificateStep);
     previousStepRef.current = false;
     previousStep(updatedCertificateStep);
   }
@@ -98,7 +97,9 @@ const LegalForm: React.FC<LegalFormProps> = ({ data, shouldResetForm, onResetFor
   };
 
   const handlePreviousStepClick = () => {
-    if (isDirty) {
+    if (!isDirty) {
+      previousStep(certificateStep);
+    } else {
       const payload = {
         step: StepEnum.LEGAL,
         form: {
@@ -109,7 +110,6 @@ const LegalForm: React.FC<LegalFormProps> = ({ data, shouldResetForm, onResetFor
       updateCertificateStep(payload);
       previousStepRef.current = true;
     }
-    previousStep(certificateStep);
   };
 
   const handleResetForm = () => {

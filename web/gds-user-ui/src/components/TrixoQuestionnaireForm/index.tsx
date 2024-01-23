@@ -126,12 +126,9 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
   };
 
   const handlePreviousStepClick = () => {
-    // isDirty is not working for the checkbox so we need to compare the values
-    if (
-      isDirty ||
-      getMustComplyRegulationsFromData !== getMustComplyRegulations ||
-      getHasRequiredRegulatoryProgramFromData !== getHasRequiredRegulatoryProgram
-    ) {
+    if (!isDirty) {
+      previousStep(certificateStep);
+    } else {
       const payload = {
         step: StepEnum.TRIXO,
         form: {
@@ -139,11 +136,9 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
           state: currentState()
         } as any
       };
-
       updateCertificateStep(payload);
       previousStepRef.current = true;
     }
-    previousStep(certificateStep);
   };
 
   const handleResetForm = () => {

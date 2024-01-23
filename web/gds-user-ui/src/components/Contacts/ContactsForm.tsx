@@ -62,7 +62,7 @@ const ContactsForm: React.FC<ContactsFormProps> = ({ data, shouldResetForm, onRe
     resetForm(updatedCertificateStep?.form, {
       keepValues: false
     });
-    nextStep(certificateStep);
+    nextStep(updatedCertificateStep);
     nextStepRef.current = false;
   }
 
@@ -72,13 +72,14 @@ const ContactsForm: React.FC<ContactsFormProps> = ({ data, shouldResetForm, onRe
     resetForm(updatedCertificateStep?.form, {
       keepValues: false
     });
-    // console.log('[] prev updatedCertificateStep', updatedCertificateStep);
     previousStepRef.current = false;
     previousStep(updatedCertificateStep);
   }
 
   const handlePreviousStepClick = () => {
-    if (isDirty) {
+    if (!isDirty) {
+      previousStep(certificateStep);
+    } else {
       const payload = {
         step: StepEnum.CONTACTS,
         form: {
@@ -89,7 +90,6 @@ const ContactsForm: React.FC<ContactsFormProps> = ({ data, shouldResetForm, onRe
       updateCertificateStep(payload);
       previousStepRef.current = true;
     }
-    previousStep(certificateStep);
   };
 
   useEffect(() => {

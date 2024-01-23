@@ -40,7 +40,6 @@ const useCertificateStepper = () => {
   const currentState = () => {
     // log store state
     const updatedState = Store.getState().stepper;
-    console.log('updatedState', updatedState);
     const formatState = {
       current: updatedState.currentStep,
       steps: removeMissingFields(updatedState.steps),
@@ -68,7 +67,6 @@ const useCertificateStepper = () => {
 
   const previousStep = (data?: any) => {
     const errorFields = data?.errors;
-    console.log('previous errorFields', errorFields);
     const stepNumber = getStepNumber(data?.step) || currentStep; // get step number from step name
     if (data && errorFields && Object.keys(errorFields).length > 0) {
       dispatch(setStepStatus({ step: stepNumber, status: LSTATUS.ERROR }));
