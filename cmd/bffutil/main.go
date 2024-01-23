@@ -1122,7 +1122,7 @@ func dedupeAppdataOrgs(c *cli.Context) (err error) {
 			continue
 		}
 
-		// Check for duplicate orgs and remove them.
+		// Check for duplicate orgs and remove them
 		seen := make(map[string]struct{})
 		appdata.Organizations = []string{}
 		for _, org := range orgs {
