@@ -1123,11 +1123,11 @@ func dedupeAppdataOrgs(c *cli.Context) (err error) {
 		}
 
 		// Check for duplicate orgs and remove them.
-		seen := make(map[string]bool)
+		seen := make(map[string]struct{})
 		appdata.Organizations = []string{}
 		for _, org := range orgs {
 			if _, ok := seen[org]; !ok {
-				seen[org] = true
+				seen[org] = struct{}{}
 				appdata.Organizations = append(appdata.Organizations, org)
 			} else {
 				fmt.Printf("found duplicate org %q from user %s (%s)\n", org, *user.Email, *user.ID)
