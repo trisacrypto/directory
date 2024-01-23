@@ -240,6 +240,19 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:   "appdata:dedupeorgs",
+			Usage:  "remove duplicate organizations from a user's app_metadata",
+			Action: dedupeAppdataOrgs,
+			Before: Before(loadConf, connectAuth0),
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "dry-run",
+					Aliases: []string{"d"},
+					Usage:   "display user duplicate orgs without removing them",
+				},
+			},
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
@@ -1085,6 +1098,50 @@ func sortAppdataOrgs(c *cli.Context) (err error) {
 	}
 
 	fmt.Printf("updated app metadata for %d users\n", updated)
+
+	return nil
+}
+
+func dedupeAppdataOrgs(c *cli.Context) (err error) {
+	// Get all users in the tenant
+	var users *management.UserList
+	if users, err = auth0.User.List(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Recreate org list for each user
+	for _, user := range users.Users {
+		appdata := &auth.AppMetadata{}
+		if err = appdata.Load(user.AppMetadata); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		// Get the user's current org list
+		orgs := appdata.GetOrganizations()
+		if len(orgs) == 0 {
+			continue
+		}
+
+		// Check for duplicate orgs and remove them
+		seen := make(map[string]struct{})
+		appdata.Organizations = []string{}
+		for _, org := range orgs {
+			if _, ok := seen[org]; !ok {
+				seen[org] = struct{}{}
+				appdata.Organizations = append(appdata.Organizations, org)
+			} else {
+				fmt.Printf("found duplicate org %q from user %s (%s)\n", org, *user.Email, *user.ID)
+			}
+		}
+
+		fmt.Printf("current org list for user %s (%s): %v\n", *user.Email, *user.ID, appdata.Organizations)
+
+		if !c.Bool("dry-run") {
+			if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
+				return cli.Exit(err, 1)
+			}
+		}
+	}
 
 	return nil
 }
