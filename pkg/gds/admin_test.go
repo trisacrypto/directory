@@ -1011,7 +1011,7 @@ func (s *gdsTestSuite) TestReplaceContact() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	charlieVASP, _, err := s.fixtures.GetVASP("charliebank")
+	charlieVASP, contacts, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err, "could not get charliebank VASP")
 	charlieID := charlieVASP.Id
 
@@ -1148,6 +1148,7 @@ func (s *gdsTestSuite) TestReplaceContact() {
 	require.NotNil(vasp.Contacts.Technical)
 	require.Equal(contact.Name, vasp.Contacts.Technical.Name)
 	require.Equal(contact.Email, vasp.Contacts.Technical.Email)
+
 	// Should not be verified
 	token, verified, err = models.GetContactVerification(vasp.Contacts.Technical)
 	require.NoError(err, "could not retrieve contact verification")
@@ -1155,24 +1156,10 @@ func (s *gdsTestSuite) TestReplaceContact() {
 	require.False(verified)
 
 	// Should send verification emails to the two contacts
-	messages := []*emails.EmailMeta{
-		{
-			Contact:   vasp.Contacts.Administrative,
-			To:        "clark.kent@charliebank.com",
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.VerifyContactRE,
-			Reason:    "verify_contact",
-			Timestamp: adminSent,
-		},
-		{
-			Contact:   vasp.Contacts.Technical,
-			To:        "lois.lane@charliebank.com",
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.VerifyContactRE,
-			Reason:    "verify_contact",
-			Timestamp: technicalSent,
-		},
-	}
+	messages := s.expectedEmails(
+		emails.Expected(contacts.Administrative(), emails.VerifyContactRE, adminSent),
+		emails.Expected(contacts.Technical(), emails.VerifyContactRE, technicalSent),
+	)
 	emails.CheckEmails(s.T(), messages)
 }
 
@@ -1816,24 +1803,10 @@ func (s *gdsTestSuite) TestReviewReject() {
 	require.Len(emailLog, 1)
 
 	// Rejection emails should be sent to the verified contacts
-	messages := []*emails.EmailMeta{
-		{
-			Contact:   v.Contacts.Administrative,
-			To:        v.Contacts.Administrative.Email,
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.RejectRegistrationRE,
-			Reason:    string(admin.ResendRejection),
-			Timestamp: sent,
-		},
-		{
-			Contact:   v.Contacts.Legal,
-			To:        v.Contacts.Legal.Email,
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.RejectRegistrationRE,
-			Reason:    string(admin.ResendRejection),
-			Timestamp: sent,
-		},
-	}
+	messages := s.expectedEmails(
+		emails.Expected(contacts.Administrative(), emails.RejectRegistrationRE, sent),
+		emails.Expected(contacts.Legal(), emails.RejectRegistrationRE, sent),
+	)
 	emails.CheckEmails(s.T(), messages)
 }
 
@@ -1927,43 +1900,24 @@ func (s *gdsTestSuite) TestResend() {
 	require.Contains(actual.Message, "rejection emails resent")
 
 	// Verify that all emails were sent
-	errored, err := s.svc.GetStore().RetrieveVASP(context.Background(), vaspErrored.Id)
-	require.NoError(err)
-	rejected, err := s.svc.GetStore().RetrieveVASP(context.Background(), vaspRejected.Id)
-	require.NoError(err)
+	// TODO: do we need to retrieve the contacts from the store for this test to work?
+	// errored, err := s.svc.GetStore().RetrieveVASP(context.Background(), vaspErrored.Id)
+	// require.NoError(err)
+	// rejected, err := s.svc.GetStore().RetrieveVASP(context.Background(), vaspRejected.Id)
+	// require.NoError(err)
 
-	messages := []*emails.EmailMeta{
-		{
-			Contact:   errored.Contacts.Billing,
-			To:        errored.Contacts.Billing.Email,
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.VerifyContactRE,
-			Reason:    "verify_contact",
-			Timestamp: firstSend,
-		},
-		{
+	messages := s.expectedEmails(
+		emails.Expected(vaspErroredContacts.Billing(), emails.RejectRegistrationRE, firstSend),
+		&emails.EmailMeta{
 			To:        s.svc.GetConf().Email.AdminEmail,
 			From:      s.svc.GetConf().Email.ServiceEmail,
 			Subject:   emails.ReviewRequestRE,
 			Timestamp: secondSend,
 		},
-		{
-			Contact:   rejected.Contacts.Administrative,
-			To:        rejected.Contacts.Administrative.Email,
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.RejectRegistrationRE,
-			Reason:    "rejection",
-			Timestamp: thirdSend,
-		},
-		{
-			Contact:   rejected.Contacts.Legal,
-			To:        rejected.Contacts.Legal.Email,
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.RejectRegistrationRE,
-			Reason:    "rejection",
-			Timestamp: thirdSend,
-		},
-	}
+		emails.Expected(vaspRejectedContacts.Administrative(), emails.RejectRegistrationRE, thirdSend),
+		emails.Expected(vaspRejectedContacts.Legal(), emails.RejectRegistrationRE, thirdSend),
+	)
+
 	emails.CheckEmails(s.T(), messages)
 }
 

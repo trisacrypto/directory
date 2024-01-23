@@ -166,33 +166,16 @@ func (s *gdsTestSuite) TestRegister() {
 	_, err = client.Register(ctx, request)
 	require.Error(err)
 
-	// Emails should be sent to all unique contacts
-	messages := []*emails.EmailMeta{
-		{
-			Contact:   v.Contacts.Administrative,
-			To:        v.Contacts.Administrative.Email,
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.VerifyContactRE,
-			Reason:    "verify_contact",
-			Timestamp: sent,
-		},
-		{
-			Contact:   v.Contacts.Legal,
-			To:        v.Contacts.Legal.Email,
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.VerifyContactRE,
-			Reason:    "verify_contact",
-			Timestamp: sent,
-		},
-		{
-			Contact:   v.Contacts.Technical,
-			To:        v.Contacts.Technical.Email,
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.VerifyContactRE,
-			Reason:    "verify_contact",
-			Timestamp: sent,
-		},
-	}
+	_, vaspContacts, err := s.fixtures.GetVASP("charliebank")
+	require.NoError(err, "could not load vasp contacts for charlie after registration")
+
+	// Emails should be sent to all unique contact
+	messages := s.expectedEmails(
+		emails.Expected(vaspContacts.Administrative(), emails.VerifyContactRE, sent),
+		emails.Expected(vaspContacts.Legal(), emails.VerifyContactRE, sent),
+		emails.Expected(vaspContacts.Technical(), emails.VerifyContactRE, sent),
+	)
+
 	emails.CheckEmails(s.T(), messages)
 }
 
@@ -304,39 +287,19 @@ func (s *gdsTestSuite) TestRegisterAlreadyVerified() {
 	require.Error(err)
 
 	// Emails should be sent to all unverified contacts
-	messages := []*emails.EmailMeta{
-		{
-			Contact:   v.Contacts.Administrative,
-			To:        v.Contacts.Administrative.Email,
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.VerifyContactRE,
-			Reason:    "verify_contact",
-			Timestamp: sent,
-		},
-		{
-			Contact:   v.Contacts.Legal,
-			To:        v.Contacts.Legal.Email,
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.VerifyContactRE,
-			Reason:    "verify_contact",
-			Timestamp: sent,
-		},
-		{
-			Contact:   v.Contacts.Technical,
-			To:        v.Contacts.Technical.Email,
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.VerifyContactRE,
-			Reason:    "verify_contact",
-			Timestamp: sent,
-		},
-		{
+	messages := s.expectedEmails(
+		emails.Expected(contacts.Administrative(), emails.VerifyContactRE, sent),
+		emails.Expected(contacts.Legal(), emails.VerifyContactRE, sent),
+		emails.Expected(contacts.Technical(), emails.VerifyContactRE, sent),
+		&emails.EmailMeta{
 			To:        s.svc.GetConf().Email.AdminEmail,
 			From:      s.svc.GetConf().Email.ServiceEmail,
 			Subject:   emails.ReviewRequestRE,
 			Reason:    "review_request",
 			Timestamp: sent,
 		},
-	}
+	)
+
 	emails.CheckEmails(s.T(), messages)
 }
 

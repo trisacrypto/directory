@@ -143,6 +143,26 @@ func (c *Contacts) Get(kind string) *ContactRecord {
 	return record
 }
 
+// Shortcut for c.Get(AdministrativeContact)
+func (c *Contacts) Administrative() *ContactRecord {
+	return c.Get(AdministrativeContact)
+}
+
+// Shortcut for c.Get(TechnicalContact)
+func (c *Contacts) Technical() *ContactRecord {
+	return c.Get(TechnicalContact)
+}
+
+// Shortcut for c.Get(LegalContact)
+func (c *Contacts) Legal() *ContactRecord {
+	return c.Get(LegalContact)
+}
+
+// Shortcut for c.Get(BillingContact)
+func (c *Contacts) Billing() *ContactRecord {
+	return c.Get(BillingContact)
+}
+
 // Index returns the contact at the specified index guaranteeing a specific ordering to
 // contacts if you iterate from 0 to 3; the ordering is: technical, administrative,
 // legal, then billing. You can also use the contacts iterator to loop over the contacts
