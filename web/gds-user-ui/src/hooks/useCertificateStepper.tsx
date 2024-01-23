@@ -40,16 +40,19 @@ const useCertificateStepper = () => {
   const currentState = () => {
     // log store state
     const updatedState = Store.getState().stepper;
+    console.log('updatedState', updatedState);
     const formatState = {
       current: updatedState.currentStep,
       steps: removeMissingFields(updatedState.steps),
       ready_to_submit: updatedState.hasReachSubmitStep
     };
+    console.log('currentFormatState', formatState);
     return formatState;
   };
 
   const nextStep = (data?: any) => {
     const errorFields = data?.errors;
+    console.log('errorFields', errorFields);
     const stepNumber = getStepNumber(data?.step) || currentStep;
 
     if (data && errorFields && Object.keys(errorFields).length > 0) {

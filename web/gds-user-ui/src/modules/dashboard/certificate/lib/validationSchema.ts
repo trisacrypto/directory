@@ -1,5 +1,5 @@
 import { reviewValidationSchema } from './reviewValidationSchema';
-import { legalPersonValidationSchemam } from './legalPersonValidationSchema';
+import { legalPersonValidationSchema } from './legalPersonValidationSchema';
 import { basicDetailsValidationSchema } from './basicDetailsValidationSchema';
 import { contactsValidationSchema } from './contactsValidationSchema';
 import { trisaImplementationValidationSchema } from './trisaImplementationValidationSchema';
@@ -7,7 +7,7 @@ import { trixoQuestionnaireValidationSchema } from './trixoQuestionnaireValidati
 
 export const validationSchema = [
   basicDetailsValidationSchema,
-  legalPersonValidationSchemam,
+  legalPersonValidationSchema,
   contactsValidationSchema,
   trisaImplementationValidationSchema,
   trixoQuestionnaireValidationSchema,

@@ -8,7 +8,7 @@ import Address from 'components/Addresses';
 import { FormProvider, useForm } from 'react-hook-form';
 import StepButtons from 'components/StepsButtons';
 import useCertificateStepper from 'hooks/useCertificateStepper';
-import { legalPersonValidationSchemam } from 'modules/dashboard/certificate/lib/legalPersonValidationSchema';
+import { legalPersonValidationSchema } from 'modules/dashboard/certificate/lib/legalPersonValidationSchema';
 import { yupResolver } from '@hookform/resolvers/yup';
 
 import { StepEnum } from 'types/enums';
@@ -38,7 +38,7 @@ const LegalForm: React.FC<LegalFormProps> = ({ data, shouldResetForm, onResetFor
   } = useUpdateCertificateStep();
   const previousStepRef = useRef<any>(false);
   const nextStepRef = useRef<any>(false);
-  const resolver = yupResolver(legalPersonValidationSchemam);
+  const resolver = yupResolver(legalPersonValidationSchema);
   const methods = useForm({
     defaultValues: data,
     resolver,

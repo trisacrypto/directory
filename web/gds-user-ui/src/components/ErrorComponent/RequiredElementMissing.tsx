@@ -14,9 +14,7 @@ interface RequiredElementMissingProps {
   errorFields?: any[];
 }
 
-const RequiredElementMissing = ({ elementKey, errorFields }: RequiredElementMissingProps) => {
-  console.log('k', elementKey);
-
+const RequiredElementMissing = ({ errorFields }: RequiredElementMissingProps) => {
   return (
     <Alert
       status="error"
@@ -36,7 +34,6 @@ const RequiredElementMissing = ({ elementKey, errorFields }: RequiredElementMiss
         <AlertDescription>
           <UnorderedList>
             {errorFields?.map((errorField: any, index) => {
-              console.log('errorField', errorField);
               return (
                 <ListItem key={index}>
                   <Text as="span" fontWeight="bold">

@@ -1,5 +1,5 @@
 import { basicDetailsValidationSchema } from 'modules/dashboard/certificate/lib/basicDetailsValidationSchema';
-import { legalPersonValidationSchemam } from 'modules/dashboard/certificate/lib/legalPersonValidationSchema';
+import { legalPersonValidationSchema } from 'modules/dashboard/certificate/lib/legalPersonValidationSchema';
 import { contactsValidationSchema } from 'modules/dashboard/certificate/lib/contactsValidationSchema';
 import { trisaImplementationValidationSchema } from 'modules/dashboard/certificate/lib/trisaImplementationValidationSchema';
 import { trixoQuestionnaireValidationSchema } from 'modules/dashboard/certificate/lib/trixoQuestionnaireValidationSchema';
@@ -16,7 +16,7 @@ export const isBasicDetailsCompleted = async (data: any) => {
 
 export const isLegalPersonCompleted = async (data: any) => {
   try {
-    const r = await legalPersonValidationSchemam.validate(data);
+    const r = await legalPersonValidationSchema.validate(data);
     console.log(r);
     return true;
   } catch (err) {

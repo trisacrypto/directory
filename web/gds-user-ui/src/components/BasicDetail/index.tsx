@@ -71,6 +71,7 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
 
   if (wasCertificateStepUpdated) {
     reset();
+    console.log('updatedCertificateStep', updatedCertificateStep);
     nextStep(updatedCertificateStep);
   }
 
