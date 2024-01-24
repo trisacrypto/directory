@@ -40,6 +40,7 @@ const BasicDetails: React.FC<BasicDetailProps> = () => {
   } = useFetchCertificateStep({
     key: StepEnum.BASIC
   });
+  
   const {
     updateCertificateStep,
     updatedCertificateStep,
