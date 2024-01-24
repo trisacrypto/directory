@@ -17,14 +17,13 @@ const TrixoQuestionnaire: React.FC = () => {
   const stepStatus = getStepStatus(steps, currentStep);
   const [shouldResetForm, setShouldResetForm] = useState<boolean>(false);
   const { isStepDeleted, updateDeleteStepState } = useCertificateStepper();
-  const isTrixoStepDeleted = isStepDeleted(StepEnum.LEGAL);
+  const isTrixoStepDeleted = isStepDeleted(StepEnum.TRIXO);
   const { certificateStep, isFetchingCertificateStep, getCertificateStep } =
     useFetchCertificateStep({
       key: StepEnum.TRIXO
     });
   useEffect(() => {
     if (isTrixoStepDeleted) {
-      console.log('[] isLegalStepDeleted', isTrixoStepDeleted);
       const payload = {
         step: StepEnum.TRIXO,
         isDeleted: false
