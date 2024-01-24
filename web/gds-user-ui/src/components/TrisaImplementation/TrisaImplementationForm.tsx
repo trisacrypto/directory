@@ -13,6 +13,7 @@ import TrisaImplementationForm from './TrisaImplementationForm/index';
 import { StepsIndexes } from 'constants/steps';
 import { isProdEnv } from 'application/config';
 import { DevTool } from '@hookform/devtools';
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 interface TrisaFormProps {
   data?: any;
   isLoading?: boolean;
@@ -23,12 +24,15 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
   const { isOpen, onClose, onOpen } = useDisclosure();
   const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
+  const { certificateStep } = useFetchCertificateStep({
+    key: StepEnum.TRISA
+  });
   const {
     updateCertificateStep,
     updatedCertificateStep,
     wasCertificateStepUpdated,
     isUpdatingCertificateStep,
-    reset: resetMutation
+    reset
   } = useUpdateCertificateStep();
   const previousStepRef = useRef<any>(false);
   const nextStepRef = useRef<any>(false);
@@ -56,7 +60,7 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
   }, [shouldShowResetFormModal]);
 
   if (wasCertificateStepUpdated && nextStepRef.current) {
-    resetMutation();
+    reset();
     // reset the form with the new values
     resetForm(updatedCertificateStep?.form, {
       keepValues: false
@@ -66,7 +70,7 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
   }
 
   if (wasCertificateStepUpdated && previousStepRef.current && !isUpdatingCertificateStep) {
-    resetMutation();
+    reset();
     // reset the form with the new values
     resetForm(updatedCertificateStep?.form);
     previousStepRef.current = false;
@@ -74,7 +78,9 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
   }
 
   const handlePreviousStepClick = () => {
-    if (isDirty) {
+    if (!isDirty) {
+      previousStep(certificateStep);
+    } else {
       const payload = {
         step: StepEnum.TRISA,
         form: {
@@ -85,18 +91,11 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
       updateCertificateStep(payload);
       previousStepRef.current = true;
     }
-    previousStep(data);
   };
 
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep({
-        step: StepEnum.TRISA,
-        form: {
-          ...methods.getValues(),
-          state: currentState()
-        } as any
-      });
+      nextStep(certificateStep);
     } else {
       const payload = {
         step: StepEnum.TRISA,

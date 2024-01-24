@@ -6,14 +6,14 @@ import { getCountriesOptions } from 'constants/countries';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
-const OtherJuridictions: React.FC<{ name: string }> = ({ name }) => {
+const OtherJurisdictions: React.FC<{ name: string }> = ({ name }) => {
   const { control, register } = useFormContext();
   const { fields, append, remove } = useFieldArray({
     name,
     control
   });
 
-  const handleAddJuridictionClick = () => {
+  const handleAddJurisdictionClick = () => {
     append({
       country: '',
       regulator_name: ''
@@ -61,7 +61,7 @@ const OtherJuridictions: React.FC<{ name: string }> = ({ name }) => {
       ))}
 
       <Button
-        onClick={handleAddJuridictionClick}
+        onClick={handleAddJurisdictionClick}
         borderRadius={5}
         data-testid="trixo-add-jurisdictions-btn">
         <Trans id="Add Jurisdiction">Add Jurisdiction</Trans>
@@ -70,4 +70,4 @@ const OtherJuridictions: React.FC<{ name: string }> = ({ name }) => {
   );
 };
 
-export default OtherJuridictions;
+export default OtherJurisdictions;

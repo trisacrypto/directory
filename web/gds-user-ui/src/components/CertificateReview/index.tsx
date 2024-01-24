@@ -18,6 +18,7 @@ import { getRefreshToken } from 'utils/auth0.helper';
 import { STEPPER_NETWORK } from 'utils/constants';
 import { getUserCurrentOrganizationService } from 'modules/auth/login/auth.service';
 import { setUserOrganization } from 'modules/auth/login/user.slice';
+import { upperCaseFirstLetter } from 'utils/utils';
 const ReviewsSummary = lazy(() => import('./ReviewsSummary'));
 const CertificateReview = () => {
   const toast = useToast();
@@ -64,11 +65,11 @@ const CertificateReview = () => {
       setIsMainNetSubmitting(false);
       setIsTestNetSubmitting(false);
 
-      if (!err?.response?.data?.success) {
+      if (!err?.data?.success) {
         toast({
           position: 'top-right',
           title: t`Error Submitting Certificate`,
-          description: t`${err?.response?.data?.error}`,
+          description: t`${upperCaseFirstLetter(err?.data?.error)}`,
           status: 'error',
           duration: 5000,
           isClosable: true

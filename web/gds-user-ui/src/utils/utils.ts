@@ -7,9 +7,10 @@ import * as Sentry from '@sentry/react';
 import { getRegistrationDefaultValue } from 'modules/dashboard/registration/utils';
 import { getCookie, setCookie } from 'utils/cookies';
 const DEFAULT_REGISTRATION_AUTHORITY = 'RA777777';
-export const findStepKey = (steps: any, key: number) =>
-  steps?.filter((step: any) => step.key === key);
-
+export const findStepKey = (steps: any, key: number) => {
+  return steps?.filter((step: any) => step.key === key);
+};
+ 
 export const isValidUuid = (str: string) => {
   // Regular expression to check if string is a valid UUID
   const regexExp =

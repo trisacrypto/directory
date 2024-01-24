@@ -5,7 +5,7 @@ import * as yup from 'yup';
 
 const _i18n = setupI18n();
 
-export const legalPersonValidationSchemam = yup.object().shape({
+export const legalPersonValidationSchema = yup.object().shape({
   entity: yup.object().shape({
     country_of_registration: yup.string(),
     // .required(_i18n._(t`Country of registration is required.`)),

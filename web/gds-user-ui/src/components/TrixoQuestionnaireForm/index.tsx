@@ -1,12 +1,11 @@
 import { useEffect, useState, useRef, Dispatch, SetStateAction } from 'react';
 import { Box, Grid, GridItem, Heading, Text, VStack, chakra, useDisclosure } from '@chakra-ui/react';
-import OtherJuridictions from 'components/OtherJuridictions';
 import Regulations from 'components/Regulations';
 import SwitchFormControl from 'components/SwitchFormControl';
 import InputFormControl from 'components/ui/InputFormControl';
 import SelectFormControl from 'components/ui/SelectFormControl';
 import { getCountriesOptions } from 'constants/countries';
-import { getCurrenciesOptions, getFinancialTransfertsPermittedOptions } from 'constants/trixo';
+import { getCurrenciesOptions, getFinancialTransfersPermittedOptions } from 'constants/trixo';
 import FormLayout from 'layouts/FormLayout';
 import { Controller, useForm, FormProvider } from 'react-hook-form';
 
@@ -22,6 +21,8 @@ import useCertificateStepper from 'hooks/useCertificateStepper';
 import { StepsIndexes } from 'constants/steps';
 import { isProdEnv } from 'application/config';
 import { DevTool } from '@hookform/devtools';
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
+import OtherJurisdictions from 'components/OtherJurisdictions';
 
 interface TrixoFormProps {
   data: any;
@@ -37,6 +38,9 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
   const { isOpen, onClose, onOpen } = useDisclosure();
   const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState<boolean>(false);
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
+  const { certificateStep } = useFetchCertificateStep({
+    key: StepEnum.TRIXO
+  });
 
   const resolver = yupResolver(trixoQuestionnaireValidationSchema);
   const methods = useForm({
@@ -57,7 +61,7 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
   const previousStepRef = useRef<any>(false);
   const nextStepRef = useRef<any>(false);
   const countries = getCountriesOptions();
-  const financialTransfertsOptions = getFinancialTransfertsPermittedOptions();
+  const financialTransfersOptions = getFinancialTransfersPermittedOptions();
   const currencies = getCurrenciesOptions();
   const getHasRequiredRegulatoryProgram = watch('trixo.has_required_regulatory_program');
   const getMustComplyRegulations = watch('trixo.must_comply_travel_rule');
@@ -73,7 +77,7 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
     updatedCertificateStep,
     isUpdatingCertificateStep,
     wasCertificateStepUpdated,
-    reset: resetMutation
+    reset
   } = useUpdateCertificateStep();
   const onCloseModalHandler = () => {
     setShouldShowResetFormModal(false);
@@ -81,7 +85,7 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
   };
 
   if (wasCertificateStepUpdated && nextStepRef.current) {
-    resetMutation();
+    reset();
     // reset the form with the new values
     resetForm(updatedCertificateStep?.form, {
       keepValues: false
@@ -91,7 +95,7 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
   }
 
   if (wasCertificateStepUpdated && previousStepRef.current && !isUpdatingCertificateStep) {
-    resetMutation();
+    reset();
     // reset the form with the new values
     resetForm(updatedCertificateStep?.form, {
       keepValues: false
@@ -117,23 +121,14 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
       updateCertificateStep(payload);
       nextStepRef.current = true;
     } else {
-      nextStep({
-        step: StepEnum.TRIXO,
-        form: {
-          ...methods.getValues(),
-          state: currentState()
-        } as any
-      });
+      nextStep(certificateStep);
     }
   };
 
   const handlePreviousStepClick = () => {
-    // isDirty is not working for the checkbox so we need to compare the values
-    if (
-      isDirty ||
-      getMustComplyRegulationsFromData !== getMustComplyRegulations ||
-      getHasRequiredRegulatoryProgramFromData !== getHasRequiredRegulatoryProgram
-    ) {
+    if (!isDirty) {
+      previousStep(certificateStep);
+    } else {
       const payload = {
         step: StepEnum.TRIXO,
         form: {
@@ -141,11 +136,9 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
           state: currentState()
         } as any
       };
-
       updateCertificateStep(payload);
       previousStepRef.current = true;
     }
-    previousStep(data);
   };
 
   const handleResetForm = () => {
@@ -255,7 +248,7 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
               </Trans>
             </Text>
 
-            <OtherJuridictions name={'trixo.other_jurisdictions'} />
+            <OtherJurisdictions name={'trixo.other_jurisdictions'} />
           </VStack>
 
           <VStack data-testid="is-required-financial-transfers">
@@ -267,8 +260,8 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
                   ref={field.ref}
                   name={field.name}
                   data-testid="financial_transfers_permitted"
-                  options={financialTransfertsOptions}
-                  value={financialTransfertsOptions.find((option) => option.value === field.value)}
+                  options={financialTransfersOptions}
+                  value={financialTransfersOptions.find((option) => option.value === field.value)}
                   onChange={(newValue: any) => field.onChange(newValue.value)}
                   label={t`Is your organization permitted to send and/or receive transfers of virtual assets in the jurisdictions in which it operates?`}
                   controlId="financial_transfers_permitted"
@@ -288,10 +281,10 @@ const TrixoQuestionnaireForm: React.FC<TrixoFormProps> = ({
                 <SelectFormControl
                   ref={field.ref}
                   name={field.name}
-                  options={financialTransfertsOptions.filter(
+                  options={financialTransfersOptions.filter(
                     (option) => option.value !== 'partially'
                   )}
-                  value={financialTransfertsOptions.find((option) => option.value === field.value)}
+                  value={financialTransfersOptions.find((option) => option.value === field.value)}
                   onChange={(newValue: any) => field.onChange(newValue.value)}
                   label={t`Does your organization have a programme that sets minimum Anti-Money
               Laundering (AML), Countering the Financing of Terrorism (CFT), Know your
