@@ -305,6 +305,7 @@ func (s *Server) SetURL(url string) {
 func (s *Server) setupRoutes() (err error) {
 	var (
 		authenticator gin.HandlerFunc
+		sentryRecover gin.HandlerFunc
 		tags          gin.HandlerFunc
 		tracing       gin.HandlerFunc
 		bffTags       map[string]string
@@ -322,6 +323,11 @@ func (s *Server) setupRoutes() (err error) {
 	}
 
 	if s.conf.Sentry.UseSentry() {
+		sentryRecover = sentrygin.New(sentrygin.Options{
+			Repanic:         true,
+			WaitForDelivery: false,
+		})
+
 		bffTags = map[string]string{"service": "bff"}
 		tags = sentry.UseTags(bffTags)
 	}
@@ -339,10 +345,7 @@ func (s *Server) setupRoutes() (err error) {
 
 		// Panic recovery middleware; note: gin middleware needs to be added before sentry
 		gin.Recovery(),
-		sentrygin.New(sentrygin.Options{
-			Repanic:         true,
-			WaitForDelivery: false,
-		}),
+		sentryRecover,
 
 		// Add searchable tags to the sentry context.
 		tags,

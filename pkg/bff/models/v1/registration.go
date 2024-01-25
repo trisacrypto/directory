@@ -498,33 +498,35 @@ func (r *RegistrationForm) ValidateContacts() error {
 		return err
 	}
 
+	// Create a contacts data structure for validation that does not have associated
+	// email records. The email records are created after validation during the GDS
+	// registration process and not on the BFF.
+	contacts := &models.Contacts{Contacts: r.Contacts}
+
 	// Validate each non-zero contact
-	contacts := 0
-	iter := models.NewContactIterator(r.Contacts)
+
+	iter := contacts.NewIterator()
 	for iter.Next() {
-		contacts++
-		contact, field := iter.Value()
-		if !models.ContactIsZero(contact) {
-			err, _ = err.Append(ValidateContact(contact, FieldContacts+"."+field))
-		}
+		contact := iter.Contact()
+		err, _ = err.Append(ValidateContact(contact.Contact, FieldContacts+"."+contact.Kind))
 	}
 
 	// Check that all required contacts are present (special rules)
-	switch contacts {
+	switch contacts.Length() {
 	case 0:
 		// At least one contact is required
 		err = append(err, &ValidationError{Field: FieldContacts, Err: ErrNoContacts.Error()})
 	case 1:
 		// If there is only one contact, it must be the admin; if not highlight the missing fields
-		if models.ContactIsZero(r.Contacts.Administrative) {
+		if !contacts.Has(models.AdministrativeContact) {
 			// Global contact error
 			err = append(err, &ValidationError{Field: FieldContacts, Err: ErrMissingContact.Error()})
 			switch {
-			case !models.ContactIsZero(r.Contacts.Technical):
+			case contacts.Has(models.TechnicalContact):
 				// If the technical contact is filled in then nominate the legal/admin contact to be populated
 				err = append(err, &ValidationError{Field: FieldContactsAdministrative, Err: ErrMissingAdminOrLegal.Error()})
 				err = append(err, &ValidationError{Field: FieldContactsLegal, Err: ErrMissingAdminOrLegal.Error()})
-			case !models.ContactIsZero(r.Contacts.Legal):
+			case contacts.Has(models.LegalContact):
 				// If the legal contact is filled in then nominate the technical/admin contact to be populated
 				err = append(err, &ValidationError{Field: FieldContactsAdministrative, Err: ErrMissingAdminOrTechnical.Error()})
 				err = append(err, &ValidationError{Field: FieldContactsTechnical, Err: ErrMissingAdminOrTechnical.Error()})
@@ -537,13 +539,13 @@ func (r *RegistrationForm) ValidateContacts() error {
 		}
 	default:
 		// If there are at least two contacts, either admin or technical must be present
-		if models.ContactIsZero(r.Contacts.Administrative) && models.ContactIsZero(r.Contacts.Technical) {
+		if !contacts.Has(models.AdministrativeContact) && !contacts.Has(models.TechnicalContact) {
 			err = append(err, &ValidationError{Field: FieldContacts, Err: ErrMissingContact.Error()})
 			err = append(err, &ValidationError{Field: FieldContactsAdministrative, Err: ErrMissingAdminOrTechnical.Error()})
 			err = append(err, &ValidationError{Field: FieldContactsTechnical, Err: ErrMissingAdminOrTechnical.Error()})
 		}
 		// Admin or legal must be present
-		if models.ContactIsZero(r.Contacts.Administrative) && models.ContactIsZero(r.Contacts.Legal) {
+		if !contacts.Has(models.AdministrativeContact) && !contacts.Has(models.LegalContact) {
 			err = append(err, &ValidationError{Field: FieldContacts, Err: ErrMissingContact.Error()})
 			err = append(err, &ValidationError{Field: FieldContactsAdministrative, Err: ErrMissingAdminOrLegal.Error()})
 			err = append(err, &ValidationError{Field: FieldContactsLegal, Err: ErrMissingAdminOrLegal.Error()})
@@ -559,6 +561,7 @@ func (r *RegistrationForm) ValidateContacts() error {
 // Validate a single contact, using the field name to construct errors.
 func ValidateContact(contact *pb.Contact, fieldName string) error {
 	err := make(ValidationErrors, 0)
+
 	name := strings.TrimSpace(contact.Name)
 	if name == "" {
 		err = append(err, &ValidationError{Field: fieldName + ".name", Err: ErrMissingField.Error()})
@@ -583,12 +586,9 @@ func ValidateContact(contact *pb.Contact, fieldName string) error {
 		err = append(err, &ValidationError{Field: fieldName + ".phone", Err: ErrMissingField.Error()})
 	}
 
-	// TODO: Ensure this is a valid phone number
-
 	if len(err) == 0 {
 		return nil
 	}
-
 	return err
 }
 

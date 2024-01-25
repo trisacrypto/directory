@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -64,6 +65,7 @@ var (
 	preCertReqs      = []byte("certreqs::")
 	preOrganizations = []byte("organizations::")
 	preContacts      = []byte("contacts::")
+	preEmails        = []byte("emails::")
 )
 
 // Store implements store.Store for some basic LevelDB operations and simple protocol
@@ -791,7 +793,7 @@ func (s *Store) DeleteOrganization(ctx context.Context, id uuid.UUID) (err error
 	return nil
 }
 
-// TODO: Complete the leveldb ContactStore implementation
+// TODO: Delete the leveldb ContactStore implementation
 //===========================================================================
 // ContactStore Implementation
 //===========================================================================
@@ -877,6 +879,184 @@ func (s *Store) DeleteContact(ctx context.Context, email string) (err error) {
 }
 
 //===========================================================================
+// EmailStore Implementation
+//===========================================================================
+
+// List all of the emails in the database.
+func (s *Store) ListEmails(ctx context.Context) iterator.EmailIterator {
+	return &emailIterator{
+		iterWrapper{
+			iter: s.db.NewIterator(util.BytesPrefix(preEmails), nil),
+		},
+	}
+}
+
+// CreateEmail creates a new Email record in the store using the normalized unique email
+// as the key. If the email already exists in the database, an error is returned.
+func (s *Store) CreateEmail(ctx context.Context, c *models.Email) (_ string, err error) {
+	if c == nil || c.Email == "" {
+		return "", storeerrors.ErrIncompleteRecord
+	}
+
+	// Validate the email model
+	if err = c.Validate(); err != nil {
+		return "", err
+	}
+
+	// Update management timestamps and record metadata
+	c.Created = time.Now().Format(time.RFC3339)
+	c.Modified = c.Created
+
+	// Check that the email record doesn't already exist
+	// NOTE: because there is no locking there is the possibility of a concurrency bug
+	// between the "Has" check and the Put: callers should use locks to prevent this.
+	key := emailKey(c.Email)
+	if exists, err := s.db.Has(key, nil); exists || err != nil {
+		if err != nil {
+			return "", err
+		}
+		return "", storeerrors.ErrEmailExists
+	}
+
+	var data []byte
+	if data, err = proto.Marshal(c); err != nil {
+		return "", err
+	}
+
+	if err = s.db.Put(key, data, nil); err != nil {
+		return "", err
+	}
+
+	return c.Email, nil
+}
+
+// RetrieveEmail returns the contact email record if found.
+func (s *Store) RetrieveEmail(ctx context.Context, email string) (c *models.Email, err error) {
+	if strings.TrimSpace(email) == "" {
+		return nil, storeerrors.ErrEntityNotFound
+	}
+
+	var data []byte
+	if data, err = s.db.Get(emailKey(email), nil); err != nil {
+		if errors.Is(err, leveldb.ErrNotFound) {
+			return nil, storeerrors.ErrEntityNotFound
+		}
+		return nil, err
+	}
+
+	c = &models.Email{}
+	if err = proto.Unmarshal(data, c); err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+// UpdateEmail can create or update an email contact record in the database and does not
+// return an error if the email does not exist in the database.
+func (s *Store) UpdateEmail(ctx context.Context, c *models.Email) (err error) {
+	if c == nil || c.Email == "" {
+		return storeerrors.ErrIncompleteRecord
+	}
+
+	// Validate the email model
+	if err = c.Validate(); err != nil {
+		return err
+	}
+
+	// Manage the updated and modified timestamps
+	c.Modified = time.Now().Format(time.RFC3339)
+	if c.Created == "" {
+		c.Created = c.Modified
+	}
+
+	var data []byte
+	if data, err = proto.Marshal(c); err != nil {
+		return err
+	}
+
+	if err = s.db.Put(emailKey(c.Email), data, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteEmail deletes an email contact record from the store.
+func (s *Store) DeleteEmail(ctx context.Context, email string) (err error) {
+	if email == "" {
+		return storeerrors.ErrEntityNotFound
+	}
+
+	if err = s.db.Delete(emailKey(email), nil); err != nil {
+		return err
+	}
+	return nil
+}
+
+//===========================================================================
+// DirectoryStore Implementation
+//===========================================================================
+
+// VASPContacts implements a join mechanism to ensure that the contacts on the VASP
+// (e.g. the technical, administrative, legal, and billing contacts) are connected with
+// the email address records for those contacts.
+func (s *Store) VASPContacts(ctx context.Context, vasp *pb.VASP) (_ *models.Contacts, err error) {
+	if vasp.Contacts == nil {
+		return nil, storeerrors.ErrNoContacts
+	}
+
+	// Identify all the normalized, unique emails that need to be retrieved.
+	emails := make(map[string]struct{})
+	vcards := vasp.Contacts
+
+	if vcards.Administrative != nil && vcards.Administrative.Email != "" {
+		emails[models.NormalizeEmail(vcards.Administrative.Email)] = struct{}{}
+	}
+
+	if vcards.Technical != nil && vcards.Technical.Email != "" {
+		emails[models.NormalizeEmail(vcards.Technical.Email)] = struct{}{}
+	}
+
+	if vcards.Legal != nil && vcards.Legal.Email != "" {
+		emails[models.NormalizeEmail(vcards.Legal.Email)] = struct{}{}
+	}
+
+	if vcards.Billing != nil && vcards.Billing.Email != "" {
+		emails[models.NormalizeEmail(vcards.Billing.Email)] = struct{}{}
+	}
+
+	// Create the contacts record to return.
+	contacts := &models.Contacts{
+		VASP:     vasp.Id,
+		Contacts: vcards,
+		Emails:   make([]*models.Email, 0, len(emails)),
+	}
+
+	// Fetch the emails and add them to the contacts.
+	for email := range emails {
+		var record *models.Email
+		if record, err = s.RetrieveEmail(ctx, email); err != nil {
+			return nil, err
+		}
+		contacts.Emails = append(contacts.Emails, record)
+	}
+	return contacts, nil
+}
+
+// This is a helper method to fetch the contacts for a VASP with only the vaspID.
+func (s *Store) RetrieveVASPContacts(ctx context.Context, vaspID string) (_ *models.Contacts, err error) {
+	var vasp *pb.VASP
+	if vasp, err = s.RetrieveVASP(ctx, vaspID); err != nil {
+		return nil, err
+	}
+	return s.VASPContacts(ctx, vasp)
+}
+
+func (s *Store) UpdateVASPContacts(ctx context.Context, vaspID string, contacts *models.Contacts) error {
+	return errors.New("not implemented yet")
+}
+
+//===========================================================================
 // Key Handlers
 //===========================================================================
 
@@ -915,6 +1095,14 @@ func orgKey(orgKey []byte) (key []byte) {
 func contactKey(email string) []byte {
 	email = models.NormalizeEmail(email)
 	return makeKey(preContacts, email)
+}
+
+func emailKey(email string) []byte {
+	email = models.NormalizeEmail(email)
+	if email == "" {
+		panic("cannot create key for empty email")
+	}
+	return makeKey(preEmails, email)
 }
 
 //===========================================================================

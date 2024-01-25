@@ -50,18 +50,7 @@
         "technical": null,
         "administrative": null,
         "legal": null,
-        "billing": {
-            "name": "Didna Respont",
-            "email": "lostmy@email.com",
-            "phone": "123-432-6666",
-            "person": null,
-            "extra": {
-                "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
-                "verified": false,
-                "token": "billing_token",
-                "email_log": []
-            }
-        }
+        "billing": null
     },
     "identity_certificate": null,
     "signing_certificates": [],

@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/trisacrypto/directory/pkg/gds"
 	"github.com/trisacrypto/directory/pkg/gds/config"
+	"github.com/trisacrypto/directory/pkg/gds/emails"
 	"github.com/trisacrypto/directory/pkg/gds/fixtures"
 	"github.com/trisacrypto/directory/pkg/utils/bufconn"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
@@ -40,10 +41,11 @@ var (
 // access the internals of the service and services for testing purposes.
 type gdsTestSuite struct {
 	suite.Suite
-	svc      *gds.Service
-	grpc     *bufconn.GRPCListener
-	conf     *config.Config
-	fixtures *fixtures.Library
+	svc            *gds.Service
+	grpc           *bufconn.GRPCListener
+	conf           *config.Config
+	fixtures       *fixtures.Library
+	expectedEmails emails.ExpectedEmails
 }
 
 // SetConfig allows a custom config to be specified by the tests.
@@ -183,6 +185,9 @@ func (s *gdsTestSuite) loadFixtures(ftype fixtures.FixtureType) {
 	default:
 		require.Fail("unrecognized store type %d", s.fixtures.StoreType())
 	}
+
+	// Create the expected emails factory from the configuration.
+	s.expectedEmails = emails.ExpectedEmailsFactory(conf.Email.ServiceEmail)
 
 	log.Info().Uint8("ftype", uint8(ftype)).Msg("FIXTURE LOADED")
 }

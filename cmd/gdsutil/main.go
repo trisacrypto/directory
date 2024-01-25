@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/aes"
@@ -26,7 +27,6 @@ import (
 	"github.com/trisacrypto/directory/pkg"
 	profiles "github.com/trisacrypto/directory/pkg/gds/client"
 	"github.com/trisacrypto/directory/pkg/gds/config"
-	"github.com/trisacrypto/directory/pkg/gds/secrets"
 	"github.com/trisacrypto/directory/pkg/models/v1"
 	"github.com/trisacrypto/directory/pkg/store"
 	storerr "github.com/trisacrypto/directory/pkg/store/errors"
@@ -154,10 +154,10 @@ func main() {
 			Flags:     []cli.Flag{},
 		},
 		{
-			Name:     "contact:migrate",
-			Usage:    "migrate all contacts on vasps into the model contacts namespace",
-			Category: "contact",
-			Action:   migrateContacts,
+			Name:     "emails:migrate",
+			Usage:    "migrate all contacts and email logs on vasps into the emails namespace",
+			Category: "emails",
+			Action:   migrateEmails,
 			Before:   connectDB,
 			After:    closeDB,
 			Flags: []cli.Flag{
@@ -165,27 +165,32 @@ func main() {
 					Name:    "dryrun",
 					Aliases: []string{"d"},
 					Usage:   "print migration results without modifying the database, used for testing",
-					Value:   true,
 				},
 				&cli.BoolFlag{
 					Name:    "compare",
 					Aliases: []string{"c"},
 					Usage:   "if the contact exists, compare to the vasp contact record",
 				},
+				&cli.BoolFlag{
+					Name:    "force",
+					Aliases: []string{"f"},
+					Usage:   "do not prompt to confirm operation",
+				},
 			},
 		},
 		{
-			Name:     "contact:fixverifytoken",
-			Usage:    "fixes any unverified contacts that do not have verification tokens",
-			Category: "contact",
-			Action:   fixVerifyToken,
-			Before:   connectDB,
-			After:    closeDB,
+			Name:      "emails:detail",
+			Usage:     "get contact information for the specified email address",
+			UsageText: "email [email ...]",
+			Category:  "emails",
+			Action:    emailsDetail,
+			Before:    connectDB,
+			After:     closeDB,
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
-					Name:    "dryrun",
-					Aliases: []string{"d"},
-					Usage:   "print migration results without modifying the database, used for testing",
+					Name:    "no-logs",
+					Aliases: []string{"l"},
+					Usage:   "omit fetching email logs for the contact",
 				},
 			},
 		},
@@ -532,9 +537,14 @@ func vaspDetail(c *cli.Context) (err error) {
 // Contact Functions
 //===========================================================================
 
-func migrateContacts(c *cli.Context) (err error) {
+func migrateEmails(c *cli.Context) (err error) {
 	dryrun := c.Bool("dryrun")
 	compare := c.Bool("compare")
+	force := c.Bool("force")
+
+	if !force && !askForConfirmation("continue with migration?") {
+		return cli.Exit("operation canceled by user", 0)
+	}
 
 	// Iterate through all vasps in the database
 	vasps := db.ListVASPs(context.Background())
@@ -545,11 +555,13 @@ func migrateContacts(c *cli.Context) (err error) {
 			return cli.Exit(err, 1)
 		}
 
-		// Iterate through all contacts on the vasp
-		contacts := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail())
-		for contacts.Next() {
-			vaspContact, _ := contacts.Value()
+		vaspContacts := []*pb.Contact{
+			vasp.Contacts.Technical, vasp.Contacts.Administrative,
+			vasp.Contacts.Legal, vasp.Contacts.Billing,
+		}
 
+		// Iterate through all contacts on the vasp
+		for _, vaspContact := range vaspContacts {
 			var contact *models.Contact
 			if contact, err = db.RetrieveContact(context.Background(), vaspContact.Email); err != nil {
 				if errors.Is(err, storerr.ErrEntityNotFound) {
@@ -667,63 +679,18 @@ func migrateContacts(c *cli.Context) (err error) {
 	return nil
 }
 
-func fixVerifyToken(c *cli.Context) (err error) {
-	dryrun := c.Bool("dryrun")
-
-	vasps := db.ListVASPs(context.Background())
-	defer vasps.Release()
-	for vasps.Next() {
-		var vasp *pb.VASP
-		if vasp, err = vasps.VASP(); err != nil {
-			return cli.Exit(err, 1)
-		}
-
-		contacts := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail(), models.SkipDuplicates())
-		for contacts.Next() {
-			vaspContact, kind := contacts.Value()
-
-			var contact *models.Contact
-			if contact, err = db.RetrieveContact(context.Background(), vaspContact.Email); err != nil {
-				return cli.Exit(err, 1)
-			}
-
-			if !contact.Verified && contact.Token == "" {
-				fmt.Printf("contact %s is not verified and has no verification token\n", contact.Email)
-
-				if !dryrun {
-					contact.Token = secrets.CreateToken(models.VerificationTokenLength)
-					if err = db.UpdateContact(context.Background(), contact); err != nil {
-						return cli.Exit(err, 1)
-					}
-				}
-			}
-
-			// Ensure the vaspContact matches the contact
-			token, verified, err := models.GetContactVerification(vaspContact)
-			if err != nil {
-				return cli.Exit(err, 1)
-			}
-
-			if contact.Verified != verified || contact.Token != token {
-				vaspName, _ := vasp.Name()
-				fmt.Printf("vasp %s contact %s (%s) does not match contact record\n", vaspName, kind, vaspContact.Email)
-
-				if !dryrun {
-					if err = models.SetContactVerification(vaspContact, contact.Token, contact.Verified); err != nil {
-						return cli.Exit(err, 1)
-					}
-
-					if err = db.UpdateVASP(context.Background(), vasp); err != nil {
-						return cli.Exit(err, 1)
-					}
-				}
-			}
-
-		}
+func emailsDetail(c *cli.Context) (err error) {
+	if c.NArg() == 0 {
+		return cli.Exit("specify an email address to fetch details for", 1)
 	}
 
-	if err = vasps.Error(); err != nil {
-		return cli.Exit(err, 1)
+	for i := 0; i < c.NArg(); i++ {
+		email := c.Args().Get(i)
+		contact, err := db.RetrieveContact(context.Background(), email)
+		if err != nil {
+			return cli.Exit(err, 1)
+		}
+		printJSON(contact)
 	}
 
 	return nil
@@ -845,6 +812,57 @@ func loadProfile(c *cli.Context) (err error) {
 	return nil
 }
 
+func connectDB(c *cli.Context) (err error) {
+	// Suppress the zerolog output from the store.
+	logger.Discard()
+
+	if conf, err = config.New(); err != nil {
+		return cli.Exit(err, 1)
+	}
+	conf.Database.ReindexOnBoot = false
+	conf.ConsoleLog = false
+
+	if db, err = store.Open(conf.Database); err != nil {
+		if serr, ok := status.FromError(err); ok {
+			return cli.Exit(fmt.Errorf("could not open store: %s", serr.Message()), 1)
+		}
+		return cli.Exit(err, 1)
+	}
+
+	return nil
+}
+
+func closeDB(c *cli.Context) (err error) {
+	if db != nil {
+		if err = db.Close(); err != nil {
+			return cli.Exit(err, 2)
+		}
+	}
+	return nil
+}
+
+func askForConfirmation(s string) bool {
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Printf("%s [y/n]: ", s)
+
+		response, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "could not interpret response: %s", err)
+			os.Exit(1)
+		}
+
+		response = strings.ToLower(strings.TrimSpace(response))
+
+		if response == "y" || response == "yes" {
+			return true
+		} else if response == "n" || response == "no" {
+			return false
+		}
+	}
+}
+
 func printJSON(v interface{}) (err error) {
 	if m, ok := v.(protoreflect.ProtoMessage); ok {
 		return printJSONPB(m)
@@ -892,35 +910,6 @@ func printJSONPBList(msgs []protoreflect.ProtoMessage) (err error) {
 	encoder.SetIndent("", "  ")
 	if err = encoder.Encode(objs); err != nil {
 		return cli.Exit(fmt.Errorf("could not marshal json: %w", err), 1)
-	}
-	return nil
-}
-
-func connectDB(c *cli.Context) (err error) {
-	// Suppress the zerolog output from the store.
-	logger.Discard()
-
-	if conf, err = config.New(); err != nil {
-		return cli.Exit(err, 1)
-	}
-	conf.Database.ReindexOnBoot = false
-	conf.ConsoleLog = false
-
-	if db, err = store.Open(conf.Database); err != nil {
-		if serr, ok := status.FromError(err); ok {
-			return cli.Exit(fmt.Errorf("could not open store: %s", serr.Message()), 1)
-		}
-		return cli.Exit(err, 1)
-	}
-
-	return nil
-}
-
-func closeDB(c *cli.Context) (err error) {
-	if db != nil {
-		if err = db.Close(); err != nil {
-			return cli.Exit(err, 2)
-		}
 	}
 	return nil
 }

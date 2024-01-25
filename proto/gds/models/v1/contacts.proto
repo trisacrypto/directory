@@ -1,0 +1,70 @@
+syntax="proto3";
+
+package gds.models.v1;
+option go_package = "github.com/trisacrypto/directory/pkg/models/v1;models";
+
+
+// Contact contains a unique email address and information about a TRISA member.
+message Contact {
+    // Unique email address for this contact
+    string email = 1;
+    string name = 2; // used to address the email
+
+    // List of VASP IDs that the contact is included in
+    repeated string vasps = 3;
+
+    // Token for email verification
+    bool verified = 4;
+    string token = 5;
+
+    // Email audit log
+    repeated EmailLogEntry email_log = 6;
+
+    // RFC3339 Timestamp for when the contact was verified
+    string verified_on = 7;
+
+    // Logging information timestamps
+    string created = 8;
+    string modified = 9;
+}
+
+// Email refers to a unique email address that can be used across multiple TRISA
+// contacts inside of a VASP record. The email structure stores the verification token
+// as well as the most current name referring to the contact for addressing emails.
+message Email {
+    string email = 1; // Unique email address for this contact (also used for the key)
+    string name = 2;  // Used to address the email, should be sent to most current name
+
+    // List of VASP IDs that the contact is included in
+    repeated string vasps = 3;
+
+    // Token for email verification
+    bool verified = 4;
+    string token = 5;
+
+    // RFC3339 Timestamp for when the contact was verified
+    string verified_on = 6;
+
+    // A log of all emails sent to this contact record
+    repeated EmailLogEntry send_log = 13;
+
+    // Logging information timestamps
+    string created = 14;
+    string modified = 15;
+}
+
+// EmailLogEntry contains information about a single email message that was sent.
+// The key of the email log entry is the recipient + the timestamp of the email.
+message EmailLogEntry {
+    // RFC3339 timestamp
+    string timestamp = 1;
+
+    // Reason why the email was sent
+    string reason = 2;
+
+    // Subject line of the email
+    string subject = 3;
+
+    // Email address of the recipient
+    string recipient = 4;
+}

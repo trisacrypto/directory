@@ -62,3 +62,11 @@ func (s *Store) CountContacts(ctx context.Context) (_ uint64, err error) {
 	}
 	return reply.Objects, nil
 }
+
+func (s *Store) CountEmails(ctx context.Context) (_ uint64, err error) {
+	var reply *pb.CountReply
+	if reply, err = s.client.Count(ctx, &pb.CountRequest{Namespace: wire.NamespaceEmails}); err != nil {
+		return 0, err
+	}
+	return reply.Objects, nil
+}

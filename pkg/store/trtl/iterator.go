@@ -33,6 +33,10 @@ type organizationIterator struct {
 	trtlIterator
 }
 
+type emailIterator struct {
+	trtlIterator
+}
+
 // trtlIterator is an interface that is implemented by both the trtlBatchIterator and
 // trtlStreamingIterator to iterate over values in the trtl store. The general workflow
 // is to instantiate the iterator with either NewTrtlBatchIterator or
@@ -402,4 +406,12 @@ func (i *organizationIterator) Organization() (o *bff.Organization, err error) {
 		return nil, err
 	}
 	return o, nil
+}
+
+func (i *emailIterator) Email() (c *models.Email, err error) {
+	c = &models.Email{}
+	if err = proto.Unmarshal(i.Value(), c); err != nil {
+		return nil, err
+	}
+	return c, nil
 }

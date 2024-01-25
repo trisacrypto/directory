@@ -698,3 +698,234 @@ func (s *leveldbTestSuite) TestContactStore() {
 	s.Nil(con)
 	s.Equal(err, storeerrors.ErrEntityNotFound)
 }
+
+func (s *leveldbTestSuite) TestEmailStore() {
+	ctx := context.Background()
+
+	s.Run("List", func() {
+		cleanup := func() {
+			iter := s.db.ListEmails(ctx)
+			defer iter.Release()
+
+			for iter.Next() {
+				email, _ := iter.Email()
+				s.db.DeleteEmail(ctx, email.Email)
+			}
+		}
+
+		// Ensure the database is empty and emptied at the end of the test.
+		cleanup()
+		defer cleanup()
+
+		// Test list empty database
+		iter := s.db.ListEmails(ctx)
+		s.False(iter.Next(), "expected next to be false in empty database")
+		s.False(iter.Prev(), "expected prev to be false in empty database")
+		iter.Release()
+		s.NoError(iter.Error(), "expected no error during iteration")
+
+		// Create some emails in the database
+		for i := 1; i < 128; i++ {
+			email := &models.Email{Email: fmt.Sprintf("person%03d@example.com", i), Token: "foo"}
+			err := s.db.UpdateEmail(ctx, email)
+			s.NoError(err, "could not insert email into database")
+		}
+
+		count := 0
+		iter = s.db.ListEmails(ctx)
+		for iter.Next() {
+			_, err := iter.Email()
+			s.NoError(err, "could not load email from iterator")
+			count++
+		}
+
+		iter.Release()
+		s.NoError(iter.Error(), "expected no error during iteration")
+		s.Equal(127, count, "wrong iterator count returned")
+	})
+
+	s.Run("HappyCRUD", func() {
+		email := &models.Email{
+			Email:    "Gary Vespers <Gary.Vespers@example.com>",
+			Vasps:    []string{"06c74ef0-0b5b-4df1-8fc5-53f6bb7044af"},
+			Verified: false,
+			Token:    "ZPr7O4YRes30ie5SZjjqGwkETM2qHD1nfUIbcIecXTg",
+		}
+
+		// Test create email record
+		key, err := s.db.CreateEmail(ctx, email)
+		s.NoError(err, "could not create valid email record")
+		s.Equal("gary.vespers@example.com", key, "unexpected key returned")
+		s.NotEmpty(email.Created, "expected the created timestamp to be added")
+		s.NotEmpty(email.Modified, "expected the modified timestamp to be added")
+		s.Equal("gary.vespers@example.com", email.Email, "expected the email to be normalized")
+		s.Equal("Gary Vespers", email.Name, "expected the name to be parsed from the email")
+
+		// Test retrieve email record
+		record, err := s.db.RetrieveEmail(ctx, "Gary Vespers <Gary.Vespers@example.com>")
+		s.NoError(err)
+		s.True(proto.Equal(email, record))
+
+		// Sleep to allow time for the modified field to change
+		time.Sleep(time.Second)
+
+		// Test updating the email record
+		record.Verified = true
+		record.VerifiedOn = time.Now().Format(time.RFC3339)
+		record.Token = ""
+
+		err = s.db.UpdateEmail(ctx, record)
+		s.NoError(err, "could not update email record")
+		s.NotEqual(record.Modified, email.Modified, "expected modified timestamp to be updated")
+
+		updated, err := s.db.RetrieveEmail(ctx, "gary.vespers@example.com")
+		s.NoError(err, "could not retrieve updated email")
+		s.False(proto.Equal(email, updated))
+		s.True(proto.Equal(record, updated))
+
+		// Test deleting the email record
+		err = s.db.DeleteEmail(ctx, "Gary.Vespers@example.com")
+		s.NoError(err, "could not delete email record")
+
+		// Ensure the email was deleted
+		_, err = s.db.RetrieveEmail(ctx, "gary.vespers@example.com")
+		s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+	})
+
+	s.Run("CreateEmptyEmailError", func() {
+		// Make sure create errors with a nil email
+		email, err := s.db.CreateEmail(ctx, nil)
+		s.Empty(email)
+		s.ErrorIs(err, storeerrors.ErrIncompleteRecord)
+
+		// Make sure create errors with an email empty string
+		email, err = s.db.CreateEmail(ctx, &models.Email{Email: ""})
+		s.Empty(email)
+		s.ErrorIs(err, storeerrors.ErrIncompleteRecord)
+	})
+
+	s.Run("CreateDuplicate", func() {
+		// Cannot create a duplicate record
+		email := &models.Email{
+			Name:  "Barb Fabrittle",
+			Email: "barb@example.com",
+			Token: "ZPr7O4YRes30ie5SZjjqGwkETM2qHD1nfUIbcIecXTg",
+		}
+
+		_, err := s.db.CreateEmail(ctx, email)
+		s.NoError(err, "could not create first record")
+
+		_, err = s.db.CreateEmail(ctx, email)
+		s.ErrorIs(err, storeerrors.ErrEmailExists, "expected email exists error")
+	})
+
+	s.Run("CreateNameParsing", func() {
+		// NOTE: test cases need unique emails since database isn't reset between tests
+		testCases := []struct {
+			email         *models.Email
+			expectedName  string
+			expectedEmail string
+		}{
+			{
+				&models.Email{Name: "Frank Shadypants", Email: "Kelly Clarkberry <kelly.clarkberry@example.com>", Token: "foo"},
+				"Frank Shadypants",
+				"kelly.clarkberry@example.com",
+			},
+			{
+				&models.Email{Name: "", Email: "Gillian.Redbottom@example.com", Token: "foo"},
+				"",
+				"gillian.redbottom@example.com",
+			},
+			{
+				&models.Email{Name: "", Email: "Edward Boilermaker <EDWARD@BOILERMAKER.IO>", Token: "foo"},
+				"Edward Boilermaker",
+				"edward@boilermaker.io",
+			},
+		}
+
+		for i, tc := range testCases {
+			_, err := s.db.CreateEmail(ctx, tc.email)
+			s.NoError(err, "test case %d failed", i)
+			s.Equal(tc.expectedName, tc.email.Name, "test case %d failed", i)
+			s.Equal(tc.expectedEmail, tc.email.Email, "test case %d failed", i)
+		}
+	})
+
+	s.Run("RetrieveEmptyEmailError", func() {
+		email, err := s.db.RetrieveEmail(ctx, "")
+		s.Empty(email)
+		s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+	})
+
+	s.Run("RetrieveNotFound", func() {
+		email, err := s.db.RetrieveEmail(ctx, "thisemaildoesnot@exist.com")
+		s.Empty(email)
+		s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+	})
+
+	s.Run("UpdateEmptyEmailError", func() {
+		// Make sure update errors with a nil email
+		err := s.db.UpdateEmail(ctx, nil)
+		s.ErrorIs(err, storeerrors.ErrIncompleteRecord)
+
+		// Make sure update errors with an email empty string
+		err = s.db.UpdateEmail(ctx, &models.Email{Email: ""})
+		s.ErrorIs(err, storeerrors.ErrIncompleteRecord)
+	})
+
+	s.Run("DeleteEmptyEmailError", func() {
+		// Make sure delete errors with an email empty string
+		err := s.db.DeleteEmail(ctx, "")
+		s.ErrorIs(err, storeerrors.ErrEntityNotFound)
+	})
+}
+
+func (s *leveldbTestSuite) TestDirectoryContactStore() {
+	ctx := context.Background()
+	require := s.Require()
+
+	// Load fixtures into database for tests
+	data, err := os.ReadFile("../testdata/altvasp.json")
+	require.NoError(err)
+
+	vasp := &pb.VASP{}
+	err = protojson.Unmarshal(data, vasp)
+	require.NoError(err)
+
+	vaspID, err := s.db.CreateVASP(ctx, vasp)
+	require.NoError(err, "could not create vasp fixture")
+
+	admin := &models.Email{Name: vasp.Contacts.Administrative.Name, Email: vasp.Contacts.Administrative.Email, Verified: true, VerifiedOn: time.Now().Format(time.RFC3339)}
+	tech := &models.Email{Name: vasp.Contacts.Technical.Name, Email: vasp.Contacts.Technical.Email, Verified: true, VerifiedOn: time.Now().Format(time.RFC3339)}
+	legal := &models.Email{Name: vasp.Contacts.Legal.Name, Email: vasp.Contacts.Legal.Email, Verified: true, VerifiedOn: time.Now().Format(time.RFC3339)}
+	billing := &models.Email{Name: vasp.Contacts.Billing.Name, Email: vasp.Contacts.Billing.Email, Verified: true, VerifiedOn: time.Now().Format(time.RFC3339)}
+
+	for _, record := range []*models.Email{admin, tech, legal, billing} {
+		err = s.db.UpdateEmail(ctx, record)
+		require.NoError(err, "could not create associated contact email")
+	}
+
+	defer func() {
+		require.NoError(s.db.DeleteVASP(ctx, vaspID), "could not delete darlene vasp")
+		for _, record := range []*models.Email{admin, tech, legal, billing} {
+			err = s.db.DeleteEmail(ctx, record.Email)
+			require.NoError(err, "could not delete associated contact email")
+		}
+	}()
+
+	s.Run("VASPContacts", func() {
+		contacts, err := s.db.VASPContacts(ctx, vasp)
+		require.NoError(err, "could not get vasp contacts for darlene")
+		require.Equal(vasp.Id, contacts.VASP, "expected the vasp ID to be on the contacts")
+		require.Equal(vasp.Contacts, contacts.Contacts, "expected the contacts to match the VASP")
+		require.Len(contacts.Emails, 4, "expected two emails retrieved")
+	})
+
+	s.Run("RetrieveVASPContacts", func() {
+		contacts, err := s.db.RetrieveVASPContacts(ctx, vaspID)
+		require.NoError(err, "could not retrieve vasp contacts for darlene")
+		require.Equal(vasp.Id, contacts.VASP, "expected the vasp ID to be on the contacts")
+		require.True(proto.Equal(vasp.Contacts, contacts.Contacts), "expected the contacts to match the VASP")
+		require.Len(contacts.Emails, 4, "expected two emails retrieved")
+	})
+}

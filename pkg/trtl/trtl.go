@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"errors"
 	"io"
 	"time"
 
@@ -129,12 +130,34 @@ func (h *TrtlService) Put(ctx context.Context, in *pb.PutRequest) (out *pb.PutRe
 		return nil, status.Error(codes.InvalidArgument, "value must be provided in Put request")
 	}
 
+	// Create the write options for the Honu database.
+	opts := []options.Option{
+		options.WithNamespace(in.Namespace),
+	}
+
+	if in.Options != nil {
+		if in.Options.RequireExists {
+			opts = append(opts, options.WithRequireExists())
+		}
+
+		if in.Options.RequireNotExists {
+			opts = append(opts, options.WithRequireNotExists())
+		}
+	}
+
 	// Check if we have a namespace
 	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
 	var object *object.Object
-	if object, err = h.db.Put(in.Key, in.Value, options.WithNamespace(in.Namespace)); err != nil {
-		sentry.Error(ctx).Err(err).Bytes("key", in.Key).Msg("unable to put object")
-		return nil, status.Error(codes.Internal, err.Error())
+	if object, err = h.db.Put(in.Key, in.Value, opts...); err != nil {
+		switch {
+		case errors.Is(err, engine.ErrNotFound):
+			return nil, status.Error(codes.NotFound, err.Error())
+		case errors.Is(err, engine.ErrAlreadyExists):
+			return nil, status.Error(codes.FailedPrecondition, err.Error())
+		default:
+			sentry.Error(ctx).Err(err).Bytes("key", in.Key).Msg("unable to put object")
+			return nil, status.Error(codes.Internal, err.Error())
+		}
 	}
 
 	// Increment the number of writes, the number of bytes written, and the object size
@@ -170,15 +193,34 @@ func (h *TrtlService) Delete(ctx context.Context, in *pb.DeleteRequest) (out *pb
 		return nil, status.Error(codes.InvalidArgument, "key must be provided in Delete request")
 	}
 
+	// Create the write options for the Honu database.
+	opts := []options.Option{
+		options.WithNamespace(in.Namespace),
+	}
+
+	if in.Options != nil {
+		if in.Options.RequireExists {
+			opts = append(opts, options.WithRequireExists())
+		}
+
+		if in.Options.RequireNotExists {
+			opts = append(opts, options.WithRequireNotExists())
+		}
+	}
+
 	// Check if we have a namespace
 	// NOTE: empty string in.Namespace will use default namespace after honu v0.2.4
 	var object *object.Object
-	if object, err = h.db.Delete(in.Key, options.WithNamespace(in.Namespace)); err != nil {
-		if err == engine.ErrNotFound {
+	if object, err = h.db.Delete(in.Key, opts...); err != nil {
+		switch {
+		case errors.Is(err, engine.ErrNotFound):
 			return nil, status.Error(codes.NotFound, err.Error())
+		case errors.Is(err, engine.ErrAlreadyExists):
+			return nil, status.Error(codes.FailedPrecondition, err.Error())
+		default:
+			sentry.Error(ctx).Err(err).Bytes("key", in.Key).Msg("unable to delete object")
+			return nil, status.Error(codes.Internal, err.Error())
 		}
-		sentry.Error(ctx).Err(err).Bytes("key", in.Key).Msg("unable to delete object")
-		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	// Increment the number of writes (but no bytes can be written here)

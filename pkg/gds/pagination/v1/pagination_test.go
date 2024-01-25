@@ -1,10 +1,10 @@
-package models_test
+package pagination_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	. "github.com/trisacrypto/directory/pkg/models/v1"
+	. "github.com/trisacrypto/directory/pkg/gds/pagination/v1"
 )
 
 // This is a very similar test to trtl.internal but decoupled so Trtl and GDS aren't
