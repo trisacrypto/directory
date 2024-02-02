@@ -15,9 +15,6 @@ function TrisaImplementationReviewDataTable({ mainnet, testnet }: TrisaImplement
         }}>
         <Tbody
           sx={{
-            ' td': {
-              fontSize: '1rem'
-            },
             'td:first-child': {
               width: '50%',
               paddingLeft: '1rem'

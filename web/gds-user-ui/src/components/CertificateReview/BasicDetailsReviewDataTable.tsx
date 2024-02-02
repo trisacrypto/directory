@@ -6,7 +6,7 @@ interface BasicReviewProps {
 }
 function BasicDetailsReviewDataTable({ data }: BasicReviewProps) {
   return (
-    <Stack fontSize={18}>
+    <Stack fontSize={'1rem'}>
       <Table
         sx={{
           'td:nth-child(2),td:nth-child(3)': { fontWeight: 'semibold' },
@@ -19,12 +19,7 @@ function BasicDetailsReviewDataTable({ data }: BasicReviewProps) {
             paddingY: 2.5
           }
         }}>
-        <Tbody
-          sx={{
-            '*': {
-              fontSize: '1rem'
-            }
-          }}>
+        <Tbody>
           <Tr>
             <Td pl={'1rem !important'}>
               <Trans id="Organization Name">Organization Name</Trans>
