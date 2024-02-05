@@ -13,7 +13,7 @@ interface LegalReviewProps {
 }
 function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
   return (
-    <Stack fontSize={18}>
+    <Stack fontSize={'1rem'}>
       <Sentry.ErrorBoundary
         fallback={
           <Text color={'red'} pt={20}>{t`An error has occurred to load legal person data`}</Text>
@@ -32,14 +32,9 @@ function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
               paddingY: 2.5
             }
           }}>
-          <Tbody
-            sx={{
-              '*': {
-                fontSize: '1rem'
-              }
-            }}>
+          <Tbody>
             <Tr>
-              <Td fontSize={'1rem'} fontWeight="bold" colSpan={3} background="#E5EDF1">
+              <Td fontWeight="bold" colSpan={3} background="#E5EDF1">
                 <Trans id="Name Identifiers">Name Identifiers</Trans>
               </Td>
             </Tr>
@@ -151,7 +146,7 @@ function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
               <Td></Td>
             </Tr>
             <Tr>
-              <Td fontSize={'1rem'} pt={'2rem'} fontWeight="bold" colSpan={3} background="#E5EDF1">
+              <Td pt={'2rem'} fontWeight="bold" colSpan={3} background="#E5EDF1">
                 <Text mb={1}>
                   <Trans id="National Identification">National Identification</Trans>
                 </Text>
@@ -171,7 +166,7 @@ function LegalPersonReviewDataTable({ data }: LegalReviewProps) {
                 <Trans id="Identification Type">Identification Type</Trans>
               </Td>
               <Td pt={0}>
-                <Tag color={'white'} bg={'blue'} size={'lg'}>
+                <Tag color={'white'} bg={'blue'} size={'md'}>
                   {getNationalIdentificationLabel(
                     data?.national_identification?.national_identifier_type
                   )}
