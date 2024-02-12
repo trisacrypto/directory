@@ -187,7 +187,7 @@
     "prettier": "^2.8.0",
     "redux-mock-store": "^1.5.4",
     "ts-loader": "^9.4.3",
-    "webpack": "^5.69.1"
+    "webpack": "^5.90.1"
   },
   "jest": {
     "resetMocks": false,
