@@ -31,7 +31,7 @@
     "@types/react-dom": "^17.0.11",
     "@types/react-redux": "^7.1.22",
     "akar-icons": "^1.9.20",
-    "auth0-js": "^9.19.0",
+    "auth0-js": "^9.2.41",
     "axios": "^0.26.1",
     "babel-plugin-polyfill-regenerator": "^0.4.0",
     "chakra-react-select": "^3.0.5",

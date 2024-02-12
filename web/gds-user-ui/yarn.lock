@@ -6681,7 +6681,7 @@ atob@^2.1.2:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
-auth0-js@^9.19.0:
+auth0-js@^9.2.41:
   version "9.24.1"
   resolved "https://registry.yarnpkg.com/auth0-js/-/auth0-js-9.24.1.tgz#4f35fd0b344e8ea7f9ce03c07d2f276e6fa53803"
   integrity sha512-Zax2BOEP6ZRLWNnG59JiquIHiWkgePOOfNv3UgA30Vm0jMQY4SyNAI6yG2+xr5rBxjs/L38xZAHLJm5lcwwGog==
