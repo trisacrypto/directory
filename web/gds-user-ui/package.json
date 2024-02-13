@@ -27,11 +27,11 @@
     "@types/jest": "^27.4.0",
     "@types/node": "^16.11.25",
     "@types/prop-types": "^15.7.4",
-    "@types/react": "^17.0.39",
+    "@types/react": "^18.2.55",
     "@types/react-dom": "^17.0.11",
     "@types/react-redux": "^7.1.22",
     "akar-icons": "^1.9.20",
-    "auth0-js": "^9.19.0",
+    "auth0-js": "^9.24.1",
     "axios": "^0.26.1",
     "babel-plugin-polyfill-regenerator": "^0.4.0",
     "chakra-react-select": "^3.0.5",
@@ -137,7 +137,7 @@
     ]
   },
   "devDependencies": {
-    "@babel/core": "^7.18.0",
+    "@babel/core": "^7.23.9",
     "@badeball/cypress-cucumber-preprocessor": "^16.0.3",
     "@cypress/webpack-preprocessor": "^5.17.1",
     "@faker-js/faker": "^7.2.0",
@@ -187,7 +187,7 @@
     "prettier": "^2.8.0",
     "redux-mock-store": "^1.5.4",
     "ts-loader": "^9.4.3",
-    "webpack": "^5.69.1"
+    "webpack": "^5.90.1"
   },
   "jest": {
     "resetMocks": false,

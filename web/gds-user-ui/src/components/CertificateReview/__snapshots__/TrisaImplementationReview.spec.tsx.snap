@@ -160,10 +160,6 @@ exports[`<TrisaImplementationReview /> should match snapshot 1`] = `
   border-style: hidden;
 }
 
-.emotion-7 td {
-  font-size: 1rem;
-}
-
 .emotion-7 td:first-child {
   width: 50%;
   padding-left: 1rem;

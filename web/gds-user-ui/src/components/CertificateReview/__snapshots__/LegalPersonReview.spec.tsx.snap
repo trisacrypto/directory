@@ -133,7 +133,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
   -webkit-flex-direction: column;
   -ms-flex-direction: column;
   flex-direction: column;
-  font-size: 18px;
+  font-size: 1rem;
 }
 
 .emotion-5>*:not(style)~*:not(style) {
@@ -174,10 +174,6 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
   padding-bottom: var(--chakra-space-2-5);
 }
 
-.emotion-7 * {
-  font-size: 1rem;
-}
-
 .emotion-9 {
   text-align: start;
   -webkit-padding-start: var(--chakra-space-6);
@@ -189,7 +185,6 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
   line-height: var(--chakra-lineHeights-5);
   border-bottom: var(--chakra-borders-1px);
   border-color: var(--chakra-colors-gray-100);
-  font-size: 1rem;
   font-weight: var(--chakra-fontWeights-bold);
   background: #E5EDF1;
 }
@@ -339,7 +334,6 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
   line-height: var(--chakra-lineHeights-5);
   border-bottom: var(--chakra-borders-1px);
   border-color: var(--chakra-colors-gray-100);
-  font-size: 1rem;
   font-weight: var(--chakra-fontWeights-bold);
   background: #E5EDF1;
 }
@@ -367,14 +361,14 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
   line-height: 1.2;
   outline: 2px solid transparent;
   outline-offset: 2px;
-  min-height: var(--chakra-sizes-8);
-  min-width: var(--chakra-sizes-8);
-  font-size: var(--chakra-fontSizes-md);
+  min-height: 1.5rem;
+  min-width: 1.5rem;
+  font-size: var(--chakra-fontSizes-sm);
   border-radius: var(--chakra-radii-md);
-  -webkit-padding-start: var(--chakra-space-3);
-  padding-inline-start: var(--chakra-space-3);
-  -webkit-padding-end: var(--chakra-space-3);
-  padding-inline-end: var(--chakra-space-3);
+  -webkit-padding-start: var(--chakra-space-2);
+  padding-inline-start: var(--chakra-space-2);
+  -webkit-padding-end: var(--chakra-space-2);
+  padding-inline-end: var(--chakra-space-2);
   background: blue;
   color: var(--chakra-colors-white);
 }
@@ -417,7 +411,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
             class="emotion-7"
           >
             <tr
-              class="emotion-8"
+              class="emotion-7"
               role="row"
             >
               <td
@@ -429,7 +423,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
               </td>
             </tr>
             <tr
-              class="emotion-8"
+              class="emotion-7"
               role="row"
             >
               <td
@@ -447,13 +441,13 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
                   role="table"
                 >
                   <tbody
-                    class="emotion-8"
+                    class="emotion-7"
                   />
                 </table>
               </td>
             </tr>
             <tr
-              class="emotion-8"
+              class="emotion-7"
               role="row"
             >
               <td
@@ -467,7 +461,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
                 role="gridcell"
               >
                 <tr
-                  class="emotion-8"
+                  class="emotion-7"
                   role="row"
                 >
                   <td
@@ -478,7 +472,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
               </td>
             </tr>
             <tr
-              class="emotion-8"
+              class="emotion-7"
               role="row"
             >
               <td
@@ -492,10 +486,10 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
                 role="gridcell"
               >
                 <tbody
-                  class="emotion-8"
+                  class="emotion-7"
                 >
                   <tr
-                    class="emotion-8"
+                    class="emotion-7"
                     role="row"
                   >
                     <td
@@ -509,7 +503,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
               </td>
             </tr>
             <tr
-              class="emotion-8"
+              class="emotion-7"
               role="row"
             >
               <td
@@ -518,7 +512,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
               />
             </tr>
             <tr
-              class="emotion-8"
+              class="emotion-7"
               role="row"
             >
               <td
@@ -534,7 +528,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
               </td>
             </tr>
             <tr
-              class="emotion-8"
+              class="emotion-7"
               role="row"
             >
               <td
@@ -543,7 +537,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
               />
             </tr>
             <tr
-              class="emotion-8"
+              class="emotion-7"
               role="row"
             >
               <td
@@ -558,7 +552,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
               />
             </tr>
             <tr
-              class="emotion-8"
+              class="emotion-7"
               role="row"
             >
               <td
@@ -577,7 +571,7 @@ exports[`<LegalPersonReview /> should match snapshot 1`] = `
               </td>
             </tr>
             <tr
-              class="emotion-8"
+              class="emotion-7"
               role="row"
             >
               <td

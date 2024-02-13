@@ -620,11 +620,6 @@ exports[`ContactsForm should render 1`] = `
                   Burkina Faso
                 </option>
                 <option
-                  value="MM"
-                >
-                  Burma
-                </option>
-                <option
                   value="BI"
                 >
                   Burundi
@@ -1185,6 +1180,11 @@ exports[`ContactsForm should render 1`] = `
                   Mozambique
                 </option>
                 <option
+                  value="MM"
+                >
+                  Myanmar
+                </option>
+                <option
                   value="NA"
                 >
                   Namibia
@@ -1671,6 +1671,7 @@ exports[`ContactsForm should render 1`] = `
                 </option>
               </select>
               <div
+                aria-hidden="true"
                 class="PhoneInputCountryIcon"
               >
                 <svg
@@ -2031,11 +2032,6 @@ exports[`ContactsForm should render 1`] = `
                     value="BF"
                   >
                     Burkina Faso
-                  </option>
-                  <option
-                    value="MM"
-                  >
-                    Burma
                   </option>
                   <option
                     value="BI"
@@ -2598,6 +2594,11 @@ exports[`ContactsForm should render 1`] = `
                     Mozambique
                   </option>
                   <option
+                    value="MM"
+                  >
+                    Myanmar
+                  </option>
+                  <option
                     value="NA"
                   >
                     Namibia
@@ -3084,6 +3085,7 @@ exports[`ContactsForm should render 1`] = `
                   </option>
                 </select>
                 <div
+                  aria-hidden="true"
                   class="PhoneInputCountryIcon"
                 >
                   <svg
@@ -3447,11 +3449,6 @@ exports[`ContactsForm should render 1`] = `
                     Burkina Faso
                   </option>
                   <option
-                    value="MM"
-                  >
-                    Burma
-                  </option>
-                  <option
                     value="BI"
                   >
                     Burundi
@@ -4012,6 +4009,11 @@ exports[`ContactsForm should render 1`] = `
                     Mozambique
                   </option>
                   <option
+                    value="MM"
+                  >
+                    Myanmar
+                  </option>
+                  <option
                     value="NA"
                   >
                     Namibia
@@ -4498,6 +4500,7 @@ exports[`ContactsForm should render 1`] = `
                   </option>
                 </select>
                 <div
+                  aria-hidden="true"
                   class="PhoneInputCountryIcon"
                 >
                   <svg
@@ -4861,11 +4864,6 @@ exports[`ContactsForm should render 1`] = `
                     Burkina Faso
                   </option>
                   <option
-                    value="MM"
-                  >
-                    Burma
-                  </option>
-                  <option
                     value="BI"
                   >
                     Burundi
@@ -5426,6 +5424,11 @@ exports[`ContactsForm should render 1`] = `
                     Mozambique
                   </option>
                   <option
+                    value="MM"
+                  >
+                    Myanmar
+                  </option>
+                  <option
                     value="NA"
                   >
                     Namibia
@@ -5912,6 +5915,7 @@ exports[`ContactsForm should render 1`] = `
                   </option>
                 </select>
                 <div
+                  aria-hidden="true"
                   class="PhoneInputCountryIcon"
                 >
                   <svg

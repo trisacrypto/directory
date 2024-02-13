@@ -332,7 +332,6 @@ exports[`LegalForm should render 1`] = `
 
 .emotion-20 {
   position: relative;
-  pointer-events: auto;
 }
 
 .emotion-21 {
@@ -905,11 +904,9 @@ exports[`LegalForm should render 1`] = `
                 >
                   <input
                     aria-autocomplete="list"
-                    aria-controls="react-select-2-listbox"
                     aria-describedby="react-select-2-placeholder"
                     aria-expanded="false"
                     aria-haspopup="true"
-                    aria-owns="react-select-2-listbox"
                     autocapitalize="none"
                     autocomplete="off"
                     autocorrect="off"
@@ -1054,11 +1051,9 @@ exports[`LegalForm should render 1`] = `
                 >
                   <input
                     aria-autocomplete="list"
-                    aria-controls="react-select-3-listbox"
                     aria-describedby="react-select-3-placeholder"
                     aria-expanded="false"
                     aria-haspopup="true"
-                    aria-owns="react-select-3-listbox"
                     autocapitalize="none"
                     autocomplete="off"
                     autocorrect="off"
@@ -1144,10 +1139,8 @@ exports[`LegalForm should render 1`] = `
                 >
                   <input
                     aria-autocomplete="list"
-                    aria-controls="react-select-4-listbox"
                     aria-expanded="false"
                     aria-haspopup="true"
-                    aria-owns="react-select-4-listbox"
                     autocapitalize="none"
                     autocomplete="off"
                     autocorrect="off"
