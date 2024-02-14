@@ -76,7 +76,7 @@ axiosInstance.interceptors.response.use(
         // The user should not be logged out if he can't process a request due to a missing permission
         if (
           error?.response?.status === 401 &&
-          (error as AxiosError).config.url !== '/users/login'
+          (error as AxiosError)?.config?.url !== '/users/login'
         ) {
           toast({
             title: "Sorry, you don't have permission to perform this action",
