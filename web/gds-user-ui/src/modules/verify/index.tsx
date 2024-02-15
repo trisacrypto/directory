@@ -7,6 +7,7 @@ import AlertMessage from 'components/ui/AlertMessage';
 import useAuth from 'hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import TransparentLoader from 'components/Loader/TransparentLoader';
+import { upperCaseFirstLetter } from 'utils/utils';
 const VerifyPage: React.FC = () => {
   const { vaspID, token, registered_directory } = useQuery();
   const [isLoading, setIsLoading] = useState(true);
@@ -42,11 +43,11 @@ const VerifyPage: React.FC = () => {
           setError('Invalid params');
         }
       } catch (e: any) {
-        if (!e.response?.data?.success) {
-          setError(e.response?.data?.error);
+        if (!e?.data?.success) {
+          setError(upperCaseFirstLetter(e?.data?.error));
         } else {
           // log error
-          console.error('sorry something went wrong , please try again');
+          console.error('Sorry something went wrong, please try again.');
         }
       } finally {
         setIsLoading(false);
