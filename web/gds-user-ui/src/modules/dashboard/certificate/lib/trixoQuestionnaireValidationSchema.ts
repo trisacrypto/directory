@@ -14,16 +14,15 @@ export const trixoQuestionnaireValidationSchema = yup.object().shape({
     has_required_regulatory_program: yup.string().oneOf(['no', 'yes']).default('no'),
     conducts_customer_kyc: yup.boolean().default(false),
     kyc_threshold: yup
-      .number()
+      .string()
       .transform((value, originalValue) => {
         if (originalValue) {
-          console.log('[originalValue]', originalValue);
-          const v = originalValue?.replace(/^0+/, '');
+          const stringValue = typeof originalValue === 'string' ? originalValue : originalValue.toString();
+          const v = stringValue?.replace(/^0+/, '');
           return v?.length > 0 ? Number(v) : 0;
         }
         return value;
-      })
-      .default(0),
+      }),
     kyc_threshold_currency: yup.string(),
     must_comply_travel_rule: yup.boolean(),
     applicable_regulations: yup
@@ -36,15 +35,15 @@ export const trixoQuestionnaireValidationSchema = yup.object().shape({
         return value;
       }),
     compliance_threshold: yup
-      .number()
+      .string()
       .transform((value, originalValue: any) => {
         if (originalValue) {
-          const v = originalValue?.replace(/^0+/, '');
+          const stringValue = typeof originalValue === 'string' ? originalValue : originalValue.toString();
+          const v = stringValue?.replace(/^0+/, '');
           return v?.length > 0 ? Number(v) : 0;
         }
         return value;
-      })
-      .default(0),
+      }),
     compliance_threshold_currency: yup.string(),
     must_safeguard_pii: yup.boolean().default(false),
     safeguards_pii: yup.boolean().default(false)
