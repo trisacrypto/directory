@@ -1,3 +1,5 @@
+import { addressTypeEnum } from "constants/address";
+
 export const getRegistrationDefaultValues = () => {
   return {
     entity: {
@@ -14,7 +16,7 @@ export const getRegistrationDefaultValues = () => {
       },
       geographic_addresses: [
         {
-          address_type: 'ADDRESS_TYPE_CODE_BIZZ',
+          address_type: addressTypeEnum.ADDRESS_TYPE_BIZZ,
           address_line: [],
           country: ''
         }
