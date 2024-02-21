@@ -55,8 +55,13 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   // const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
+  console.log('testnet submitted', isTestNetSubmitted);
+  console.log('mainnet submitted', isMainNetSubmitted);
+
+  // Replace with values from the redux store?
   const isTestnetNetworkFieldsIncomplete = false;
   const isMainnetNetworkIncomplete = false;
+  
   useEffect(() => {
     if (isTestNetSubmitted) {
       setTestnet(true);
