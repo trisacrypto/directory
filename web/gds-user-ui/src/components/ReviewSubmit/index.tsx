@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import {
   Button,
   Heading,
@@ -16,7 +16,6 @@ import ConfirmationModal from 'components/ReviewSubmit/ConfirmationModal';
 import { t, Trans } from '@lingui/macro';
 import useCertificateStepper from 'hooks/useCertificateStepper';
 import { useSelector } from 'react-redux';
-// import { useNavigate } from 'react-router-dom';
 import { STEPPER_NETWORK } from 'utils/constants';
 import {
   getTestNetSubmittedStatus,
@@ -27,6 +26,8 @@ import WarningBox from 'components/WarningBox';
 import { setHasReachSubmitStep } from 'application/store/stepper.slice';
 import { useAppDispatch } from 'application/store';
 import { StepsIndexes } from 'constants/steps';
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
+import { StepEnum } from 'types/enums';
 
 interface ReviewSubmitProps {
   onSubmitHandler: (e: React.FormEvent, network: string) => void;
@@ -47,29 +48,20 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
 }) => {
   const isTestNetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
   const isMainNetSubmitted: boolean = useSelector(getMainNetSubmittedStatus);
+ const { certificateStep } = useFetchCertificateStep({ key: StepEnum.ALL });
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isSent = isTestNetSent || isMainNetSent;
-  const [testnet, setTestnet] = useState(false);
-  const [mainnet, setMainnet] = useState(false);
   const { jumpToLastStep, jumpToStep } = useCertificateStepper();
-  // const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  console.log('testnet submitted', isTestNetSubmitted);
-  console.log('mainnet submitted', isMainNetSubmitted);
+  const mainnetCommonName = certificateStep?.form?.mainnet?.common_name;
+  const mainnetEndpoint = certificateStep?.form?.mainnet?.endpoint;
+  const testnetCommonName = certificateStep?.form?.testnet?.common_name;
+  const testnetEndpoint = certificateStep?.form?.testnet?.endpoint;
 
-  // Replace with values from the redux store?
-  const isTestnetNetworkFieldsIncomplete = false;
-  const isMainnetNetworkIncomplete = false;
-  
-  useEffect(() => {
-    if (isTestNetSubmitted) {
-      setTestnet(true);
-    }
-    if (isMainNetSubmitted) {
-      setMainnet(true);
-    }
-  }, [isTestNetSubmitted, isMainNetSubmitted]);
+  const isMainnetNetworkIncomplete = !mainnetCommonName || !mainnetEndpoint;
+  const isTestnetNetworkIncomplete = !testnetCommonName || !testnetEndpoint;
+
   useEffect(() => {
     if (isSent) {
       onOpen();
@@ -168,7 +160,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   .
                 </Text>
 
-                {isTestnetNetworkFieldsIncomplete ? (
+                {isTestnetNetworkIncomplete ? (
                   <WarningBox>
                     <Text>
                       <Trans>
@@ -213,7 +205,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                     bgColor: '#f55c35'
                   }}
                   isLoading={isTestNetSubmitting}
-                  isDisabled={testnet || isTestnetNetworkFieldsIncomplete}
+                  isDisabled={isTestNetSubmitted || isTestnetNetworkIncomplete}
                   data-testid="testnet-submit-btn"
                   onClick={(e) => {
                     onSubmitHandler(e, STEPPER_NETWORK.TESTNET);
@@ -304,7 +296,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                     bgColor: '#189fda'
                   }}
                   isLoading={isMainNetSubmitting}
-                  isDisabled={mainnet || isMainnetNetworkIncomplete}
+                  isDisabled={isMainNetSubmitted || isMainnetNetworkIncomplete}
                   whiteSpace="normal"
                   boxShadow="lg"
                   data-testid="mainnet-submit-btn"
