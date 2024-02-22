@@ -40,7 +40,7 @@ const CertificateReview = () => {
       if (network === STEPPER_NETWORK.TESTNET) {
         setIsTestNetSubmitting(true);
         const response = await submitTestnetRegistration();
-        if (response.status === 200) {
+        if (response?.status === 200) {
           await getRefreshToken(response?.data?.refresh_token);
           setIsTestNetSubmitting(false);
           setIsTestNetSent(true);

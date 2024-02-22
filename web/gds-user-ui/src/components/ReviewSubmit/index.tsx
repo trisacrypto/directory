@@ -48,12 +48,12 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
 }) => {
   const isTestNetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
   const isMainNetSubmitted: boolean = useSelector(getMainNetSubmittedStatus);
- const { certificateStep } = useFetchCertificateStep({ key: StepEnum.ALL });
+  const { certificateStep } = useFetchCertificateStep({ key: StepEnum.ALL });
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isSent = isTestNetSent || isMainNetSent;
   const { jumpToLastStep, jumpToStep } = useCertificateStepper();
   const dispatch = useAppDispatch();
-
+  
   const mainnetCommonName = certificateStep?.form?.mainnet?.common_name;
   const mainnetEndpoint = certificateStep?.form?.mainnet?.endpoint;
   const testnetCommonName = certificateStep?.form?.testnet?.common_name;
@@ -67,18 +67,16 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
       onOpen();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isTestNetSent, isMainNetSent]);
+  }, [isSent]);
 
   const handleJumpToLastStep = () => {
     jumpToLastStep();
-    // navigate('/dashboard/certificate/registration');
   };
 
   const handleJumpToTrisaImplementationStep = () => {
     dispatch(setHasReachSubmitStep({ hasReachSubmitStep: false }));
     jumpToStep(StepsIndexes.TRISA_IMPLEMENTATION);
   };
-
   return (
     <>
       <Flex>
