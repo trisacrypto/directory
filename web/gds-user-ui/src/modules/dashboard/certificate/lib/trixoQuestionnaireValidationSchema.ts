@@ -57,7 +57,6 @@ export const isTrixoQuestionnaireValid = async (data: any) => {
     });
     return true;
   } catch (error) {
-    console.log('[isTrixoQuestionnaireValid] error', error);
     return false;
   }
 };
