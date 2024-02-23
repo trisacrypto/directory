@@ -108,7 +108,6 @@ const useCertificateStepper = () => {
     dispatch(setCertificateValue({ value }));
   };
 
-  // Does the submitted status get set to false when user goes back to a previous step?
   const setInitialState = (value: any) => {
     const state: TPayload = {
       currentStep: value?.state?.current,
