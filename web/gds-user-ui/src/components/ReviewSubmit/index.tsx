@@ -15,12 +15,7 @@ import FormLayout from 'layouts/FormLayout';
 import ConfirmationModal from 'components/ReviewSubmit/ConfirmationModal';
 import { t, Trans } from '@lingui/macro';
 import useCertificateStepper from 'hooks/useCertificateStepper';
-import { useSelector } from 'react-redux';
 import { STEPPER_NETWORK } from 'utils/constants';
-import {
-  getTestNetSubmittedStatus,
-  getMainNetSubmittedStatus
-} from 'application/store/selectors/stepper';
 
 import WarningBox from 'components/WarningBox';
 import { setHasReachSubmitStep } from 'application/store/stepper.slice';
@@ -28,6 +23,7 @@ import { useAppDispatch } from 'application/store';
 import { StepsIndexes } from 'constants/steps';
 import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 import { StepEnum } from 'types/enums';
+import useSubmissionStatus from 'modules/dashboard/registration/hooks/useSubmissionStatus';
 
 interface ReviewSubmitProps {
   onSubmitHandler: (e: React.FormEvent, network: string) => void;
@@ -36,6 +32,7 @@ interface ReviewSubmitProps {
   result?: any;
   isTestNetSubmitting?: boolean;
   isMainNetSubmitting?: boolean;
+  handleJumpToLastStep?: (e: React.FormEvent) => void;
 }
 
 const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
@@ -44,16 +41,18 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   isMainNetSent,
   result,
   isTestNetSubmitting,
-  isMainNetSubmitting
+  isMainNetSubmitting,
+  handleJumpToLastStep,
 }) => {
-  const isTestNetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
-  const isMainNetSubmitted: boolean = useSelector(getMainNetSubmittedStatus);
   const { certificateStep } = useFetchCertificateStep({ key: StepEnum.ALL });
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isSent = isTestNetSent || isMainNetSent;
-  const { jumpToLastStep, jumpToStep } = useCertificateStepper();
+  const { jumpToStep } = useCertificateStepper();
+  const { status } = useSubmissionStatus();
   const dispatch = useAppDispatch();
   
+  // Display a warning box if the user has reached the submit step but not completed the
+  // TRISA implementation step for one of the networks.
   const mainnetCommonName = certificateStep?.form?.mainnet?.common_name;
   const mainnetEndpoint = certificateStep?.form?.mainnet?.endpoint;
   const testnetCommonName = certificateStep?.form?.testnet?.common_name;
@@ -62,16 +61,15 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   const isMainnetNetworkIncomplete = !mainnetCommonName || !mainnetEndpoint;
   const isTestnetNetworkIncomplete = !testnetCommonName || !testnetEndpoint;
 
+  const isTestNetSubmitted = status?.data?.testnet_submitted;
+  const isMainNetSubmitted = status?.data?.mainnet_submitted;
+
   useEffect(() => {
     if (isSent) {
       onOpen();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSent]);
-
-  const handleJumpToLastStep = () => {
-    jumpToLastStep();
-  };
 
   const handleJumpToTrisaImplementationStep = () => {
     dispatch(setHasReachSubmitStep({ hasReachSubmitStep: false }));
@@ -203,7 +201,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                     bgColor: '#f55c35'
                   }}
                   isLoading={isTestNetSubmitting}
-                  isDisabled={isTestNetSubmitted || isTestnetNetworkIncomplete}
+                  isDisabled={isTestnetNetworkIncomplete || isTestNetSubmitted }
                   data-testid="testnet-submit-btn"
                   onClick={(e) => {
                     onSubmitHandler(e, STEPPER_NETWORK.TESTNET);
@@ -294,7 +292,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                     bgColor: '#189fda'
                   }}
                   isLoading={isMainNetSubmitting}
-                  isDisabled={isMainNetSubmitted || isMainnetNetworkIncomplete}
+                  isDisabled={isMainnetNetworkIncomplete || isMainNetSubmitted }
                   whiteSpace="normal"
                   boxShadow="lg"
                   data-testid="mainnet-submit-btn"

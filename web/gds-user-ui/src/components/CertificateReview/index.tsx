@@ -23,7 +23,7 @@ const ReviewsSummary = lazy(() => import('./ReviewsSummary'));
 const CertificateReview = () => {
   const toast = useToast();
   const dispatch = useDispatch();
-  const { testnetSubmissionState, mainnetSubmissionState } = useCertificateStepper();
+  const { testnetSubmissionState, mainnetSubmissionState, jumpToLastStep } = useCertificateStepper();
 
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
@@ -89,6 +89,13 @@ const CertificateReview = () => {
     }
   }, [isTestNetSent, isMainNetSent, dispatch]);
 
+  const handleJumpToLastStep = (e: React.FormEvent) => {
+    e.preventDefault();
+    jumpToLastStep();
+    setIsTestNetSent(false);
+    setIsMainNetSent(false);
+  };
+
   if (!hasReachSubmitStep) {
     return <ReviewsSummary />;
   }
@@ -102,6 +109,7 @@ const CertificateReview = () => {
         result={result}
         isTestNetSubmitting={isTestNetSubmitting}
         isMainNetSubmitting={isMainNetSubmitting}
+        handleJumpToLastStep={handleJumpToLastStep}
       />
     </Suspense>
   );
