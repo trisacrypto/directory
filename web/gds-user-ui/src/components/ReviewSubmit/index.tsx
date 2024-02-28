@@ -18,12 +18,13 @@ import useCertificateStepper from 'hooks/useCertificateStepper';
 import { STEPPER_NETWORK } from 'utils/constants';
 
 import WarningBox from 'components/WarningBox';
-import { setHasReachSubmitStep } from 'application/store/stepper.slice';
+import { setHasReachSubmitStep, setStepStatus } from 'application/store/stepper.slice';
 import { useAppDispatch } from 'application/store';
 import { StepsIndexes } from 'constants/steps';
 import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 import { StepEnum } from 'types/enums';
 import useSubmissionStatus from 'modules/dashboard/registration/hooks/useSubmissionStatus';
+import { LSTATUS } from 'components/RegistrationForm/CertificateStepLabel';
 
 interface ReviewSubmitProps {
   onSubmitHandler: (e: React.FormEvent, network: string) => void;
@@ -70,6 +71,11 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSent]);
+
+  // Update the review step status to complete if the user submits a registration.
+  if (isTestNetSubmitted || isMainNetSubmitted) {
+    dispatch(setStepStatus({ step: 6, status: LSTATUS.COMPLETE }));
+  }
 
   const handleJumpToTrisaImplementationStep = () => {
     dispatch(setHasReachSubmitStep({ hasReachSubmitStep: false }));
