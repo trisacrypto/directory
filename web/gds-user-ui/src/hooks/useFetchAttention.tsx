@@ -11,8 +11,8 @@ const useFetchAttention = () => {
     try {
       setAuthorization();
       const result = await axiosInstance.get('/attention');
-      if (result.status === 200) {
-        setAttentionResponse(result.data);
+      if (result?.status === 200) {
+        setAttentionResponse(result?.data);
       } else {
         setAttentionResponse([]);
       }
