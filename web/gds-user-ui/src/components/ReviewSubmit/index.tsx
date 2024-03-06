@@ -70,7 +70,8 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
       onOpen();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSent]);
+    // List props in the dependency array to ensure the correct values are used.
+  }, [isTestNetSent, isMainNetSent]);
 
   // Update the review step status to complete if the user submits a registration.
   if (isTestNetSubmitted || isMainNetSubmitted) {
