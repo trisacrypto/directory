@@ -99,7 +99,7 @@ const StartPage: React.FC = () => {
       }
 
       // catch this error in sentry
-      Sentry.captureException(err);
+      Sentry.captureException(err?.original);
     }
   };
   return (
