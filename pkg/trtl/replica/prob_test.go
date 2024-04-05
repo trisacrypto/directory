@@ -1,7 +1,6 @@
 package replica_test
 
 import (
-	"math/rand"
 	"testing"
 	"time"
 
@@ -50,7 +49,8 @@ func TestReplicateObjectRoulette(t *testing.T) {
 	for i, tc := range cases {
 		count := 0
 		ts := time.Now().Add(tc.before)
-		rand.Seed(24)
+		replica.Seed(24)
+
 		for i := 0; i < tc.rolls; i++ {
 			if replica.ReplicateObjectRoulette(ts) {
 				count++

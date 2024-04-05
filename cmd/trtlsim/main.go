@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	crand "crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -27,10 +28,6 @@ import (
 	gprcInsecure "google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 )
-
-func init() {
-	rand.Seed(time.Now().UTC().UnixNano())
-}
 
 const (
 	interval  = 10 * time.Second                                       // the ticker interval, default to 5 seconds
@@ -735,7 +732,7 @@ func (t *TRISAModel) Iter(namespace string) (err error) {
 func (t *TRISAModel) Put(key, namespace string, nbytes int) (err error) {
 	// Create a random value of the specified length
 	value := make([]byte, nbytes)
-	if _, err = rand.Read(value); err != nil {
+	if _, err = crand.Read(value); err != nil {
 		return fmt.Errorf("could not create random value: %v", err)
 	}
 
