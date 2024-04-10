@@ -4,6 +4,7 @@ import { Trans } from '@lingui/react';
 import MembershipGuideCard from 'components/MembershipGuideCard';
 import React from 'react';
 import LandingLayout from 'layouts/LandingLayout';
+import LandingBanner from 'components/Banner/LandingBanner';
 
 const MembershipGuideText = [
   {
@@ -33,6 +34,7 @@ const MembershipGuide = () => {
   return (
     <>
       <LandingLayout>
+      <LandingBanner />
         <Flex
           bgGradient="linear-gradient(90.17deg, rgba(35, 167, 224, 0.85) 3.85%, rgba(27, 206, 159, 0.55) 96.72%);"
           color="white"

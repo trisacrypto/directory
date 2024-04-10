@@ -4,6 +4,7 @@ import { GoogleIcon, GithubIcon, MicrosoftIcon } from 'components/Icon';
 import { Trans } from '@lingui/react';
 import AuthLayout from 'layouts/AuthLayout';
 import SignupForm from 'components/Form/SignupForm';
+import LandingBanner from 'components/Banner/LandingBanner';
 interface CreateAccountProps {
   handleSocialAuth: (event: React.FormEvent, type: string) => void;
   handleSignUpWithEmail: (data: any) => void;
@@ -21,6 +22,7 @@ const CreateAccount: React.FC<CreateAccountProps> = ({
 }) => {
   return (
     <AuthLayout>
+      <LandingBanner />
       <Heading
         fontWeight={'bold'}
         color={useColorModeValue('gray.600', 'white')}
