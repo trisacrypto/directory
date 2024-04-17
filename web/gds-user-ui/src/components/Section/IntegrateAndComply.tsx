@@ -18,12 +18,13 @@ import { Line } from './Line';
 import LandingHeader from 'components/Header/LandingHeader';
 import Footer from 'components/Footer/LandingFooter';
 import { t } from '@lingui/macro';
+import LandingBanner from 'components/Banner/LandingBanner';
 
 export default function IntegrateAndComply() {
   return (
     <>
       <LandingHeader />
-
+      <LandingBanner />
       <Flex
         bgGradient="linear-gradient(90.17deg, rgba(35, 167, 224, 0.85) 3.85%, rgba(27, 206, 159, 0.55) 96.72%);"
         color="white"
