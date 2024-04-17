@@ -9,9 +9,10 @@ const LandingBanner = () => {
       justifyContent="center"
       paddingY={'5'}
       fontSize={'lg'}
+      backgroundColor="#BEE3F8"
       >
-      <AlertIcon />
-      <AlertDescription>
+      <AlertIcon/>
+      <AlertDescription fontWeight={'semibold'}>
         <Link href="https://calendar.app.google/FBg7GTmgDfeMbUMT9" isExternal>
           <Trans id="Schedule a demo to learn about TRISA's open source self-hosted solution for cost-effective Travel Rule compliance.">
             Schedule a demo to learn about TRISA's open source self-hosted solution for cost-effective Travel Rule compliance.
