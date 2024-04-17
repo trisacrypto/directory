@@ -43,7 +43,9 @@ const MembershipGuide = () => {
           justifyContent="center"
           direction="column"
           paddingY={{ base: 12, md: 16 }}
-          fontSize={'xl'}>
+          fontSize={'xl'}
+          style={{ marginTop: 0 }}
+          >
           <Stack textAlign={'center'} color="white" spacing={{ base: 3 }}>
             <VStack spacing={1}>
               <Heading
