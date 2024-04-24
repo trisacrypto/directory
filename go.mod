@@ -36,7 +36,7 @@ require (
 	github.com/swaggo/swag v1.16.1
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/trisacrypto/courier v0.0.0-20231106194613-8a8d8b5a1d91
-	github.com/trisacrypto/trisa v0.4.1
+	github.com/trisacrypto/trisa v1.0.0
 	github.com/urfave/cli v1.22.14
 	github.com/urfave/cli/v2 v2.25.7
 	github.com/vmihailenco/msgpack/v5 v5.3.5
