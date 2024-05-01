@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/google/uuid"
@@ -186,6 +187,48 @@ func main() {
 			},
 		},
 		{
+			Name:   "registration:update",
+			Usage:  "update the trisa testnet or mainnet registration details",
+			Action: registrationUpdate,
+			Before: connectDB,
+			After:  closeDB,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "org-id",
+					Aliases:  []string{"org", "o"},
+					Usage:    "the id of the organization to update",
+					Required: true,
+				},
+				&cli.StringFlag{
+					Name:     "network",
+					Aliases:  []string{"n"},
+					Usage:    "specify testnet or mainnet",
+					Required: true,
+				},
+				&cli.StringFlag{
+					Name:    "id",
+					Aliases: []string{"i"},
+					Usage:   "update the directory id of the registration",
+				},
+				&cli.StringFlag{
+					Name:    "registered-directory",
+					Aliases: []string{"d"},
+					Usage:   "update the registered directory of the registration",
+				},
+				&cli.StringFlag{
+					Name:    "common-name",
+					Aliases: []string{"c"},
+					Usage:   "update the common name of the registration",
+				},
+				&cli.TimestampFlag{
+					Name:    "submitted",
+					Aliases: []string{"s"},
+					Usage:   "update the submitted timestamp of the registration",
+					Layout:  time.RFC3339,
+				},
+			},
+		},
+		{
 			Name:   "collabs:add",
 			Usage:  "add a collaborator to an organization",
 			Action: addCollab,
@@ -216,13 +259,13 @@ func main() {
 				&cli.StringFlag{
 					Name:     "org",
 					Aliases:  []string{"o"},
-					Usage:    "specify the organization id to add the collaborator to",
+					Usage:    "specify the organization id to remove the collaborator from",
 					Required: true,
 				},
 				&cli.StringFlag{
 					Name:     "user",
 					Aliases:  []string{"u"},
-					Usage:    "specify the auth0 id of the user to make a collaborator",
+					Usage:    "specify the auth0 id of the user to remove",
 					Required: true,
 				},
 			},
@@ -859,6 +902,69 @@ func deleteOrgs(c *cli.Context) (err error) {
 	return nil
 }
 
+func registrationUpdate(c *cli.Context) (err error) {
+	var orgID string
+	if orgID = c.String("org-id"); orgID == "" {
+		return cli.Exit("org-id is required", 1)
+	}
+
+	var org *models.Organization
+	if org, err = GetOrg(orgID); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	network := strings.ToLower(c.String("network"))
+
+	var record *models.DirectoryRecord
+	switch network {
+	case "test", "testnet", "t":
+		if org.Testnet == nil {
+			org.Testnet = &models.DirectoryRecord{}
+		}
+		record = org.Testnet
+	case "main", "mainnet", "m":
+		if org.Mainnet == nil {
+			org.Mainnet = &models.DirectoryRecord{}
+		}
+		record = org.Mainnet
+	default:
+		return cli.Exit(fmt.Errorf("unknown network type %q", network), 1)
+	}
+
+	updated := false
+
+	if id := c.String("id"); id != "" {
+		record.Id = id
+		updated = true
+	}
+
+	if registeredDirectory := c.String("registered-directory"); registeredDirectory != "" {
+		record.RegisteredDirectory = registeredDirectory
+		updated = true
+	}
+
+	if commonName := c.String("common-name"); commonName != "" {
+		record.CommonName = commonName
+		updated = true
+	}
+
+	if submitted := c.Timestamp("submitted"); submitted != nil && !submitted.IsZero() {
+		record.Submitted = submitted.Format(time.RFC3339)
+		updated = true
+	}
+
+	if !updated {
+		return cli.Exit("no updates specified", 1)
+	}
+
+	if err = db.UpdateOrganization(context.Background(), org); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	fmt.Printf("updated %s registration record for %s (%s)\n", network, org.Name, org.Domain)
+	return nil
+}
+
 func cleanupOrgs(c *cli.Context) (err error) {
 	orgsDeleted := 0
 	force := c.Bool("force")
@@ -1029,7 +1135,7 @@ func deleteCollab(c *cli.Context) (err error) {
 	// Ask if we should proceed
 	username, _ := auth.UserDisplayName(user)
 	fmt.Printf("User %s (%s, switch_organizations=%t) has appdata.OrgID %q\n", username, StringifyRoles(roles), HasPermission(auth.SwitchOrganizations, permissions), appdata.OrgID)
-	if !askForConfirmation(fmt.Sprintf("add user %q to organization %q?", username, org.ResolveName())) {
+	if !askForConfirmation(fmt.Sprintf("remove user %q from organization %q?", username, org.ResolveName())) {
 		return cli.Exit("canceled at request of user", 0)
 	}
 
