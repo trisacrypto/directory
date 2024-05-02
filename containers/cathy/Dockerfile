@@ -1,10 +1,12 @@
 # Dynamic Builds
-ARG BUILDER_IMAGE=golang:1.19-buster
-ARG FINAL_IMAGE=debian:buster-slim
+ARG BUILDER_IMAGE=golang:1.19-bullseye
+ARG FINAL_IMAGE=debian:bullseye-slim
 
 # Build Stage
-FROM ${BUILDER_IMAGE} AS builder
+FROM --platform=${BUILDPLATFORM} ${BUILDER_IMAGE} as builder
 
+ARG TARGETOS
+ARG TARGETARCH
 ARG GIT_REVISION=""
 
 # Ensure ca-certificates are up to date
@@ -25,10 +27,10 @@ COPY cmd ./cmd
 COPY pkg ./pkg
 
 # Build binaries
-RUN go build -v -o /go/bin/sectigo -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$GIT_REVISION'" ./cmd/sectigo
+RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -v -o /go/bin/sectigo -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$GIT_REVISION'" ./cmd/sectigo
 
 # Final Stage
-FROM ${FINAL_IMAGE} AS final
+FROM --platform=${BUILDPLATFORM} ${FINAL_IMAGE} AS final
 
 LABEL maintainer="TRISA <info@trisa.io>"
 LABEL description="TRISA Cathy CA for Integration Testing and Staging QA"

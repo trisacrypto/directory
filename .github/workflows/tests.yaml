@@ -22,7 +22,7 @@ jobs:
         run: go install honnef.co/go/tools/cmd/staticcheck@v0.3.3
 
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Lint Go Code
         run: staticcheck ./...
@@ -51,7 +51,7 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
 
@@ -70,7 +70,7 @@ jobs:
           go install github.com/swaggo/swag/cmd/swag@v1.8.12
 
       - name: Clone TRISA repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: trisacrypto/trisa
           ref: main
@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node
         uses: actions/setup-node@v3
@@ -138,7 +138,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node
         uses: actions/setup-node@v3
@@ -183,7 +183,7 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
 
@@ -202,7 +202,7 @@ jobs:
           go install github.com/swaggo/swag/cmd/swag@v1.8.12
 
       - name: Clone TRISA repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: trisacrypto/trisa
           ref: main
