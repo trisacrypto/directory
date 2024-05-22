@@ -120,8 +120,7 @@ func TestVerifyContactURL(t *testing.T) {
 		VID:     "42",
 		BaseURL: "http://localhost:8080/verify",
 	}
-	link, err := url.Parse(data.VerifyContactURL())
-	require.NoError(t, err)
+	link := data.VerifyContactURL()
 	require.Equal(t, "http", link.Scheme)
 	require.Equal(t, "localhost:8080", link.Host)
 	require.Equal(t, "/verify", link.Path)
