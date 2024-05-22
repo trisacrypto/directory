@@ -47,7 +47,7 @@ type VerifyContactData struct {
 // VerifyContactURL composes the link to verify the contact from the context. If the
 // link is not able to be composed, the function returns an empty string and logs an
 // error because without the link the email is fairly useless.
-func (d VerifyContactData) VerifyContactURL() string {
+func (d VerifyContactData) VerifyContactURL() *url.URL {
 	var (
 		link *url.URL
 		err  error
@@ -55,11 +55,11 @@ func (d VerifyContactData) VerifyContactURL() string {
 	if d.BaseURL != "" {
 		if link, err = url.Parse(d.BaseURL); err != nil {
 			sentry.Error(nil).Err(err).Msg("could not include verify contact link in email, could not parse verify contact base url")
-			return ""
+			return nil
 		}
 	} else {
 		sentry.Error(nil).Msg("could not include verify contact link in email, no verify contact base url")
-		return ""
+		return nil
 	}
 
 	params := link.Query()
@@ -67,7 +67,12 @@ func (d VerifyContactData) VerifyContactURL() string {
 	params.Set("token", d.Token)
 	params.Set("registered_directory", d.DirectoryID)
 	link.RawQuery = params.Encode()
-	return link.String()
+	return link
+}
+
+func (d VerifyContactData) VerifyContactURLUnencoded() template.HTML {
+	url := d.VerifyContactURL()
+	return template.HTML(url.String())
 }
 
 // ReviewRequestData to complete review request email templates.

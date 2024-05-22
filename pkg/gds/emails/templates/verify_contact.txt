@@ -4,7 +4,7 @@ Thank you for submitting a TRISA network registration request. To begin the revi
 
 If you cannot click on the link, please copy and paste the link below into your browser address bar:
 
-{{ .VerifyContactURL }}
+{{ .VerifyContactURLUnencoded }}
 
 If you're having trouble verifying your contact email, please contact the TRISA admins at support@rotational.io or on our community Slack channel trisa-workspace.slack.com.
 

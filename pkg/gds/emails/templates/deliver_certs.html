@@ -1,8 +1,8 @@
 <p>Hello {{ .Name }},</p>
 
 <p>
-  Your TRISA network registration has been approved! Your organization has been
-  granted identity certificates validating your membership to other TRISA
+  Your TRISA network registration has been approved (or reapproved)! Your organization
+  has been granted identity certificates validating your membership to other TRISA
   members via the TRISA Global Directory. Attached to this email are PKCS12
   encrypted certificates so that you can implement the TRISA protocol using mTLS
   with other network members to exchange Travel Rule compliance information.
@@ -20,13 +20,17 @@
 </ul>
 
 <p>
-  To decrypt your certificates, <em>you will need the PKCS12 password</em> that
-  you received when you first submitted your registration. To decrypt the
-  unzipped certificates on the command line, you can use <code>openssl</code> as
-  follows (you will be prompted to enter your password):
+  To decrypt your certificates, <em>you will need a PKCS12 password</em>. If this is
+  the first certificate you've received after registration, you'll need the PKCS12
+  password that was displayed during the registration process. If these are annually
+  re-issued certificates, you'll need the PCKS12 password that was emailed to you via a
+  one-time Whisper link preceding this email.
 </p>
 
-<pre>$ openssl pkcs12 -in INFILE.p12 -out OUTFILE.crt -nodes</pre>
+<p>
+  To decrypt the unzipped certificates on the command line, you can use <code>openssl</code>
+  as described in <a href="https://trisa.dev/joining-trisa/pkcs12/index.html#accessing-and-saving-the-certificates">our documentation</a>.
+<p>
 
 <p>
   For more information on integrating with the TRISA network, please see our
