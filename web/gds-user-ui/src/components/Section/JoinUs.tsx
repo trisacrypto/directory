@@ -72,7 +72,7 @@ const JoinUsSection: React.FC = () => {
                 <Link
                   isExternal
                   textDecoration={'underline'}
-                  href="https://trisa.io/getting-started-with-trisa/">
+                  href="https://trisa.dev/reference/faq/index.html">
                   <Trans id="Learn how TRISA works.">Learn how TRISA works.</Trans>
                 </Link>
               </Text>
@@ -125,7 +125,7 @@ const JoinUsSection: React.FC = () => {
                   border="2px solid #fff"
                   _hover={{ bg: '#24a9df' }}
                   as="a"
-                  href="https://trisa.io/members/"
+                  href="https://trisa.dev"
                   target="_blank">
                   <Trans id="View Member List">View Member List</Trans>
                 </Button>

@@ -177,7 +177,7 @@ export default function IntegrateAndComply() {
                     <Line title={t`Need to Learn More?`} fontWeight={'bold'}>
                       <UnorderedList color={'#1F4CED'}>
                         <ListItem>
-                          <Link isExternal href="https://trisa.io/getting-started-with-trisa/">
+                          <Link isExternal href="https://trisa.dev/reference/faq/index.html">
                             <Trans id="Learn How TRISA Works">Learn How TRISA Works</Trans>
                           </Link>
                         </ListItem>
