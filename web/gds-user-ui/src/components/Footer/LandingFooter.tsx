@@ -31,11 +31,6 @@ const Footer = (): React.ReactElement => {
               {' '}
               Rotational Labs
             </Link>{' '}
-            <Trans id="in partnership with">in partnership with</Trans>{' '}
-            <Link href="https://cyphertrace.com" color={colors.system.cyan}>
-              {' '}
-              CipherTrace
-            </Link>{' '}
             <Trans id="on behalf of">on behalf of</Trans>{' '}
             <Link href="https://trisa.dev" color={colors.system.cyan}>
               TRISA

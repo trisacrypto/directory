@@ -130,11 +130,6 @@ export default function IntegrateAndComply() {
                   <Line title={t`3rd Party Travel Rule Providers`}>
                     <UnorderedList color={'#1F4CED'}>
                       <ListItem>
-                        <Link href="https://ciphertrace.com/travel-rule-compliance/" isExternal>
-                          <Trans id="CipherTrace Traveler">CipherTrace Traveler</Trans>
-                        </Link>
-                      </ListItem>
-                      <ListItem>
                         <Link href="https://sygna.io" isExternal>
                           <Trans id="Synga Bridge">Synga Bridge</Trans>
                         </Link>

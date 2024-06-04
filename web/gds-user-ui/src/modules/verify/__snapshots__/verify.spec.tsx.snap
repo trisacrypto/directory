@@ -831,16 +831,6 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
               Rotational Labs
             </a>
              
-            in partnership with
-             
-            <a
-              class="chakra-link emotion-31"
-              href="https://cyphertrace.com"
-            >
-               
-              CipherTrace
-            </a>
-             
             on behalf of
              
             <a
