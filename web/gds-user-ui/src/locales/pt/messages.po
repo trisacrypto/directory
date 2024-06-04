@@ -2555,8 +2555,8 @@ msgid "Verified VASPs"
 msgstr ""
 
 #: src/components/Section/JoinUs.tsx:130
-msgid "View Member List"
-msgstr ""
+#~ msgid "View Member List"
+#~ msgstr ""
 
 #: src/components/CertificateManagement/CertificateValidityAlert.tsx:40
 #: src/components/CertificateManagement/CertificateValidityAlert.tsx:67
@@ -2693,12 +2693,16 @@ msgid "Your dashboard"
 msgstr ""
 
 #: src/components/CertificateSection/index.tsx:61
-msgid "Your registration form has been successfully submitted. You will receive a confirmation email from admin@rotational.io. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate."
-msgstr ""
+#~ msgid "Your registration form has been successfully submitted. You will receive a confirmation email from admin@rotational.io. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate."
+#~ msgstr ""
 
 #: src/components/CertificateSection/index.tsx:61
 #~ msgid "Your registration form has been successfully submitted. You will receive a confirmation email from admin@trisa.io. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate."
 #~ msgstr ""
+
+#: src/components/CertificateSection/index.tsx:61
+msgid "Your registration form has been successfully submitted. You will receive a confirmation email from admin@vaspdirectory.net. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate."
+msgstr ""
 
 #: src/components/ReviewSubmit/ConfirmationModal.tsx:59
 msgid "Your registration request has been successfully received by the Directory Service. Verification emails have been sent to all contacts listed. Once your contact information has been verified, the registration form will be sent to the TRISA review board to verify your membership in the TRISA network."
