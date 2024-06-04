@@ -94,7 +94,7 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
             alignItems="center"
             color="#8391a2"
             role="group"
-            href="mailto:support@trisa.io"
+            href="mailto:support@rotational.io"
             as={Link}>
             <Icon
               mr="4"

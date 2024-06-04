@@ -229,7 +229,7 @@ msgid "All TRISA members must complete TRISA’s VASP verification and due dilig
 msgstr "Tous les membres de TRISA doivent suivre le processus de vérification et de diligence raisonnable de TRISA pour devenir un VASP vérifié."
 
 #: src/components/Form/SignupForm.tsx:85
-#: src/components/Section/IntegrateAndComply.tsx:199
+#: src/components/Section/IntegrateAndComply.tsx:194
 #: src/components/Section/VaspVerification.tsx:217
 msgid "Already have an account?"
 msgstr "Vous avez déjà un compte?"
@@ -251,8 +251,12 @@ msgid "An error has occurred to load {type} metric"
 msgstr ""
 
 #: src/components/Collaborators/DeleteCollaborator/DeleteCollaboratorModal.tsx:86
-msgid "An error occurred while deleting the collaborator, please try again or contact support at support@trisa.io"
+msgid "An error occurred while deleting the collaborator, please try again or contact support at support@rotational.io"
 msgstr ""
+
+#: src/components/Collaborators/DeleteCollaborator/DeleteCollaboratorModal.tsx:86
+#~ msgid "An error occurred while deleting the collaborator, please try again or contact support at support@trisa.io"
+#~ msgstr ""
 
 #: src/components/NationalIdentification/index.tsx:129
 msgid "An identifier issued by an appropriate issuing authority"
@@ -403,8 +407,8 @@ msgid "Check to delete user account."
 msgstr ""
 
 #: src/components/Section/IntegrateAndComply.tsx:134
-msgid "CipherTrace Traveler"
-msgstr ""
+#~ msgid "CipherTrace Traveler"
+#~ msgstr ""
 
 #: src/components/AddressForm/index.tsx:56
 msgid "City / Town / Municipality"
@@ -657,7 +661,7 @@ msgid "Create Your Account"
 msgstr ""
 
 #: src/components/Section/GettingStarted.tsx:14
-#: src/components/Section/IntegrateAndComply.tsx:196
+#: src/components/Section/IntegrateAndComply.tsx:191
 #: src/components/Section/VaspVerification.tsx:213
 msgid "Create account"
 msgstr "Créer un compte"
@@ -754,7 +758,7 @@ msgstr "Recherche dans l'annuaire"
 #: src/components/Navbar/Landing/MobileNav.tsx:72
 #: src/components/Navbar/Landing/Nav.tsx:22
 #: src/components/OpenSourceResources/index.tsx:20
-#: src/components/Section/IntegrateAndComply.tsx:156
+#: src/components/Section/IntegrateAndComply.tsx:151
 msgid "Documentation"
 msgstr "Documentation"
 
@@ -1209,7 +1213,7 @@ msgstr ""
 msgid "Last Updated"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:181
+#: src/components/Section/IntegrateAndComply.tsx:176
 #: src/components/Section/VaspVerification.tsx:182
 msgid "Learn How TRISA Works"
 msgstr "Apprenez comment fonctionne TRISA"
@@ -1288,7 +1292,7 @@ msgid "Log in to TRISA’s Global Directory Service"
 msgstr ""
 
 #: src/components/Form/SignupForm.tsx:91
-#: src/components/Section/IntegrateAndComply.tsx:203
+#: src/components/Section/IntegrateAndComply.tsx:198
 #: src/components/Section/VaspVerification.tsx:221
 msgid "Log in."
 msgstr "Connectez-vous"
@@ -1359,7 +1363,7 @@ msgstr ""
 msgid "Meet Alice VASP, Bob VASP and Evil VASP"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:168
+#: src/components/Section/IntegrateAndComply.tsx:163
 msgid "Meet Alice VASP, Bob VASP, and “Evil” VASP"
 msgstr ""
 
@@ -1440,7 +1444,7 @@ msgstr "Identification nationale"
 msgid "National Jurisdiction"
 msgstr "Juridiction nationale"
 
-#: src/components/Section/IntegrateAndComply.tsx:177
+#: src/components/Section/IntegrateAndComply.tsx:172
 #: src/components/Section/VaspVerification.tsx:176
 msgid "Need to Learn More?"
 msgstr "Vous voulez en savoir plus ?"
@@ -1523,7 +1527,7 @@ msgid "Open Source"
 msgstr "Source libre"
 
 #: src/components/OpenSourceResources/index.tsx:9
-#: src/components/Section/IntegrateAndComply.tsx:147
+#: src/components/Section/IntegrateAndComply.tsx:142
 msgid "Open Source Resources"
 msgstr ""
 
@@ -1763,7 +1767,7 @@ msgid "REVIEWED"
 msgstr ""
 
 #: src/components/OpenSourceResources/index.tsx:27
-#: src/components/Section/IntegrateAndComply.tsx:163
+#: src/components/Section/IntegrateAndComply.tsx:158
 msgid "Reference implementation"
 msgstr ""
 
@@ -2101,7 +2105,7 @@ msgstr ""
 msgid "Switch Accounts"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:139
+#: src/components/Section/IntegrateAndComply.tsx:134
 msgid "Synga Bridge"
 msgstr ""
 
@@ -2254,7 +2258,7 @@ msgstr ""
 msgid "TRISA's Slack channel"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:151
+#: src/components/Section/IntegrateAndComply.tsx:146
 msgid "TRISA’s Github repo"
 msgstr ""
 
@@ -2611,7 +2615,7 @@ msgstr "Bienvenue dans le réseau de VASP certifiés de TRISA."
 msgid "We’ll be back soon."
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:186
+#: src/components/Section/IntegrateAndComply.tsx:181
 #: src/components/Section/VaspVerification.tsx:187
 msgid "What is IVMS101?"
 msgstr "Qu'est-ce que l'IVMS101?"
@@ -2712,8 +2716,12 @@ msgid "Your dashboard"
 msgstr ""
 
 #: src/components/CertificateSection/index.tsx:61
-msgid "Your registration form has been successfully submitted. You will receive a confirmation email from admin@trisa.io. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate."
-msgstr "Votre formulaire d'inscription a été soumis avec succès. Vous recevrez un e-mail de confirmation de admin@trisa.io. Dans cet e-mail, vous recevrez des instructions sur les prochaines étapes. Retournez à votre tableau de bord pour suivre l'état de votre inscription et de votre certificat."
+msgid "Your registration form has been successfully submitted. You will receive a confirmation email from admin@rotational.io. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate."
+msgstr ""
+
+#: src/components/CertificateSection/index.tsx:61
+#~ msgid "Your registration form has been successfully submitted. You will receive a confirmation email from admin@trisa.io. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate."
+#~ msgstr "Votre formulaire d'inscription a été soumis avec succès. Vous recevrez un e-mail de confirmation de admin@trisa.io. Dans cet e-mail, vous recevrez des instructions sur les prochaines étapes. Retournez à votre tableau de bord pour suivre l'état de votre inscription et de votre certificat."
 
 #: src/components/ReviewSubmit/ConfirmationModal.tsx:59
 msgid "Your registration request has been successfully received by the Directory Service. Verification emails have been sent to all contacts listed. Once your contact information has been verified, the registration form will be sent to the TRISA review board to verify your membership in the TRISA network."
@@ -2761,8 +2769,8 @@ msgid "for legal persons and is strongly suggested for use as KYC or CDD (Know y
 msgstr "pour les personnes morales et il est fortement conseillé de l'utiliser comme information KYC ou CDD échangée dans les transferts TRISA."
 
 #: src/components/Footer/LandingFooter.tsx:34
-msgid "in partnership with"
-msgstr "en partenariat avec"
+#~ msgid "in partnership with"
+#~ msgstr "en partenariat avec"
 
 #: src/components/Section/AboutUs.tsx:41
 msgid "is a global, open source, secure, and peer-to-peer protocol for"
@@ -2784,7 +2792,7 @@ msgstr ""
 msgid "numbers (i.e. 0-9)"
 msgstr ""
 
-#: src/components/Footer/LandingFooter.tsx:39
+#: src/components/Footer/LandingFooter.tsx:34
 msgid "on behalf of"
 msgstr ""
 

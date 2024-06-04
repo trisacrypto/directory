@@ -222,7 +222,7 @@ msgid "All TRISA members must complete TRISA’s VASP verification and due dilig
 msgstr "---"
 
 #: src/components/Form/SignupForm.tsx:85
-#: src/components/Section/IntegrateAndComply.tsx:199
+#: src/components/Section/IntegrateAndComply.tsx:194
 #: src/components/Section/VaspVerification.tsx:217
 msgid "Already have an account?"
 msgstr "---"
@@ -244,8 +244,12 @@ msgid "An error has occurred to load {type} metric"
 msgstr "---"
 
 #: src/components/Collaborators/DeleteCollaborator/DeleteCollaboratorModal.tsx:86
-msgid "An error occurred while deleting the collaborator, please try again or contact support at support@trisa.io"
+msgid "An error occurred while deleting the collaborator, please try again or contact support at support@rotational.io"
 msgstr ""
+
+#: src/components/Collaborators/DeleteCollaborator/DeleteCollaboratorModal.tsx:86
+#~ msgid "An error occurred while deleting the collaborator, please try again or contact support at support@trisa.io"
+#~ msgstr ""
 
 #: src/components/NationalIdentification/index.tsx:129
 msgid "An identifier issued by an appropriate issuing authority"
@@ -396,8 +400,8 @@ msgid "Check to delete user account."
 msgstr ""
 
 #: src/components/Section/IntegrateAndComply.tsx:134
-msgid "CipherTrace Traveler"
-msgstr "---"
+#~ msgid "CipherTrace Traveler"
+#~ msgstr "---"
 
 #: src/components/AddressForm/index.tsx:56
 msgid "City / Town / Municipality"
@@ -648,7 +652,7 @@ msgid "Create Your Account"
 msgstr ""
 
 #: src/components/Section/GettingStarted.tsx:14
-#: src/components/Section/IntegrateAndComply.tsx:196
+#: src/components/Section/IntegrateAndComply.tsx:191
 #: src/components/Section/VaspVerification.tsx:213
 msgid "Create account"
 msgstr "---"
@@ -745,7 +749,7 @@ msgstr "---"
 #: src/components/Navbar/Landing/MobileNav.tsx:72
 #: src/components/Navbar/Landing/Nav.tsx:22
 #: src/components/OpenSourceResources/index.tsx:20
-#: src/components/Section/IntegrateAndComply.tsx:156
+#: src/components/Section/IntegrateAndComply.tsx:151
 msgid "Documentation"
 msgstr "---"
 
@@ -1186,7 +1190,7 @@ msgstr "---"
 msgid "Last Updated"
 msgstr "---"
 
-#: src/components/Section/IntegrateAndComply.tsx:181
+#: src/components/Section/IntegrateAndComply.tsx:176
 #: src/components/Section/VaspVerification.tsx:182
 msgid "Learn How TRISA Works"
 msgstr "---"
@@ -1265,7 +1269,7 @@ msgid "Log in to TRISA’s Global Directory Service"
 msgstr "---"
 
 #: src/components/Form/SignupForm.tsx:91
-#: src/components/Section/IntegrateAndComply.tsx:203
+#: src/components/Section/IntegrateAndComply.tsx:198
 #: src/components/Section/VaspVerification.tsx:221
 msgid "Log in."
 msgstr "---"
@@ -1336,7 +1340,7 @@ msgstr "---"
 msgid "Meet Alice VASP, Bob VASP and Evil VASP"
 msgstr "---"
 
-#: src/components/Section/IntegrateAndComply.tsx:168
+#: src/components/Section/IntegrateAndComply.tsx:163
 msgid "Meet Alice VASP, Bob VASP, and “Evil” VASP"
 msgstr "---"
 
@@ -1417,7 +1421,7 @@ msgstr "---"
 msgid "National Jurisdiction"
 msgstr "---"
 
-#: src/components/Section/IntegrateAndComply.tsx:177
+#: src/components/Section/IntegrateAndComply.tsx:172
 #: src/components/Section/VaspVerification.tsx:176
 msgid "Need to Learn More?"
 msgstr "---"
@@ -1500,7 +1504,7 @@ msgid "Open Source"
 msgstr "---"
 
 #: src/components/OpenSourceResources/index.tsx:9
-#: src/components/Section/IntegrateAndComply.tsx:147
+#: src/components/Section/IntegrateAndComply.tsx:142
 msgid "Open Source Resources"
 msgstr "---"
 
@@ -1740,7 +1744,7 @@ msgid "REVIEWED"
 msgstr ""
 
 #: src/components/OpenSourceResources/index.tsx:27
-#: src/components/Section/IntegrateAndComply.tsx:163
+#: src/components/Section/IntegrateAndComply.tsx:158
 msgid "Reference implementation"
 msgstr "---"
 
@@ -2078,7 +2082,7 @@ msgstr "---"
 msgid "Switch Accounts"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:139
+#: src/components/Section/IntegrateAndComply.tsx:134
 msgid "Synga Bridge"
 msgstr "---"
 
@@ -2231,7 +2235,7 @@ msgstr "---"
 msgid "TRISA's Slack channel"
 msgstr "---"
 
-#: src/components/Section/IntegrateAndComply.tsx:151
+#: src/components/Section/IntegrateAndComply.tsx:146
 msgid "TRISA’s Github repo"
 msgstr "---"
 
@@ -2588,7 +2592,7 @@ msgstr "---"
 msgid "We’ll be back soon."
 msgstr "---"
 
-#: src/components/Section/IntegrateAndComply.tsx:186
+#: src/components/Section/IntegrateAndComply.tsx:181
 #: src/components/Section/VaspVerification.tsx:187
 msgid "What is IVMS101?"
 msgstr "---"
@@ -2689,8 +2693,12 @@ msgid "Your dashboard"
 msgstr "---"
 
 #: src/components/CertificateSection/index.tsx:61
-msgid "Your registration form has been successfully submitted. You will receive a confirmation email from admin@trisa.io. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate."
-msgstr "---"
+msgid "Your registration form has been successfully submitted. You will receive a confirmation email from admin@rotational.io. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate."
+msgstr ""
+
+#: src/components/CertificateSection/index.tsx:61
+#~ msgid "Your registration form has been successfully submitted. You will receive a confirmation email from admin@trisa.io. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate."
+#~ msgstr "---"
 
 #: src/components/ReviewSubmit/ConfirmationModal.tsx:59
 msgid "Your registration request has been successfully received by the Directory Service. Verification emails have been sent to all contacts listed. Once your contact information has been verified, the registration form will be sent to the TRISA review board to verify your membership in the TRISA network."
@@ -2738,8 +2746,8 @@ msgid "for legal persons and is strongly suggested for use as KYC or CDD (Know y
 msgstr "---"
 
 #: src/components/Footer/LandingFooter.tsx:34
-msgid "in partnership with"
-msgstr "---"
+#~ msgid "in partnership with"
+#~ msgstr "---"
 
 #: src/components/Section/AboutUs.tsx:41
 msgid "is a global, open source, secure, and peer-to-peer protocol for"
@@ -2761,7 +2769,7 @@ msgstr "---"
 msgid "numbers (i.e. 0-9)"
 msgstr "---"
 
-#: src/components/Footer/LandingFooter.tsx:39
+#: src/components/Footer/LandingFooter.tsx:34
 msgid "on behalf of"
 msgstr "---"
 
