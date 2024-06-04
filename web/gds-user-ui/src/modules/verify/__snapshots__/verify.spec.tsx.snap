@@ -713,7 +713,7 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
               >
                 <a
                   class="chakra-link emotion-6"
-                  href="https://trisa.io"
+                  href="https://trisa.dev/reference/faq/index.html"
                   rel="noopener"
                   target="_blank"
                 >
@@ -811,7 +811,7 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
              
             <a
               class="chakra-link emotion-31"
-              href="https://trisa.io"
+              href="https://trisa.dev"
             >
               the TRISA architecture
             </a>
@@ -845,7 +845,7 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
              
             <a
               class="chakra-link emotion-31"
-              href="https://trisa.io"
+              href="https://trisa.dev"
             >
               TRISA
             </a>
