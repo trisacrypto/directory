@@ -114,7 +114,7 @@ const JoinUsSection: React.FC = () => {
                   <Trans id="Join Today">Join Today</Trans>
                 </Button>
               </RouterLink>
-                <Button
+                {/* <Button
                   bg="#60C4CA"
                   color="white"
                   borderColor="white"
@@ -128,7 +128,7 @@ const JoinUsSection: React.FC = () => {
                   href="https://trisa.dev"
                   target="_blank">
                   <Trans id="View Member List">View Member List</Trans>
-                </Button>
+                </Button> */}
             </Stack>
           </Stack>
           <Flex flex={1} />
