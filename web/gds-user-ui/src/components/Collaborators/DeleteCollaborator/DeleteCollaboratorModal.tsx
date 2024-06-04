@@ -83,7 +83,7 @@ function DeleteCollaboratorModal(props: Props) {
       // display error toast
       const hasErrored =
         errorMessage &&
-        t`An error occurred while deleting the collaborator, please try again or contact support at support@trisa.io`;
+        t`An error occurred while deleting the collaborator, please try again or contact support at support@rotational.io`;
       toast({
         title: t`Collaborator not deleted`,
         description: hasErrored || t`The collaborator has not been deleted`,

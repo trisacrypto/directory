@@ -32,7 +32,7 @@ function SealingCertificateLearnMore({ children, ...rest }: SealingCertificateLe
             </Text>
             <Text>
               If your organization requires a sealing certificate now, TRISA can issue them
-              manually. Please contact support@trisa.io to learn more.
+              manually. Please contact support@rotational.io to learn more.
             </Text>
           </ModalBody>
 

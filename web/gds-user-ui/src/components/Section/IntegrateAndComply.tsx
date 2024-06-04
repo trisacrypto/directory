@@ -130,11 +130,6 @@ export default function IntegrateAndComply() {
                   <Line title={t`3rd Party Travel Rule Providers`}>
                     <UnorderedList color={'#1F4CED'}>
                       <ListItem>
-                        <Link href="https://ciphertrace.com/travel-rule-compliance/" isExternal>
-                          <Trans id="CipherTrace Traveler">CipherTrace Traveler</Trans>
-                        </Link>
-                      </ListItem>
-                      <ListItem>
                         <Link href="https://sygna.io" isExternal>
                           <Trans id="Synga Bridge">Synga Bridge</Trans>
                         </Link>
@@ -177,7 +172,7 @@ export default function IntegrateAndComply() {
                     <Line title={t`Need to Learn More?`} fontWeight={'bold'}>
                       <UnorderedList color={'#1F4CED'}>
                         <ListItem>
-                          <Link isExternal href="https://trisa.io/getting-started-with-trisa/">
+                          <Link isExternal href="https://trisa.dev/reference/faq/index.html">
                             <Trans id="Learn How TRISA Works">Learn How TRISA Works</Trans>
                           </Link>
                         </ListItem>

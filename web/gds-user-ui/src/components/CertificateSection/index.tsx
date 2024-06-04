@@ -58,7 +58,7 @@ const getSection = (
     case 7:
       return {
         title: t`Section 6: Review & Submit`,
-        description: t`Your registration form has been successfully submitted. You will receive a confirmation email from admin@trisa.io. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate.`
+        description: t`Your registration form has been successfully submitted. You will receive a confirmation email from admin@vaspdirectory.net. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate.`
       };
     default:
       return {

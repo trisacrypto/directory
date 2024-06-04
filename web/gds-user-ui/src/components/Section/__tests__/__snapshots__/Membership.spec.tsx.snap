@@ -436,6 +436,105 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
   -webkit-flex-direction: column;
   -ms-flex-direction: column;
   flex-direction: column;
+}
+
+.emotion-21>*:not(style)~*:not(style) {
+  margin-top: var(--chakra-space-3);
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
+.emotion-22 {
+  width: 100%;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  -webkit-padding-start: var(--chakra-space-4);
+  padding-inline-start: var(--chakra-space-4);
+  -webkit-padding-end: var(--chakra-space-4);
+  padding-inline-end: var(--chakra-space-4);
+  padding-top: var(--chakra-space-5);
+  padding-bottom: var(--chakra-space-5);
+  background: #bee3f8;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  font-size: var(--chakra-fontSizes-lg);
+  background-color: #BEE3F8;
+}
+
+.emotion-23 {
+  -webkit-flex-shrink: 0;
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+  -webkit-margin-end: var(--chakra-space-3);
+  margin-inline-end: var(--chakra-space-3);
+  width: var(--chakra-sizes-5);
+  height: var(--chakra-sizes-6);
+  color: var(--chakra-colors-blue-500);
+  display: inherit;
+}
+
+.emotion-24 {
+  width: 100%;
+  height: 100%;
+  display: inline-block;
+  line-height: 1em;
+  -webkit-flex-shrink: 0;
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+  color: currentColor;
+  vertical-align: middle;
+}
+
+.emotion-25 {
+  display: inline;
+  line-height: var(--chakra-lineHeights-6);
+  font-weight: var(--chakra-fontWeights-semibold);
+}
+
+.emotion-26 {
+  transition-property: var(--chakra-transition-property-common);
+  transition-duration: var(--chakra-transition-duration-fast);
+  transition-timing-function: var(--chakra-transition-easing-ease-out);
+  cursor: pointer;
+  -webkit-text-decoration: none;
+  text-decoration: none;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  color: inherit;
+}
+
+.emotion-26:hover,
+.emotion-26[data-hover] {
+  -webkit-text-decoration: underline;
+  text-decoration: underline;
+}
+
+.emotion-26:focus,
+.emotion-26[data-focus] {
+  box-shadow: var(--chakra-shadows-outline);
+}
+
+.emotion-27 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
   -webkit-box-pack: center;
   -ms-flex-pack: center;
   -webkit-justify-content: center;
@@ -450,13 +549,13 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
 }
 
 @media screen and (min-width: 48em) {
-  .emotion-21 {
+  .emotion-27 {
     padding-top: var(--chakra-space-16);
     padding-bottom: var(--chakra-space-16);
   }
 }
 
-.emotion-22 {
+.emotion-28 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -468,7 +567,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
   color: var(--chakra-colors-white);
 }
 
-.emotion-22>*:not(style)~*:not(style) {
+.emotion-28>*:not(style)~*:not(style) {
   margin-top: var(--chakra-space-3);
   -webkit-margin-end: 0px;
   margin-inline-end: 0px;
@@ -477,7 +576,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
   margin-inline-start: 0px;
 }
 
-.emotion-23 {
+.emotion-29 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -491,7 +590,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
   flex-direction: column;
 }
 
-.emotion-23>*:not(style)~*:not(style) {
+.emotion-29>*:not(style)~*:not(style) {
   margin-top: var(--chakra-space-1);
   -webkit-margin-end: 0px;
   margin-inline-end: 0px;
@@ -500,7 +599,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
   margin-inline-start: 0px;
 }
 
-.emotion-24 {
+.emotion-30 {
   font-family: Open Sans,sans-serif!important;
   font-weight: 700;
   line-height: 1.33;
@@ -508,23 +607,23 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
 }
 
 @media screen and (min-width: 30em) {
-  .emotion-24 {
+  .emotion-30 {
     font-size: var(--chakra-fontSizes-2xl);
   }
 }
 
 @media screen and (min-width: 48em) {
-  .emotion-24 {
+  .emotion-30 {
     font-size: var(--chakra-fontSizes-4xl);
     line-height: 1.2;
   }
 }
 
-.emotion-25 {
+.emotion-31 {
   margin-top: var(--chakra-space-2);
 }
 
-.emotion-27 {
+.emotion-33 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -553,7 +652,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
   margin-bottom: 2rem!important;
 }
 
-.emotion-27>*:not(style)~*:not(style) {
+.emotion-33>*:not(style)~*:not(style) {
   margin-top: var(--chakra-space-10);
   -webkit-margin-end: 0px;
   margin-inline-end: 0px;
@@ -563,7 +662,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
 }
 
 @media screen and (min-width: 48em) {
-  .emotion-27 {
+  .emotion-33 {
     -webkit-align-items: stretch;
     -webkit-box-align: stretch;
     -ms-flex-align: stretch;
@@ -573,7 +672,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
     flex-direction: row;
   }
 
-  .emotion-27>*:not(style)~*:not(style) {
+  .emotion-33>*:not(style)~*:not(style) {
     margin-top: 0px;
     -webkit-margin-end: 0px;
     margin-inline-end: 0px;
@@ -584,20 +683,20 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
 }
 
 @media screen and (min-width: 62em) {
-  .emotion-27 {
+  .emotion-33 {
     margin-top: 3rem!important;
     margin-bottom: 3rem!important;
   }
 }
 
-.emotion-28 {
+.emotion-34 {
   text-align: center;
   width: 100%;
   max-width: 300px;
   min-height: 100%;
 }
 
-.emotion-29 {
+.emotion-35 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -611,7 +710,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
   height: 100%;
 }
 
-.emotion-29>*:not(style)~*:not(style) {
+.emotion-35>*:not(style)~*:not(style) {
   margin-top: 0.5rem;
   -webkit-margin-end: 0px;
   margin-inline-end: 0px;
@@ -620,7 +719,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
   margin-inline-start: 0px;
 }
 
-.emotion-30 {
+.emotion-36 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -634,7 +733,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
   flex-direction: column;
 }
 
-.emotion-30>*:not(style)~*:not(style) {
+.emotion-36>*:not(style)~*:not(style) {
   margin-top: 0.5rem;
   -webkit-margin-end: 0px;
   margin-inline-end: 0px;
@@ -643,22 +742,22 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
   margin-inline-start: 0px;
 }
 
-.emotion-31 {
+.emotion-37 {
   text-align: center;
   font-size: var(--chakra-fontSizes-xl);
   text-transform: capitalize;
 }
 
-.emotion-32 {
+.emotion-38 {
   font-weight: var(--chakra-fontWeights-bold);
   text-transform: capitalize;
 }
 
-.emotion-34 {
+.emotion-40 {
   margin-top: auto!important;
 }
 
-.emotion-35 {
+.emotion-41 {
   display: inline-block;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -699,39 +798,39 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
   text-transform: capitalize;
 }
 
-.emotion-35:focus,
-.emotion-35[data-focus] {
+.emotion-41:focus,
+.emotion-41[data-focus] {
   box-shadow: var(--chakra-shadows-outline);
 }
 
-.emotion-35[disabled],
-.emotion-35[aria-disabled=true],
-.emotion-35[data-disabled] {
+.emotion-41[disabled],
+.emotion-41[aria-disabled=true],
+.emotion-41[data-disabled] {
   opacity: 0.4;
   cursor: not-allowed;
   box-shadow: var(--chakra-shadows-none);
 }
 
-.emotion-35:hover,
-.emotion-35[data-hover] {
+.emotion-41:hover,
+.emotion-41[data-hover] {
   background: var(--chakra-colors-gray-200);
 }
 
-.emotion-35:hover[disabled],
-.emotion-35[data-hover][disabled],
-.emotion-35:hover[aria-disabled=true],
-.emotion-35[data-hover][aria-disabled=true],
-.emotion-35:hover[data-disabled],
-.emotion-35[data-hover][data-disabled] {
+.emotion-41:hover[disabled],
+.emotion-41[data-hover][disabled],
+.emotion-41:hover[aria-disabled=true],
+.emotion-41[data-hover][aria-disabled=true],
+.emotion-41:hover[data-disabled],
+.emotion-41[data-hover][data-disabled] {
   background: var(--chakra-colors-gray-100);
 }
 
-.emotion-35:active,
-.emotion-35[data-active] {
+.emotion-41:active,
+.emotion-41[data-active] {
   background: var(--chakra-colors-gray-300);
 }
 
-.emotion-52 {
+.emotion-58 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -753,7 +852,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
   padding: var(--chakra-space-4);
 }
 
-.emotion-52>*:not(style)~*:not(style) {
+.emotion-58>*:not(style)~*:not(style) {
   margin-top: 0.5rem;
   -webkit-margin-end: 0px;
   margin-inline-end: 0px;
@@ -762,7 +861,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
   margin-inline-start: 0px;
 }
 
-.emotion-53 {
+.emotion-59 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -774,14 +873,14 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
   width: 100%;
 }
 
-.emotion-54 {
+.emotion-60 {
   width: 100%;
   text-align: center;
   color: var(--chakra-colors-white);
   font-size: var(--chakra-fontSizes-sm);
 }
 
-.emotion-55 {
+.emotion-61 {
   transition-property: var(--chakra-transition-property-common);
   transition-duration: var(--chakra-transition-duration-fast);
   transition-timing-function: var(--chakra-transition-easing-ease-out);
@@ -793,14 +892,14 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
   color: #1BCE9F;
 }
 
-.emotion-55:hover,
-.emotion-55[data-hover] {
+.emotion-61:hover,
+.emotion-61[data-hover] {
   -webkit-text-decoration: underline;
   text-decoration: underline;
 }
 
-.emotion-55:focus,
-.emotion-55[data-focus] {
+.emotion-61:focus,
+.emotion-61[data-focus] {
   box-shadow: var(--chakra-shadows-outline);
 }
 
@@ -919,7 +1018,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
               >
                 <a
                   class="chakra-link emotion-6"
-                  href="https://trisa.io"
+                  href="https://trisa.dev/reference/faq/index.html"
                   rel="noopener"
                   target="_blank"
                 >
@@ -964,26 +1063,62 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
       class="chakra-stack emotion-20"
     >
       <div
-        class="emotion-21"
+        class="chakra-stack emotion-21"
       >
         <div
-          class="chakra-stack emotion-22"
+          class="chakra-alert emotion-22"
+          role="alert"
+        >
+          <span
+            class="chakra-alert__icon emotion-23"
+          >
+            <svg
+              class="chakra-icon emotion-24"
+              focusable="false"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm.25,5a1.5,1.5,0,1,1-1.5,1.5A1.5,1.5,0,0,1,12.25,5ZM14.5,18.5h-4a1,1,0,0,1,0-2h.75a.25.25,0,0,0,.25-.25v-4.5a.25.25,0,0,0-.25-.25H10.5a1,1,0,0,1,0-2h1a2,2,0,0,1,2,2v4.75a.25.25,0,0,0,.25.25h.75a1,1,0,1,1,0,2Z"
+                fill="currentColor"
+              />
+            </svg>
+          </span>
+          <div
+            class="chakra-alert__desc emotion-25"
+          >
+            <a
+              class="chakra-link emotion-26"
+              href="https://calendar.app.google/FBg7GTmgDfeMbUMT9"
+              rel="noopener"
+              target="_blank"
+            >
+              Schedule a demo to learn about TRISA's open source self-hosted solution for cost-effective Travel Rule compliance.
+            </a>
+          </div>
+        </div>
+      </div>
+      <div
+        class="emotion-27"
+        style="margin-top: 0px;"
+      >
+        <div
+          class="chakra-stack emotion-28"
         >
           <div
-            class="chakra-stack emotion-23"
+            class="chakra-stack emotion-29"
           >
             <h2
-              class="chakra-heading emotion-24"
+              class="chakra-heading emotion-30"
             >
               Welcome to TRISA’s network of Certified VASPs.
             </h2>
             <p
-              class="chakra-text emotion-25"
+              class="chakra-text emotion-31"
             >
               Learn about the three-step process to become a member and verified VASP.
             </p>
             <p
-              class="chakra-text emotion-25"
+              class="chakra-text emotion-31"
             >
               Create your account today.
             </p>
@@ -991,26 +1126,26 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
         </div>
       </div>
       <div
-        class="chakra-stack emotion-27"
+        class="chakra-stack emotion-33"
       >
         <div
-          class="emotion-28"
+          class="emotion-34"
         >
           <div
-            class="chakra-stack emotion-29"
+            class="chakra-stack emotion-35"
           >
             <div
-              class="chakra-stack emotion-30"
+              class="chakra-stack emotion-36"
             >
               <p
-                class="chakra-text emotion-31"
+                class="chakra-text emotion-37"
                 data-testid="step"
               >
                 Step 
                 1
               </p>
               <p
-                class="chakra-text emotion-32"
+                class="chakra-text emotion-38"
                 data-testid="header"
               >
                 create your account
@@ -1023,14 +1158,14 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
               </p>
             </div>
             <div
-              class="emotion-34"
+              class="emotion-40"
             >
               <a
                 class=""
                 href="/auth/register"
               >
                 <button
-                  class="chakra-button emotion-35"
+                  class="chakra-button emotion-41"
                   type="button"
                 >
                   Create Account
@@ -1040,23 +1175,23 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
           </div>
         </div>
         <div
-          class="emotion-28"
+          class="emotion-34"
         >
           <div
-            class="chakra-stack emotion-29"
+            class="chakra-stack emotion-35"
           >
             <div
-              class="chakra-stack emotion-30"
+              class="chakra-stack emotion-36"
             >
               <p
-                class="chakra-text emotion-31"
+                class="chakra-text emotion-37"
                 data-testid="step"
               >
                 Step 
                 2
               </p>
               <p
-                class="chakra-text emotion-32"
+                class="chakra-text emotion-38"
                 data-testid="header"
               >
                 complete VASP verification
@@ -1069,14 +1204,14 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
               </p>
             </div>
             <div
-              class="emotion-34"
+              class="emotion-40"
             >
               <a
                 class=""
                 href="/getting-started"
               >
                 <button
-                  class="chakra-button emotion-35"
+                  class="chakra-button emotion-41"
                   type="button"
                 >
                   Learn More
@@ -1086,23 +1221,23 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
           </div>
         </div>
         <div
-          class="emotion-28"
+          class="emotion-34"
         >
           <div
-            class="chakra-stack emotion-29"
+            class="chakra-stack emotion-35"
           >
             <div
-              class="chakra-stack emotion-30"
+              class="chakra-stack emotion-36"
             >
               <p
-                class="chakra-text emotion-31"
+                class="chakra-text emotion-37"
                 data-testid="step"
               >
                 Step 
                 3
               </p>
               <p
-                class="chakra-text emotion-32"
+                class="chakra-text emotion-38"
                 data-testid="header"
               >
                 Integrate and Comply
@@ -1115,14 +1250,14 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
               </p>
             </div>
             <div
-              class="emotion-34"
+              class="emotion-40"
             >
               <a
                 class=""
                 href="/comply"
               >
                 <button
-                  class="chakra-button emotion-35"
+                  class="chakra-button emotion-41"
                   type="button"
                 >
                   Learn More
@@ -1137,19 +1272,19 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
       style="width: 100%;"
     >
       <div
-        class="chakra-stack emotion-52"
+        class="chakra-stack emotion-58"
       >
         <div
-          class="emotion-53"
+          class="emotion-59"
         >
           <p
-            class="chakra-text emotion-54"
+            class="chakra-text emotion-60"
           >
             A component of
              
             <a
-              class="chakra-link emotion-55"
-              href="https://trisa.io"
+              class="chakra-link emotion-61"
+              href="https://trisa.dev"
             >
               the TRISA architecture
             </a>
@@ -1157,33 +1292,23 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
             for Cryptocurrency Travel Rule compliance.
           </p>
           <p
-            class="chakra-text emotion-54"
+            class="chakra-text emotion-60"
           >
             Created and maintained by
              
             <a
-              class="chakra-link emotion-55"
+              class="chakra-link emotion-61"
               href="https://rotational.io"
             >
                
               Rotational Labs
             </a>
              
-            in partnership with
-             
-            <a
-              class="chakra-link emotion-55"
-              href="https://cyphertrace.com"
-            >
-               
-              CipherTrace
-            </a>
-             
             on behalf of
              
             <a
-              class="chakra-link emotion-55"
-              href="https://trisa.io"
+              class="chakra-link emotion-61"
+              href="https://trisa.dev"
             >
               TRISA
             </a>

@@ -609,7 +609,7 @@ exports[`<Line /> should match snapshot 1`] = `
                   >
                     <a
                       class="chakra-link emotion-54"
-                      href="https://trisa.io/getting-started-with-trisa/"
+                      href="https://trisa.dev/reference/faq/index.html"
                       rel="noopener"
                       target="_blank"
                     >
