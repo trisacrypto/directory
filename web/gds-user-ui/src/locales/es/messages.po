@@ -75,7 +75,7 @@ msgstr ""
 msgid "3 Contacts"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:129
+#: src/components/Section/IntegrateAndComply.tsx:130
 #: src/components/TravelRuleProviders/index.tsx:9
 msgid "3rd Party Travel Rule Providers"
 msgstr ""
@@ -217,12 +217,12 @@ msgstr ""
 msgid "Alien Registration Number"
 msgstr ""
 
-#: src/components/Head/LandingHead.tsx:55
+#: src/components/Head/LandingHead.tsx:57
 msgid "All TRISA members must complete TRISA’s VASP verification and due diligence process to become a Verified VASP."
 msgstr ""
 
 #: src/components/Form/SignupForm.tsx:85
-#: src/components/Section/IntegrateAndComply.tsx:198
+#: src/components/Section/IntegrateAndComply.tsx:199
 #: src/components/Section/VaspVerification.tsx:217
 msgid "Already have an account?"
 msgstr ""
@@ -260,7 +260,7 @@ msgstr ""
 msgid "Applicable Regulations"
 msgstr ""
 
-#: src/components/Head/LandingHead.tsx:32
+#: src/components/Head/LandingHead.tsx:34
 msgid "Apply to Become a TRISA-certified Virtual Asset Service Provider."
 msgstr ""
 
@@ -295,7 +295,7 @@ msgstr ""
 msgid "Basic Details"
 msgstr ""
 
-#: src/components/Head/LandingHead.tsx:31
+#: src/components/Head/LandingHead.tsx:33
 msgid "Become Travel Rule compliant."
 msgstr ""
 
@@ -395,7 +395,7 @@ msgstr ""
 msgid "Check to delete user account."
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:133
+#: src/components/Section/IntegrateAndComply.tsx:134
 msgid "CipherTrace Traveler"
 msgstr ""
 
@@ -494,7 +494,7 @@ msgstr ""
 msgid "Complete Certficate Registration"
 msgstr ""
 
-#: src/components/Head/LandingHead.tsx:45
+#: src/components/Head/LandingHead.tsx:47
 msgid "Complete TRISA’s VASP Verfication Process"
 msgstr ""
 
@@ -504,7 +504,7 @@ msgid ""
 "            approved, gain access to the Testnet."
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:19
+#: src/components/Section/MembershipGuide.tsx:20
 msgid "Complete the multi-part TRISA verification form and due diligence process. Once approved, gain access to the Testnet and MainNet."
 msgstr ""
 
@@ -532,7 +532,7 @@ msgstr ""
 msgid "Compliance, Technical, Admininstrative, Billing"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:50
+#: src/components/Section/IntegrateAndComply.tsx:51
 msgid "Comply with the Travel Rule"
 msgstr ""
 
@@ -639,7 +639,7 @@ msgstr ""
 msgid "Country:"
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:13
+#: src/components/Section/MembershipGuide.tsx:14
 msgid "Create Account"
 msgstr ""
 
@@ -648,7 +648,7 @@ msgid "Create Your Account"
 msgstr ""
 
 #: src/components/Section/GettingStarted.tsx:14
-#: src/components/Section/IntegrateAndComply.tsx:195
+#: src/components/Section/IntegrateAndComply.tsx:196
 #: src/components/Section/VaspVerification.tsx:213
 msgid "Create account"
 msgstr ""
@@ -657,11 +657,11 @@ msgstr ""
 msgid "Create your TRISA account"
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:12
+#: src/components/Section/MembershipGuide.tsx:13
 msgid "Create your TRISA account with your VASP email address. Add collaborators in your organization."
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:62
+#: src/components/Section/MembershipGuide.tsx:66
 msgid "Create your account today."
 msgstr ""
 
@@ -735,7 +735,7 @@ msgstr ""
 msgid "Details"
 msgstr ""
 
-#: src/components/Head/LandingHead.tsx:97
+#: src/components/Head/LandingHead.tsx:99
 #: src/components/Section/SearchDirectory.tsx:91
 msgid "Directory Lookup"
 msgstr ""
@@ -745,7 +745,7 @@ msgstr ""
 #: src/components/Navbar/Landing/MobileNav.tsx:72
 #: src/components/Navbar/Landing/Nav.tsx:22
 #: src/components/OpenSourceResources/index.tsx:20
-#: src/components/Section/IntegrateAndComply.tsx:155
+#: src/components/Section/IntegrateAndComply.tsx:156
 msgid "Documentation"
 msgstr ""
 
@@ -976,7 +976,7 @@ msgstr ""
 msgid "Git Revision"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:98
+#: src/components/Section/IntegrateAndComply.tsx:99
 msgid "GitHub repository"
 msgstr ""
 
@@ -993,7 +993,7 @@ msgstr ""
 msgid "Home"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:117
+#: src/components/Section/IntegrateAndComply.tsx:118
 msgid "How to set up your own node?"
 msgstr ""
 
@@ -1097,11 +1097,11 @@ msgid "Information to ensure that required compliance information exchanges are 
 msgstr ""
 
 #: src/components/Section/GettingStarted.tsx:50
-#: src/components/Section/MembershipGuide.tsx:25
+#: src/components/Section/MembershipGuide.tsx:26
 msgid "Integrate and Comply"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:43
+#: src/components/Section/IntegrateAndComply.tsx:44
 msgid "Integrate with TRISA."
 msgstr ""
 
@@ -1186,7 +1186,7 @@ msgstr ""
 msgid "Last Updated"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:180
+#: src/components/Section/IntegrateAndComply.tsx:181
 #: src/components/Section/VaspVerification.tsx:182
 msgid "Learn How TRISA Works"
 msgstr ""
@@ -1194,12 +1194,12 @@ msgstr ""
 #: src/components/CertificateManagement/CertificateDataTable.tsx:19
 #: src/components/Section/GettingStarted.tsx:42
 #: src/components/Section/GettingStarted.tsx:61
-#: src/components/Section/MembershipGuide.tsx:20
-#: src/components/Section/MembershipGuide.tsx:27
+#: src/components/Section/MembershipGuide.tsx:21
+#: src/components/Section/MembershipGuide.tsx:28
 msgid "Learn More"
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:57
+#: src/components/Section/MembershipGuide.tsx:61
 msgid "Learn about the three-step process to become a member and verified VASP."
 msgstr ""
 
@@ -1265,7 +1265,7 @@ msgid "Log in to TRISA’s Global Directory Service"
 msgstr ""
 
 #: src/components/Form/SignupForm.tsx:91
-#: src/components/Section/IntegrateAndComply.tsx:202
+#: src/components/Section/IntegrateAndComply.tsx:203
 #: src/components/Section/VaspVerification.tsx:221
 msgid "Log in."
 msgstr ""
@@ -1336,7 +1336,7 @@ msgstr ""
 msgid "Meet Alice VASP, Bob VASP and Evil VASP"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:167
+#: src/components/Section/IntegrateAndComply.tsx:168
 msgid "Meet Alice VASP, Bob VASP, and “Evil” VASP"
 msgstr ""
 
@@ -1417,7 +1417,7 @@ msgstr ""
 msgid "National Jurisdiction"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:176
+#: src/components/Section/IntegrateAndComply.tsx:177
 #: src/components/Section/VaspVerification.tsx:176
 msgid "Need to Learn More?"
 msgstr ""
@@ -1500,15 +1500,15 @@ msgid "Open Source"
 msgstr ""
 
 #: src/components/OpenSourceResources/index.tsx:9
-#: src/components/Section/IntegrateAndComply.tsx:146
+#: src/components/Section/IntegrateAndComply.tsx:147
 msgid "Open Source Resources"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:88
+#: src/components/Section/IntegrateAndComply.tsx:89
 msgid "Option 1. Set Up Your Own TRISA Node"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:107
+#: src/components/Section/IntegrateAndComply.tsx:108
 msgid "Option 2. Use a 3rd-party Solution"
 msgstr ""
 
@@ -1567,7 +1567,7 @@ msgstr ""
 msgid "Partially"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:53
+#: src/components/Section/IntegrateAndComply.tsx:54
 msgid "Participate in verified VASP-to-VASP Travel Rule exchanges."
 msgstr ""
 
@@ -1740,7 +1740,7 @@ msgid "REVIEWED"
 msgstr ""
 
 #: src/components/OpenSourceResources/index.tsx:27
-#: src/components/Section/IntegrateAndComply.tsx:162
+#: src/components/Section/IntegrateAndComply.tsx:163
 msgid "Reference implementation"
 msgstr ""
 
@@ -1842,6 +1842,10 @@ msgstr ""
 
 #: src/components/StepsButtons/index.tsx:52
 msgid "Save & Previous"
+msgstr ""
+
+#: src/components/Banner/LandingBanner.tsx:17
+msgid "Schedule a demo to learn about TRISA's open source self-hosted solution for cost-effective Travel Rule compliance."
 msgstr ""
 
 #: src/components/CertificateManagement/X509IdentityCertificateInventory.tsx:59
@@ -1947,7 +1951,7 @@ msgid ""
 "            testing and move to production."
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:26
+#: src/components/Section/MembershipGuide.tsx:27
 msgid "Set up your TRISA node or integrate with a 3rd-party Travel Rule solution. Complete testing and move to production."
 msgstr ""
 
@@ -1964,7 +1968,7 @@ msgstr ""
 msgid "Signature ID"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:89
+#: src/components/Section/IntegrateAndComply.tsx:90
 msgid ""
 "Since TRISA is an open source, peer-to-peer Travel Rule solution, VASPs can set\n"
 "                    up and maintain their own TRISA server to exhange encrypted Travel Rule\n"
@@ -2000,7 +2004,7 @@ msgstr ""
 msgid "Start Certificate Registration"
 msgstr ""
 
-#: src/components/Head/LandingHead.tsx:83
+#: src/components/Head/LandingHead.tsx:85
 msgid "Start Registration"
 msgstr ""
 
@@ -2074,7 +2078,7 @@ msgstr ""
 msgid "Switch Accounts"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:138
+#: src/components/Section/IntegrateAndComply.tsx:139
 msgid "Synga Bridge"
 msgstr ""
 
@@ -2108,7 +2112,7 @@ msgstr ""
 msgid "TRISA GitHub repo"
 msgstr ""
 
-#: src/components/Head/LandingHead.tsx:24
+#: src/components/Head/LandingHead.tsx:26
 msgid "TRISA Global Directory Service"
 msgstr ""
 
@@ -2192,7 +2196,7 @@ msgstr ""
 msgid "TRISA is designed to be interoperable with other Travel Rule solutions."
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:108
+#: src/components/Section/IntegrateAndComply.tsx:109
 msgid ""
 "TRISA is designed to be interoperable. There are several Travel Rule solutions\n"
 "                    providers available on the market. If you are a customer, work with them to\n"
@@ -2227,7 +2231,7 @@ msgstr ""
 msgid "TRISA's Slack channel"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:150
+#: src/components/Section/IntegrateAndComply.tsx:151
 msgid "TRISA’s Github repo"
 msgstr ""
 
@@ -2244,7 +2248,7 @@ msgstr ""
 msgid "TRIXO Questionnaire"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:118
+#: src/components/Section/IntegrateAndComply.tsx:119
 msgid ""
 "Talk to a member of your technical team to determine the requirements and\n"
 "                    resources to integrate TRISA with your system. Have members of your technical\n"
@@ -2475,7 +2479,7 @@ msgstr ""
 msgid "Unspecified"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:66
+#: src/components/Section/IntegrateAndComply.tsx:67
 msgid "Upon verification, integrate with TRISA to begin exchanging Travel Rule compliance data."
 msgstr ""
 
@@ -2515,7 +2519,7 @@ msgstr ""
 msgid "VASP Name"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:74
+#: src/components/Section/IntegrateAndComply.tsx:75
 msgid "VASPs have two options to integrate with TRISA."
 msgstr ""
 
@@ -2576,7 +2580,7 @@ msgstr ""
 msgid "Website, incorporation Date, VASP Category"
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:52
+#: src/components/Section/MembershipGuide.tsx:56
 msgid "Welcome to TRISA’s network of Certified VASPs."
 msgstr ""
 
@@ -2584,7 +2588,7 @@ msgstr ""
 msgid "We’ll be back soon."
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:185
+#: src/components/Section/IntegrateAndComply.tsx:186
 #: src/components/Section/VaspVerification.tsx:187
 msgid "What is IVMS101?"
 msgstr ""
@@ -2701,7 +2705,7 @@ msgstr ""
 msgid "about us"
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:18
+#: src/components/Section/MembershipGuide.tsx:19
 msgid "complete VASP verification"
 msgstr ""
 
@@ -2713,7 +2717,7 @@ msgstr ""
 msgid "create account"
 msgstr ""
 
-#: src/components/Section/MembershipGuide.tsx:11
+#: src/components/Section/MembershipGuide.tsx:12
 msgid "create your account"
 msgstr ""
 
@@ -2808,7 +2812,7 @@ msgstr ""
 msgid "view details"
 msgstr ""
 
-#: src/components/Section/IntegrateAndComply.tsx:100
+#: src/components/Section/IntegrateAndComply.tsx:101
 msgid ""
 "with detailed documentation, a reference implemenation, and “robot” VASPs for\n"
 "                    testing purposes."
