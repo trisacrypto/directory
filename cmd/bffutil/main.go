@@ -3,9 +3,12 @@ package main
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -176,7 +179,7 @@ func main() {
 			Name:   "orgs:cleanup",
 			Usage:  "removes any organizations that have zero collaborators",
 			Action: cleanupOrgs,
-			Before: connectDB,
+			Before: Before(loadConf, connectDB, connectAuth0),
 			After:  closeDB,
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
@@ -267,6 +270,20 @@ func main() {
 					Aliases:  []string{"u"},
 					Usage:    "specify the auth0 id of the user to remove",
 					Required: true,
+				},
+			},
+		},
+		{
+			Name:   "collabs:export-emails",
+			Usage:  "export email addresses from collaborators",
+			Action: exportEmails,
+			Before: connectDB,
+			After:  closeDB,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "out",
+					Aliases: []string{"o"},
+					Usage:   "path to write csv output to",
 				},
 			},
 		},
@@ -969,7 +986,7 @@ func cleanupOrgs(c *cli.Context) (err error) {
 	orgsDeleted := 0
 	force := c.Bool("force")
 
-	ctx, cancel := utils.WithDeadline(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	iter := db.ListOrganizations(ctx)
@@ -978,6 +995,45 @@ func cleanupOrgs(c *cli.Context) (err error) {
 		var org *models.Organization
 		if org, err = iter.Organization(); err != nil {
 			return cli.Exit(err, 1)
+		}
+
+		// Resolve the collaborators
+		edited := false
+		collabs := make(map[string]*models.Collaborator, len(org.Collaborators))
+		for uid, collaborator := range org.Collaborators {
+			if collaborator.UserId == "" {
+				fmt.Printf("org %s (%s) has collaborator (bff id %s) with missing user id\n", org.ResolveName(), org.Id, uid)
+				continue
+			}
+
+			var user *management.User
+			if user, err = auth0.User.Read(collaborator.UserId); err != nil {
+				fmt.Printf("could not get user details for %q: %s\n", collaborator.UserId, err)
+				continue
+			}
+
+			appdata := &auth.AppMetadata{}
+			if err = appdata.Load(user.AppMetadata); err != nil {
+				return cli.Exit(fmt.Errorf("could not load app metadata: %w", err), 1)
+			}
+
+			if !UserBelongsToOrg(org.Id, appdata) {
+				edited = true
+			} else {
+				collabs[uid] = collaborator
+			}
+		}
+
+		// If changes have been made, update the organization
+		if edited {
+			if !force && !askForConfirmation(fmt.Sprintf("org %s has been updated from %d collaborators to %d collaborators, update?", org.ResolveName(), len(org.Collaborators), len(collabs))) {
+				continue
+			}
+
+			org.Collaborators = collabs
+			if err = db.UpdateOrganization(ctx, org); err != nil {
+				return cli.Exit(fmt.Errorf("could not update org %s: %w", org.ResolveName(), err), 1)
+			}
 		}
 
 		if len(org.Collaborators) == 0 {
@@ -1157,6 +1213,60 @@ func deleteCollab(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
+	return nil
+}
+
+func exportEmails(c *cli.Context) (err error) {
+	var o io.Writer
+	if out := c.String("out"); out != "" {
+		var f *os.File
+		if f, err = os.Create(out); err != nil {
+			return cli.Exit(fmt.Errorf("could not open %s: %w", out, err), 1)
+		}
+		defer f.Close()
+		o = f
+	} else {
+		o = os.Stdout
+	}
+
+	writer := csv.NewWriter(o)
+	writer.Write([]string{"org", "name", "email", "auth0"})
+
+	seen := make(map[string]struct{})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	iter := db.ListOrganizations(ctx)
+	defer iter.Release()
+	for iter.Next() {
+		var org *models.Organization
+		if org, err = iter.Organization(); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		for _, collab := range org.Collaborators {
+			// Deduplication - ignore names/emails we've already seen
+			hash := StringHash(collab.Name, collab.Email)
+			if _, ok := seen[hash]; ok {
+				continue
+			}
+
+			row := []string{org.ResolveName(), collab.Name, collab.Email, collab.UserId}
+			if err = writer.Write(row); err != nil {
+				return cli.Exit(err, 1)
+			}
+
+			// Track which names/emails we've already written
+			seen[hash] = struct{}{}
+		}
+	}
+
+	if err = iter.Error(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	writer.Flush()
 	return nil
 }
 
@@ -1362,4 +1472,24 @@ func SaveAppMetadata(uid string, appdata auth.AppMetadata) (err error) {
 		return err
 	}
 	return nil
+}
+
+func UserBelongsToOrg(orgID string, appdata *auth.AppMetadata) bool {
+	for _, id := range appdata.Organizations {
+		if id == orgID {
+			return true
+		}
+	}
+
+	return appdata.OrgID == orgID
+}
+
+func StringHash(strs ...string) string {
+	hash := sha256.New()
+	for _, s := range strs {
+		s = strings.TrimSpace(strings.ToLower(s))
+		hash.Write([]byte(s))
+	}
+
+	return base64.RawStdEncoding.EncodeToString(hash.Sum(nil))
 }
