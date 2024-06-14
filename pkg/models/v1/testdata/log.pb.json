@@ -1,0 +1,62 @@
+[
+  {
+    "timestamp": "",
+    "reason": "verify_contact",
+    "subject": "TRISA: Please verify your email address",
+    "recipient": "joe@example.com"
+  },
+  {
+    "timestamp": "",
+    "reason": "verify_contact",
+    "subject": "TRISA: Please verify your email address",
+    "recipient": "joe@example.com"
+  },
+  {
+    "timestamp": "",
+    "reason": "verify_contact",
+    "subject": "TRISA: Please verify your email address",
+    "recipient": "joe@example.com"
+  },
+  {
+    "timestamp": "",
+    "reason": "verify_contact",
+    "subject": "TRISA: Please verify your email address",
+    "recipient": "joe@example.com"
+  },
+  {
+    "timestamp": "",
+    "reason": "reissuance_reminder",
+    "subject": "TRISA Identity Certificate Expiration",
+    "recipient": "joe@example.com"
+  },
+  {
+    "timestamp": "",
+    "reason": "reissuance_started",
+    "subject": "TRISA PKCS12 Password for Certificate Reissuance",
+    "recipient": "joe@example.com"
+  },
+  {
+    "timestamp": "",
+    "reason": "deliver_certs",
+    "subject": "Welcome to the TRISA network!",
+    "recipient": "joe@example.com"
+  },
+  {
+    "timestamp": "",
+    "reason": "reissuance_reminder",
+    "subject": "TRISA Identity Certificate Expiration",
+    "recipient": "joe@example.com"
+  },
+  {
+    "timestamp": "",
+    "reason": "reissuance_started",
+    "subject": "TRISA PKCS12 Password for Certificate Reissuance",
+    "recipient": "joe@example.com"
+  },
+  {
+    "timestamp": "",
+    "reason": "deliver_certs",
+    "subject": "Welcome to the TRISA network!",
+    "recipient": "joe@example.com"
+  }
+]

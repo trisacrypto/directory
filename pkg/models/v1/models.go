@@ -178,17 +178,22 @@ func AppendAdminEmailLog(vasp *pb.VASP, reason string, subject string) (err erro
 }
 
 // GetVASPEmailLog computes a unified email log which is a time ordered representation
-// of all the emails sent to a VASP's contacts.
-func GetVASPEmailLog(vasp *pb.VASP) (emails []*EmailLogEntry, err error) {
+// of all the emails sent to a VASP's contacts. If contacts is nil, or there are no
+// contacts then an empty email log is returned.
+func GetVASPEmailLog(contacts *Contacts) (emails []*EmailLogEntry, err error) {
 	emails = make([]*EmailLogEntry, 0)
+	if contacts == nil {
+		return emails, nil
+	}
 
 	// Iterate over all the contacts on the VASP, this skips any nil contacts.
-	iter := NewContactIterator(vasp.Contacts)
+	iter := contacts.NewIterator(SkipNoEmail(), SkipDuplicates())
 	for iter.Next() {
-		contact, _ := iter.Value()
+		contact := iter.Contact()
+
 		var contactLog []*EmailLogEntry
-		if contactLog, err = GetEmailLog(contact); err != nil {
-			return nil, err
+		if contact.Email != nil {
+			contactLog = contact.Email.SendLog
 		}
 
 		// Merge the contact log into the unified log while maintaining timestamp order
@@ -221,60 +226,6 @@ func GetVASPEmailLog(vasp *pb.VASP) (emails []*EmailLogEntry, err error) {
 	}
 
 	return emails, nil
-}
-
-// Create and add a new entry to the EmailLog on the extra data on the Contact record.
-func (c *Contact) AppendEmailLog(reason, subject string) {
-	// Contact must be non-nil.
-	if c == nil {
-		return
-	}
-
-	// Create the EmailLog if it is nil.
-	if c.EmailLog == nil {
-		c.EmailLog = make([]*EmailLogEntry, 0, 1)
-	}
-
-	// Append entry to the previous log.
-	entry := &EmailLogEntry{
-		Timestamp: time.Now().Format(time.RFC3339),
-		Reason:    reason,
-		Subject:   subject,
-		Recipient: c.Email,
-	}
-	c.EmailLog = append(c.EmailLog, entry)
-}
-
-// Normalize the email and convert to bytes
-func NormalizeEmail(email string) string {
-	trimmed := strings.TrimSpace(email)
-	normalized := strings.ToLower(trimmed)
-	return normalized
-}
-
-// Counts emails within the given EmailLogEntry slice for the given reason within the given time frame.
-func CountSentEmails(emailLog []*EmailLogEntry, reason string, timeWindowDays int) (sent int, err error) {
-	if reason == "" {
-		return 0, errors.New("cannot match on empty reason string")
-	}
-	if timeWindowDays < 0 {
-		return 0, errors.New("time window must be a positive number of days")
-	}
-
-	for _, value := range emailLog {
-		var timestamp time.Time
-		if timestamp, err = time.Parse(time.RFC3339, value.Timestamp); err != nil {
-			return 0, fmt.Errorf("error parsing timestamp: %v", err)
-		}
-
-		matchedReason := reason == value.Reason
-		withinTimeWindow := timestamp.After(time.Now().AddDate(0, 0, -timeWindowDays))
-
-		if matchedReason && withinTimeWindow {
-			sent++
-		}
-	}
-	return sent, nil
 }
 
 // GetCertReqIDs returns the list of associated CertificateRequest IDs for the VASP record.

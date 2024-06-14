@@ -25,7 +25,6 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -56,9 +55,13 @@ var (
 			"delta":       {},
 			"hotel":       {},
 		},
-		wire.NamespaceContacts: {
-			"adam@example.com":  {},
-			"bruce@example.com": {},
+		wire.NamespaceEmails: {
+			"joseph@charliebank.org":   {},
+			"katherine@charliebank.ai": {},
+			"deborah@deltaassets.net":  {},
+			"lauren@deltaassets.io":    {},
+			"paul@hotelcorp.org":       {},
+			"jonathan@hotelcorp.io":    {},
 		},
 	}
 )
@@ -97,22 +100,56 @@ func (lib *Library) Fixtures() map[string]map[string]interface{} {
 	return lib.fixtures
 }
 
-func (lib *Library) GetContact(name string) (contact *models.Contact, err error) {
+func (lib *Library) GetEmail(name string) (contact *models.Email, _ error) {
 	var ok bool
-	if contact, ok = lib.fixtures[wire.NamespaceContacts][name].(*models.Contact); !ok {
-		return nil, fmt.Errorf("could not retrieve contact %s from fixtures", name)
+	if contact, ok = lib.fixtures[wire.NamespaceEmails][name].(*models.Email); !ok {
+		return nil, fmt.Errorf("could not retrieve email %q from fixtures", name)
 	}
-
 	return contact, nil
 }
 
-func (lib *Library) GetVASP(name string) (vasp *pb.VASP, err error) {
+func (lib *Library) GetVASP(name string) (vasp *pb.VASP, contacts *models.Contacts, err error) {
 	var ok bool
 	if vasp, ok = lib.fixtures[wire.NamespaceVASPs][name].(*pb.VASP); !ok {
-		return nil, fmt.Errorf("could not retrieve VASP %s from fixtures", name)
+		return nil, nil, fmt.Errorf("could not retrieve VASP %s from fixtures", name)
 	}
 
-	return vasp, nil
+	// Identify all the normalized, unique emails that need to be retrieved.
+	emails := make(map[string]struct{})
+	vcards := vasp.Contacts
+
+	if vcards.Administrative != nil && vcards.Administrative.Email != "" {
+		emails[models.NormalizeEmail(vcards.Administrative.Email)] = struct{}{}
+	}
+
+	if vcards.Technical != nil && vcards.Technical.Email != "" {
+		emails[models.NormalizeEmail(vcards.Technical.Email)] = struct{}{}
+	}
+
+	if vcards.Legal != nil && vcards.Legal.Email != "" {
+		emails[models.NormalizeEmail(vcards.Legal.Email)] = struct{}{}
+	}
+
+	if vcards.Billing != nil && vcards.Billing.Email != "" {
+		emails[models.NormalizeEmail(vcards.Billing.Email)] = struct{}{}
+	}
+
+	// Create the contacts record to return.
+	contacts = &models.Contacts{
+		VASP:     vasp.Id,
+		Contacts: vcards,
+		Emails:   make([]*models.Email, 0, len(emails)),
+	}
+
+	for email := range emails {
+		var contact *models.Email
+		if contact, err = lib.GetEmail(email); err != nil {
+			return nil, nil, err
+		}
+		contacts.Emails = append(contacts.Emails, contact)
+	}
+
+	return vasp, contacts, nil
 }
 
 func (lib *Library) GetCert(name string) (cert *models.Certificate, err error) {
@@ -267,7 +304,7 @@ func (lib *Library) LoadReferenceFixtures() (err error) {
 
 	// Create the reference fixtures map
 	lib.fixtures = make(map[string]map[string]interface{})
-	for _, namespace := range []string{wire.NamespaceContacts, wire.NamespaceVASPs, wire.NamespaceCerts, wire.NamespaceCertReqs} {
+	for _, namespace := range []string{wire.NamespaceVASPs, wire.NamespaceCerts, wire.NamespaceCertReqs, wire.NamespaceEmails} {
 		lib.fixtures[namespace] = make(map[string]interface{})
 	}
 
@@ -293,12 +330,6 @@ func (lib *Library) LoadReferenceFixtures() (err error) {
 		}
 
 		switch prefix {
-		case wire.NamespaceContacts:
-			contact := &models.Contact{}
-			if err = protojson.Unmarshal(data, contact); err != nil {
-				return err
-			}
-			lib.fixtures[wire.NamespaceContacts][key] = contact
 		case wire.NamespaceVASPs:
 			vasp := &pb.VASP{}
 			if err = protojson.Unmarshal(data, vasp); err != nil {
@@ -317,6 +348,12 @@ func (lib *Library) LoadReferenceFixtures() (err error) {
 				return err
 			}
 			lib.fixtures[wire.NamespaceCertReqs][key] = cert
+		case wire.NamespaceEmails:
+			email := &models.Email{}
+			if err = protojson.Unmarshal(data, email); err != nil {
+				return err
+			}
+			lib.fixtures[wire.NamespaceEmails][key] = email
 		default:
 			return fmt.Errorf("unrecognized prefix for file: %s", info.Name())
 		}
@@ -335,6 +372,10 @@ func (lib *Library) GenerateDB(ftype FixtureType) (err error) {
 
 	if v, ok := lib.fixtures[wire.NamespaceVASPs]; !ok || len(v) == 0 {
 		return errors.New("there are no VASPs in the fixtures library")
+	}
+
+	if v, ok := lib.fixtures[wire.NamespaceEmails]; !ok || len(v) == 0 {
+		return errors.New("there are no emails in the fixtures library")
 	}
 
 	if c, ok := lib.fixtures[wire.NamespaceCerts]; !ok || len(c) == 0 {
@@ -387,10 +428,6 @@ func (lib *Library) GenerateDB(ftype FixtureType) (err error) {
 
 			// Add the fixture to the database, updating indices
 			switch namespace {
-			case wire.NamespaceContacts:
-				if err = db.UpdateContact(context.Background(), item.(*models.Contact)); err != nil {
-					return err
-				}
 			case wire.NamespaceVASPs:
 				vasp := item.(*pb.VASP)
 				var id string
@@ -400,6 +437,10 @@ func (lib *Library) GenerateDB(ftype FixtureType) (err error) {
 
 				if vasp.Id != id {
 					return fmt.Errorf("VASP ID mismatch after creation: %s != %s", vasp.Id, id)
+				}
+			case wire.NamespaceEmails:
+				if err = db.UpdateEmail(context.Background(), item.(*models.Email)); err != nil {
+					return err
 				}
 			case wire.NamespaceCerts:
 				if err = db.UpdateCert(context.Background(), item.(*models.Certificate)); err != nil {
@@ -422,138 +463,145 @@ func (lib *Library) GenerateDB(ftype FixtureType) (err error) {
 // CompareFixture returns True if the given object matches the object in the fixtures
 // library. This is used in tests to verify the correctness of the reference library,
 // and to verify endpoints that return unmodified objects from the database.
-func (lib *Library) CompareFixture(namespace, key string, obj interface{}, removeExtra, removeSerials bool) (matches bool, err error) {
-	var (
-		ok bool
-	)
-
+func (lib *Library) CompareFixture(namespace, key string, obj interface{}, removeSerials bool) (matches bool, err error) {
+	// Check that the namespace is valid.
+	var ok bool
 	if _, ok = lib.fixtures[namespace]; !ok {
 		return false, fmt.Errorf("unknown namespace %s", namespace)
 	}
 
+	// Look up the comparison object from the fixtures
+	var cmp interface{}
+	if cmp, err = lib.Find(namespace, key); err != nil {
+		return false, err
+	}
+
 	// Reset any time fields for the comparison and compare directly
 	switch namespace {
-	case wire.NamespaceContacts:
-		var a *models.Contact
-		for _, f := range lib.fixtures[namespace] {
-			ref := f.(*models.Contact)
-			if ref.Email == key {
-				a = ref
-				break
-			}
-		}
-		if a == nil {
-			return false, fmt.Errorf("unknown contact fixture %s", key)
-		}
-
-		var b *models.Contact
-		if b, ok = obj.(*models.Contact); !ok {
-			return false, errors.New("obj is not a Contact object")
-		}
-
-		// Remove time fields for comparison
-		a.Created, b.Created = "", ""
-		a.Modified, b.Modified = "", ""
-		a.VerifiedOn, b.VerifiedOn = "", ""
-
-		return proto.Equal(a, b), nil
-
 	case wire.NamespaceVASPs:
-		var a *pb.VASP
-		for _, f := range lib.fixtures[namespace] {
-			ref := f.(*pb.VASP)
-			if ref.Id == key {
-				a = ref
-				break
-			}
-		}
-		if a == nil {
-			return false, fmt.Errorf("unknown VASP fixture %s", key)
+
+		var a, b *pb.VASP
+		if a, ok = cmp.(*pb.VASP); !ok {
+			return false, fmt.Errorf("cmp is a %T not a %T", cmp, a)
 		}
 
-		var b *pb.VASP
 		if b, ok = obj.(*pb.VASP); !ok {
-			return false, errors.New("obj is not a VASP object")
+			return false, fmt.Errorf("obj is a %T not a %T", obj, b)
 		}
 
-		// Remove time fields for comparison
-		a.LastUpdated, b.LastUpdated = "", ""
-
-		if removeExtra {
-			a.Extra, b.Extra = nil, nil
-			iter := models.NewContactIterator(a.Contacts)
-			for iter.Next() {
-				contact, _ := iter.Value()
-				contact.Extra = nil
-			}
-
-			iter = models.NewContactIterator(b.Contacts)
-			for iter.Next() {
-				contact, _ := iter.Value()
-				contact.Extra = nil
-			}
-		}
-
-		if removeSerials {
-			a.IdentityCertificate.SerialNumber, b.IdentityCertificate.SerialNumber = nil, nil
-
-			for _, cert := range a.SigningCertificates {
-				cert.SerialNumber = nil
-			}
-
-			for _, cert := range b.SigningCertificates {
-				cert.SerialNumber = nil
-			}
-		}
-
-		return proto.Equal(a, b), nil
+		return compareVASP(a, b, removeSerials)
 
 	case wire.NamespaceCerts:
-		var a *models.Certificate
-		for _, f := range lib.fixtures[namespace] {
-			ref := f.(*models.Certificate)
-			if ref.Id == key {
-				a = ref
-				break
-			}
-		}
-		if a == nil {
-			return false, fmt.Errorf("unknown cert fixture %s", key)
+
+		var a, b *models.Certificate
+		if a, ok = cmp.(*models.Certificate); !ok {
+			return false, fmt.Errorf("cmp is a %T not a %T", cmp, a)
 		}
 
-		var b *models.Certificate
 		if b, ok = obj.(*models.Certificate); !ok {
-			return false, errors.New("obj is not a Certificate object")
+			return false, fmt.Errorf("obj is a %T not a %T", obj, b)
 		}
+
 		return proto.Equal(a, b), nil
 
 	case wire.NamespaceCertReqs:
-		var a *models.CertificateRequest
-		for _, f := range lib.fixtures[namespace] {
-			ref := f.(*models.CertificateRequest)
-			if ref.Id == key {
-				// Avoid modifying the object in the fixtures map
-				a = ref
-				break
-			}
-		}
-		if a == nil {
-			return false, fmt.Errorf("unknown certreq fixture %s", key)
+
+		var a, b *models.CertificateRequest
+		if a, ok = cmp.(*models.CertificateRequest); !ok {
+			return false, fmt.Errorf("cmp is a %T not a %T", cmp, a)
 		}
 
-		var b *models.CertificateRequest
 		if b, ok = obj.(*models.CertificateRequest); !ok {
-			return false, errors.New("obj is not a CertificateRequest object")
+			return false, fmt.Errorf("obj is a %T not a %T", obj, b)
 		}
 
-		a.Modified, b.Modified = "", ""
-		a.Created, b.Created = "", ""
+		return compareCertificateRequests(a, b)
 
-		return proto.Equal(a, b), nil
+	case wire.NamespaceEmails:
+		var a, b *models.Email
+		if a, ok = cmp.(*models.Email); !ok {
+			return false, fmt.Errorf("cmp is a %T not a %T", cmp, a)
+		}
+
+		if b, ok = obj.(*models.Email); !ok {
+			return false, fmt.Errorf("obj is a %T not a %T", obj, b)
+		}
+
+		return compareEmails(a, b)
 
 	default:
 		return false, fmt.Errorf("unrecognized namespace: %s", namespace)
 	}
+}
+
+func compareVASP(cmp, obj *pb.VASP, removeSerials bool) (bool, error) {
+	a := proto.Clone(cmp).(*pb.VASP)
+	b := proto.Clone(obj).(*pb.VASP)
+
+	// Remove time fields for comparison
+	a.LastUpdated, b.LastUpdated = "", ""
+
+	if removeSerials {
+		a.IdentityCertificate.SerialNumber, b.IdentityCertificate.SerialNumber = nil, nil
+
+		for _, cert := range a.SigningCertificates {
+			cert.SerialNumber = nil
+		}
+
+		for _, cert := range b.SigningCertificates {
+			cert.SerialNumber = nil
+		}
+	}
+
+	return proto.Equal(a, b), nil
+}
+
+func compareCertificateRequests(cmp, obj *models.CertificateRequest) (bool, error) {
+	a := proto.Clone(cmp).(*models.CertificateRequest)
+	b := proto.Clone(obj).(*models.CertificateRequest)
+
+	a.Modified, b.Modified = "", ""
+	a.Created, b.Created = "", ""
+
+	return proto.Equal(a, b), nil
+}
+
+func compareEmails(cmp, obj *models.Email) (bool, error) {
+	a := proto.Clone(cmp).(*models.Email)
+	b := proto.Clone(obj).(*models.Email)
+
+	// Remove time fields for comparison
+	a.Created, b.Created = "", ""
+	a.Modified, b.Modified = "", ""
+	a.VerifiedOn, b.VerifiedOn = "", ""
+
+	return proto.Equal(a, b), nil
+}
+
+func (lib *Library) Find(namespace, key string) (interface{}, error) {
+	for _, f := range lib.fixtures[namespace] {
+		switch t := f.(type) {
+		case *pb.VASP:
+			if t.Id == key {
+				return t, nil
+			}
+		case *models.Certificate:
+			if t.Id == key {
+				return t, nil
+			}
+		case *models.CertificateRequest:
+			if t.Id == key {
+				return t, nil
+			}
+		case *models.Email:
+			if t.Email == key {
+				return t, nil
+			}
+		default:
+			return false, fmt.Errorf("unknown fixture type %T for %s in %s", f, key, namespace)
+		}
+	}
+	return false, fmt.Errorf("could not find %s in %s", key, namespace)
 }
 
 func RemarshalProto(namespace string, obj map[string]interface{}) (_ protoreflect.ProtoMessage, err error) {
@@ -568,12 +616,6 @@ func RemarshalProto(namespace string, obj map[string]interface{}) (_ protoreflec
 	}
 
 	switch namespace {
-	case wire.NamespaceContacts:
-		contact := &models.Contact{}
-		if err = jsonpb.Unmarshal(data, contact); err != nil {
-			return nil, err
-		}
-		return contact, nil
 	case wire.NamespaceVASPs:
 		vasp := &pb.VASP{}
 		if err = jsonpb.Unmarshal(data, vasp); err != nil {
@@ -592,6 +634,12 @@ func RemarshalProto(namespace string, obj map[string]interface{}) (_ protoreflec
 			return nil, err
 		}
 		return certreq, nil
+	case wire.NamespaceEmails:
+		record := &models.Email{}
+		if err = jsonpb.Unmarshal(data, record); err != nil {
+			return nil, err
+		}
+		return record, nil
 	default:
 		return nil, fmt.Errorf("unknown namespace %q", namespace)
 	}
@@ -600,21 +648,11 @@ func RemarshalProto(namespace string, obj map[string]interface{}) (_ protoreflec
 // ClearContactEmailLogs clears the contact email logs on a VASP object. Tests which
 // assert against state on the contact email logs should call this method to ensure
 // that the logs are empty before reaching the test point.
-func ClearContactEmailLogs(vasp *pb.VASP) (err error) {
-	contacts := vasp.Contacts
-	iter := models.NewContactIterator(contacts)
+func ClearContactEmailLogs(contacts *models.Contacts) (err error) {
+	iter := contacts.NewIterator()
 	for iter.Next() {
-		contact, _ := iter.Value()
-		extra := &models.GDSContactExtraData{}
-		if contact.Extra != nil {
-			if err = contact.Extra.UnmarshalTo(extra); err != nil {
-				return err
-			}
-			extra.EmailLog = nil
-			if contact.Extra, err = anypb.New(extra); err != nil {
-				return err
-			}
-		}
+		contact := iter.Contact()
+		contact.Email.SendLog = make([]*models.EmailLogEntry, 0)
 	}
 	return nil
 }

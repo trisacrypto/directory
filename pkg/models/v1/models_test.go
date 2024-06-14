@@ -436,152 +436,6 @@ func TestCertReqIDs(t *testing.T) {
 	require.Len(t, ids, 2)
 }
 
-func TestContactExtra(t *testing.T) {
-	// Test contact is nil
-	token, verified, err := GetContactVerification(nil)
-	require.NoError(t, err, "nil contact returns error")
-	require.False(t, verified)
-	require.Empty(t, token)
-
-	// Test extra is nil
-	contact := &pb.Contact{
-		Email: "pontoon@boatz.com",
-		Name:  "Sailor Moon",
-		Phone: "555-5555",
-	}
-	token, verified, err = GetContactVerification(contact)
-	require.NoError(t, err, "nil contact extra returns error")
-	require.False(t, verified)
-	require.Empty(t, token)
-
-	// Contact cannot be nil to set extra
-	err = SetContactVerification(nil, "12345", false)
-	require.Error(t, err)
-
-	// Set extra on contact
-	err = SetContactVerification(contact, "12345", false)
-	require.NoError(t, err)
-
-	// Fetch set extra
-	token, verified, err = GetContactVerification(contact)
-	require.NoError(t, err)
-	require.False(t, verified)
-	require.Equal(t, "12345", token)
-
-	// Append to email log
-	err = AppendEmailLog(contact, "verify_contact", "verification")
-	require.NoError(t, err)
-	require.False(t, verified)
-	require.Equal(t, "12345", token)
-
-	// Fetch email log
-	emailLog, err := GetEmailLog(contact)
-	require.NoError(t, err)
-	require.Len(t, emailLog, 1)
-	require.Equal(t, "verify_contact", emailLog[0].Reason)
-	require.Equal(t, "verification", emailLog[0].Subject)
-
-	// Should not overwrite contact verification
-	token, verified, err = GetContactVerification(contact)
-	require.NoError(t, err)
-	require.False(t, verified)
-	require.Equal(t, "12345", token)
-
-	// Set extra on contact
-	err = SetContactVerification(contact, "", true)
-	require.NoError(t, err)
-
-	// Fetch set extra
-	token, verified, err = GetContactVerification(contact)
-	require.NoError(t, err)
-	require.True(t, verified)
-	require.Equal(t, "", token)
-
-	// Should not overwrite email log
-	emailLog, err = GetEmailLog(contact)
-	require.NoError(t, err)
-	require.Len(t, emailLog, 1)
-	require.Equal(t, "verify_contact", emailLog[0].Reason)
-	require.Equal(t, "verification", emailLog[0].Subject)
-}
-
-func TestContactEmailLog(t *testing.T) {
-	// Test that the email log functions are working as expected
-	contact := &pb.Contact{
-		Name:  "Test Contact",
-		Email: "test@example.com",
-	}
-
-	// Audit log should initially be empty
-	emailLog, err := GetEmailLog(contact)
-	require.NoError(t, err)
-	require.Len(t, emailLog, 0)
-
-	// Should not be able to append on a nil contact
-	err = AppendEmailLog(nil, "verify_contact", "verification")
-	require.Error(t, err)
-
-	// Append an entry to an empty log
-	err = AppendEmailLog(contact, "verify_contact", "verification")
-	require.NoError(t, err)
-	emailLog, err = GetEmailLog(contact)
-	require.NoError(t, err)
-	require.Len(t, emailLog, 1)
-	require.Equal(t, "verify_contact", emailLog[0].Reason)
-	require.Equal(t, "verification", emailLog[0].Subject)
-
-	// Append another entry to the email log
-	err = AppendEmailLog(contact, "review", "review resend")
-	require.NoError(t, err)
-	emailLog, err = GetEmailLog(contact)
-	require.NoError(t, err)
-	require.Len(t, emailLog, 2)
-	require.Equal(t, "verify_contact", emailLog[0].Reason)
-	require.Equal(t, "verification", emailLog[0].Subject)
-	require.Equal(t, "review", emailLog[1].Reason)
-	require.Equal(t, "review resend", emailLog[1].Subject)
-}
-
-func TestVeriedContacts(t *testing.T) {
-	vasp := &pb.VASP{
-		Contacts: &pb.Contacts{
-			Administrative: &pb.Contact{
-				Name:  "Admin Person",
-				Email: "admin@example.com",
-			},
-			Technical: &pb.Contact{
-				Name:  "Technical Person",
-				Email: "tech@example.com",
-			},
-			Legal: &pb.Contact{
-				Name:  "Legal Person",
-				Email: "legal@example.com",
-			},
-		},
-	}
-
-	contacts := VerifiedContacts(vasp)
-	require.Len(t, contacts, 0)
-
-	err := SetContactVerification(vasp.Contacts.Administrative, "", true)
-	require.NoError(t, err)
-
-	err = SetContactVerification(vasp.Contacts.Technical, "12345", false)
-	require.NoError(t, err)
-
-	contacts = VerifiedContacts(vasp)
-	require.Len(t, contacts, 1)
-
-	err = SetContactVerification(vasp.Contacts.Technical, "", true)
-	require.NoError(t, err)
-
-	err = SetContactVerification(vasp.Contacts.Legal, "12345", false)
-	require.NoError(t, err)
-
-	contacts = VerifiedContacts(vasp)
-	require.Len(t, contacts, 2)
-}
-
 func TestNewCertificate(t *testing.T) {
 	vasp := &pb.VASP{
 		Id: "b5841869-105f-411c-8722-4045aad72717",
@@ -905,129 +759,233 @@ func TestVASPSignature(t *testing.T) {
 }
 
 func TestGetVASPEmailLog(t *testing.T) {
-	vasp := &pb.VASP{
-		Contacts: &pb.Contacts{},
+	// Create a function that will create a contacts fixture for testing GetVASPEmailLog
+	makeContacts := func(contacts *pb.Contacts) *Contacts {
+		if contacts == nil {
+			contacts = &pb.Contacts{
+				Administrative: &pb.Contact{
+					Name:  "Ashley Quickstar",
+					Email: "admin@example.com",
+				},
+				Technical: &pb.Contact{
+					Name:  "Billy Rester",
+					Email: "tech@example.com",
+				},
+				Legal: &pb.Contact{
+					Name:  "Cathleen Studeville",
+					Email: "legal@example.com",
+				},
+				Billing: &pb.Contact{
+					Name:  "David Teeter",
+					Email: "billing@example.com",
+				},
+			}
+		}
+
+		fixture := &Contacts{
+			VASP:     "b2fc0f56-3121-492f-8cd5-540f15456f6f",
+			Contacts: contacts,
+			Emails:   make([]*Email, 0),
+		}
+
+		seen := make(map[string]struct{})
+		emails := []*pb.Contact{contacts.Administrative, contacts.Technical, contacts.Billing, contacts.Legal}
+
+		for _, email := range emails {
+			if email != nil && email.Email != "" {
+				if _, ok := seen[email.Email]; !ok {
+					record := &Email{
+						Name:    email.Name,
+						Email:   email.Email,
+						Vasps:   []string{fixture.VASP},
+						SendLog: make([]*EmailLogEntry, 0),
+					}
+
+					fixture.Emails = append(fixture.Emails, record)
+					seen[email.Email] = struct{}{}
+				}
+			}
+		}
+
+		return fixture
 	}
 
-	// Should return an empty slice if there are no contacts
-	emails, err := GetVASPEmailLog(vasp)
-	require.NoError(t, err, "could not get email log")
-	require.Len(t, emails, 0)
-
-	// Create a contact with some email log entries
+	// Email fixtures for the tests below
 	now := time.Now()
-	verifyAdmin := &EmailLogEntry{
-		Reason:    "verify_contact",
-		Subject:   "verify_admin",
-		Timestamp: now.Format(time.RFC3339),
-	}
-	reissuanceAdmin := &EmailLogEntry{
-		Reason:    "reissuance",
-		Subject:   "reissuance_admin",
-		Timestamp: now.AddDate(0, 0, 1).Format(time.RFC3339),
-	}
-	admin := &pb.Contact{
-		Email: "admin@example.com",
-	}
-	admin.Extra, err = anypb.New(&GDSContactExtraData{
-		EmailLog: []*EmailLogEntry{
-			verifyAdmin,
-			reissuanceAdmin,
+	messages := []*EmailLogEntry{
+		{
+			Reason:    "verify_contact",
+			Subject:   "verify_admin",
+			Timestamp: now.Format(time.RFC3339),
+			Recipient: "admin@example.com",
 		},
-	})
-	require.NoError(t, err, "could not create admin contact")
-	vasp.Contacts = &pb.Contacts{
-		Administrative: admin,
-	}
-
-	// Should preserve ordering of the email log entries
-	emails, err = GetVASPEmailLog(vasp)
-	require.NoError(t, err, "could not get email log")
-	require.Len(t, emails, 2)
-	require.Equal(t, verifyAdmin.Subject, emails[0].Subject)
-	require.Equal(t, reissuanceAdmin.Subject, emails[1].Subject)
-
-	// Add a second contact with no log entries
-	tech := &pb.Contact{
-		Email: "tech@example.com",
-	}
-	vasp.Contacts.Technical = tech
-
-	// Should handle contact with no log entries
-	emails, err = GetVASPEmailLog(vasp)
-	require.NoError(t, err, "could not get email log")
-	require.Len(t, emails, 2)
-	require.Equal(t, verifyAdmin.Subject, emails[0].Subject)
-	require.Equal(t, reissuanceAdmin.Subject, emails[1].Subject)
-
-	// Add some log entries to the second contact
-	verifyTech := &EmailLogEntry{
-		Reason:    "verify_contact",
-		Subject:   "verify_tech",
-		Timestamp: now.Add(time.Hour).Format(time.RFC3339),
-	}
-	reissuanceTech := &EmailLogEntry{
-		Reason:    "reissuance",
-		Subject:   "reissuance_tech",
-		Timestamp: now.Add(time.Hour * 2).Format(time.RFC3339),
-	}
-	tech.Extra, err = anypb.New(&GDSContactExtraData{
-		EmailLog: []*EmailLogEntry{
-			verifyTech,
-			reissuanceTech,
+		{
+			Reason:    "reissuance",
+			Subject:   "reissuance_admin",
+			Timestamp: now.AddDate(0, 0, 1).Format(time.RFC3339),
+			Recipient: "admin@example.com",
 		},
-	})
-	require.NoError(t, err, "could not create tech contact")
-
-	// Should properly merge the two email logs
-	emails, err = GetVASPEmailLog(vasp)
-	require.NoError(t, err, "could not get email log")
-	require.Len(t, emails, 4)
-	require.Equal(t, verifyAdmin.Subject, emails[0].Subject)
-	require.Equal(t, verifyTech.Subject, emails[1].Subject)
-	require.Equal(t, reissuanceTech.Subject, emails[2].Subject)
-	require.Equal(t, reissuanceAdmin.Subject, emails[3].Subject)
-
-	// Add a third contact with some log entries
-	billing := &pb.Contact{
-		Email: "billing@example.com",
-	}
-	verifyBilling := &EmailLogEntry{
-		Reason:    "verify_contact",
-		Subject:   "verify_billing",
-		Timestamp: now.Add(-time.Hour).Format(time.RFC3339),
-	}
-	resendBilling := &EmailLogEntry{
-		Reason:    "resend",
-		Subject:   "resend_billing",
-		Timestamp: now.Add(time.Hour * 3).Format(time.RFC3339),
-	}
-	reissuanceBilling := &EmailLogEntry{
-		Reason:    "reissuance",
-		Subject:   "reissuance_billing",
-		Timestamp: now.AddDate(0, 0, 2).Format(time.RFC3339),
-	}
-	billing.Extra, err = anypb.New(&GDSContactExtraData{
-		EmailLog: []*EmailLogEntry{
-			verifyBilling,
-			resendBilling,
-			reissuanceBilling,
+		{
+			Reason:    "verify_contact",
+			Subject:   "verify_tech",
+			Timestamp: now.Add(time.Hour).Format(time.RFC3339),
+			Recipient: "tech@example.com",
 		},
-	})
-	require.NoError(t, err, "could not create billing contact")
-	vasp.Contacts.Billing = billing
+		{
+			Reason:    "reissuance",
+			Subject:   "reissuance_tech",
+			Timestamp: now.Add(time.Hour * 2).Format(time.RFC3339),
+			Recipient: "tech@example.com",
+		},
+		{
+			Reason:    "verify_contact",
+			Subject:   "verify_billing",
+			Timestamp: now.Add(-time.Hour).Format(time.RFC3339),
+			Recipient: "billing@example.com",
+		},
+		{
+			Reason:    "resend",
+			Subject:   "resend_billing",
+			Timestamp: now.Add(time.Hour * 3).Format(time.RFC3339),
+			Recipient: "billing@example.com",
+		},
+		{
+			Reason:    "reissuance",
+			Subject:   "reissuance_billing",
+			Timestamp: now.AddDate(0, 0, 2).Format(time.RFC3339),
+			Recipient: "billing@example.com",
+		},
+	}
 
-	// Should properly merge the three email logs
-	emails, err = GetVASPEmailLog(vasp)
-	require.NoError(t, err, "could not get email log")
-	require.Len(t, emails, 7)
-	require.Equal(t, verifyBilling.Subject, emails[0].Subject)
-	require.Equal(t, verifyAdmin.Subject, emails[1].Subject)
-	require.Equal(t, verifyTech.Subject, emails[2].Subject)
-	require.Equal(t, reissuanceTech.Subject, emails[3].Subject)
-	require.Equal(t, resendBilling.Subject, emails[4].Subject)
-	require.Equal(t, reissuanceAdmin.Subject, emails[5].Subject)
-	require.Equal(t, reissuanceBilling.Subject, emails[6].Subject)
+	t.Run("Nil", func(t *testing.T) {
+		emails, err := GetVASPEmailLog(nil)
+		require.NoError(t, err, "could not get email log")
+		require.Len(t, emails, 0)
+	})
+
+	t.Run("Empty", func(t *testing.T) {
+		// Create a contacts data structure that is completely empty
+		contacts := makeContacts(&pb.Contacts{})
+
+		// Should return an empty slice if there are no contacts
+		emails, err := GetVASPEmailLog(contacts)
+		require.NoError(t, err, "could not get email log")
+		require.Len(t, emails, 0)
+	})
+
+	t.Run("Single", func(t *testing.T) {
+		// Create a single contact with some email log entries
+		contacts := makeContacts(&pb.Contacts{Administrative: &pb.Contact{Name: "Ashley Quickstar", Email: "admin@example.com"}})
+		admin := contacts.Get(AdministrativeContact)
+
+		admin.Email.SendLog = append(admin.Email.SendLog, messages[0], messages[1])
+
+		// Should preserve ordering of the email log entries
+		emails, err := GetVASPEmailLog(contacts)
+		require.NoError(t, err, "could not get email log")
+		require.Len(t, emails, 2)
+		require.Equal(t, messages[0].Subject, emails[0].Subject)
+		require.Equal(t, messages[1].Subject, emails[1].Subject)
+	})
+
+	t.Run("SingleLog", func(t *testing.T) {
+		// Only a single contact has log entries, the others should be empty logs
+		contacts := makeContacts(nil)
+		admin := contacts.Get(AdministrativeContact)
+
+		// Should ignore contacts with no log entries
+		admin.Email.SendLog = append(admin.Email.SendLog, messages[0], messages[1])
+		emails, err := GetVASPEmailLog(contacts)
+		require.NoError(t, err, "could not get email log")
+		require.Len(t, emails, 2)
+		require.Equal(t, messages[0].Subject, emails[0].Subject)
+		require.Equal(t, messages[1].Subject, emails[1].Subject)
+	})
+
+	t.Run("Duplicates", func(t *testing.T) {
+		// Create four contacts all with the same email address and therefore the same
+		// email log, but the logs should be deduplicated.
+		contacts := makeContacts(&pb.Contacts{
+			Administrative: &pb.Contact{Name: "Ashley Quickstar", Email: "admin@example.com"},
+			Technical:      &pb.Contact{Name: "Ashley Quickstar", Email: "admin@example.com"},
+			Billing:        &pb.Contact{Name: "Ashley Quickstar", Email: "admin@example.com"},
+			Legal:          &pb.Contact{Name: "Ashley Quickstar", Email: "admin@example.com"},
+		})
+		admin := contacts.Get(AdministrativeContact)
+
+		// Should ignore contacts with no log entries
+		admin.Email.SendLog = append(admin.Email.SendLog, messages[0], messages[1])
+		emails, err := GetVASPEmailLog(contacts)
+		require.NoError(t, err, "could not get email log")
+		require.Len(t, emails, 2)
+		require.Equal(t, messages[0].Subject, emails[0].Subject)
+		require.Equal(t, messages[1].Subject, emails[1].Subject)
+	})
+
+	t.Run("Double", func(t *testing.T) {
+		// Create contacts with two records, both with log entries
+		contacts := makeContacts(&pb.Contacts{
+			Administrative: &pb.Contact{Name: "Ashley Quickstar", Email: "admin@example.com"},
+			Technical:      &pb.Contact{Name: "Ashley Quickstar", Email: "tech@example.com"},
+		})
+
+		admin := contacts.Get(AdministrativeContact)
+		tech := contacts.Get(TechnicalContact)
+
+		admin.Email.SendLog = append(admin.Email.SendLog, messages[0], messages[1])
+		tech.Email.SendLog = append(tech.Email.SendLog, messages[2], messages[3])
+
+		// Should properly merge the two email logs
+		emails, err := GetVASPEmailLog(contacts)
+		require.NoError(t, err, "could not get email log")
+		require.Len(t, emails, 4)
+		require.Equal(t, messages[0].Subject, emails[0].Subject)
+		require.Equal(t, messages[2].Subject, emails[1].Subject)
+		require.Equal(t, messages[3].Subject, emails[2].Subject)
+		require.Equal(t, messages[1].Subject, emails[3].Subject)
+	})
+
+	t.Run("Triple", func(t *testing.T) {
+		// Create contacts where three contacts have log entries
+		contacts := makeContacts(nil)
+
+		admin := contacts.Get(AdministrativeContact)
+		tech := contacts.Get(TechnicalContact)
+		billing := contacts.Get(BillingContact)
+
+		admin.Email.SendLog = append(admin.Email.SendLog, messages[0], messages[1])
+		tech.Email.SendLog = append(tech.Email.SendLog, messages[2], messages[3])
+		billing.Email.SendLog = append(billing.Email.SendLog, messages[4], messages[5], messages[6])
+
+		// Should properly merge the three email logs
+		emails, err := GetVASPEmailLog(contacts)
+		require.NoError(t, err, "could not get email log")
+		require.Len(t, emails, 7)
+		require.Equal(t, messages[4].Subject, emails[0].Subject)
+		require.Equal(t, messages[0].Subject, emails[1].Subject)
+		require.Equal(t, messages[2].Subject, emails[2].Subject)
+		require.Equal(t, messages[3].Subject, emails[3].Subject)
+		require.Equal(t, messages[5].Subject, emails[4].Subject)
+		require.Equal(t, messages[1].Subject, emails[5].Subject)
+		require.Equal(t, messages[6].Subject, emails[6].Subject)
+	})
+
+	t.Run("NoEmail", func(t *testing.T) {
+		// Create contacts that do not have an email address.
+		contacts := makeContacts(&pb.Contacts{
+			Administrative: &pb.Contact{Name: "Ashley Quickstar", Email: "admin@example.com"},
+			Technical:      &pb.Contact{Name: "Sydney Sneaks", Email: ""},
+		})
+		admin := contacts.Get(AdministrativeContact)
+
+		// Should ignore contacts with no log entries
+		admin.Email.SendLog = append(admin.Email.SendLog, messages[0], messages[1])
+		emails, err := GetVASPEmailLog(contacts)
+		require.NoError(t, err, "could not get email log")
+		require.Len(t, emails, 2)
+		require.Equal(t, messages[0].Subject, emails[0].Subject)
+		require.Equal(t, messages[1].Subject, emails[1].Subject)
+	})
 }
 
 func loadFixture(path string) (vasp *pb.VASP, err error) {

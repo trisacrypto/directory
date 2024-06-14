@@ -36,6 +36,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/store/config"
 	"github.com/trisacrypto/directory/pkg/store/iterator"
 	"github.com/trisacrypto/directory/pkg/store/leveldb"
+	"github.com/trisacrypto/directory/pkg/store/mock"
 	"github.com/trisacrypto/directory/pkg/store/trtl"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
@@ -44,6 +45,8 @@ import (
 // specify protocol+transport://user:pass@host/dbname?opt1=a&opt2=b for servers or
 // protocol:///relative/path/to/file for embedded databases (for absolute paths, specify
 // protocol:////absolute/path/to/file).
+//
+// To open a mock store, use the DSN mock:///
 func Open(conf config.StoreConfig) (s Store, err error) {
 	var dsn *DSN
 	if dsn, err = ParseDSN(conf.URL); err != nil {
@@ -57,6 +60,10 @@ func Open(conf config.StoreConfig) (s Store, err error) {
 		}
 	case "trtl":
 		if s, err = trtl.Open(conf); err != nil {
+			return nil, err
+		}
+	case "mock":
+		if s, err = mock.Open(); err != nil {
 			return nil, err
 		}
 	default:
@@ -92,11 +99,14 @@ type Store interface {
 	ActivityStore
 	OrganizationStore
 	ContactStore
+	EmailStore
+	DirectoryContactStore
 }
 
 // leveldb.Store and trtl.Store must implement the Store interface.
 var _ Store = &leveldb.Store{}
 var _ Store = &trtl.Store{}
+var _ Store = &mock.Store{}
 
 // DirectoryStore describes how services interact with VASP identity records.
 type DirectoryStore interface {
@@ -163,6 +173,23 @@ type ContactStore interface {
 	UpdateContact(ctx context.Context, c *models.Contact) error
 	DeleteContact(ctx context.Context, email string) error
 	CountContacts(context.Context) (uint64, error)
+}
+
+// EmailStore describes how services interact with Email records.
+type EmailStore interface {
+	ListEmails(ctx context.Context) iterator.EmailIterator
+	CreateEmail(ctx context.Context, c *models.Email) (string, error)
+	RetrieveEmail(ctx context.Context, email string) (*models.Email, error)
+	UpdateEmail(ctx context.Context, c *models.Email) error
+	DeleteEmail(ctx context.Context, email string) error
+	CountEmails(context.Context) (uint64, error)
+}
+
+// DirectoryContactStore joins VASP contact records with Email records.
+type DirectoryContactStore interface {
+	VASPContacts(ctx context.Context, vasp *pb.VASP) (*models.Contacts, error)
+	RetrieveVASPContacts(ctx context.Context, vaspID string) (*models.Contacts, error)
+	UpdateVASPContacts(ctx context.Context, vaspID string, contacts *models.Contacts) error
 }
 
 // Indexer allows external methods to access the index function of the store if it has

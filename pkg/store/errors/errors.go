@@ -10,4 +10,6 @@ var (
 	ErrIDAlreadySet      = errors.New("record must not have an ID (use update instead)")
 	ErrIncompleteRecord  = errors.New("record is missing required fields")
 	ErrProtocol          = errors.New("unexpected protocol error")
+	ErrEmailExists       = errors.New("a contact with this email address already exists")
+	ErrNoContacts        = errors.New("vasp record contains no contacts")
 )

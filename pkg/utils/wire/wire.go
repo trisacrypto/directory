@@ -39,6 +39,7 @@ const (
 	NamespaceActivities    = "activities"
 	NamespaceOrganizations = "organizations"
 	NamespaceContacts      = "contacts"
+	NamespaceEmails        = "emails"
 )
 
 // Namespaces defines all possible namespaces that GDS manages
@@ -47,7 +48,7 @@ var Namespaces = [4]string{NamespaceVASPs, NamespaceCertReqs, NamespaceReplicas,
 
 // UnmarshalProto expects protocol buffer data and unmarshals it to the correct type
 // based on the namespace. This is a utility function for dealing with the various
-// namespaces and types that GDS manages and is not a substitute for direct unmarshalling.
+// namespaces and types that GDS manages and is not a substitute for direct unmarshaling.
 func UnmarshalProto(namespace string, data []byte) (_ proto.Message, err error) {
 	switch namespace {
 	case NamespaceVASPs:

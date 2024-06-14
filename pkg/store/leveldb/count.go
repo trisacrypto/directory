@@ -48,3 +48,7 @@ func (s *Store) CountOrganizations(context.Context) (uint64, error) {
 func (s *Store) CountContacts(context.Context) (uint64, error) {
 	return s.countPrefix(preContacts)
 }
+
+func (s *Store) CountEmails(context.Context) (uint64, error) {
+	return s.countPrefix(preEmails)
+}

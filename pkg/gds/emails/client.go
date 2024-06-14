@@ -86,24 +86,17 @@ func (m *EmailManager) Send(message *sgmail.SGMailV3) (err error) {
 // list and sends them the verification email with instructions on how to verify their
 // email address. Caller must update the VASP record on the data store after calling
 // this function.
-func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP, contacts map[string]*models.Contact) (sent int, err error) {
+func (m *EmailManager) SendVerifyContacts(contacts *models.Contacts) (sent int, err error) {
 	// Attempt at least one delivery, don't give up just because one email failed
 	// Track how many emails and errors occurred during delivery.
 	var nErrors int
-	iter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail(), models.SkipDuplicates())
+	iter := contacts.NewIterator(models.SkipNoEmail(), models.SkipDuplicates())
 	for iter.Next() {
-		contact, kind := iter.Value()
-		card, ok := contacts[contact.Email]
-		if !ok {
-			nErrors++
-			sentry.Error(nil).Err(err).Str("email", contact.Email).Str("vasp", vasp.Id).Msg("unable to find contact model for VASP contact")
-			continue
-		}
-
-		if !card.Verified {
-			if err := m.SendVerifyContact(vasp, card); err != nil {
+		contact := iter.Contact()
+		if !contact.Email.Verified {
+			if err := m.SendVerifyContact(contacts.VASP, contact); err != nil {
 				nErrors++
-				sentry.Error(nil).Err(err).Str("vasp", vasp.Id).Str("contact", kind).Msg("failed to send verify contact email")
+				sentry.Error(nil).Err(err).Str("vasp", contacts.VASP).Str("contact", contact.Kind).Msg("failed to send verify contact email")
 			} else {
 				sent++
 			}
@@ -118,28 +111,28 @@ func (m *EmailManager) SendVerifyContacts(vasp *pb.VASP, contacts map[string]*mo
 }
 
 // SendVerifyContact sends a verification email to a contact.
-func (m *EmailManager) SendVerifyContact(vasp *pb.VASP, contact *models.Contact) (err error) {
+func (m *EmailManager) SendVerifyContact(vaspID string, contact *models.ContactRecord) (err error) {
 	ctx := VerifyContactData{
-		Name:        contact.Name,
-		VID:         vasp.Id,
+		Name:        contact.Contact.Name,
+		VID:         vaspID,
 		BaseURL:     m.conf.VerifyContactBaseURL,
 		DirectoryID: m.conf.DirectoryID,
-		Token:       contact.Token,
+		Token:       contact.Email.Token,
 	}
 
 	if ctx.Token == "" {
 		err = errors.New("cannot send verify contact: no verification token available")
-		sentry.Error(nil).Err(err).Str("vasp", vasp.Id).Str("contact", contact.Email).Msg("no email verification token available")
+		sentry.Error(nil).Err(err).Str("vasp", vaspID).Str("contact", contact.Email.Email).Msg("no email verification token available")
 		return err
 	}
 
-	if contact.Verified {
-		sentry.Error(nil).Err(err).Str("vasp", vasp.Id).Str("contact", contact.Email).Msg("verification email being sent to a verified contact")
+	if contact.Email.Verified {
+		sentry.Error(nil).Err(err).Str("vasp", vaspID).Str("contact", contact.Email.Email).Msg("verification email being sent to a verified contact")
 	}
 
 	msg, err := VerifyContactEmail(
 		m.serviceEmail.Name, m.serviceEmail.Address,
-		contact.Name, contact.Email,
+		contact.Email.Name, contact.Email.Email,
 		ctx,
 	)
 
@@ -153,7 +146,7 @@ func (m *EmailManager) SendVerifyContact(vasp *pb.VASP, contact *models.Contact)
 		return err
 	}
 
-	contact.AppendEmailLog(string(admin.ResendVerifyContact), msg.Subject)
+	contact.Email.Log(string(admin.ResendVerifyContact), msg.Subject)
 	return nil
 }
 
@@ -173,13 +166,6 @@ func (m *EmailManager) SendReviewRequest(vasp *pb.VASP) (sent int, err error) {
 	// Remove sensitive data so it's not sent in the form.
 	clone := proto.Clone(vasp).(*pb.VASP)
 	models.SetAdminVerificationToken(clone, "[REDACTED]")
-
-	iter := models.NewContactIterator(clone.Contacts)
-	for iter.Next() {
-		contact, _ := iter.Value()
-		_, verified, _ := models.GetContactVerification(contact)
-		models.SetContactVerification(contact, "[REDACTED]", verified)
-	}
 
 	// Marshal the VASP struct for review in the email.
 	jsonpb := protojson.MarshalOptions{
@@ -224,7 +210,7 @@ func (m *EmailManager) SendReviewRequest(vasp *pb.VASP) (sent int, err error) {
 // SendRejectRegistration sends a notification to all VASP contacts that their
 // registration status is rejected without certificate issuance and explains why.
 // Caller must update the VASP record on the data store after calling this function.
-func (m *EmailManager) SendRejectRegistration(vasp *pb.VASP, reason string) (sent int, err error) {
+func (m *EmailManager) SendRejectRegistration(vasp *pb.VASP, contacts *models.Contacts, reason string) (sent int, err error) {
 	var errs *multierror.Error
 	ctx := RejectRegistrationData{
 		VID:                 vasp.Id,
@@ -240,37 +226,29 @@ func (m *EmailManager) SendRejectRegistration(vasp *pb.VASP, reason string) (sen
 
 	// Attempt at least one delivery, don't give up just because one email failed
 	// Track how many emails and errors occurred during delivery.
-	iter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail(), models.SkipUnverified(), models.SkipDuplicates())
+	iter := contacts.NewIterator(models.SkipNoEmail(), models.SkipUnverified(), models.SkipDuplicates())
 	for iter.Next() {
-		var contact *pb.Contact
-		var kind string
-		contact, kind = iter.Value()
-		ctx.Name = contact.Name
+		contact := iter.Contact()
+		ctx.Name = contact.Contact.Name
+
 		msg, err := RejectRegistrationEmail(
 			m.serviceEmail.Name, m.serviceEmail.Address,
-			contact.Name, contact.Email,
+			contact.Email.Name, contact.Email.Email,
 			ctx,
 		)
+
 		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("could not create reject registration email for %s contact: %s", kind, err))
+			errs = multierror.Append(errs, fmt.Errorf("could not create reject registration email for %s contact: %s", contact.Kind, err))
 			continue
 		}
 
 		if err = m.Send(msg); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("could not send reject registration email for %s contact: %s", kind, err))
+			errs = multierror.Append(errs, fmt.Errorf("could not send reject registration email for %s contact: %s", contact.Kind, err))
 			continue
 		}
 
 		sent++
-
-		if err = models.AppendEmailLog(contact, string(admin.ResendRejection), msg.Subject); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("could not log reject registration email for %s contact: %s", kind, err))
-			continue
-		}
-	}
-
-	if iterErrs := iter.Error(); iterErrs != nil {
-		errs = multierror.Append(errs, iterErrs)
+		contact.Email.Log(string(admin.ResendRejection), msg.Subject)
 	}
 
 	if sent == 0 {
@@ -285,7 +263,7 @@ func (m *EmailManager) SendRejectRegistration(vasp *pb.VASP, reason string) (sen
 // only sends the certificate attachment to one email (to limit the delivery of a secure
 // email), ranking the contact emails by priority. Caller must update the VASP record on
 // the data store after calling this function.
-func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent int, err error) {
+func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, contacts *models.Contacts, path string) (sent int, err error) {
 	var errs *multierror.Error
 	ctx := DeliverCertsData{
 		VID:                 vasp.Id,
@@ -303,42 +281,32 @@ func (m *EmailManager) SendDeliverCertificates(vasp *pb.VASP, path string) (sent
 	// Attempt at least one delivery, don't give up just because one email failed
 	// Track how many emails and errors occurred during delivery.
 	// Note: new contact iterator provides the contact email prioritization order.
-	iter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail(), models.SkipUnverified(), models.SkipDuplicates())
+	iter := contacts.NewIterator(models.SkipNoEmail(), models.SkipUnverified(), models.SkipDuplicates())
 	for iter.Next() {
-		var contact *pb.Contact
-		var kind string
-		contact, kind = iter.Value()
-		ctx.Name = contact.Name
+		contact := iter.Contact()
+		ctx.Name = contact.Email.Name
 		msg, err := DeliverCertsEmail(
 			m.serviceEmail.Name, m.serviceEmail.Address,
-			contact.Name, contact.Email,
+			contact.Email.Name, contact.Email.Email,
 			path, ctx,
 		)
 
 		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("could not create deliver certificates email for %s contact: %s", kind, err))
+			errs = multierror.Append(errs, fmt.Errorf("could not create deliver certificates email for %s contact: %s", contact.Kind, err))
 			continue
 		}
 
 		if err = m.Send(msg); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("could not send deliver certificates email for %s contact: %s", kind, err))
+			errs = multierror.Append(errs, fmt.Errorf("could not send deliver certificates email for %s contact: %s", contact.Kind, err))
 			continue
 		}
 
 		sent++
-
-		if err = models.AppendEmailLog(contact, string(admin.ResendDeliverCerts), msg.Subject); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("could not log deliver certificates email for %s contact: %s", kind, err))
-			continue
-		}
+		contact.Email.Log(string(admin.ResendDeliverCerts), msg.Subject)
 
 		// If we've successfully sent one cert delivery message, then stop sending
 		// the message so that we only send it a single time.
 		break
-	}
-
-	if iterErrs := iter.Error(); iterErrs != nil {
-		errs = multierror.Append(errs, iterErrs)
 	}
 
 	if sent == 0 {
@@ -409,7 +377,7 @@ func (m *EmailManager) SendExpiresAdminNotification(vasp *pb.VASP, timeWindow in
 // Helper function for HandleCertificateReissuance that sends reissuance reminder emails
 // a vasp's contacts, ensuring at least one of the contact's receives the reminder or a
 // critical alert is raised.
-func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow int, reissuanceDate time.Time) (err error) {
+func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, contacts *models.Contacts, timeWindow int, reissuanceDate time.Time) (err error) {
 	ctx := ReissuanceReminderData{
 		VID:                 vasp.Id,
 		CommonName:          vasp.CommonName,
@@ -431,23 +399,16 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 	}
 
 	// Iterate through the VASP's verified contacts and send the reissuance reminder email.
-	contactsToNotify, err := getContactsToNotify(vasp.Contacts)
-	if err != nil {
-		return err
-	}
-	if len(contactsToNotify) == 0 {
+	var contactsToNotify []*models.Email
+	if contactsToNotify = getContactsToNotify(contacts); len(contactsToNotify) == 0 {
 		log.WithLevel(zerolog.FatalLevel).Str("vasp_id", vasp.Id).Msg("cert-manager could not find a verified contact for vasp")
 		return nil
 	}
 
 	for _, contact := range contactsToNotify {
 		// Make sure that the reminder email hasn't already been sent to this contact.
-		var emailLog []*models.EmailLogEntry
-		if emailLog, err = models.GetEmailLog(contact); err != nil {
-			return err
-		}
 		reissuanceReminder := string(admin.ReissuanceReminder)
-		emailCount, err := models.CountSentEmails(emailLog, reissuanceReminder, timeWindow)
+		emailCount, err := models.CountSentEmails(contact.SendLog, reissuanceReminder, timeWindow)
 		if err != nil {
 			sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("could not retrieve email count from email log")
 			continue
@@ -472,9 +433,10 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 			sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("error sending reissuance reminder email")
 			continue
 		}
-		if err = models.AppendEmailLog(contact, reissuanceReminder, msg.Subject); err != nil {
-			sentry.Error(nil).Err(err).Str("vasp_id", vasp.Id).Str("contact", contact.Name).Msg("error appending to email log")
-		}
+
+		// Update the email contact with the sent email log entry
+		// Ensure that the caller saves the contact back to the database!
+		contact.Log(reissuanceReminder, msg.Subject)
 	}
 	return nil
 }
@@ -484,38 +446,31 @@ func (m *EmailManager) SendContactReissuanceReminder(vasp *pb.VASP, timeWindow i
 //  1. Send to the Technical contact if verified, else
 //  2. Send to the Administrative contact if verified, else
 //  3. Send to all other verified contacts
-func getContactsToNotify(contacts *pb.Contacts) (contactsToNotify []*pb.Contact, err error) {
-	if verified, err := models.ContactIsVerified(contacts.Technical); err != nil {
-		return nil, err
-	} else if verified {
-		return []*pb.Contact{contacts.Technical}, nil
+func getContactsToNotify(contacts *models.Contacts) []*models.Email {
+	if contacts.IsVerified(models.TechnicalContact) {
+		return []*models.Email{contacts.Get(models.TechnicalContact).Email}
 	}
 
-	if verified, err := models.ContactIsVerified(contacts.Administrative); err != nil {
-		return nil, err
-	} else if verified {
-		return []*pb.Contact{contacts.Administrative}, nil
+	if contacts.IsVerified(models.AdministrativeContact) {
+		return []*models.Email{contacts.Get(models.AdministrativeContact).Email}
 	}
 
-	if verified, err := models.ContactIsVerified(contacts.Legal); err != nil {
-		return nil, err
-	} else if verified {
-		contactsToNotify = append(contactsToNotify, contacts.Legal)
+	contactsToNotify := make([]*models.Email, 0, 2)
+	if contacts.IsVerified(models.LegalContact) {
+		contactsToNotify = append(contactsToNotify, contacts.Get(models.LegalContact).Email)
 	}
 
-	if verified, err := models.ContactIsVerified(contacts.Billing); err != nil {
-		return nil, err
-	} else if verified {
-		contactsToNotify = append(contactsToNotify, contacts.Billing)
+	if contacts.IsVerified(models.BillingContact) {
+		contactsToNotify = append(contactsToNotify, contacts.Get(models.BillingContact).Email)
 	}
 
-	return contactsToNotify, nil
+	return contactsToNotify
 }
 
 // SendReissuanceReminder sends a reminder to all verified contacts that their identity
 // certificates will be expiring soon and that the system will automatically reissue the
 // certs on a particular date.
-func (m *EmailManager) SendReissuanceReminder(vasp *pb.VASP, reissueDate time.Time) (sent int, err error) {
+func (m *EmailManager) SendReissuanceReminder(vasp *pb.VASP, contacts *models.Contacts, reissueDate time.Time) (sent int, err error) {
 	var errs *multierror.Error
 	ctx := ReissuanceReminderData{
 		VID:                 vasp.Id,
@@ -538,37 +493,29 @@ func (m *EmailManager) SendReissuanceReminder(vasp *pb.VASP, reissueDate time.Ti
 
 	// Attempt at least one delivery, don't give up just because one email failed.
 	// Track how many emails and errors occurred during delivery.
-	iter := models.NewContactIterator(vasp.Contacts, models.SkipNoEmail(), models.SkipUnverified(), models.SkipDuplicates())
+	iter := contacts.NewIterator(models.SkipNoEmail(), models.SkipUnverified(), models.SkipDuplicates())
 	for iter.Next() {
-		contact, kind := iter.Value()
-		ctx.Name = contact.Name
+		contact := iter.Contact()
+		ctx.Name = contact.Contact.Name
 
 		msg, err := ReissuanceReminderEmail(
 			m.serviceEmail.Name, m.serviceEmail.Address,
-			contact.Name, contact.Email,
+			contact.Email.Name, contact.Email.Email,
 			ctx,
 		)
 
 		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("could not create reissuance reminder email for %s contact: %s", kind, err))
+			errs = multierror.Append(errs, fmt.Errorf("could not create reissuance reminder email for %s contact: %s", contact.Kind, err))
 			continue
 		}
 
 		if err = m.Send(msg); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("could not send reissuance reminder email for %s contact: %s", kind, err))
+			errs = multierror.Append(errs, fmt.Errorf("could not send reissuance reminder email for %s contact: %s", contact.Kind, err))
 			continue
 		}
 
 		sent++
-
-		if err = models.AppendEmailLog(contact, string(admin.ReissuanceReminder), msg.Subject); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("could not log reissuance reminder email for %s contact: %s", kind, err))
-			continue
-		}
-	}
-
-	if iterErrs := iter.Error(); iterErrs != nil {
-		errs = multierror.Append(errs, iterErrs)
+		contact.Email.Log(string(admin.ReissuanceReminder), msg.Subject)
 	}
 
 	if sent == 0 {
@@ -581,7 +528,7 @@ func (m *EmailManager) SendReissuanceReminder(vasp *pb.VASP, reissueDate time.Ti
 // SendReissuanceStarted sends the PKCS12 password via a secure one time link. This
 // method only sends the PKCS12 password to one email (to limit the delivery of secure
 // emails), ranking the contact emails by priority.
-func (m *EmailManager) SendReissuanceStarted(vasp *pb.VASP, whisperLink string) (sent int, err error) {
+func (m *EmailManager) SendReissuanceStarted(vasp *pb.VASP, contacts *models.Contacts, whisperLink string) (sent int, err error) {
 	var errs *multierror.Error
 	ctx := ReissuanceStartedData{
 		VID:                 vasp.Id,
@@ -599,41 +546,33 @@ func (m *EmailManager) SendReissuanceStarted(vasp *pb.VASP, whisperLink string) 
 	// Attempt at least one delivery, don't give up just because one email failed.
 	// Track how many emails and errors are occurring during delivery.
 	// Note: new contact iterator provides the contact email prioritization order.
-	iter := models.NewContactIterator(vasp.Contacts, models.SkipDuplicates(), models.SkipUnverified(), models.SkipDuplicates())
+	iter := contacts.NewIterator(models.SkipDuplicates(), models.SkipUnverified(), models.SkipDuplicates())
 	for iter.Next() {
-		contact, kind := iter.Value()
-		ctx.Name = contact.Name
+		contact := iter.Contact()
+		ctx.Name = contact.Contact.Name
 
 		msg, err := ReissuanceStartedEmail(
 			m.serviceEmail.Name, m.serviceEmail.Address,
-			contact.Name, contact.Email,
+			contact.Email.Name, contact.Email.Email,
 			ctx,
 		)
 
 		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("could not create reissuance started email for %s contact: %s", kind, err))
+			errs = multierror.Append(errs, fmt.Errorf("could not create reissuance started email for %s contact: %s", contact.Kind, err))
 			continue
 		}
 
 		if err = m.Send(msg); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("could not send reissuance started email for %s contact: %s", kind, err))
+			errs = multierror.Append(errs, fmt.Errorf("could not send reissuance started email for %s contact: %s", contact.Kind, err))
 			continue
 		}
 
 		sent++
-
-		if err = models.AppendEmailLog(contact, string(admin.ReissuanceStarted), msg.Subject); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("could not log reissuance started email for %s contact: %s", kind, err))
-			continue
-		}
+		contact.Email.Log(string(admin.ReissuanceStarted), msg.Subject)
 
 		// If we've successfully send one reissuance started message, ten stop sending
 		// messages to minimize how many contacts receive the secure one-time link.
 		break
-	}
-
-	if iterErrs := iter.Error(); iterErrs != nil {
-		errs = multierror.Append(errs, iterErrs)
 	}
 
 	if sent == 0 {

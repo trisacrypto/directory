@@ -453,11 +453,11 @@ func (s *gdsTestSuite) TestAutocomplete() {
 	require.Equal(http.StatusOK, rep.StatusCode)
 
 	// Construct the expected response
-	charlie, err := s.fixtures.GetVASP("charliebank")
+	charlie, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err)
-	delta, err := s.fixtures.GetVASP("delta")
+	delta, _, err := s.fixtures.GetVASP("delta")
 	require.NoError(err)
-	hotel, err := s.fixtures.GetVASP("hotel")
+	hotel, _, err := s.fixtures.GetVASP("hotel")
 	require.NoError(err)
 	expected := &admin.AutocompleteReply{
 		Names: map[string]string{
@@ -488,11 +488,11 @@ func (s *gdsTestSuite) TestListVASPs() {
 		})
 	}
 
-	charlie, err := s.fixtures.GetVASP("charliebank")
+	charlie, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err)
-	delta, err := s.fixtures.GetVASP("delta")
+	delta, _, err := s.fixtures.GetVASP("delta")
 	require.NoError(err)
-	hotel, err := s.fixtures.GetVASP("hotel")
+	hotel, _, err := s.fixtures.GetVASP("hotel")
 	require.NoError(err)
 
 	snippets := []admin.VASPSnippet{
@@ -646,7 +646,7 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 	rep := s.doRequest(a.RetrieveVASP, c, w, nil)
 	require.Equal(http.StatusNotFound, rep.StatusCode)
 
-	hotel, err := s.fixtures.GetVASP("hotel")
+	hotel, _, err := s.fixtures.GetVASP("hotel")
 	require.NoError(err)
 
 	// Retrieve a VASP that exists
@@ -771,7 +771,7 @@ func (s *gdsTestSuite) TestRetrieveVASP() {
 	// Compare to the reference VASP after removing the serial numbers and extra data
 	// Note: This modifies the original fixtures so LoadReferenceFixtures() must be
 	// deferred in order to restore them before the next test.
-	matches, err := s.fixtures.CompareFixture(wire.NamespaceVASPs, hotel.Id, actualVASP, true, true)
+	matches, err := s.fixtures.CompareFixture(wire.NamespaceVASPs, hotel.Id, actualVASP, true)
 	require.NoError(err, "could not compare retrieved VASP to fixture")
 	require.True(matches, "retrieved VASP does not match fixture")
 
@@ -805,7 +805,7 @@ func (s *gdsTestSuite) TestUpdateVASP() {
 	s.APIError(http.StatusNotFound, "could not retrieve VASP record by ID", rep)
 
 	// Update a VASP that exists
-	charlieVASP, err := s.fixtures.GetVASP("charliebank")
+	charlieVASP, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err, "could not get charliebank VASP")
 	charlieID := charlieVASP.Id
 	request.path = "/v2/vasps/" + charlieID
@@ -845,13 +845,13 @@ func (s *gdsTestSuite) TestDeleteVASP() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	delta, err := s.fixtures.GetVASP("delta")
+	delta, _, err := s.fixtures.GetVASP("delta")
 	require.NoError(err, "could not get delta VASP")
-	juliet, err := s.fixtures.GetVASP("juliet")
+	juliet, _, err := s.fixtures.GetVASP("juliet")
 	require.NoError(err, "could not get juliet VASP")
 	xray, err := s.fixtures.GetCertReq("xray")
 	require.NoError(err, "could not get xray cert request")
-	golf, err := s.fixtures.GetVASP("golfbucks")
+	golf, _, err := s.fixtures.GetVASP("golfbucks")
 	require.NoError(err, "could not get golfbucks VASP")
 
 	// Attempt to delete a VASP that doesn't exist
@@ -922,11 +922,11 @@ func (s *gdsTestSuite) TestListCertificates() {
 	a := s.svc.GetAdmin()
 
 	// CharlieBank has no certificates
-	charlie, err := s.fixtures.GetVASP("charliebank")
+	charlie, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err, "could not get charliebank VASP")
 
 	// HotelCorp has a few certificates
-	hotel, err := s.fixtures.GetVASP("hotel")
+	hotel, _, err := s.fixtures.GetVASP("hotel")
 	require.NoError(err, "could not get hotel VASP")
 	uniform, err := s.fixtures.GetCert("uniform")
 	require.NoError(err, "could not get uniform certificate")
@@ -1011,7 +1011,7 @@ func (s *gdsTestSuite) TestReplaceContact() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	charlieVASP, err := s.fixtures.GetVASP("charliebank")
+	charlieVASP, contacts, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err, "could not get charliebank VASP")
 	charlieID := charlieVASP.Id
 
@@ -1148,6 +1148,7 @@ func (s *gdsTestSuite) TestReplaceContact() {
 	require.NotNil(vasp.Contacts.Technical)
 	require.Equal(contact.Name, vasp.Contacts.Technical.Name)
 	require.Equal(contact.Email, vasp.Contacts.Technical.Email)
+
 	// Should not be verified
 	token, verified, err = models.GetContactVerification(vasp.Contacts.Technical)
 	require.NoError(err, "could not retrieve contact verification")
@@ -1155,24 +1156,10 @@ func (s *gdsTestSuite) TestReplaceContact() {
 	require.False(verified)
 
 	// Should send verification emails to the two contacts
-	messages := []*emails.EmailMeta{
-		{
-			Contact:   vasp.Contacts.Administrative,
-			To:        "clark.kent@charliebank.com",
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.VerifyContactRE,
-			Reason:    "verify_contact",
-			Timestamp: adminSent,
-		},
-		{
-			Contact:   vasp.Contacts.Technical,
-			To:        "lois.lane@charliebank.com",
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.VerifyContactRE,
-			Reason:    "verify_contact",
-			Timestamp: technicalSent,
-		},
-	}
+	messages := s.expectedEmails(
+		emails.Expected(contacts.Administrative(), emails.VerifyContactRE, adminSent),
+		emails.Expected(contacts.Technical(), emails.VerifyContactRE, technicalSent),
+	)
 	emails.CheckEmails(s.T(), messages)
 }
 
@@ -1185,7 +1172,7 @@ func (s *gdsTestSuite) TestDeleteContact() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	charlieVASP, err := s.fixtures.GetVASP("charliebank")
+	charlieVASP, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err, "could not retrieve VASP record")
 	charlieID := charlieVASP.Id
 
@@ -1250,7 +1237,7 @@ func (s *gdsTestSuite) TestCreateReviewNote() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	charlie, err := s.fixtures.GetVASP("charliebank")
+	charlie, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err, "could not retrieve VASP record")
 
 	// Supplying an invalid note ID
@@ -1328,7 +1315,7 @@ func (s *gdsTestSuite) TestListReviewNotes() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	charlie, err := s.fixtures.GetVASP("charliebank")
+	charlie, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err)
 
 	// Supplying an invalid VASP ID
@@ -1368,7 +1355,7 @@ func (s *gdsTestSuite) TestUpdateReviewNote() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	charlie, err := s.fixtures.GetVASP("charliebank")
+	charlie, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err)
 	noteID := "5daa4ff0-9011-4b61-a8b3-9b0ff1ec4927"
 
@@ -1452,7 +1439,7 @@ func (s *gdsTestSuite) TestDeleteReviewNote() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	charlie, err := s.fixtures.GetVASP("charliebank")
+	charlie, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err)
 	noteID := "5daa4ff0-9011-4b61-a8b3-9b0ff1ec4927"
 
@@ -1502,9 +1489,9 @@ func (s *gdsTestSuite) TestReviewToken() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	echo, err := s.fixtures.GetVASP("echo")
+	echo, _, err := s.fixtures.GetVASP("echo")
 	require.NoError(err)
-	juliet, err := s.fixtures.GetVASP("juliet")
+	juliet, _, err := s.fixtures.GetVASP("juliet")
 	require.NoError(err)
 
 	require.NotEqual(pb.VerificationState_PENDING_REVIEW, echo.VerificationStatus, "echo must not be in PENDING_REVIEW for this test to pass")
@@ -1554,7 +1541,7 @@ func (s *gdsTestSuite) TestReviewInvalid() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	julietVASP, err := s.fixtures.GetVASP("juliet")
+	julietVASP, _, err := s.fixtures.GetVASP("juliet")
 	require.NoError(err)
 
 	// Supplying an invalid VASP ID
@@ -1608,9 +1595,9 @@ func (s *gdsTestSuite) TestReviewAccept() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	charlie, err := s.fixtures.GetVASP("charliebank")
+	charlie, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err)
-	julietVASP, err := s.fixtures.GetVASP("juliet")
+	julietVASP, _, err := s.fixtures.GetVASP("juliet")
 	require.NoError(err)
 	xray, err := s.fixtures.GetCertReq("xray")
 	require.NoError(err)
@@ -1700,21 +1687,24 @@ func (s *gdsTestSuite) TestReviewReject() {
 	defer s.ResetFixtures()
 	defer mock.PurgeEmails()
 
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	charlie, err := s.fixtures.GetVASP("charliebank")
+	charlie, charlieContacts, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err)
-	julietVASP, err := s.fixtures.GetVASP("juliet")
+	julietVASP, julietContacts, err := s.fixtures.GetVASP("juliet")
 	require.NoError(err)
 	xray, err := s.fixtures.GetCertReq("xray")
 	require.NoError(err)
 
 	// Clear email logs to make testing easier
-	require.NoError(fixtures.ClearContactEmailLogs(charlie), "could not clear contact email logs")
-	require.NoError(s.svc.GetStore().UpdateVASP(context.Background(), charlie))
-	require.NoError(fixtures.ClearContactEmailLogs(julietVASP), "could not clear contact email logs")
-	require.NoError(s.svc.GetStore().UpdateVASP(context.Background(), julietVASP))
+	require.NoError(fixtures.ClearContactEmailLogs(charlieContacts), "could not clear contact email logs")
+	require.NoError(s.svc.GetStore().UpdateVASP(ctx, charlie))
+	require.NoError(fixtures.ClearContactEmailLogs(julietContacts), "could not clear contact email logs")
+	require.NoError(s.svc.GetStore().UpdateVASP(ctx, julietVASP))
 
 	// Test when VASP does not have admin verification token
 	request := &httpRequest{
@@ -1802,32 +1792,21 @@ func (s *gdsTestSuite) TestReviewReject() {
 	require.Len(ids, 0)
 
 	// Certificate request should be deleted
-	_, err = s.svc.GetStore().RetrieveCertReq(context.Background(), xray.Id)
+	_, err = s.svc.GetStore().RetrieveCertReq(ctx, xray.Id)
 	require.Error(err)
 
-	emailLog, err := models.GetEmailLog(v.Contacts.Administrative)
-	require.NoError(err)
+	contacts, err := s.svc.GetStore().VASPContacts(ctx, v)
+	require.NoError(err, "could not fetch contacts from database")
+
+	// Administrative contact should have been sent the email
+	emailLog := contacts.Logs(models.AdministrativeContact)
 	require.Len(emailLog, 1)
 
 	// Rejection emails should be sent to the verified contacts
-	messages := []*emails.EmailMeta{
-		{
-			Contact:   v.Contacts.Administrative,
-			To:        v.Contacts.Administrative.Email,
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.RejectRegistrationRE,
-			Reason:    string(admin.ResendRejection),
-			Timestamp: sent,
-		},
-		{
-			Contact:   v.Contacts.Legal,
-			To:        v.Contacts.Legal.Email,
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.RejectRegistrationRE,
-			Reason:    string(admin.ResendRejection),
-			Timestamp: sent,
-		},
-	}
+	messages := s.expectedEmails(
+		emails.Expected(contacts.Administrative(), emails.RejectRegistrationRE, sent),
+		emails.Expected(contacts.Legal(), emails.RejectRegistrationRE, sent),
+	)
 	emails.CheckEmails(s.T(), messages)
 }
 
@@ -1842,15 +1821,15 @@ func (s *gdsTestSuite) TestResend() {
 	require := s.Require()
 	a := s.svc.GetAdmin()
 
-	vaspErrored, err := s.fixtures.GetVASP("golfbucks")
+	vaspErrored, vaspErroredContacts, err := s.fixtures.GetVASP("golfbucks")
 	require.NoError(err)
-	vaspRejected, err := s.fixtures.GetVASP("lima")
+	vaspRejected, vaspRejectedContacts, err := s.fixtures.GetVASP("lima")
 	require.NoError(err)
 
 	// Clear email logs to make testing easier
-	require.NoError(fixtures.ClearContactEmailLogs(vaspErrored), "could not clear vasp email logs")
+	require.NoError(fixtures.ClearContactEmailLogs(vaspErroredContacts), "could not clear vasp email logs")
 	require.NoError(s.svc.GetStore().UpdateVASP(context.Background(), vaspErrored), "could not update vasp")
-	require.NoError(fixtures.ClearContactEmailLogs(vaspRejected), "could not clear vasp email logs")
+	require.NoError(fixtures.ClearContactEmailLogs(vaspRejectedContacts), "could not clear vasp email logs")
 	require.NoError(s.svc.GetStore().UpdateVASP(context.Background(), vaspRejected), "could not update vasp")
 
 	// Supplying an invalid VASP ID
@@ -1921,43 +1900,24 @@ func (s *gdsTestSuite) TestResend() {
 	require.Contains(actual.Message, "rejection emails resent")
 
 	// Verify that all emails were sent
-	errored, err := s.svc.GetStore().RetrieveVASP(context.Background(), vaspErrored.Id)
-	require.NoError(err)
-	rejected, err := s.svc.GetStore().RetrieveVASP(context.Background(), vaspRejected.Id)
-	require.NoError(err)
+	// TODO: do we need to retrieve the contacts from the store for this test to work?
+	// errored, err := s.svc.GetStore().RetrieveVASP(context.Background(), vaspErrored.Id)
+	// require.NoError(err)
+	// rejected, err := s.svc.GetStore().RetrieveVASP(context.Background(), vaspRejected.Id)
+	// require.NoError(err)
 
-	messages := []*emails.EmailMeta{
-		{
-			Contact:   errored.Contacts.Billing,
-			To:        errored.Contacts.Billing.Email,
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.VerifyContactRE,
-			Reason:    "verify_contact",
-			Timestamp: firstSend,
-		},
-		{
+	messages := s.expectedEmails(
+		emails.Expected(vaspErroredContacts.Billing(), emails.RejectRegistrationRE, firstSend),
+		&emails.EmailMeta{
 			To:        s.svc.GetConf().Email.AdminEmail,
 			From:      s.svc.GetConf().Email.ServiceEmail,
 			Subject:   emails.ReviewRequestRE,
 			Timestamp: secondSend,
 		},
-		{
-			Contact:   rejected.Contacts.Administrative,
-			To:        rejected.Contacts.Administrative.Email,
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.RejectRegistrationRE,
-			Reason:    "rejection",
-			Timestamp: thirdSend,
-		},
-		{
-			Contact:   rejected.Contacts.Legal,
-			To:        rejected.Contacts.Legal.Email,
-			From:      s.svc.GetConf().Email.ServiceEmail,
-			Subject:   emails.RejectRegistrationRE,
-			Reason:    "rejection",
-			Timestamp: thirdSend,
-		},
-	}
+		emails.Expected(vaspRejectedContacts.Administrative(), emails.RejectRegistrationRE, thirdSend),
+		emails.Expected(vaspRejectedContacts.Legal(), emails.RejectRegistrationRE, thirdSend),
+	)
+
 	emails.CheckEmails(s.T(), messages)
 }
 
@@ -2047,19 +2007,19 @@ func (s *gdsTestSuite) TestListCountries() {
 	a := s.svc.GetAdmin()
 
 	// Alter the VASPs so we can test the country record sorting
-	charlie, err := s.fixtures.GetVASP("charliebank")
+	charlie, _, err := s.fixtures.GetVASP("charliebank")
 	require.NoError(err, "could not get charliebank fixture")
 	charlie.Entity.CountryOfRegistration = "US"
 	charlie.VerificationStatus = pb.VerificationState_VERIFIED
 	require.NoError(s.svc.GetStore().UpdateVASP(context.Background(), charlie), "could not update charliebank")
 
-	delta, err := s.fixtures.GetVASP("delta")
+	delta, _, err := s.fixtures.GetVASP("delta")
 	require.NoError(err, "could not get delta fixture")
 	delta.Entity.CountryOfRegistration = "US"
 	delta.VerificationStatus = pb.VerificationState_VERIFIED
 	require.NoError(s.svc.GetStore().UpdateVASP(context.Background(), delta), "could not update delta")
 
-	hotel, err := s.fixtures.GetVASP("hotel")
+	hotel, _, err := s.fixtures.GetVASP("hotel")
 	require.NoError(err, "could not get hotel fixture")
 	hotel.Entity.CountryOfRegistration = "SG"
 	hotel.VerificationStatus = pb.VerificationState_VERIFIED
