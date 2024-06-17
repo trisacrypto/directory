@@ -13,7 +13,7 @@ describe('<LandingHeader />', () => {
       render(<LandingHeader />, { locale: 'en' });
 
       expect(screen.getByText(/documentation/i)).toHaveAttribute('href', `${TRISA_BASE_URL}/en`);
-      expect(screen.getByText(/about trisa/i)).toHaveAttribute('href', 'https://trisa.dev/reference/faq/index.html');
+      expect(screen.getByText(/about trisa/i)).toHaveAttribute('href', 'https://trisa.io');
     });
 
     it('should target the german website', async () => {

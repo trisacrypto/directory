@@ -147,7 +147,7 @@ export default function IntegrateAndComply() {
                           </Link>
                         </ListItem>
                         <ListItem>
-                          <Link href="https://trisa.dev/" isExternal>
+                          <Link href="https://trisa.dev" isExternal>
                             <Trans id="Documentation">Documentation</Trans>
                           </Link>
                         </ListItem>

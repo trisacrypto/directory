@@ -178,7 +178,7 @@ export default function VaspVerification() {
                 <chakra.dd mt={2}>
                   <UnorderedList color={'#1F4CED'}>
                     <ListItem fontSize="1rem">
-                      <Link isExternal href="https://trisa.dev/reference/faq/index.html">
+                      <Link isExternal href="https://trisa.io/getting-started-with-trisa/">
                         <Trans id="Learn How TRISA Works">Learn How TRISA Works</Trans>
                       </Link>
                     </ListItem>

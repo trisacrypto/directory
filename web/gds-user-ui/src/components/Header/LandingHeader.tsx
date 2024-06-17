@@ -75,7 +75,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
               <Stack pr={2}>
                 <LanguagesDropdown />
               </Stack>
-              <MenuItem to="https://trisa.dev/reference/faq/index.html" data-testid="about">
+              <MenuItem to="https://trisa.io" data-testid="about">
                 <Trans id="About TRISA">About TRISA</Trans>
               </MenuItem>
               <MenuItem data-testid="documentation" to={`${TRISA_BASE_URL}/${locale}`}>
@@ -112,7 +112,7 @@ const LandingHeader = (props: FlexProps): JSX.Element => {
                   }}
                 />
                 <DrawerBody mt="50px" px={5}>
-                  <MenuItem to="https://trisa.dev/reference/faq/index.html" color="white" pb={0}>
+                  <MenuItem to="https://trisa.io" color="white" pb={0}>
                     <Trans id="About TRISA">About TRISA</Trans>
                   </MenuItem>
                   <MenuItem to={`${TRISA_BASE_URL}/${locale}`} color="white">
