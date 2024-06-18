@@ -2555,8 +2555,8 @@ msgid "Verified VASPs"
 msgstr ""
 
 #: src/components/Section/JoinUs.tsx:130
-#~ msgid "View Member List"
-#~ msgstr ""
+msgid "View Member List"
+msgstr ""
 
 #: src/components/CertificateManagement/CertificateValidityAlert.tsx:40
 #: src/components/CertificateManagement/CertificateValidityAlert.tsx:67

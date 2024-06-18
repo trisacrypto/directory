@@ -1018,7 +1018,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
               >
                 <a
                   class="chakra-link emotion-6"
-                  href="https://trisa.dev/reference/faq/index.html"
+                  href="https://trisa.io"
                   rel="noopener"
                   target="_blank"
                 >
@@ -1284,7 +1284,9 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
              
             <a
               class="chakra-link emotion-61"
-              href="https://trisa.dev"
+              href="https://trisa.io"
+              rel="noopener"
+              target="_blank"
             >
               the TRISA architecture
             </a>
@@ -1299,6 +1301,8 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
             <a
               class="chakra-link emotion-61"
               href="https://rotational.io"
+              rel="noopener"
+              target="_blank"
             >
                
               Rotational Labs
@@ -1308,7 +1312,9 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
              
             <a
               class="chakra-link emotion-61"
-              href="https://trisa.dev"
+              href="https://trisa.io"
+              rel="noopener"
+              target="_blank"
             >
               TRISA
             </a>
