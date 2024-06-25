@@ -17,6 +17,7 @@ export type NeedsAttentionProps = {
 
 const NeedsAttention = ({ buttonText, onClick }: NeedsAttentionProps) => {
   const { attentionResponse } = useFetchAttention();
+  console.log(attentionResponse);
 
   if (
     attentionResponse &&
@@ -38,9 +39,9 @@ const NeedsAttention = ({ buttonText, onClick }: NeedsAttentionProps) => {
         {attentionResponse?.messages?.map((item: AttentionResponseType, key: any) => (
           <AttentionAlert
             key={key}
-            action={item.action}
-            severity={item.severity}
-            message={item.message}
+            action={item?.action}
+            severity={item?.severity}
+            message={item?.message}
             onClick={onClick}
             buttonText={buttonText}
           />
