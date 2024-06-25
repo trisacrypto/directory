@@ -79,15 +79,34 @@ msgstr ""
 msgid "1 Basic Details"
 msgstr "1 Basic Details"
 
+#: src/components/Section/IntegrateAndComply.tsx:86
+msgid "1. Open Source/DIY"
+msgstr "1. Open Source/DIY"
+
 #: src/components/Section/VaspVerification.tsx:108
 msgid "2 Legal Person"
 msgstr "2 Legal Person"
+
+#: src/components/Section/IntegrateAndComply.tsx:144
+msgid "2-3 weeks"
+msgstr "2-3 weeks"
+
+#: src/components/Section/IntegrateAndComply.tsx:133
+msgid "2. One-time Setup"
+msgstr "2. One-time Setup"
 
 #: src/components/Section/VaspVerification.tsx:123
 msgid "3 Contacts"
 msgstr "3 Contacts"
 
-#: src/components/Section/IntegrateAndComply.tsx:130
+#: src/components/Section/IntegrateAndComply.tsx:97
+msgid "3-6 months"
+msgstr "3-6 months"
+
+#: src/components/Section/IntegrateAndComply.tsx:176
+msgid "3-7 days"
+msgstr "3-7 days"
+
 #: src/components/TravelRuleProviders/index.tsx:9
 msgid "3rd Party Travel Rule Providers"
 msgstr "3rd Party Travel Rule Providers"
@@ -234,7 +253,7 @@ msgid "All TRISA members must complete TRISA’s VASP verification and due dilig
 msgstr "All TRISA members must complete TRISA’s VASP verification and due diligence process to become a Verified VASP."
 
 #: src/components/Form/SignupForm.tsx:85
-#: src/components/Section/IntegrateAndComply.tsx:194
+#: src/components/Section/IntegrateAndComply.tsx:237
 #: src/components/Section/VaspVerification.tsx:217
 msgid "Already have an account?"
 msgstr "Already have an account?"
@@ -314,6 +333,12 @@ msgstr "Basic Details"
 #: src/components/Head/LandingHead.tsx:33
 msgid "Become Travel Rule compliant."
 msgstr "Become Travel Rule compliant."
+
+#: src/components/Section/IntegrateAndComply.tsx:92
+#: src/components/Section/IntegrateAndComply.tsx:139
+#: src/components/Section/IntegrateAndComply.tsx:171
+msgid "Best for:"
+msgstr "Best for:"
 
 #: src/components/Contacts/ContactsForm.tsx:166
 msgid "Billing Contact (optional)"
@@ -546,11 +571,15 @@ msgstr "Compliance Officer"
 msgid "Compliance officer or legal contact for requests about the compliance requirements and legal status of your organization. A business phone number is required to complete physical verification for MainNet registration. Please provide a phone number where the Legal/ Compliance contact can be contacted."
 msgstr "Compliance officer or legal contact for requests about the compliance requirements and legal status of your organization. A business phone number is required to complete physical verification for MainNet registration. Please provide a phone number where the Legal/ Compliance contact can be contacted."
 
+#: src/components/Section/IntegrateAndComply.tsx:172
+msgid "Compliance teams seeking a turnkey solution with minimal effort while leveraging expert support & maintenance for sustained regulatory adherence."
+msgstr "Compliance teams seeking a turnkey solution with minimal effort while leveraging expert support & maintenance for sustained regulatory adherence."
+
 #: src/components/CertificateRegistration/CertificateRegistrationTable.tsx:22
 msgid "Compliance, Technical, Admininstrative, Billing"
 msgstr "Compliance, Technical, Admininstrative, Billing"
 
-#: src/components/Section/IntegrateAndComply.tsx:51
+#: src/components/Section/IntegrateAndComply.tsx:50
 msgid "Comply with the Travel Rule"
 msgstr "Comply with the Travel Rule"
 
@@ -573,6 +602,11 @@ msgstr "Contact Details"
 #: src/components/Collaborators/AddCollaborator/AddCollaboratorForm.tsx:115
 msgid "Contact Name"
 msgstr "Contact Name"
+
+#: src/components/Section/IntegrateAndComply.tsx:153
+#: src/components/Section/IntegrateAndComply.tsx:185
+msgid "Contact Rotational Labs at <0>support@rotational.io</0> to request information."
+msgstr "Contact Rotational Labs at <0>support@rotational.io</0> to request information."
 
 #: src/components/Section/UserEmailConfirmation.tsx:27
 msgid "Contact Verified"
@@ -621,6 +655,12 @@ msgstr "Copied"
 msgid "Copy"
 msgstr "Copy"
 
+#: src/components/Section/IntegrateAndComply.tsx:100
+#: src/components/Section/IntegrateAndComply.tsx:147
+#: src/components/Section/IntegrateAndComply.tsx:179
+msgid "Cost:"
+msgstr "Cost:"
+
 #: src/components/CertificateDetails/CertificateDetails.tsx:229
 #: src/components/CertificateDetails/CertificateDetails.tsx:292
 #: src/components/CertificateInventory/index.tsx:212
@@ -666,7 +706,7 @@ msgid "Create Your Account"
 msgstr "Create Your Account"
 
 #: src/components/Section/GettingStarted.tsx:14
-#: src/components/Section/IntegrateAndComply.tsx:191
+#: src/components/Section/IntegrateAndComply.tsx:234
 #: src/components/Section/VaspVerification.tsx:213
 msgid "Create account"
 msgstr "Create account"
@@ -748,6 +788,12 @@ msgstr "Delete the following collaborator from the VASP account. The collaborato
 msgid "Description"
 msgstr "Description"
 
+#: src/components/Section/IntegrateAndComply.tsx:88
+#: src/components/Section/IntegrateAndComply.tsx:135
+#: src/components/Section/IntegrateAndComply.tsx:167
+msgid "Description:"
+msgstr "Description:"
+
 #: src/components/CertificateManagement/CertificateDataTable.tsx:41
 #: src/components/Tables/MembersRow.tsx:50
 msgid "Details"
@@ -763,7 +809,7 @@ msgstr "Directory Lookup"
 #: src/components/Navbar/Landing/MobileNav.tsx:72
 #: src/components/Navbar/Landing/Nav.tsx:22
 #: src/components/OpenSourceResources/index.tsx:20
-#: src/components/Section/IntegrateAndComply.tsx:151
+#: src/components/Section/IntegrateAndComply.tsx:217
 msgid "Documentation"
 msgstr "Documentation"
 
@@ -824,6 +870,10 @@ msgstr ""
 #: src/components/TrisaVerifiedLogo/index.tsx:49
 msgid "Download"
 msgstr "Download"
+
+#: src/components/Section/IntegrateAndComply.tsx:116
+msgid "Download <0>Docker image</0>"
+msgstr "Download <0>Docker image</0>"
 
 #: src/constants/national-identification.ts:12
 msgid "Driver's License Number"
@@ -906,9 +956,23 @@ msgstr "Enter the name and type of name by which the legal person is known. At l
 msgid "Enter your email address"
 msgstr "Enter your email address"
 
+#: src/components/Section/IntegrateAndComply.tsx:71
+msgid "Envoy is an <0>open source messaging tool</0> built to help compliance teams handle travel rule exchanges efficiently and securely. It is designed by compliance experts and TRISA engineers to provide simplified data exchanges using the TRISA or TRP protocols."
+msgstr "Envoy is an <0>open source messaging tool</0> built to help compliance teams handle travel rule exchanges efficiently and securely. It is designed by compliance experts and TRISA engineers to provide simplified data exchanges using the TRISA or TRP protocols."
+
+#: src/components/Section/IntegrateAndComply.tsx:89
+msgid "Envoy is open source (MIT License). Download, install, integrate, host and support your own Envoy node and service."
+msgstr "Envoy is open source (MIT License). Download, install, integrate, host and support your own Envoy node and service."
+
 #: src/components/CertificateReview/index.tsx:71
 msgid "Error Submitting Certificate"
 msgstr "Error Submitting Certificate"
+
+#: src/components/Section/IntegrateAndComply.tsx:96
+#: src/components/Section/IntegrateAndComply.tsx:143
+#: src/components/Section/IntegrateAndComply.tsx:175
+msgid "Est. Time:"
+msgstr "Est. Time:"
 
 #: src/components/CertificateManagement/CertificateDataTable.tsx:35
 #: src/components/CertificateManagement/MainnetTestnetCertificates.tsx:64
@@ -1007,8 +1071,8 @@ msgid "Git Revision"
 msgstr "Git Revision"
 
 #: src/components/Section/IntegrateAndComply.tsx:99
-msgid "GitHub repository"
-msgstr "GitHub repository"
+#~ msgid "GitHub repository"
+#~ msgstr "GitHub repository"
 
 #: src/modules/dashboard/member/utils.ts:107
 msgid "Government Entity"
@@ -1023,9 +1087,13 @@ msgstr "Guest"
 msgid "Home"
 msgstr "Home"
 
+#: src/components/Section/IntegrateAndComply.tsx:202
+msgid "How TRISA Works"
+msgstr "How TRISA Works"
+
 #: src/components/Section/IntegrateAndComply.tsx:118
-msgid "How to set up your own node?"
-msgstr "How to set up your own node?"
+#~ msgid "How to set up your own node?"
+#~ msgstr "How to set up your own node?"
 
 #: src/components/ConfirmIdentityCertificateRequest/index.tsx:54
 msgid "I acknowledge that requesting a new X.509 Identity Certificate will invalidate and revoke my organization’s current X.509 Identity Certificate."
@@ -1131,7 +1199,11 @@ msgstr "Information to ensure that required compliance information exchanges are
 msgid "Integrate and Comply"
 msgstr "Integrate and Comply"
 
-#: src/components/Section/IntegrateAndComply.tsx:44
+#: src/components/Section/IntegrateAndComply.tsx:66
+msgid "Integrate with <0>TRISA</0> using Envoy to begin exchanging Travel Rule compliance data."
+msgstr "Integrate with <0>TRISA</0> using Envoy to begin exchanging Travel Rule compliance data."
+
+#: src/components/Section/IntegrateAndComply.tsx:43
 msgid "Integrate with TRISA."
 msgstr "Integrate with TRISA."
 
@@ -1218,7 +1290,6 @@ msgstr "Last Login:"
 msgid "Last Updated"
 msgstr "Last Updated"
 
-#: src/components/Section/IntegrateAndComply.tsx:176
 #: src/components/Section/VaspVerification.tsx:182
 msgid "Learn How TRISA Works"
 msgstr "Learn How TRISA Works"
@@ -1297,7 +1368,7 @@ msgid "Log in to TRISA’s Global Directory Service"
 msgstr "Log in to TRISA’s Global Directory Service"
 
 #: src/components/Form/SignupForm.tsx:91
-#: src/components/Section/IntegrateAndComply.tsx:198
+#: src/components/Section/IntegrateAndComply.tsx:241
 #: src/components/Section/VaspVerification.tsx:221
 msgid "Log in."
 msgstr "Log in."
@@ -1369,8 +1440,8 @@ msgid "Meet Alice VASP, Bob VASP and Evil VASP"
 msgstr "Meet Alice VASP, Bob VASP and Evil VASP"
 
 #: src/components/Section/IntegrateAndComply.tsx:163
-msgid "Meet Alice VASP, Bob VASP, and “Evil” VASP"
-msgstr "Meet Alice VASP, Bob VASP, and “Evil” VASP"
+#~ msgid "Meet Alice VASP, Bob VASP, and “Evil” VASP"
+#~ msgstr "Meet Alice VASP, Bob VASP, and “Evil” VASP"
 
 #: src/utils/menu.tsx:54
 msgid "Member Directory"
@@ -1449,7 +1520,7 @@ msgstr "National Identification"
 msgid "National Jurisdiction"
 msgstr "National Jurisdiction"
 
-#: src/components/Section/IntegrateAndComply.tsx:172
+#: src/components/Section/IntegrateAndComply.tsx:198
 #: src/components/Section/VaspVerification.tsx:176
 msgid "Need to Learn More?"
 msgstr "Need to Learn More?"
@@ -1484,6 +1555,12 @@ msgstr "New X.509 Identity Certificate Request"
 #: src/components/ConfirmIdentityCertificateRequest/index.tsx:74
 msgid "Next"
 msgstr "Next"
+
+#: src/components/Section/IntegrateAndComply.tsx:103
+#: src/components/Section/IntegrateAndComply.tsx:150
+#: src/components/Section/IntegrateAndComply.tsx:182
+msgid "Next Steps:"
+msgstr "Next Steps:"
 
 #: src/components/CertificateManagement/CertificateDataTable.tsx:26
 #: src/components/CertificateManagement/X509IdentityCertificateInventoryDataTable.tsx:33
@@ -1532,17 +1609,24 @@ msgid "Open Source"
 msgstr "Open Source"
 
 #: src/components/OpenSourceResources/index.tsx:9
-#: src/components/Section/IntegrateAndComply.tsx:142
 msgid "Open Source Resources"
 msgstr "Open Source Resources"
 
+#: src/components/Section/IntegrateAndComply.tsx:140
+msgid "Operators seeking a balance between cost & convenience, with professional implementation ensuring a robust setup without the ongoing costs of managed services."
+msgstr "Operators seeking a balance between cost & convenience, with professional implementation ensuring a robust setup without the ongoing costs of managed services."
+
+#: src/components/Section/IntegrateAndComply.tsx:93
+msgid "Operators that want maximum flexibility and control to customize and have the technical resources to integrate with their systems."
+msgstr "Operators that want maximum flexibility and control to customize and have the technical resources to integrate with their systems."
+
 #: src/components/Section/IntegrateAndComply.tsx:89
-msgid "Option 1. Set Up Your Own TRISA Node"
-msgstr "Option 1. Set Up Your Own TRISA Node"
+#~ msgid "Option 1. Set Up Your Own TRISA Node"
+#~ msgstr "Option 1. Set Up Your Own TRISA Node"
 
 #: src/components/Section/IntegrateAndComply.tsx:108
-msgid "Option 2. Use a 3rd-party Solution"
-msgstr "Option 2. Use a 3rd-party Solution"
+#~ msgid "Option 2. Use a 3rd-party Solution"
+#~ msgstr "Option 2. Use a 3rd-party Solution"
 
 #: src/components/CertificateDetails/CertificateDetails.tsx:241
 #: src/components/CertificateDetails/CertificateDetails.tsx:304
@@ -1599,7 +1683,7 @@ msgstr "Page Not Found"
 msgid "Partially"
 msgstr "Partially"
 
-#: src/components/Section/IntegrateAndComply.tsx:54
+#: src/components/Section/IntegrateAndComply.tsx:53
 msgid "Participate in verified VASP-to-VASP Travel Rule exchanges."
 msgstr "Participate in verified VASP-to-VASP Travel Rule exchanges."
 
@@ -1772,7 +1856,7 @@ msgid "REVIEWED"
 msgstr "REVIEWED"
 
 #: src/components/OpenSourceResources/index.tsx:27
-#: src/components/Section/IntegrateAndComply.tsx:158
+#: src/components/Section/IntegrateAndComply.tsx:224
 msgid "Reference implementation"
 msgstr "Reference implementation"
 
@@ -1784,6 +1868,12 @@ msgstr "Reg Authority"
 #: src/components/AddressForm/index.tsx:66
 msgid "Region / Province / State (required)"
 msgstr "Region / Province / State (required)"
+
+#: src/components/Section/IntegrateAndComply.tsx:121
+#: src/components/Section/IntegrateAndComply.tsx:158
+#: src/components/Section/IntegrateAndComply.tsx:190
+msgid "Register with <0>TRISA's GDS</0>"
+msgstr "Register with <0>TRISA's GDS</0>"
 
 #: src/components/Section/SearchDirectory.tsx:229
 #: src/components/Section/SearchDirectory.tsx:295
@@ -1842,6 +1932,14 @@ msgstr "Return to vaspdirectory.net"
 msgid "Review"
 msgstr "Review"
 
+#: src/components/Section/IntegrateAndComply.tsx:106
+msgid "Review <0>documentation</0>"
+msgstr "Review <0>documentation</0>"
+
+#: src/components/Section/IntegrateAndComply.tsx:111
+msgid "Review <0>source code</0>"
+msgstr "Review <0>source code</0>"
+
 #: src/components/ReviewSubmit/index.tsx:161
 #: src/components/ReviewSubmit/index.tsx:255
 msgid "Review section"
@@ -1851,6 +1949,14 @@ msgstr "Review section"
 #: src/components/UserProfile/UserDetails.tsx:22
 msgid "Role"
 msgstr "Role"
+
+#: src/components/Section/IntegrateAndComply.tsx:136
+msgid "Rotational will install and configure your node for your environment while you host, maintain, and support the node on an ongoing basis."
+msgstr "Rotational will install and configure your node for your environment while you host, maintain, and support the node on an ongoing basis."
+
+#: src/components/Section/IntegrateAndComply.tsx:168
+msgid "Rotational will install, configure, host, maintain, and support your node. Includes dedicated, provenance-aware node with regional deployments."
+msgstr "Rotational will install, configure, host, maintain, and support your node. Includes dedicated, provenance-aware node with regional deployments."
 
 #: src/components/UserProfile/UserProfilePassword.tsx:52
 msgid "SECURITY"
@@ -1877,8 +1983,12 @@ msgid "Save & Previous"
 msgstr "Save & Previous"
 
 #: src/components/Banner/LandingBanner.tsx:17
-msgid "Schedule a demo to learn about TRISA's open source self-hosted solution for cost-effective Travel Rule compliance."
-msgstr "Schedule a demo to learn about TRISA's open source self-hosted solution for cost-effective Travel Rule compliance."
+msgid "Schedule a demo of Envoy, TRISA's open source solution for cost-effective Travel Rule compliance."
+msgstr "Schedule a demo of Envoy, TRISA's open source solution for cost-effective Travel Rule compliance."
+
+#: src/components/Banner/LandingBanner.tsx:17
+#~ msgid "Schedule a demo to learn about TRISA's open source self-hosted solution for cost-effective Travel Rule compliance."
+#~ msgstr "Schedule a demo to learn about TRISA's open source self-hosted solution for cost-effective Travel Rule compliance."
 
 #: src/components/CertificateManagement/X509IdentityCertificateInventory.tsx:59
 msgid "Sealing Certificate Inventory"
@@ -2003,14 +2113,14 @@ msgid "Signature ID"
 msgstr "Signature ID"
 
 #: src/components/Section/IntegrateAndComply.tsx:90
-msgid ""
-"Since TRISA is an open source, peer-to-peer Travel Rule solution, VASPs can set\n"
-"                    up and maintain their own TRISA server to exhange encrypted Travel Rule\n"
-"                    compliance data. TRISA maintains an"
-msgstr ""
-"Since TRISA is an open source, peer-to-peer Travel Rule solution, VASPs can set\n"
-"                    up and maintain their own TRISA server to exhange encrypted Travel Rule\n"
-"                    compliance data. TRISA maintains an"
+#~ msgid ""
+#~ "Since TRISA is an open source, peer-to-peer Travel Rule solution, VASPs can set\n"
+#~ "                    up and maintain their own TRISA server to exhange encrypted Travel Rule\n"
+#~ "                    compliance data. TRISA maintains an"
+#~ msgstr ""
+#~ "Since TRISA is an open source, peer-to-peer Travel Rule solution, VASPs can set\n"
+#~ "                    up and maintain their own TRISA server to exhange encrypted Travel Rule\n"
+#~ "                    compliance data. TRISA maintains an"
 
 #: src/components/YourImplementation/index.tsx:11
 msgid "Since TRISA is an open source, peer-to-peer Travel Rule solution, VASPs can set up and maintain their own TRISA server to exhange encrypted Travel Rule compliance data. At the same time, TRISA is designed to be interoperable. There are several Travel Rule solutions providers available on the market. If you are a customer, work with your Travel Ruie provider to integrate TRISA into your Travel Rule compliance workflow."
@@ -2048,6 +2158,10 @@ msgstr "Start Registration"
 #: src/components/ui/Button.tsx:8
 msgid "Start trial"
 msgstr "Start trial"
+
+#: src/components/Section/IntegrateAndComply.tsx:126
+msgid "Start your implementation"
+msgstr "Start your implementation"
 
 #: src/components/CertificateDetails/CertificateDetails.tsx:131
 #: src/components/CertificateInventory/index.tsx:86
@@ -2116,8 +2230,8 @@ msgid "Switch Accounts"
 msgstr "Switch Accounts"
 
 #: src/components/Section/IntegrateAndComply.tsx:134
-msgid "Synga Bridge"
-msgstr "Synga Bridge"
+#~ msgid "Synga Bridge"
+#~ msgstr "Synga Bridge"
 
 #: src/components/Section/SearchDirectory.tsx:195
 msgid "TESTNET DIRECTORY RECORD"
@@ -2234,14 +2348,14 @@ msgid "TRISA is designed to be interoperable with other Travel Rule solutions."
 msgstr "TRISA is designed to be interoperable with other Travel Rule solutions."
 
 #: src/components/Section/IntegrateAndComply.tsx:109
-msgid ""
-"TRISA is designed to be interoperable. There are several Travel Rule solutions\n"
-"                    providers available on the market. If you are a customer, work with them to\n"
-"                    integrate TRISA into your Travel Rule compliance workflow."
-msgstr ""
-"TRISA is designed to be interoperable. There are several Travel Rule solutions\n"
-"                    providers available on the market. If you are a customer, work with them to\n"
-"                    integrate TRISA into your Travel Rule compliance workflow."
+#~ msgid ""
+#~ "TRISA is designed to be interoperable. There are several Travel Rule solutions\n"
+#~ "                    providers available on the market. If you are a customer, work with them to\n"
+#~ "                    integrate TRISA into your Travel Rule compliance workflow."
+#~ msgstr ""
+#~ "TRISA is designed to be interoperable. There are several Travel Rule solutions\n"
+#~ "                    providers available on the market. If you are a customer, work with them to\n"
+#~ "                    integrate TRISA into your Travel Rule compliance workflow."
 
 #: src/components/Section/JoinUs.tsx:41
 msgid "TRISA is open source and available to implement by any VASP."
@@ -2267,13 +2381,17 @@ msgstr "TRISA uses public-key cryptography for encrypting data in flight and at 
 msgid "TRISA verified members may download and display a “TRISA Verified VASP” logo on their website. The logo is unique to your VASP and non-reproducible. Members may download their logo after verification is complete and their certificate has been issued. The logo is in .svg fotmat"
 msgstr "TRISA verified members may download and display a “TRISA Verified VASP” logo on their website. The logo is unique to your VASP and non-reproducible. Members may download their logo after verification is complete and their certificate has been issued. The logo is in .svg fotmat"
 
+#: src/components/Section/IntegrateAndComply.tsx:212
+msgid "TRISA's Github repo"
+msgstr "TRISA's Github repo"
+
 #: src/components/Maintenance/index.tsx:32
 msgid "TRISA's Slack channel"
 msgstr "TRISA's Slack channel"
 
 #: src/components/Section/IntegrateAndComply.tsx:146
-msgid "TRISA’s Github repo"
-msgstr "TRISA’s Github repo"
+#~ msgid "TRISA’s Github repo"
+#~ msgstr "TRISA’s Github repo"
 
 #: src/components/Section/AboutUs.tsx:57
 msgid "TRISA’s Global Directory Service (GDS) is a network of vetted VASPs that can securely exchange Travel Rule compliance data with each other."
@@ -2289,16 +2407,16 @@ msgid "TRIXO Questionnaire"
 msgstr "TRIXO Questionnaire"
 
 #: src/components/Section/IntegrateAndComply.tsx:119
-msgid ""
-"Talk to a member of your technical team to determine the requirements and\n"
-"                    resources to integrate TRISA with your system. Have members of your technical\n"
-"                    team integrate your systems with TRISA. Or work with a solutions provider that\n"
-"                    can help your VASP set up your TRISA server and maintain it."
-msgstr ""
-"Talk to a member of your technical team to determine the requirements and\n"
-"                    resources to integrate TRISA with your system. Have members of your technical\n"
-"                    team integrate your systems with TRISA. Or work with a solutions provider that\n"
-"                    can help your VASP set up your TRISA server and maintain it."
+#~ msgid ""
+#~ "Talk to a member of your technical team to determine the requirements and\n"
+#~ "                    resources to integrate TRISA with your system. Have members of your technical\n"
+#~ "                    team integrate your systems with TRISA. Or work with a solutions provider that\n"
+#~ "                    can help your VASP set up your TRISA server and maintain it."
+#~ msgstr ""
+#~ "Talk to a member of your technical team to determine the requirements and\n"
+#~ "                    resources to integrate TRISA with your system. Have members of your technical\n"
+#~ "                    team integrate your systems with TRISA. Or work with a solutions provider that\n"
+#~ "                    can help your VASP set up your TRISA server and maintain it."
 
 #: src/constants/national-identification.ts:5
 msgid "Tax Identification Number"
@@ -2497,6 +2615,18 @@ msgstr "To assist in completing the registration form, the form is divided into 
 msgid "Trading"
 msgstr "Trading"
 
+#: src/components/Section/IntegrateAndComply.tsx:101
+msgid "USD $0"
+msgstr "USD $0"
+
+#: src/components/Section/IntegrateAndComply.tsx:180
+msgid "USD $375/month/node (min 6-month commitment)"
+msgstr "USD $375/month/node (min 6-month commitment)"
+
+#: src/components/Section/IntegrateAndComply.tsx:148
+msgid "USD USD $2,500 (one-time)"
+msgstr "USD USD $2,500 (one-time)"
+
 #: src/components/UserProfile/UserDetails.tsx:12
 msgid "USER DETAILS"
 msgstr "USER DETAILS"
@@ -2527,8 +2657,8 @@ msgid "Unspecified"
 msgstr "Unspecified"
 
 #: src/components/Section/IntegrateAndComply.tsx:67
-msgid "Upon verification, integrate with TRISA to begin exchanging Travel Rule compliance data."
-msgstr "Upon verification, integrate with TRISA to begin exchanging Travel Rule compliance data."
+#~ msgid "Upon verification, integrate with TRISA to begin exchanging Travel Rule compliance data."
+#~ msgstr "Upon verification, integrate with TRISA to begin exchanging Travel Rule compliance data."
 
 #: src/components/CertificateDetails/CertificateDetails.tsx:217
 #: src/components/CertificateInventory/index.tsx:200
@@ -2566,9 +2696,13 @@ msgstr "VASP Domain"
 msgid "VASP Name"
 msgstr "VASP Name"
 
+#: src/components/Section/IntegrateAndComply.tsx:79
+msgid "VASPs have three options to integrate with TRISA using Envoy."
+msgstr "VASPs have three options to integrate with TRISA using Envoy."
+
 #: src/components/Section/IntegrateAndComply.tsx:75
-msgid "VASPs have two options to integrate with TRISA."
-msgstr "VASPs have two options to integrate with TRISA."
+#~ msgid "VASPs have two options to integrate with TRISA."
+#~ msgstr "VASPs have two options to integrate with TRISA."
 
 #: src/modules/dashboard/member/utils.ts:61
 msgid "VERIFIED"
@@ -2635,7 +2769,7 @@ msgstr "Welcome to TRISA’s network of Certified VASPs."
 msgid "We’ll be back soon."
 msgstr "We’ll be back soon."
 
-#: src/components/Section/IntegrateAndComply.tsx:181
+#: src/components/Section/IntegrateAndComply.tsx:207
 #: src/components/Section/VaspVerification.tsx:187
 msgid "What is IVMS101?"
 msgstr "What is IVMS101?"
@@ -2868,12 +3002,12 @@ msgid "view details"
 msgstr "view details"
 
 #: src/components/Section/IntegrateAndComply.tsx:101
-msgid ""
-"with detailed documentation, a reference implemenation, and “robot” VASPs for\n"
-"                    testing purposes."
-msgstr ""
-"with detailed documentation, a reference implemenation, and “robot” VASPs for\n"
-"                    testing purposes."
+#~ msgid ""
+#~ "with detailed documentation, a reference implemenation, and “robot” VASPs for\n"
+#~ "                    testing purposes."
+#~ msgstr ""
+#~ "with detailed documentation, a reference implemenation, and “robot” VASPs for\n"
+#~ "                    testing purposes."
 
 #: src/components/Collaborators/index.tsx:145
 msgid "you do not have permission to invite a collaborator"
