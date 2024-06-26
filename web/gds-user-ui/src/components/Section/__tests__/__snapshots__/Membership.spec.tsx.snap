@@ -1092,7 +1092,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
               rel="noopener"
               target="_blank"
             >
-              Schedule a demo to learn about TRISA's open source self-hosted solution for cost-effective Travel Rule compliance.
+              Schedule a demo of Envoy, TRISA's open source solution for cost-effective Travel Rule compliance.
             </a>
           </div>
         </div>

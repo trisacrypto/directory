@@ -14,8 +14,8 @@ const LandingBanner = () => {
       <AlertIcon/>
       <AlertDescription fontWeight={'semibold'}>
         <Link href="https://calendar.app.google/FBg7GTmgDfeMbUMT9" isExternal>
-          <Trans id="Schedule a demo to learn about TRISA's open source self-hosted solution for cost-effective Travel Rule compliance.">
-            Schedule a demo to learn about TRISA's open source self-hosted solution for cost-effective Travel Rule compliance.
+          <Trans>
+            Schedule a demo of Envoy, TRISA's open source solution for cost-effective Travel Rule compliance.
           </Trans>
         </Link>
       </AlertDescription>

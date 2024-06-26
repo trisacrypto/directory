@@ -47,10 +47,10 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   async (error: any) => {
-    // let _retry = 0;
     const originalRequest = error?.config;
-    originalRequest._retry = originalRequest?._retry || 0;
-    //
+    if (originalRequest) {
+      originalRequest._retry = originalRequest._retry || 0;
+    }
 
     if (error && !error.response) {
       return Promise.reject<any>(new Error('Network connection error'));
