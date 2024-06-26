@@ -38,9 +38,9 @@ const NeedsAttention = ({ buttonText, onClick }: NeedsAttentionProps) => {
         {attentionResponse?.messages?.map((item: AttentionResponseType, key: any) => (
           <AttentionAlert
             key={key}
-            action={item.action}
-            severity={item.severity}
-            message={item.message}
+            action={item?.action}
+            severity={item?.severity}
+            message={item?.message}
             onClick={onClick}
             buttonText={buttonText}
           />
