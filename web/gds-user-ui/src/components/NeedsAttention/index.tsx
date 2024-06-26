@@ -17,7 +17,6 @@ export type NeedsAttentionProps = {
 
 const NeedsAttention = ({ buttonText, onClick }: NeedsAttentionProps) => {
   const { attentionResponse } = useFetchAttention();
-  console.log(attentionResponse);
 
   if (
     attentionResponse &&
