@@ -1029,7 +1029,7 @@ func weekFromNow() time.Time {
 	return time.Now().AddDate(0, 0, 7)
 }
 
-func printJSON(m protoreflect.ProtoMessage) (err error) {
+func PrintJSON(m protoreflect.ProtoMessage) (err error) {
 	jsonpb := protojson.MarshalOptions{
 		Multiline:       true,
 		Indent:          "  ",
