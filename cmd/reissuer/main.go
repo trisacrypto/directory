@@ -36,6 +36,7 @@ import (
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 var (
@@ -1026,4 +1027,22 @@ func askForConfirmation(s string) bool {
 
 func weekFromNow() time.Time {
 	return time.Now().AddDate(0, 0, 7)
+}
+
+func printJSON(m protoreflect.ProtoMessage) (err error) {
+	jsonpb := protojson.MarshalOptions{
+		Multiline:       true,
+		Indent:          "  ",
+		AllowPartial:    true,
+		UseProtoNames:   true,
+		UseEnumNumbers:  false,
+		EmitUnpopulated: true,
+	}
+
+	var data []byte
+	if data, err = jsonpb.Marshal(m); err != nil {
+		return cli.Exit(fmt.Errorf("could not marshal protocol buffer: %w", err), 1)
+	}
+	fmt.Println(string(data))
+	return nil
 }
