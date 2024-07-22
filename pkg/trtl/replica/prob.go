@@ -9,10 +9,6 @@ import (
 	"time"
 )
 
-func init() {
-	random = rand.New(rand.NewSource(time.Now().UnixNano()))
-}
-
 const (
 	lambda = -0.004
 )
