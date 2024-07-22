@@ -80,7 +80,7 @@ func setupTrtl(t testing.TB) (bench *trtlBench, err error) {
 	}
 
 	// Create a bufconn listener(s) so that there are no actual network requests
-	bench.grpc = bufconn.New(benchbuf, "")
+	bench.grpc = bufconn.New("")
 
 	// Run the test server without signals, background routines or maintenance mode checks
 	go bench.trtl.Run(bench.grpc.Listener)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	crand "crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -27,10 +28,6 @@ import (
 	gprcInsecure "google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 )
-
-func init() {
-	rand.Seed(time.Now().UTC().UnixNano())
-}
 
 const (
 	interval  = 10 * time.Second                                       // the ticker interval, default to 5 seconds
@@ -173,7 +170,7 @@ func (s *Simulator) connect() (_ pb.TrtlClient, err error) {
 
 	// Connect the replica client
 	var cc *grpc.ClientConn
-	if cc, err = grpc.Dial(s.Endpoint, opts...); err != nil {
+	if cc, err = grpc.NewClient(s.Endpoint, opts...); err != nil {
 		return nil, err
 	}
 	log.Printf("connected to trtl server at %s\n", s.Endpoint)
@@ -637,6 +634,7 @@ func (t *TRISAModel) reissuer(wg *sync.WaitGroup) {
 // User updater randomly updates users' profiles
 // This writer may generate stomps, but it's unlikely
 func (t *TRISAModel) userProfiles(wg *sync.WaitGroup) {
+	defer wg.Done()
 	ticker := jitter.New(reissueInterval, reissueSigma)
 	for {
 		<-ticker.C
@@ -735,7 +733,7 @@ func (t *TRISAModel) Iter(namespace string) (err error) {
 func (t *TRISAModel) Put(key, namespace string, nbytes int) (err error) {
 	// Create a random value of the specified length
 	value := make([]byte, nbytes)
-	if _, err = rand.Read(value); err != nil {
+	if _, err = crand.Read(value); err != nil {
 		return fmt.Errorf("could not create random value: %v", err)
 	}
 

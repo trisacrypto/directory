@@ -74,11 +74,11 @@ func (s *bffTestSuite) SetupSuite() {
 		TestNet: config.NetworkConfig{
 			Directory: config.DirectoryConfig{
 				Insecure: true,
-				Endpoint: "bufnet",
+				Endpoint: "passthrough://bufnet",
 				Timeout:  1 * time.Second,
 			},
 			Members: config.MembersConfig{
-				Endpoint: "bufnet",
+				Endpoint: "passthrough://bufnet",
 				Timeout:  1 * time.Second,
 				MTLS: config.MTLSConfig{
 					Insecure: true,
@@ -88,11 +88,11 @@ func (s *bffTestSuite) SetupSuite() {
 		MainNet: config.NetworkConfig{
 			Directory: config.DirectoryConfig{
 				Insecure: true,
-				Endpoint: "bufnet",
+				Endpoint: "passthrough://bufnet",
 				Timeout:  1 * time.Second,
 			},
 			Members: config.MembersConfig{
-				Endpoint: "bufnet",
+				Endpoint: "passthrough://bufnet",
 				Timeout:  1 * time.Second,
 				MTLS: config.MTLSConfig{
 					Insecure: true,

@@ -188,7 +188,7 @@ func (r *Service) AntiEntropySync(peer *peers.Peer, logctx *sentry.Logger) (err 
 
 	// Dial the remote peer and establish a connection
 	var cc *grpc.ClientConn
-	if cc, err = r.connect(ctx, peer); err != nil {
+	if cc, err = r.connect(peer); err != nil {
 		return err
 	}
 	defer cc.Close()
@@ -251,10 +251,9 @@ func (r *Service) AntiEntropySync(peer *peers.Peer, logctx *sentry.Logger) (err 
 // Connect to a remote peer using mTLS credentials or in insecure mode as necessary.
 // This method blocks until the connection has been established to prevent any
 // anti-entropy work from happening until we know the remote peer is live.
-func (r *Service) connect(ctx context.Context, peer *peers.Peer) (cc *grpc.ClientConn, err error) {
+func (r *Service) connect(peer *peers.Peer) (cc *grpc.ClientConn, err error) {
 	// Create the base dial options - ensure blocking
 	opts := make([]grpc.DialOption, 0, 2)
-	opts = append(opts, grpc.WithBlock())
 
 	// Add mTLS credentials if required
 	if r.mtls.Insecure {
@@ -284,7 +283,7 @@ func (r *Service) connect(ctx context.Context, peer *peers.Peer) (cc *grpc.Clien
 	}
 
 	// Dial the remote peer and establish a connection
-	return grpc.DialContext(ctx, peer.Addr, opts...)
+	return grpc.NewClient(peer.Addr, opts...)
 }
 
 // initiatorPhase1 is the go routine that starts the anti-entropy synchronization

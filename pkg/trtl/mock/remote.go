@@ -17,7 +17,6 @@ import (
 )
 
 const (
-	bufSize     = 1024 * 1024
 	GetRPC      = "trtl.v1.Trtl/Get"
 	PutRPC      = "trtl.v1.Trtl/Put"
 	DeleteRPC   = "trtl.v1.Trtl/Delete"
@@ -37,7 +36,7 @@ const (
 // ServerOptions with configured TLS.
 func New(bufnet *bufconn.GRPCListener, opts ...grpc.ServerOption) *RemoteTrtl {
 	if bufnet == nil {
-		bufnet = bufconn.New(bufSize, "")
+		bufnet = bufconn.New("")
 	}
 
 	if len(opts) == 0 {

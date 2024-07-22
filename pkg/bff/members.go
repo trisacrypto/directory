@@ -128,11 +128,6 @@ func (s *Server) Overview(c *gin.Context) {
 
 	// Get the summaries for both testnet and mainnet
 	testnet, mainnet, testnetErr, mainnetErr := s.GetSummaries(c.Request.Context(), testnetID, mainnetID)
-	if err != nil {
-		sentry.Error(c).Err(err).Msg("could not retrieve summary information")
-		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
-		return
-	}
 
 	// Populate the summary responses
 	if testnetErr != nil {

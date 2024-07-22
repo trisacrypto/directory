@@ -18,10 +18,6 @@ import (
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 )
 
-const (
-	bufSize = 1024 * 1024
-)
-
 var (
 	fixturesPath = filepath.Join("testdata", "fakes.tgz")
 	dbPath       = filepath.Join("testdata", "db")
@@ -72,7 +68,7 @@ func (s *gdsTestSuite) SetupSuite() {
 func (s *gdsTestSuite) SetupGDS() {
 
 	// Using a bufconn listener allows us to avoid network requests
-	s.grpc = bufconn.New(bufSize, "")
+	s.grpc = bufconn.New("")
 	go s.svc.GetGDS().Run(s.grpc.Listener)
 }
 
@@ -81,7 +77,7 @@ func (s *gdsTestSuite) SetupGDS() {
 func (s *gdsTestSuite) SetupMembers() {
 
 	// Using a bufconn listener allows us to avoid network requests
-	s.grpc = bufconn.New(bufSize, "")
+	s.grpc = bufconn.New("")
 	go s.svc.GetMembers().Run(s.grpc.Listener)
 }
 

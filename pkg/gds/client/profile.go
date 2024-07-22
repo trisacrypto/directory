@@ -151,7 +151,7 @@ func (p *DirectoryProfile) Connect() (_ api.TRISADirectoryClient, err error) {
 
 	// Connect the directory client
 	var cc *grpc.ClientConn
-	if cc, err = grpc.Dial(p.Endpoint, opts...); err != nil {
+	if cc, err = grpc.NewClient(p.Endpoint, opts...); err != nil {
 		return nil, err
 	}
 	return api.NewTRISADirectoryClient(cc), nil
@@ -208,7 +208,7 @@ func (p *TrtlProfile) Connect() (conn *grpc.ClientConn, err error) {
 	}
 
 	// Connect the replica client
-	if conn, err = grpc.Dial(p.Endpoint, opts...); err != nil {
+	if conn, err = grpc.NewClient(p.Endpoint, opts...); err != nil {
 		return nil, err
 	}
 	return conn, nil
@@ -271,7 +271,7 @@ func (p *MembersProfile) Connect() (_ members.TRISAMembersClient, err error) {
 
 	// Connect the directory client
 	var cc *grpc.ClientConn
-	if cc, err = grpc.Dial(p.Endpoint, opts...); err != nil {
+	if cc, err = grpc.NewClient(p.Endpoint, opts...); err != nil {
 		return nil, err
 	}
 	return members.NewTRISAMembersClient(cc), nil

@@ -32,11 +32,10 @@ import (
 )
 
 const (
-	bufSize      = 1024 * 1024
 	clientCerts  = "testdata/client.pem"
 	serverCerts  = "testdata/server.pem"
 	clientTarget = "client.trisa.dev"
-	serverTarget = "server.trisa.dev"
+	serverTarget = "passthrough://server.trisa.dev"
 )
 
 var (
@@ -223,7 +222,7 @@ func (s *trtlTestSuite) setupServers() (err error) {
 	}
 
 	// Create a bufconn listener(s) so that there are no actual network requests
-	s.grpc = bufconn.New(bufSize, "")
+	s.grpc = bufconn.New("")
 
 	// Run the test server without signals, background routines or maintenance mode checks
 	// TODO: do we need to check if there was an error when starting run?
@@ -254,7 +253,7 @@ func (s *trtlTestSuite) setupRemoteTrtl() (err error) {
 	opts = append(opts, grpc.Creds(credentials.NewTLS(tls)))
 
 	// Create the remote peer
-	s.remote = mock.New(bufconn.New(bufSize, serverTarget), opts...)
+	s.remote = mock.New(bufconn.New(serverTarget), opts...)
 	return nil
 }
 

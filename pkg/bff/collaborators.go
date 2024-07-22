@@ -90,7 +90,7 @@ func (s *Server) AddCollaborator(c *gin.Context) {
 	// Handle both users who have already registered and completely new users
 	var user *management.User
 	var baseURL string
-	if user, err = s.FindUserByEmail(collaborator.Email); err != nil {
+	if user, err = s.FindUserByEmail(c.Request.Context(), collaborator.Email); err != nil {
 		if !errors.Is(err, ErrUserEmailNotFound) {
 			sentry.Error(c).Err(err).Str("email", collaborator.Email).Msg("error finding user by email in Auth0")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not add collaborator"))
@@ -166,7 +166,7 @@ func (s *Server) ListCollaborators(c *gin.Context) {
 	}
 
 	for _, collab := range org.Collaborators {
-		if err = s.LoadCollaboratorDetails(collab); err != nil {
+		if err = s.LoadCollaboratorDetails(c.Request.Context(), collab); err != nil {
 			sentry.Error(c).Err(err).Str("collabID", collab.Key()).Msg("could not load collaborator details")
 		}
 
@@ -245,7 +245,7 @@ func (s *Server) UpdateCollaboratorRoles(c *gin.Context) {
 	}
 
 	// Update the users's roles in Auth0
-	if err = s.AssignRoles(collaborator.UserId, params.Roles); err != nil {
+	if err = s.AssignRoles(c.Request.Context(), collaborator.UserId, params.Roles); err != nil {
 		if errors.Is(err, ErrInvalidUserRole) {
 			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
 		} else {
@@ -255,7 +255,7 @@ func (s *Server) UpdateCollaboratorRoles(c *gin.Context) {
 	}
 
 	// Update the collaborator record with the info in Auth0
-	if err = s.LoadCollaboratorDetails(collaborator); err != nil {
+	if err = s.LoadCollaboratorDetails(c.Request.Context(), collaborator); err != nil {
 		sentry.Error(c).Err(err).Str("collabID", collabID).Str("auth0_id", collaborator.UserId).Msg("could not update collaborator record")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not update collaborator record"))
 		return
@@ -324,7 +324,7 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 	if collaborator.Verified && collaborator.UserId != "" {
 		// Fetch the user from Auth0
 		var user *management.User
-		if user, err = s.auth0.User.Read(collaborator.UserId); err != nil {
+		if user, err = s.auth0.User.Read(c.Request.Context(), collaborator.UserId); err != nil {
 			sentry.Error(c).Err(err).Str("collabID", collabID).Str("auth0_id", collaborator.UserId).Msg("could not fetch user from Auth0")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not fetch user from Auth0"))
 			return
@@ -340,7 +340,7 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 
 		// Update the app metadata with the removed organization
 		appdata.ClearOrganization()
-		if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
+		if err = s.SaveAuth0AppMetadata(c.Request.Context(), *user.ID, *appdata); err != nil {
 			sentry.Error(c).Err(err).Str("collabID", collabID).Str("auth0_id", collaborator.UserId).Msg("could not save user app metadata")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not save user app metadata"))
 			return
@@ -366,7 +366,7 @@ func (s *Server) DeleteCollaborator(c *gin.Context) {
 // LoadCollaboratorDetails updates a collaborator record with the user details in
 // Auth0. The collaborator must have a user ID on it and the data in Auth0 will
 // overwrite the data on the collaborator record.
-func (s *Server) LoadCollaboratorDetails(collab *models.Collaborator) (err error) {
+func (s *Server) LoadCollaboratorDetails(ctx context.Context, collab *models.Collaborator) (err error) {
 	// If the user is not verified in Auth0 then we can't retrieve the details
 	if !collab.Verified {
 		return nil
@@ -379,7 +379,7 @@ func (s *Server) LoadCollaboratorDetails(collab *models.Collaborator) (err error
 
 	// Fetch the user profile from Auth0
 	var profile *auth.UserProfile
-	if profile, err = s.FetchUserProfile(collab.UserId); err != nil {
+	if profile, err = s.FetchUserProfile(ctx, collab.UserId); err != nil {
 		return err
 	}
 
@@ -392,11 +392,11 @@ func (s *Server) LoadCollaboratorDetails(collab *models.Collaborator) (err error
 
 // FetchUserProfile fetches a user profile by ID from the user cache or Auth0 if
 // necessary.
-func (s *Server) FetchUserProfile(id string) (profile *auth.UserProfile, err error) {
+func (s *Server) FetchUserProfile(ctx context.Context, id string) (profile *auth.UserProfile, err error) {
 	if data, ok := s.users.Get(id); !ok {
 		// If we can't get the profile from the cache then fetch it from Auth0
 		var user *management.User
-		if user, err = s.auth0.User.Read(id); err != nil {
+		if user, err = s.auth0.User.Read(ctx, id); err != nil {
 			return nil, err
 		}
 
@@ -406,7 +406,7 @@ func (s *Server) FetchUserProfile(id string) (profile *auth.UserProfile, err err
 		}
 
 		var roles *management.RoleList
-		if roles, err = s.auth0.User.Roles(id); err != nil {
+		if roles, err = s.auth0.User.Roles(ctx, id); err != nil {
 			return nil, err
 		}
 

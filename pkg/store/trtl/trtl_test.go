@@ -29,7 +29,6 @@ const (
 	metaRegion = "tauceti"
 	metaOwner  = "taurian"
 	metaPID    = 8
-	bufSize    = 1024 * 1024
 )
 
 type trtlStoreTestSuite struct {
@@ -78,7 +77,7 @@ func (s *trtlStoreTestSuite) SetupSuite() {
 	s.trtl, err = trtl.New(*s.conf)
 	require.NoError(err)
 
-	s.grpc = bufconn.New(bufSize, "")
+	s.grpc = bufconn.New("")
 	go s.trtl.Run(s.grpc.Listener)
 }
 

@@ -127,7 +127,7 @@ func (s *Server) CreateOrganization(c *gin.Context) {
 
 	// Assign the user to the organization
 	appdata.AddOrganization(org.Id)
-	if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
+	if err = s.SaveAuth0AppMetadata(c.Request.Context(), *user.ID, *appdata); err != nil {
 		sentry.Error(c).Err(err).Msg("could not update user app metadata")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not update user app metadata"))
 		return
@@ -314,7 +314,7 @@ func (s *Server) DeleteOrganization(c *gin.Context) {
 
 		// Retrieve the Auth0 user record from the user ID
 		var collabUser *management.User
-		if collabUser, err = s.auth0.User.Read(collab.UserId); err != nil {
+		if collabUser, err = s.auth0.User.Read(c.Request.Context(), collab.UserId); err != nil {
 			sentry.Error(c).Err(err).Str("user_id", collab.UserId).Msg("could not retrieve user from Auth0")
 			continue
 		}
@@ -332,7 +332,7 @@ func (s *Server) DeleteOrganization(c *gin.Context) {
 		if appdata.OrgID == org.Id {
 			// This method both modifies the app metadata and pushes the updates to
 			// Auth0.
-			if err = s.SwitchUserOrganization(collabUser, appdata); err != nil {
+			if err = s.SwitchUserOrganization(c.Request.Context(), collabUser, appdata); err != nil {
 				sentry.Error(c).Err(err).Str("user_id", collab.UserId).Msg("could not switch user to new organization")
 				continue
 			}

@@ -603,7 +603,7 @@ func createOrgs(c *cli.Context) (err error) {
 		testname = "N/A"
 	}
 
-	if user, err = auth0.User.Read(c.String("user")); err != nil {
+	if user, err = auth0.User.Read(ctx, c.String("user")); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -613,7 +613,7 @@ func createOrgs(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
-	if permissions, err = auth0.User.Permissions(*user.ID); err != nil {
+	if permissions, err = auth0.User.Permissions(ctx, *user.ID); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -732,7 +732,7 @@ func createOrgs(c *cli.Context) (err error) {
 
 	// Add the user to the organization
 	appdata.AddOrganization(org.Id)
-	if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
+	if err = SaveAppMetadata(ctx, *user.ID, *appdata); err != nil {
 		return cli.Exit(err, 1)
 	}
 	return nil
@@ -846,6 +846,9 @@ func deleteOrgs(c *cli.Context) (err error) {
 		return cli.Exit("can only delete one organization at a time", 1)
 	}
 
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	var org *models.Organization
 	if org, err = GetOrg(c.Args().Get(0)); err != nil {
 		return cli.Exit(err, 1)
@@ -861,7 +864,7 @@ func deleteOrgs(c *cli.Context) (err error) {
 		}
 
 		var user *management.User
-		if user, err = auth0.User.Read(collaborator.UserId); err != nil {
+		if user, err = auth0.User.Read(ctx, collaborator.UserId); err != nil {
 			return cli.Exit(fmt.Errorf("could not fetch user for %s", collaborator.Email), 1)
 		}
 
@@ -904,13 +907,10 @@ func deleteOrgs(c *cli.Context) (err error) {
 			}
 		}
 
-		if err = SaveAppMetadata(uid, *umeta); err != nil {
+		if err = SaveAppMetadata(ctx, uid, *umeta); err != nil {
 			return cli.Exit(err, 1)
 		}
 	}
-
-	ctx, cancel := utils.WithDeadline(context.Background())
-	defer cancel()
 
 	// Last step: delete the organization from the database
 	if err = db.DeleteOrganization(ctx, org.UUID()); err != nil {
@@ -1007,7 +1007,7 @@ func cleanupOrgs(c *cli.Context) (err error) {
 			}
 
 			var user *management.User
-			if user, err = auth0.User.Read(collaborator.UserId); err != nil {
+			if user, err = auth0.User.Read(ctx, collaborator.UserId); err != nil {
 				fmt.Printf("could not get user details for %q: %s\n", collaborator.UserId, err)
 				continue
 			}
@@ -1063,9 +1063,12 @@ func addCollab(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	// Fetch the user from auth0.
 	var user *management.User
-	if user, err = auth0.User.Read(c.String("user")); err != nil {
+	if user, err = auth0.User.Read(ctx, c.String("user")); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -1076,12 +1079,12 @@ func addCollab(c *cli.Context) (err error) {
 	}
 
 	var roles *management.RoleList
-	if roles, err = auth0.User.Roles(*user.ID); err != nil {
+	if roles, err = auth0.User.Roles(ctx, *user.ID); err != nil {
 		return cli.Exit(err, 1)
 	}
 
 	var permissions *management.PermissionList
-	if permissions, err = auth0.User.Permissions(*user.ID); err != nil {
+	if permissions, err = auth0.User.Permissions(ctx, *user.ID); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -1107,9 +1110,6 @@ func addCollab(c *cli.Context) (err error) {
 	if err = org.AddCollaborator(collaborator); err != nil {
 		return cli.Exit(err, 1)
 	}
-
-	ctx, cancel := utils.WithDeadline(context.Background())
-	defer cancel()
 
 	if err = db.UpdateOrganization(ctx, org); err != nil {
 		return cli.Exit(fmt.Errorf("could not update organization: %w", err), 1)
@@ -1145,7 +1145,7 @@ func addCollab(c *cli.Context) (err error) {
 
 	// Update user's app metadata to reflect the user's currently selected organization.
 	appdata.UpdateOrganization(org)
-	if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
+	if err = SaveAppMetadata(ctx, *user.ID, *appdata); err != nil {
 		return cli.Exit(err, 1)
 	}
 	return nil
@@ -1158,9 +1158,12 @@ func deleteCollab(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	// Fetch the user from auth0.
 	var user *management.User
-	if user, err = auth0.User.Read(c.String("user")); err != nil {
+	if user, err = auth0.User.Read(ctx, c.String("user")); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -1171,12 +1174,12 @@ func deleteCollab(c *cli.Context) (err error) {
 	}
 
 	var roles *management.RoleList
-	if roles, err = auth0.User.Roles(*user.ID); err != nil {
+	if roles, err = auth0.User.Roles(ctx, *user.ID); err != nil {
 		return cli.Exit(err, 1)
 	}
 
 	var permissions *management.PermissionList
-	if permissions, err = auth0.User.Permissions(*user.ID); err != nil {
+	if permissions, err = auth0.User.Permissions(ctx, *user.ID); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -1195,9 +1198,6 @@ func deleteCollab(c *cli.Context) (err error) {
 		return cli.Exit("canceled at request of user", 0)
 	}
 
-	ctx, cancel := utils.WithDeadline(context.Background())
-	defer cancel()
-
 	// Remove collaborator from the organization (won't error if not exists)
 	org.DeleteCollaborator(*user.Email)
 	if err = db.UpdateOrganization(ctx, org); err != nil {
@@ -1209,7 +1209,7 @@ func deleteCollab(c *cli.Context) (err error) {
 		appdata.OrgID = appdata.Organizations[0]
 	}
 
-	if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
+	if err = SaveAppMetadata(ctx, *user.ID, *appdata); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -1271,9 +1271,12 @@ func exportEmails(c *cli.Context) (err error) {
 }
 
 func sortAppdataOrgs(c *cli.Context) (err error) {
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	// Get all users in the tenant
 	var users *management.UserList
-	if users, err = auth0.User.List(); err != nil {
+	if users, err = auth0.User.List(ctx); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -1303,7 +1306,7 @@ func sortAppdataOrgs(c *cli.Context) (err error) {
 
 		// Update the user's app metadata on the Auth0 tenant
 		if !c.Bool("dry-run") {
-			if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
+			if err = SaveAppMetadata(ctx, *user.ID, *appdata); err != nil {
 				return cli.Exit(err, 1)
 			}
 			fmt.Printf("updated app metadata for user %s (%s)\n", *user.Email, *user.ID)
@@ -1319,9 +1322,12 @@ func sortAppdataOrgs(c *cli.Context) (err error) {
 }
 
 func dedupeAppdataOrgs(c *cli.Context) (err error) {
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	// Get all users in the tenant
 	var users *management.UserList
-	if users, err = auth0.User.List(); err != nil {
+	if users, err = auth0.User.List(ctx); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -1353,7 +1359,7 @@ func dedupeAppdataOrgs(c *cli.Context) (err error) {
 		fmt.Printf("current org list for user %s (%s): %v\n", *user.Email, *user.ID, appdata.Organizations)
 
 		if !c.Bool("dry-run") {
-			if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
+			if err = SaveAppMetadata(ctx, *user.ID, *appdata); err != nil {
 				return cli.Exit(err, 1)
 			}
 		}
@@ -1461,14 +1467,14 @@ func HasPermission(perm string, permissions *management.PermissionList) bool {
 	return false
 }
 
-func SaveAppMetadata(uid string, appdata auth.AppMetadata) (err error) {
+func SaveAppMetadata(ctx context.Context, uid string, appdata auth.AppMetadata) (err error) {
 	// Create a blank user with no data but the app data
 	user := &management.User{}
 	if user.AppMetadata, err = appdata.Dump(); err != nil {
 		return err
 	}
 
-	if err = auth0.User.Update(uid, user); err != nil {
+	if err = auth0.User.Update(ctx, uid, user); err != nil {
 		return err
 	}
 	return nil
