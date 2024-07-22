@@ -783,7 +783,7 @@ func (s *Server) SubmitRegistration(c *gin.Context) {
 	}
 
 	// Commit the user metadata updates to auth0
-	if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
+	if err = s.SaveAuth0AppMetadata(c.Request.Context(), *user.ID, *appdata); err != nil {
 		sentry.Error(c).Err(err).Str("user_id", *user.ID).Msg("could not save user app metadata")
 	}
 

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
@@ -241,7 +242,7 @@ func (c AuthConfig) IssuerURL() (u *url.URL, err error) {
 }
 
 func (c AuthConfig) ClientCredentials() management.Option {
-	return management.WithClientCredentials(c.ClientID, c.ClientSecret)
+	return management.WithClientCredentials(context.Background(), c.ClientID, c.ClientSecret)
 }
 
 func (c MTLSConfig) Validate() error {

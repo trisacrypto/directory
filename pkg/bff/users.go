@@ -97,7 +97,7 @@ func (s *Server) Login(c *gin.Context) {
 	}
 
 	// Fetch the current user role.
-	if roles, err = s.auth0.User.Roles(*user.ID); err != nil {
+	if roles, err = s.auth0.User.Roles(c.Request.Context(), *user.ID); err != nil {
 		sentry.Error(c).Err(err).Msg("could not fetch roles associated with the user")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 		return
@@ -250,7 +250,7 @@ func (s *Server) Login(c *gin.Context) {
 	// Update the user app metadata to reflect the user's currently selected
 	// organization and make sure the metadata is up to date in Auth0.
 	appdata.UpdateOrganization(org)
-	if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
+	if err = s.SaveAuth0AppMetadata(c.Request.Context(), *user.ID, *appdata); err != nil {
 		sentry.Error(c).Err(err).Str("user_id", *user.ID).Msg("could not save user app_metadata")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 		return
@@ -265,7 +265,7 @@ func (s *Server) Login(c *gin.Context) {
 
 	// Assign a new user role if necessary
 	if userRole != prevRole {
-		if err = s.AssignRoles(*user.ID, []string{userRole}); err != nil {
+		if err = s.AssignRoles(c.Request.Context(), *user.ID, []string{userRole}); err != nil {
 			sentry.Error(c).Err(err).Str("user_id", *user.ID).Msg("could not assign user role")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not complete user login"))
 			return
@@ -343,7 +343,7 @@ func (s *Server) UpdateUser(c *gin.Context) {
 	}
 
 	// Commit the update to Auth0
-	if err = s.auth0.User.Update(*user.ID, patch); err != nil {
+	if err = s.auth0.User.Update(c.Request.Context(), *user.ID, patch); err != nil {
 		sentry.Error(c).Err(err).Str("user_id", *user.ID).Msg("could not update user name")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not update user name"))
 		return
@@ -392,14 +392,14 @@ func (s *Server) UserOrganization(c *gin.Context) {
 
 // AssignRoles assigns a set of roles to a user by ID, removing the existing roles and
 // replacing them with the new set.
-func (s *Server) AssignRoles(userID string, roles []string) (err error) {
+func (s *Server) AssignRoles(ctx context.Context, userID string, roles []string) (err error) {
 	// TODO: There might be a more atomic way to do this.
 
 	// Validate the specified roles in Auth0
 	var newRoles []*management.Role
 	for _, name := range roles {
 		var role *management.Role
-		if role, err = s.FindRoleByName(name); err != nil {
+		if role, err = s.FindRoleByName(ctx, name); err != nil {
 			sentry.Error(nil).Err(err).Str("role", name).Msg("could not find role in Auth0")
 			return ErrInvalidUserRole
 		}
@@ -408,7 +408,7 @@ func (s *Server) AssignRoles(userID string, roles []string) (err error) {
 
 	// Get the existing roles for the user
 	var userRoles *management.RoleList
-	if userRoles, err = s.auth0.User.Roles(userID); err != nil {
+	if userRoles, err = s.auth0.User.Roles(ctx, userID); err != nil {
 		sentry.Error(nil).Err(err).Str("user_id", userID).Msg("could not fetch user roles from Auth0")
 		return err
 	}
@@ -416,7 +416,7 @@ func (s *Server) AssignRoles(userID string, roles []string) (err error) {
 	// Remove the existing roles from the user
 	// The management endpoint requires a non-empty list, otherwise it returns a 400
 	if len(userRoles.Roles) > 0 {
-		if err = s.auth0.User.RemoveRoles(userID, userRoles.Roles); err != nil {
+		if err = s.auth0.User.RemoveRoles(ctx, userID, userRoles.Roles); err != nil {
 			sentry.Error(nil).Err(err).Str("user_id", userID).Msg("could not remove existing roles from user")
 			return err
 		}
@@ -425,7 +425,7 @@ func (s *Server) AssignRoles(userID string, roles []string) (err error) {
 	// Assign the new roles to the user
 	// The management endpoint requires a non-empty list, otherwise it returns a 400
 	if len(newRoles) > 0 {
-		if err = s.auth0.User.AssignRoles(userID, newRoles); err != nil {
+		if err = s.auth0.User.AssignRoles(ctx, userID, newRoles); err != nil {
 			sentry.Error(nil).Err(err).Str("user_id", userID).Msg("could not add new roles to user")
 			return err
 		}
@@ -454,9 +454,9 @@ func (s *Server) ListUserRoles(c *gin.Context) {
 // FindUserByEmail returns the Auth0 user record by email address. This method returns
 // an ErrUserEmailNotFound error if the user does not exist and returns the first user
 // if there are multiple users with the same email address.
-func (s *Server) FindUserByEmail(email string) (user *management.User, err error) {
+func (s *Server) FindUserByEmail(ctx context.Context, email string) (user *management.User, err error) {
 	var users []*management.User
-	if users, err = s.auth0.User.ListByEmail(strings.ToLower(email)); err != nil {
+	if users, err = s.auth0.User.ListByEmail(ctx, strings.ToLower(email)); err != nil {
 		return nil, err
 	}
 
@@ -474,8 +474,8 @@ func (s *Server) FindUserByEmail(email string) (user *management.User, err error
 	return users[0], nil
 }
 
-func (s *Server) FindRoleByName(name string) (*management.Role, error) {
-	roles, err := s.auth0.Role.List()
+func (s *Server) FindRoleByName(ctx context.Context, name string) (*management.Role, error) {
+	roles, err := s.auth0.Role.List(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -493,7 +493,7 @@ func (s *Server) FindRoleByName(name string) (*management.Role, error) {
 // replaces it if another organization is found.
 // TODO: This switches the user to the first valid organization in the list. Should we
 // switch the user to their last used organization instead?
-func (s *Server) SwitchUserOrganization(user *management.User, appdata *auth.AppMetadata) (err error) {
+func (s *Server) SwitchUserOrganization(ctx context.Context, user *management.User, appdata *auth.AppMetadata) (err error) {
 	// Clear out the old organization info
 	appdata.ClearOrganization()
 
@@ -511,14 +511,14 @@ func (s *Server) SwitchUserOrganization(user *management.User, appdata *auth.App
 	}
 
 	// Save the updated app metadata to Auth0
-	if err = s.SaveAuth0AppMetadata(*user.ID, *appdata); err != nil {
+	if err = s.SaveAuth0AppMetadata(ctx, *user.ID, *appdata); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *Server) SaveAuth0AppMetadata(uid string, appdata auth.AppMetadata) (err error) {
+func (s *Server) SaveAuth0AppMetadata(ctx context.Context, uid string, appdata auth.AppMetadata) (err error) {
 	// Create a blank user with no data but the appdata
 	user := &management.User{}
 
@@ -528,7 +528,7 @@ func (s *Server) SaveAuth0AppMetadata(uid string, appdata auth.AppMetadata) (err
 	}
 
 	// Patch the user with the specified user ID
-	if err = s.auth0.User.Update(uid, user); err != nil {
+	if err = s.auth0.User.Update(ctx, uid, user); err != nil {
 		return err
 	}
 

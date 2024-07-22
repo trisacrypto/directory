@@ -69,11 +69,8 @@ func (c *directoryClient) connect(conf config.DirectoryConfig, opts ...grpc.Dial
 		}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), conf.Timeout)
-	defer cancel()
-
 	// Connect the directory client (non-blocking)
-	if c.conn, err = grpc.DialContext(ctx, conf.Endpoint, opts...); err != nil {
+	if c.conn, err = grpc.NewClient(conf.Endpoint, opts...); err != nil {
 		return err
 	}
 	c.client = gds.NewTRISADirectoryClient(c.conn)
@@ -110,11 +107,8 @@ func (c *membersClient) connect(conf config.MembersConfig, opts ...grpc.DialOpti
 		}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), conf.Timeout)
-	defer cancel()
-
 	// Connect the members client (non-blocking)
-	if c.conn, err = grpc.DialContext(ctx, conf.Endpoint, opts...); err != nil {
+	if c.conn, err = grpc.NewClient(conf.Endpoint, opts...); err != nil {
 		return err
 	}
 	c.client = members.NewTRISAMembersClient(c.conn)
