@@ -1,5 +1,5 @@
 # Dynamic Builds
-ARG BUILDER_IMAGE=golang:1.21-bookworm
+ARG BUILDER_IMAGE=golang:1.22-bookworm
 ARG FINAL_IMAGE=debian:bookworm-slim
 
 # Build Stage
