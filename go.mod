@@ -37,7 +37,7 @@ require (
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.3
 	github.com/syndtr/goleveldb v1.0.0
-	github.com/trisacrypto/courier v1.0.0
+	github.com/trisacrypto/courier v0.0.0-20231106194613-8a8d8b5a1d91
 	github.com/trisacrypto/trisa v1.3.0
 	github.com/urfave/cli v1.22.15
 	github.com/urfave/cli/v2 v2.27.2
