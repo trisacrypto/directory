@@ -35,7 +35,7 @@ const (
 	clientCerts  = "testdata/client.pem"
 	serverCerts  = "testdata/server.pem"
 	clientTarget = "client.trisa.dev"
-	serverTarget = "server.trisa.dev"
+	serverTarget = "passthrough://server.trisa.dev"
 )
 
 var (
