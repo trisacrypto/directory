@@ -28,10 +28,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-const (
-	bufSize = 1024 * 1024
-)
-
 type StoreType uint8
 
 const (
@@ -232,7 +228,7 @@ func (lib *Library) SetupTrtl() (err error) {
 	}
 
 	// Using a bufconn listener allows us to avoid network requests
-	lib.trtlListener = bufconn.New(bufSize, "")
+	lib.trtlListener = bufconn.New("")
 	go lib.trtl.Run(lib.trtlListener.Listener)
 
 	// Connect to the running Trtl server

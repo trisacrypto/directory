@@ -255,7 +255,7 @@ func (c MTLSConfig) Validate() error {
 }
 
 // DialOption returns a configured dial option which can be directly used in a
-// grpc.Dial or grpc.DialContext call to connect using mTLS.
+// grpc.NewClient call to connect using mTLS.
 func (c MTLSConfig) DialOption(endpoint string) (opt grpc.DialOption, err error) {
 	var (
 		sz    *trust.Serializer
