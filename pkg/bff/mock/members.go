@@ -24,7 +24,7 @@ const (
 func NewMembers(conf config.MembersConfig) (m *Members, err error) {
 	m = &Members{
 		srv:   grpc.NewServer(),
-		sock:  bufconn.New(bufSize, ""),
+		sock:  bufconn.New(""),
 		Calls: make(map[string]int),
 	}
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, Dispatch, SetStateAction } from 'react';
-import { chakra, useDisclosure } from '@chakra-ui/react';
+import { Box, chakra, useDisclosure } from '@chakra-ui/react';
 import { t } from '@lingui/macro';
 import FormLayout from 'layouts/FormLayout';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -13,6 +13,7 @@ import TrisaImplementationForm from './TrisaImplementationForm/index';
 import { StepsIndexes } from 'constants/steps';
 import { isProdEnv } from 'application/config';
 import { DevTool } from '@hookform/devtools';
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
 interface TrisaFormProps {
   data?: any;
   isLoading?: boolean;
@@ -23,12 +24,15 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
   const { isOpen, onClose, onOpen } = useDisclosure();
   const [shouldShowResetFormModal, setShouldShowResetFormModal] = useState(false);
   const { previousStep, nextStep, currentState, updateIsDirty } = useCertificateStepper();
+  const { certificateStep } = useFetchCertificateStep({
+    key: StepEnum.TRISA
+  });
   const {
     updateCertificateStep,
     updatedCertificateStep,
     wasCertificateStepUpdated,
     isUpdatingCertificateStep,
-    reset: resetMutation
+    reset
   } = useUpdateCertificateStep();
   const previousStepRef = useRef<any>(false);
   const nextStepRef = useRef<any>(false);
@@ -56,7 +60,7 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
   }, [shouldShowResetFormModal]);
 
   if (wasCertificateStepUpdated && nextStepRef.current) {
-    resetMutation();
+    reset();
     // reset the form with the new values
     resetForm(updatedCertificateStep?.form, {
       keepValues: false
@@ -66,16 +70,17 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
   }
 
   if (wasCertificateStepUpdated && previousStepRef.current && !isUpdatingCertificateStep) {
-    resetMutation();
+    reset();
     // reset the form with the new values
     resetForm(updatedCertificateStep?.form);
-    console.log('[] prev updatedCertificateStep', updatedCertificateStep);
     previousStepRef.current = false;
     previousStep(updatedCertificateStep);
   }
 
   const handlePreviousStepClick = () => {
-    if (isDirty) {
+    if (!isDirty) {
+      previousStep(certificateStep);
+    } else {
       const payload = {
         step: StepEnum.TRISA,
         form: {
@@ -86,18 +91,11 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
       updateCertificateStep(payload);
       previousStepRef.current = true;
     }
-    previousStep(data);
   };
 
   const handleNextStepClick = () => {
     if (!isDirty) {
-      nextStep({
-        step: StepEnum.TRISA,
-        form: {
-          ...methods.getValues(),
-          state: currentState()
-        } as any
-      });
+      nextStep(certificateStep);
     } else {
       const payload = {
         step: StepEnum.TRISA,
@@ -136,6 +134,7 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
     <FormLayout>
       <FormProvider {...methods}>
         <chakra.form
+          width={'100%'}
           onSubmit={methods.handleSubmit(handleNextStepClick)}
           data-testid="trisa-implementation-form">
           <TrisaImplementationForm
@@ -143,12 +142,15 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
             name="testnet"
             headerText={t`TRISA Endpoint: TestNet`}
           />
-          <TrisaImplementationForm
+          <Box pt={5}>
+            <TrisaImplementationForm
             type="MainNet"
             name="mainnet"
             headerText={t`TRISA Endpoint: MainNet`}
-          />
-          <StepButtons
+            />
+          </Box>
+          <Box pt={5}>
+            <StepButtons
             handlePreviousStep={handlePreviousStepClick}
             handleNextStep={handleNextStepClick}
             onResetModalClose={handleResetClick}
@@ -158,7 +160,8 @@ const TrisaForm: React.FC<TrisaFormProps> = ({ data, shouldResetForm, onResetFor
             onClosed={onCloseModalHandler}
             handleResetClick={handleResetClick}
             shouldShowResetFormModal={shouldShowResetFormModal}
-          />
+            />
+          </Box>
         </chakra.form>
         {!isProdEnv ? <DevTool control={methods.control} /> : null}
       </FormProvider>

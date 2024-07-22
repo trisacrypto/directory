@@ -16,7 +16,6 @@ import (
 )
 
 const (
-	bufSize          = 1024 * 1024
 	RegisterRPC      = "Register"
 	LookupRPC        = "Lookup"
 	SearchRPC        = "Search"
@@ -28,7 +27,7 @@ const (
 func NewGDS(conf config.DirectoryConfig) (g *GDS, err error) {
 	g = &GDS{
 		srv:   grpc.NewServer(),
-		sock:  bufconn.New(bufSize, ""),
+		sock:  bufconn.New(""),
 		Calls: make(map[string]int),
 	}
 

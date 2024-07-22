@@ -10,12 +10,12 @@ import MemberHeader from './components/MemberHeader';
 const MemberPage: React.FC = () => {
   return (
     <>
-      <Heading marginBottom="69px">
+      <Heading marginBottom="32px">
         <Trans>TRISA Member Directory</Trans>
       </Heading>
       <Suspense fallback={<Loader />}>
         <DirectoryNotification />
-        <FormLayout overflowX={'scroll'}>
+        <FormLayout overflowX={'auto'}>
           <MemberHeader />
           <MemberSelectNetwork />
           <MemberTable />

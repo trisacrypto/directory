@@ -9,6 +9,8 @@ import LandingLayout from 'layouts/LandingLayout';
 import useFetchLookupAutocomplete from './useFetchLookupAutocomplete';
 import useFetchLookup from './useFetchLookup';
 import NetworkActivity from 'components/Section/NetworkActivity/NetworkActivity';
+import { Hide } from '@chakra-ui/react';
+import LandingBanner from 'components/Banner/LandingBanner';
 const HomePage: React.FC = () => {
   const { vasps } = useFetchLookupAutocomplete();
   const { handleSearch, searchString, data, isLoading, error, resetData } = useFetchLookup();
@@ -21,10 +23,13 @@ const HomePage: React.FC = () => {
 
   return (
     <LandingLayout>
+      <LandingBanner />
       <Head hasBtn isHomePage />
       <AboutTrisaSection />
       <JoinUsSection />
-      <NetworkActivity />
+      <Hide>
+        <NetworkActivity />
+      </Hide>
 
       <SearchDirectory
         handleSubmit={handleSearchSubmit}

@@ -203,8 +203,7 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
   height: -moz-fit-content;
   height: fit-content;
   position: relative;
-  max-width: 100px;
-  margin-left: var(--chakra-space-3);
+  margin-left: var(--chakra-space-2);
 }
 
 .emotion-12 {
@@ -688,11 +687,6 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
                     >
                       🇯🇵 JA
                     </option>
-                    <option
-                      value="en-dh"
-                    >
-                      - DH
-                    </option>
                   </select>
                   <div
                     class="chakra-select__icon-wrapper emotion-13"
@@ -818,6 +812,8 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
             <a
               class="chakra-link emotion-31"
               href="https://trisa.io"
+              rel="noopener"
+              target="_blank"
             >
               the TRISA architecture
             </a>
@@ -832,19 +828,11 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
             <a
               class="chakra-link emotion-31"
               href="https://rotational.io"
+              rel="noopener"
+              target="_blank"
             >
                
               Rotational Labs
-            </a>
-             
-            in partnership with
-             
-            <a
-              class="chakra-link emotion-31"
-              href="https://cyphertrace.com"
-            >
-               
-              CipherTrace
             </a>
              
             on behalf of
@@ -852,6 +840,8 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
             <a
               class="chakra-link emotion-31"
               href="https://trisa.io"
+              rel="noopener"
+              target="_blank"
             >
               TRISA
             </a>

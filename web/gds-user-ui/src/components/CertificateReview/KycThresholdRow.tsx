@@ -9,7 +9,6 @@ interface KycThresholdRowProps {
     | undefined;
 }
 const KycThresholdRow = (data: KycThresholdRowProps) => {
-  console.log('[] KycThresholdRowProps data', data);
   const { kyc_threshold, kyc_threshold_currency, has_required_regulatory_program } =
     data?.data as any;
   const shouldShowKycThreshold = kyc_threshold || +kyc_threshold !== 0;

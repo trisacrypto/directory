@@ -40,10 +40,10 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data, netwo
   }, [data?.organization_name, network, status]);
 
   return (
-    <Stack py={5} w="full">
-      <Stack bg={'#E5EDF1'} h="55px" justifyItems={'center'} p={4}>
+    <Stack w="full">
+      <Stack bg={'#E5EDF1'} justifyItems={'center'}>
         <Stack mb={5}>
-          <Heading fontSize={20}>
+          <Heading fontSize={20} pt={4} pl={8}>
             <Trans>
               {`
                 Your ${network === 'mainnet' ? 'MainNet' : 'TestNet'} TRISA Organization Profile:
@@ -56,15 +56,15 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data, netwo
           </Heading>
         </Stack>
       </Stack>
-      <SimpleGrid minChildWidth="120px" spacing="40px">
-        <Stack border={'1px solid #eee'} p={4} my={5} px={7} bg={'white'} id={'org'} ref={orgRef}>
-          <Box pb={5}>
-            <Heading as={'h1'} fontSize={19} pb={10} pt={4}>
+      <SimpleGrid columns={{ base: 1, sm: 1, lg: 2 }} spacing={{ lg: 10 }}>
+        <Stack border={'1px solid #eee'} p={4} mt={5} mb={8} px={8} bg={'white'} id={'org'} ref={orgRef}>
+          <Box pb={2}>
+            <Heading as={'h1'} fontSize={19} pb={8} pt={2}>
               <Trans>Organizational Details</Trans>
             </Heading>
-            <SimpleGrid minChildWidth="280px" spacing="40px">
+            <SimpleGrid minChildWidth={"280px"} spacing="20px">
               <List>
-                <ListItem fontWeight={'bold'}>
+                <ListItem fontWeight={'bold'} pb={1}>
                   <Trans>Name Identifiers</Trans>
                 </ListItem>
                 <ListItem>
@@ -72,20 +72,20 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data, netwo
                 </ListItem>
               </List>
               <List>
-                <ListItem fontWeight={'bold'}>
+                <ListItem fontWeight={'bold'} pb={1}>
                   <Trans>Organization Type</Trans>
                 </ListItem>
                 <ListItem>{(BUSINESS_CATEGORY as any)[data?.business_category] || 'N/A'}</ListItem>
               </List>
               <List>
-                <ListItem fontWeight={'bold'}>
+                <ListItem fontWeight={'bold'} pb={1}>
                   <Trans>VASP Category</Trans>
                 </ListItem>
                 <ListItem>
                   {data?.vasp_categories && data?.vasp_categories.length > 0
                     ? data?.vasp_categories?.map((categ: any, index: any) => {
                         return (
-                          <Tag key={index} color={'white'} bg={'blue'} mr={2} mb={1}>
+                          <Tag key={index} color={'white'} bg={'blue'} mr={2} mb={1} size={'lg'}>
                             {getBusinessCategiryLabel(categ)}
                           </Tag>
                         );
@@ -94,13 +94,13 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data, netwo
                 </ListItem>
               </List>
               <List>
-                <ListItem fontWeight={'bold'}>
+                <ListItem fontWeight={'bold'} pb={1}>
                   <Trans>Incorporation Date</Trans>
                 </ListItem>
                 <ListItem>{data?.established_on || 'N/A'}</ListItem>
               </List>
               <List>
-                <ListItem fontWeight={'bold'}>
+                <ListItem fontWeight={'bold'} pb={1}>
                   <Trans>Business Address</Trans>
                 </ListItem>
                 <ListItem>
@@ -108,7 +108,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data, netwo
                 </ListItem>
               </List>
               <List>
-                <ListItem fontWeight={'bold'}>
+                <ListItem fontWeight={'bold'} pb={1}>
                   <Trans>Identification Number</Trans>
                 </ListItem>
                 <ListItem>
@@ -116,7 +116,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data, netwo
                 </ListItem>
               </List>
               <List>
-                <ListItem fontWeight={'bold'}>
+                <ListItem fontWeight={'bold'} pb={1}>
                   <Trans>Identification Type</Trans>
                 </ListItem>
                 <ListItem>
@@ -133,7 +133,7 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data, netwo
                 </ListItem>
               </List>
               <List>
-                <ListItem fontWeight={'bold'}>
+                <ListItem fontWeight={'bold'} pb={1}>
                   <Trans>Country of Registration</Trans>
                 </ListItem>
                 <ListItem>
@@ -146,20 +146,21 @@ const OrganizationalDetail: React.FC<OrganizationalDetailProps> = ({ data, netwo
         <Stack
           border={'1px solid #eee'}
           p={4}
-          px={5}
-          my={5}
+          px={8}
+          mt={5}
+          mb={8}
           bg={'white'}
           // minHeight={divHeight}
           // boxSize={'content-box'}
           id={'cnt'}>
           <Box>
-            <Heading as={'h1'} fontSize={19} pb={10} pt={4}>
+            <Heading as={'h1'} fontSize={19} pb={8} pt={2}>
               <Trans>Contacts</Trans>
             </Heading>
-            <SimpleGrid minChildWidth="360px" spacing="40px">
+            <SimpleGrid spacing="20px">
               {['legal', 'technical', 'administrative', 'billing'].map((contact, index) => (
                 <List key={index}>
-                  <ListItem fontWeight={'bold'}>
+                  <ListItem fontWeight={'bold'} pb={1}>
                     {' '}
                     {contact === 'legal'
                       ? `Compliance / ${contact.charAt(0).toUpperCase() + contact.slice(1)}`

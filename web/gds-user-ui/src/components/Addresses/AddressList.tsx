@@ -2,6 +2,7 @@ import { VStack, Box, Button } from '@chakra-ui/react';
 import { Trans } from '@lingui/react';
 import { useFormContext, useFieldArray } from 'react-hook-form';
 import Address from './Address';
+import { addressTypeEnum } from 'constants/address';
 
 function AddressList() {
   const { control } = useFormContext();
@@ -12,7 +13,9 @@ function AddressList() {
 
   const handleAddressClick = () => {
     append({
-      address_type: '',
+      /* Set the default address type value for any additional addresses 
+      to match the default address type provided by the backend. */
+      address_type: addressTypeEnum.ADDRESS_TYPE_BIZZ,
       address_line: ['', '', ''],
       country: ''
     });

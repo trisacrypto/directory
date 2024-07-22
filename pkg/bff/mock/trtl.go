@@ -30,7 +30,7 @@ func NewTrtl() (t *Trtl, err error) {
 	if t.srv, err = trtl.New(conf); err != nil {
 		return nil, err
 	}
-	t.sock = bufconn.New(1024*1024, "")
+	t.sock = bufconn.New("")
 	go t.srv.Run(t.sock.Listener)
 	return t, nil
 }

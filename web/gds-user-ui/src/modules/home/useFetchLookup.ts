@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { isValidUuid } from 'utils/utils';
+import { isValidUuid, upperCaseFirstLetter } from 'utils/utils';
 import { lookup } from './service';
 
 const useFetchLookup = () => {
@@ -25,8 +25,8 @@ const useFetchLookup = () => {
         setData(response);
         setSearchString(searchQuery);
       } catch (e: any) {
-        if (!e?.response?.data?.success) {
-          setError(e?.response?.data?.error);
+        if (!e?.data?.success) {
+          setError(upperCaseFirstLetter(e?.data?.error));
         } else {
           setError('Something went wrong.');
         }

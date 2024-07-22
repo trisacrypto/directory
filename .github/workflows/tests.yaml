@@ -14,15 +14,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.21.x
+          go-version: 1.22.x
 
       - name: Install Staticcheck
-        run: go install honnef.co/go/tools/cmd/staticcheck@2023.1.3
+        run: go install honnef.co/go/tools/cmd/staticcheck@2023.1.7
 
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Lint Go Code
         run: staticcheck ./...
@@ -38,12 +38,12 @@ jobs:
         working-directory: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.21.x
+          go-version: 1.22.x
 
       - name: Cache Speedup
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -51,26 +51,26 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
 
       - name: Install Protoc
-        uses: arduino/setup-protoc@v1
+        uses: arduino/setup-protoc@v3
         with:
-          version: "3.x"
+          version: "27.x"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Dependencies
         run: |
           go version
           go install github.com/kevinburke/go-bindata/go-bindata@v3.24.0
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3
-          go install github.com/swaggo/swag/cmd/swag@v1.8.12
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.2
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.4.0
+          go install github.com/swaggo/swag/cmd/swag@v1.16.3
 
       - name: Clone TRISA repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: trisacrypto/trisa
           ref: main
@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node
         uses: actions/setup-node@v3
@@ -113,12 +113,12 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: "16.x.x"
+          node-version: "18.x.x"
           cache: "yarn"
           cache-dependency-path: ./web/gds-user-ui/yarn.lock
 
@@ -138,7 +138,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node
         uses: actions/setup-node@v3
@@ -170,12 +170,12 @@ jobs:
         working-directory: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.21.x
+          go-version: 1.22.x
 
       - name: Cache Speedup
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -183,26 +183,26 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
 
       - name: Install Protoc
-        uses: arduino/setup-protoc@v1
+        uses: arduino/setup-protoc@v3
         with:
-          version: "3.x"
+          version: "27.x"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Dependencies
         run: |
           go version
           go install github.com/kevinburke/go-bindata/go-bindata@v3.24.0
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3
-          go install github.com/swaggo/swag/cmd/swag@v1.8.12
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.2
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.4.0
+          go install github.com/swaggo/swag/cmd/swag@v1.16.3
 
       - name: Clone TRISA repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: trisacrypto/trisa
           ref: main

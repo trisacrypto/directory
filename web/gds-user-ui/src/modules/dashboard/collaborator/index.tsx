@@ -7,7 +7,7 @@ import Loader from 'components/Loader';
 const Collaborators: React.FC = () => {
   return (
     <>
-      <Heading marginBottom="69px">Collaborators</Heading>
+      <Heading marginBottom="32px">Collaborators</Heading>
       <Suspense fallback={<Loader />}>
         <CollaboratorsSection />
       </Suspense>

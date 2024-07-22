@@ -18,11 +18,12 @@ import { getRefreshToken } from 'utils/auth0.helper';
 import { STEPPER_NETWORK } from 'utils/constants';
 import { getUserCurrentOrganizationService } from 'modules/auth/login/auth.service';
 import { setUserOrganization } from 'modules/auth/login/user.slice';
+import { upperCaseFirstLetter } from 'utils/utils';
 const ReviewsSummary = lazy(() => import('./ReviewsSummary'));
 const CertificateReview = () => {
   const toast = useToast();
   const dispatch = useDispatch();
-  const { testnetSubmissionState, mainnetSubmissionState } = useCertificateStepper();
+  const { testnetSubmissionState, mainnetSubmissionState, jumpToLastStep } = useCertificateStepper();
 
   const hasReachSubmitStep: boolean = useSelector(
     (state: RootStateOrAny) => state.stepper.hasReachSubmitStep
@@ -39,7 +40,7 @@ const CertificateReview = () => {
       if (network === STEPPER_NETWORK.TESTNET) {
         setIsTestNetSubmitting(true);
         const response = await submitTestnetRegistration();
-        if (response.status === 200) {
+        if (response?.status === 200) {
           await getRefreshToken(response?.data?.refresh_token);
           setIsTestNetSubmitting(false);
           setIsTestNetSent(true);
@@ -64,11 +65,11 @@ const CertificateReview = () => {
       setIsMainNetSubmitting(false);
       setIsTestNetSubmitting(false);
 
-      if (!err?.response?.data?.success) {
+      if (!err?.data?.success) {
         toast({
           position: 'top-right',
           title: t`Error Submitting Certificate`,
-          description: t`${err?.response?.data?.error}`,
+          description: t`${upperCaseFirstLetter(err?.data?.error)}`,
           status: 'error',
           duration: 5000,
           isClosable: true
@@ -88,6 +89,13 @@ const CertificateReview = () => {
     }
   }, [isTestNetSent, isMainNetSent, dispatch]);
 
+  const handleJumpToLastStep = (e: React.FormEvent) => {
+    e.preventDefault();
+    jumpToLastStep();
+    setIsTestNetSent(false);
+    setIsMainNetSent(false);
+  };
+
   if (!hasReachSubmitStep) {
     return <ReviewsSummary />;
   }
@@ -101,6 +109,7 @@ const CertificateReview = () => {
         result={result}
         isTestNetSubmitting={isTestNetSubmitting}
         isMainNetSubmitting={isMainNetSubmitting}
+        handleJumpToLastStep={handleJumpToLastStep}
       />
     </Suspense>
   );

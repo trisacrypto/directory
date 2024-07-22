@@ -47,10 +47,10 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   async (error: any) => {
-    // let _retry = 0;
     const originalRequest = error?.config;
-    originalRequest._retry = originalRequest?._retry || 0;
-    //
+    if (originalRequest) {
+      originalRequest._retry = originalRequest._retry || 0;
+    }
 
     if (error && !error.response) {
       return Promise.reject<any>(new Error('Network connection error'));
@@ -70,14 +70,13 @@ axiosInstance.interceptors.response.use(
           axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
           axiosInstance.defaults.headers.common['X-CSRF-Token'] = csrfToken;
           originalRequest._retry += 1;
-          console.log('retrying request', originalRequest);
           return axiosInstance(originalRequest);
         }
       } else {
         // The user should not be logged out if he can't process a request due to a missing permission
         if (
           error?.response?.status === 401 &&
-          (error as AxiosError).config.url !== '/users/login'
+          (error as AxiosError)?.config?.url !== '/users/login'
         ) {
           toast({
             title: "Sorry, you don't have permission to perform this action",
@@ -121,7 +120,7 @@ axiosInstance.interceptors.response.use(
       }
     }
 
-    return Promise.reject(error);
+    return Promise.reject(error.response);
 
     // }
   }

@@ -133,7 +133,7 @@ exports[`<BasicDetailsReview /> should match snapshot 1`] = `
   -webkit-flex-direction: column;
   -ms-flex-direction: column;
   flex-direction: column;
-  font-size: 18px;
+  font-size: 1rem;
 }
 
 .emotion-5>*:not(style)~*:not(style) {
@@ -166,10 +166,6 @@ exports[`<BasicDetailsReview /> should match snapshot 1`] = `
   padding-inline-start: 0px;
   padding-top: var(--chakra-space-2-5);
   padding-bottom: var(--chakra-space-2-5);
-}
-
-.emotion-7 * {
-  font-size: 1rem;
 }
 
 .emotion-9 {
@@ -299,7 +295,7 @@ exports[`<BasicDetailsReview /> should match snapshot 1`] = `
             class="emotion-7"
           >
             <tr
-              class="emotion-8"
+              class="emotion-7"
               role="row"
             >
               <td
@@ -320,7 +316,7 @@ exports[`<BasicDetailsReview /> should match snapshot 1`] = `
               />
             </tr>
             <tr
-              class="emotion-8"
+              class="emotion-7"
               role="row"
             >
               <td
@@ -341,7 +337,7 @@ exports[`<BasicDetailsReview /> should match snapshot 1`] = `
               />
             </tr>
             <tr
-              class="emotion-8"
+              class="emotion-7"
               role="row"
             >
               <td

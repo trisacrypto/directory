@@ -1,6 +1,6 @@
 Hello {{ .Name }},
 
-Your TRISA network registration has been approved! Your organization has been granted identity certificates validating your membership to other TRISA members via the TRISA Global Directory. Attached to this email are PKCS12 encrypted certificates so that you can implement the TRISA protocol using mTLS with other network members to exchange Travel Rule compliance information.
+Your TRISA network registration has been approved (or reapproved)! Your organization has been granted identity certificates validating your membership to other TRISA members via the TRISA Global Directory. Attached to this email are PKCS12 encrypted certificates so that you can implement the TRISA protocol using mTLS with other network members to exchange Travel Rule compliance information.
 
 The primary details of your directory entry are as follows:
 
@@ -11,9 +11,11 @@ Common Name: {{ .CommonName }}
 Serial Number: {{ .SerialNumber }}
 Endpoint: {{ .Endpoint }}
 
-To decrypt your certificates, you will need the PKCS12 password that you received when you first submitted your registration. To decrypt the unzipped certificates on the command line, you can use openssl as follows (you will be prompted to enter your password):
+To decrypt your certificates, you will need a PKCS12 password. If this is the first certificate you've recieved after registration, you'll need the PKCS12 password that was displayed during the registration process. If these are annually re-issued certificates, you'll need the PCKS12 password that was emailed to you via a one-time Whisper link preceding this email.
 
-openssl pkcs12 -in INFILE.p12 -out OUTFILE.crt -nodes
+To decrypt the unzipped certificates on the command line, you can use `openssl` as described in our documentation here:
+
+https://trisa.dev/joining-trisa/pkcs12/index.html#accessing-and-saving-the-certificates
 
 For more information on integrating with the TRISA network, please visit our documentation at https://trisa.dev/. If you have any questions, you may contact us at support@rotational.io or join us on our Slack channel trisa-workspace.slack.com. Please do not reply directly to this email.
 

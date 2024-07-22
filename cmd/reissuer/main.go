@@ -36,6 +36,7 @@ import (
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 var (
@@ -124,6 +125,33 @@ func main() {
 					Name:    "no-email",
 					Aliases: []string{"E"},
 					Usage:   "do not deliver certificates by email",
+				},
+			},
+		},
+		{
+			Name:   "password",
+			Usage:  "view or resend the password for the latest certificate request",
+			Action: resendPassword,
+			Before: connectDB,
+			After:  closeDB,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "vasp",
+					Aliases:  []string{"vasp-id", "v"},
+					Usage:    "the VASP ID to send reissuance reminder notifications to",
+					Required: true,
+				},
+				&cli.BoolFlag{
+					Name:    "yes",
+					Aliases: []string{"y"},
+					Usage:   "skip the confirmation prompt and immediately send notifications",
+					Value:   false,
+				},
+				&cli.BoolFlag{
+					Name:    "show",
+					Aliases: []string{"s", "show-password"},
+					Usage:   "show the password on the command line and exit without emailing the user",
+					Value:   false,
 				},
 			},
 		},
@@ -502,6 +530,86 @@ func reissueCerts(c *cli.Context) (err error) {
 		return cli.Exit(fmt.Errorf("could not save vasp: %s", err), 1)
 	}
 
+	return nil
+}
+
+func resendPassword(c *cli.Context) (err error) {
+	var (
+		vasp           *pb.VASP
+		vaspName       string
+		certreqID      string
+		pkcs12password []byte
+		sm             *secrets.SecretManager
+		emailer        *emails.EmailManager
+		whisperLink    string
+		nsent          int
+	)
+
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
+	// Fetch and identify the VASP specified by the user
+	vaspID := c.String("vasp")
+	if vasp, err = db.RetrieveVASP(ctx, vaspID); err != nil {
+		return cli.Exit(fmt.Errorf("could not find VASP record %s: %s", vaspID, err), 1)
+	}
+
+	if vaspName, err = vasp.Name(); err != nil {
+		vaspName = vasp.CommonName
+	}
+
+	// Get the latest certificate request for the VASP
+	if certreqID, err = models.GetLatestCertReqID(vasp); err != nil {
+		return cli.Exit(fmt.Errorf("could not get latest certificate request ID for vasp %s: %s", vaspName, err), 1)
+	}
+
+	// Connect to the secrets store and fetch the PKCS12 password if it exists
+	if sm, err = secrets.New(conf.Secrets); err != nil {
+		return cli.Exit(fmt.Errorf("could not connect to secret manager: %s", err), 1)
+	}
+
+	if pkcs12password, err = sm.With(certreqID).GetLatestVersion(ctx, "password"); err != nil {
+		return cli.Exit(fmt.Errorf("could not retrieve pkcs12 password for vasp %s certificate request %s: %s", vaspName, certreqID, err), 1)
+	}
+
+	// If print password and exit, do that without user confirmation
+	if c.Bool("show") {
+		fmt.Printf("retrieved password for %s (certificate request %s)\n", vaspName, certreqID)
+		if !c.Bool("yes") {
+			if !askForConfirmation("show PKCS12 password on the command line?") {
+				return cli.Exit(fmt.Errorf("canceled by user"), 1)
+			}
+		}
+
+		// Print password and exit
+		fmt.Println(string(pkcs12password))
+		return nil
+	}
+
+	// Check with the user if we should continue with resending the password
+	fmt.Printf("resending password for %s (certificate request %s)\n", vaspName, certreqID)
+	if !c.Bool("yes") {
+		if !askForConfirmation("continue and resend PKCS12 password?") {
+			return cli.Exit(fmt.Errorf("canceled by user"), 1)
+		}
+	}
+
+	// Create the Whisper link for the provided PKCS12 password.
+	if whisperLink, err = whisper.CreateSecretLink(fmt.Sprintf(whisperPasswordTemplate, string(pkcs12password)), "", 3, weekFromNow()); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Create the email manager.
+	if emailer, err = emails.New(conf.Email); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Send the notification email that certificate reissuance is forthcoming and provide whisper link to the PKCS12 password.
+	if nsent, err = emailer.SendReissuanceStarted(vasp, whisperLink); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	fmt.Printf("successfully sent %d Whisper password notifications for PKCS12 password %q\n", nsent, pkcs12password)
 	return nil
 }
 
@@ -919,4 +1027,22 @@ func askForConfirmation(s string) bool {
 
 func weekFromNow() time.Time {
 	return time.Now().AddDate(0, 0, 7)
+}
+
+func PrintJSON(m protoreflect.ProtoMessage) (err error) {
+	jsonpb := protojson.MarshalOptions{
+		Multiline:       true,
+		Indent:          "  ",
+		AllowPartial:    true,
+		UseProtoNames:   true,
+		UseEnumNumbers:  false,
+		EmitUnpopulated: true,
+	}
+
+	var data []byte
+	if data, err = jsonpb.Marshal(m); err != nil {
+		return cli.Exit(fmt.Errorf("could not marshal protocol buffer: %w", err), 1)
+	}
+	fmt.Println(string(data))
+	return nil
 }

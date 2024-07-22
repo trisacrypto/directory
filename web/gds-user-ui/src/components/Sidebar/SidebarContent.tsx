@@ -94,7 +94,7 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
             alignItems="center"
             color="#8391a2"
             role="group"
-            href="mailto:support@trisa.io"
+            href="mailto:support@rotational.io"
             as={Link}>
             <Icon
               mr="4"
@@ -147,7 +147,7 @@ const SidebarContent = ({ onClose, ...rest }: SidebarProps) => {
         textAlign={'center'}
         color="white"
         width="100%">
-        <Text>GIT: {appGitVersion || 'N/A'}</Text>
+        <Text>App: {appGitVersion || 'N/A'}</Text>
         <HDivider />
         <Text>BFF & GDS: {bffAndGdsVersion || 'N/A'}</Text>
       </HStack>

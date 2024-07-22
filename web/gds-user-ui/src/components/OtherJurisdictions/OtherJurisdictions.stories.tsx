@@ -1,18 +1,18 @@
 import { Meta, Story } from '@storybook/react';
 import { withRHF } from 'hoc/withRHF';
-import OtherJuridictions from '.';
+import OtherJurisdictions from '.';
 
-type OtherJuridictionsProps = {
+type OtherJurisdictionsProps = {
   name: string;
 };
 
 export default {
-  title: 'components/OtherJuridictions',
-  component: OtherJuridictions,
+  title: 'components/OtherJurisdictions',
+  component: OtherJurisdictions,
   decorators: [withRHF(false)]
 } as Meta;
 
-const Template: Story<OtherJuridictionsProps> = (args) => <OtherJuridictions {...args} />;
+const Template: Story<OtherJurisdictionsProps> = (args) => <OtherJurisdictions {...args} />;
 
 export const Standard = Template.bind({});
 Standard.args = {

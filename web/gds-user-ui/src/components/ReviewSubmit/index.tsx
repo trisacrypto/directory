@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import {
   Button,
   Heading,
@@ -8,24 +8,23 @@ import {
   useDisclosure,
   Box,
   Flex,
-  Link
+  Link,
+  SimpleGrid,
 } from '@chakra-ui/react';
 import FormLayout from 'layouts/FormLayout';
 import ConfirmationModal from 'components/ReviewSubmit/ConfirmationModal';
 import { t, Trans } from '@lingui/macro';
 import useCertificateStepper from 'hooks/useCertificateStepper';
-import { useSelector } from 'react-redux';
-// import { useNavigate } from 'react-router-dom';
 import { STEPPER_NETWORK } from 'utils/constants';
-import {
-  getTestNetSubmittedStatus,
-  getMainNetSubmittedStatus
-} from 'application/store/selectors/stepper';
 
 import WarningBox from 'components/WarningBox';
-import { setHasReachSubmitStep } from 'application/store/stepper.slice';
+import { setHasReachSubmitStep, setStepStatus } from 'application/store/stepper.slice';
 import { useAppDispatch } from 'application/store';
 import { StepsIndexes } from 'constants/steps';
+import { useFetchCertificateStep } from 'hooks/useFetchCertificateStep';
+import { StepEnum } from 'types/enums';
+import useSubmissionStatus from 'modules/dashboard/registration/hooks/useSubmissionStatus';
+import { LSTATUS } from 'components/RegistrationForm/CertificateStepLabel';
 
 interface ReviewSubmitProps {
   onSubmitHandler: (e: React.FormEvent, network: string) => void;
@@ -34,6 +33,7 @@ interface ReviewSubmitProps {
   result?: any;
   isTestNetSubmitting?: boolean;
   isMainNetSubmitting?: boolean;
+  handleJumpToLastStep?: (e: React.FormEvent) => void;
 }
 
 const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
@@ -42,45 +42,46 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
   isMainNetSent,
   result,
   isTestNetSubmitting,
-  isMainNetSubmitting
+  isMainNetSubmitting,
+  handleJumpToLastStep,
 }) => {
-  const isTestNetSubmitted: boolean = useSelector(getTestNetSubmittedStatus);
-  const isMainNetSubmitted: boolean = useSelector(getMainNetSubmittedStatus);
+  const { certificateStep } = useFetchCertificateStep({ key: StepEnum.ALL });
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isSent = isTestNetSent || isMainNetSent;
-  const [testnet, setTestnet] = useState(false);
-  const [mainnet, setMainnet] = useState(false);
-  const { jumpToLastStep, jumpToStep } = useCertificateStepper();
-  // const navigate = useNavigate();
+  const { jumpToStep } = useCertificateStepper();
+  const { status } = useSubmissionStatus();
   const dispatch = useAppDispatch();
+  
+  // Display a warning box if the user has reached the submit step but not completed the
+  // TRISA implementation step for one of the networks.
+  const mainnetCommonName = certificateStep?.form?.mainnet?.common_name;
+  const mainnetEndpoint = certificateStep?.form?.mainnet?.endpoint;
+  const testnetCommonName = certificateStep?.form?.testnet?.common_name;
+  const testnetEndpoint = certificateStep?.form?.testnet?.endpoint;
 
-  const isTestnetNetworkFieldsIncomplete = false;
-  const isMainnetNetworkIncomplete = false;
-  useEffect(() => {
-    if (isTestNetSubmitted) {
-      setTestnet(true);
-    }
-    if (isMainNetSubmitted) {
-      setMainnet(true);
-    }
-  }, [isTestNetSubmitted, isMainNetSubmitted]);
+  const isMainnetNetworkIncomplete = !mainnetCommonName || !mainnetEndpoint;
+  const isTestnetNetworkIncomplete = !testnetCommonName || !testnetEndpoint;
+
+  const isTestNetSubmitted = status?.data?.testnet_submitted;
+  const isMainNetSubmitted = status?.data?.mainnet_submitted;
+
   useEffect(() => {
     if (isSent) {
       onOpen();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // List props in the dependency array to ensure the correct values are used.
   }, [isTestNetSent, isMainNetSent]);
 
-  const handleJumpToLastStep = () => {
-    jumpToLastStep();
-    // navigate('/dashboard/certificate/registration');
-  };
+  // Update the review step status to complete if the user submits a registration.
+  if (isTestNetSubmitted || isMainNetSubmitted) {
+    dispatch(setStepStatus({ step: 6, status: LSTATUS.COMPLETE }));
+  }
 
   const handleJumpToTrisaImplementationStep = () => {
     dispatch(setHasReachSubmitStep({ hasReachSubmitStep: false }));
     jumpToStep(StepsIndexes.TRISA_IMPLEMENTATION);
   };
-
   return (
     <>
       <Flex>
@@ -115,8 +116,8 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
               </Text>
             </Text>
           </FormLayout>
-          <Stack
-            direction={['column', 'row']}
+          <SimpleGrid
+            columns={{ base: 1, lg: 2 }}
             justifyContent="space-around"
             py={14}
             width="100%"
@@ -162,7 +163,7 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
                   .
                 </Text>
 
-                {isTestnetNetworkFieldsIncomplete ? (
+                {isTestnetNetworkIncomplete ? (
                   <WarningBox>
                     <Text>
                       <Trans>
@@ -188,26 +189,29 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
               <Stack
                 alignContent={'center'}
                 justifyContent={'center'}
+                height="100%"
                 mx="auto"
-                pb={4}
+                pt="2"
+                px="6"
+                pb="6"
                 alignItems={'center'}>
                 <Button
                   bgColor="#ff7a59f0"
                   color="#fff"
-                  isDisabled={testnet || isTestnetNetworkFieldsIncomplete}
-                  data-testid="testnet-submit-btn"
                   size="lg"
-                  py={["null", "2.5rem", "2.8rem", "1.5rem"]}
-                  isLoading={isTestNetSubmitting}
                   whiteSpace="normal"
-                  maxW={[200, 250, 385]}
+                  mt="auto"
+                  py={{ base: '1rem', lg: '1.75rem' }}
                   width="100%"
                   boxShadow="lg"
-                  onClick={(e) => {
-                    onSubmitHandler(e, STEPPER_NETWORK.TESTNET);
-                  }}
                   _hover={{
                     bgColor: '#f55c35'
+                  }}
+                  isLoading={isTestNetSubmitting}
+                  isDisabled={isTestnetNetworkIncomplete || isTestNetSubmitted }
+                  data-testid="testnet-submit-btn"
+                  onClick={(e) => {
+                    onSubmitHandler(e, STEPPER_NETWORK.TESTNET);
                   }}>
                   {t`Submit TestNet Registration`}
                 </Button>
@@ -278,39 +282,41 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
               <Stack
                 alignContent={'center'}
                 justifyContent={'center'}
+                height="100%"
                 mx="auto"
+                pt="2"
                 alignItems={'center'}
-                pb={4}>
+                pb="6"
+                px="6">
                 <Button
                   bgColor="#23a7e0e8"
                   color="#fff"
                   size="lg"
-                  py={["null", "2.5rem", "2.8rem", "1.5rem"]}
-                  isLoading={isMainNetSubmitting}
-                  isDisabled={mainnet || isMainnetNetworkIncomplete}
-                  whiteSpace="normal"
-                  boxShadow="lg"
-                  data-testid="mainnet-submit-btn"
-                  maxW={[200, 250, 385]}
-                  onClick={(e) => {
-                    onSubmitHandler(e, STEPPER_NETWORK.MAINNET);
-                  }}
+                  mt="auto"
+                  py={{ base: '1rem', lg: '1.75rem' }}
                   width="100%"
                   _hover={{
                     bgColor: '#189fda'
-                  }}>
+                  }}
+                  isLoading={isMainNetSubmitting}
+                  isDisabled={isMainnetNetworkIncomplete || isMainNetSubmitted }
+                  whiteSpace="normal"
+                  boxShadow="lg"
+                  data-testid="mainnet-submit-btn"
+                  onClick={(e) => {
+                    onSubmitHandler(e, STEPPER_NETWORK.MAINNET);
+                  }}
+                  >
                   {t`Submit MainNet Registration`}
                 </Button>
               </Stack>
             </Stack>
-          </Stack>
+          </SimpleGrid>
 
           <Box alignSelf={'flex-start'} textAlign="center" mx={'auto'}>
             <Button
-              data-cy="back-to-review-section"
               bgColor="#fff"
               color="#1026F0"
-              onClick={handleJumpToLastStep}
               size="lg"
               py="2rem"
               whiteSpace="normal"
@@ -319,7 +325,9 @@ const ReviewSubmit: React.FC<ReviewSubmitProps> = ({
               width="100%"
               _hover={{
                 bgColor: '#E6E6E6'
-              }}>
+              }}
+              data-cy="back-to-review-section"
+              onClick={handleJumpToLastStep}>
               {t`Back to Review section`}
             </Button>
           </Box>

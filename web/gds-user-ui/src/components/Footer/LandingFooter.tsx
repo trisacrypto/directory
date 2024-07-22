@@ -18,7 +18,7 @@ const Footer = (): React.ReactElement => {
         <Flex width="100%" wrap="wrap">
           <Text width="100%" textAlign="center" color="white" fontSize="sm">
             <Trans id="A component of">A component of</Trans>{' '}
-            <Link href="https://trisa.io" color={colors.system.cyan}>
+            <Link isExternal href="https://trisa.io" color={colors.system.cyan}>
               <Trans id="the TRISA architecture">the TRISA architecture</Trans>
             </Link>{' '}
             <Trans id="for Cryptocurrency Travel Rule compliance.">
@@ -27,17 +27,12 @@ const Footer = (): React.ReactElement => {
           </Text>
           <Text width="100%" textAlign="center" color="white" fontSize="sm">
             <Trans id="Created and maintained by">Created and maintained by</Trans>{' '}
-            <Link href="https://rotational.io" color={colors.system.cyan}>
+            <Link isExternal href="https://rotational.io" color={colors.system.cyan}>
               {' '}
               Rotational Labs
             </Link>{' '}
-            <Trans id="in partnership with">in partnership with</Trans>{' '}
-            <Link href="https://cyphertrace.com" color={colors.system.cyan}>
-              {' '}
-              CipherTrace
-            </Link>{' '}
             <Trans id="on behalf of">on behalf of</Trans>{' '}
-            <Link href="https://trisa.io" color={colors.system.cyan}>
+            <Link isExternal href="https://trisa.io" color={colors.system.cyan}>
               TRISA
             </Link>{' '}
           </Text>

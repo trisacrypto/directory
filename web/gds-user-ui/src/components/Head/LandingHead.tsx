@@ -16,7 +16,9 @@ const LandingHead: React.FC<LandingHeaderProps> = ({ isStartPage, isHomePage, ha
       justifyContent="center"
       direction="column"
       paddingY={{ base: 16, md: 20 }}
-      fontSize={'xl'}>
+      fontSize={'xl'}
+      style={{ marginTop: 0 }}
+      >
       <Stack textAlign={'center'} spacing={{ base: 3 }}>
         {isHomePage && (
           <Box width={'80%'} mx="auto">

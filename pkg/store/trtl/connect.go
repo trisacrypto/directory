@@ -58,7 +58,7 @@ func Connect(conf config.StoreConfig) (conn *grpc.ClientConn, err error) {
 	}
 
 	// Connect the replica client
-	if conn, err = grpc.Dial(dsn.Host, opts...); err != nil {
+	if conn, err = grpc.NewClient(dsn.Host, opts...); err != nil {
 		return nil, err
 	}
 	return conn, nil

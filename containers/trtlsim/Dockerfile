@@ -1,9 +1,12 @@
 # Dynamic Builds
-ARG BUILDER_IMAGE=golang:1.21-bookworm
+ARG BUILDER_IMAGE=golang:1.22-bookworm
 ARG FINAL_IMAGE=debian:bookworm-slim
 
 # Build stage
-FROM ${BUILDER_IMAGE} as builder
+FROM --platform=${BUILDPLATFORM} ${BUILDER_IMAGE} as builder
+
+ARG TARGETOS
+ARG TARGETARCH
 
 # Ensure ca-certificates are up to date
 RUN update-ca-certificates
@@ -25,10 +28,10 @@ COPY pkg ./pkg
 COPY proto ./proto
 
 # Build binaries
-RUN go build -v -o /go/bin/trtlsim ./cmd/trtlsim
+RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -v -o /go/bin/trtlsim ./cmd/trtlsim
 
 # Final Stage
-FROM ${FINAL_IMAGE} AS final
+FROM --platform=${BUILDPLATFORM} ${FINAL_IMAGE} AS final
 
 LABEL maintainer="TRISA <info@trisa.io>"
 LABEL description="GDS Replicated Data Backend (TRTL)"

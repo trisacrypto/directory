@@ -34,6 +34,25 @@ exports[`LegalForm should render 1`] = `
   }
 }
 
+.emotion-2 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+.emotion-2>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
 .emotion-3 {
   display: -webkit-box;
   display: -webkit-flex;
@@ -236,6 +255,26 @@ exports[`LegalForm should render 1`] = `
   background: var(--chakra-colors-gray-300);
 }
 
+.emotion-10 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  padding-top: var(--chakra-space-5);
+}
+
+.emotion-10>*:not(style)~*:not(style) {
+  margin-top: 0.5rem;
+  -webkit-margin-end: 0px;
+  margin-inline-end: 0px;
+  margin-bottom: 0px;
+  -webkit-margin-start: 0px;
+  margin-inline-start: 0px;
+}
+
 .emotion-11 {
   font-family: var(--chakra-fonts-heading);
   font-weight: var(--chakra-fontWeights-bold);
@@ -293,7 +332,6 @@ exports[`LegalForm should render 1`] = `
 
 .emotion-20 {
   position: relative;
-  pointer-events: auto;
 }
 
 .emotion-21 {
@@ -645,6 +683,10 @@ exports[`LegalForm should render 1`] = `
 }
 
 .emotion-76 {
+  padding-top: var(--chakra-space-5);
+}
+
+.emotion-77 {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -666,7 +708,7 @@ exports[`LegalForm should render 1`] = `
   row-gap: var(--chakra-space-2);
 }
 
-.emotion-76>*:not(style)~*:not(style) {
+.emotion-77>*:not(style)~*:not(style) {
   margin-top: 0px;
   -webkit-margin-end: 0px;
   margin-inline-end: 0px;
@@ -675,7 +717,7 @@ exports[`LegalForm should render 1`] = `
   margin-inline-start: var(--chakra-space-8);
 }
 
-.emotion-78 {
+.emotion-79 {
   display: -webkit-inline-box;
   display: -webkit-inline-flex;
   display: -ms-inline-flexbox;
@@ -716,25 +758,25 @@ exports[`LegalForm should render 1`] = `
   padding-inline-end: var(--chakra-space-4);
 }
 
-.emotion-78:focus,
-.emotion-78[data-focus] {
+.emotion-79:focus,
+.emotion-79[data-focus] {
   box-shadow: var(--chakra-shadows-outline);
 }
 
-.emotion-78[disabled],
-.emotion-78[aria-disabled=true],
-.emotion-78[data-disabled] {
+.emotion-79[disabled],
+.emotion-79[aria-disabled=true],
+.emotion-79[data-disabled] {
   opacity: 0.4;
   cursor: not-allowed;
   box-shadow: var(--chakra-shadows-none);
 }
 
-.emotion-78:hover[disabled],
-.emotion-78[data-hover][disabled],
-.emotion-78:hover[aria-disabled=true],
-.emotion-78[data-hover][aria-disabled=true],
-.emotion-78:hover[data-disabled],
-.emotion-78[data-hover][data-disabled] {
+.emotion-79:hover[disabled],
+.emotion-79[data-hover][disabled],
+.emotion-79:hover[aria-disabled=true],
+.emotion-79[data-hover][aria-disabled=true],
+.emotion-79:hover[data-disabled],
+.emotion-79[data-hover][data-disabled] {
   background: initial;
 }
 
@@ -746,7 +788,7 @@ exports[`LegalForm should render 1`] = `
       class="emotion-1"
     >
       <div
-        class="chakra-stack emotion-0"
+        class="chakra-stack emotion-2"
         data-testid="name-identifier"
       >
         <div
@@ -782,7 +824,7 @@ exports[`LegalForm should render 1`] = `
         </div>
       </div>
       <div
-        class="chakra-stack emotion-0"
+        class="chakra-stack emotion-10"
       >
         <h2
           class="chakra-heading emotion-11"
@@ -811,7 +853,7 @@ exports[`LegalForm should render 1`] = `
         </div>
       </div>
       <div
-        class="chakra-stack emotion-0"
+        class="chakra-stack emotion-10"
         data-testid="legal-country-of-registration"
       >
         <h2
@@ -862,11 +904,9 @@ exports[`LegalForm should render 1`] = `
                 >
                   <input
                     aria-autocomplete="list"
-                    aria-controls="react-select-2-listbox"
                     aria-describedby="react-select-2-placeholder"
                     aria-expanded="false"
                     aria-haspopup="true"
-                    aria-owns="react-select-2-listbox"
                     autocapitalize="none"
                     autocomplete="off"
                     autocorrect="off"
@@ -917,7 +957,7 @@ exports[`LegalForm should render 1`] = `
         </div>
       </div>
       <div
-        class="chakra-stack emotion-0"
+        class="chakra-stack emotion-10"
         data-testid="legal-name-identification"
       >
         <h2
@@ -1011,11 +1051,9 @@ exports[`LegalForm should render 1`] = `
                 >
                   <input
                     aria-autocomplete="list"
-                    aria-controls="react-select-3-listbox"
                     aria-describedby="react-select-3-placeholder"
                     aria-expanded="false"
                     aria-haspopup="true"
-                    aria-owns="react-select-3-listbox"
                     autocapitalize="none"
                     autocomplete="off"
                     autocorrect="off"
@@ -1101,10 +1139,8 @@ exports[`LegalForm should render 1`] = `
                 >
                   <input
                     aria-autocomplete="list"
-                    aria-controls="react-select-4-listbox"
                     aria-expanded="false"
                     aria-haspopup="true"
-                    aria-owns="react-select-4-listbox"
                     autocapitalize="none"
                     autocomplete="off"
                     autocorrect="off"
@@ -1179,27 +1215,31 @@ exports[`LegalForm should render 1`] = `
         </div>
       </div>
       <div
-        class="chakra-stack emotion-76"
-        data-testid="step-buttons"
+        class="emotion-76"
       >
-        <button
-          class="chakra-button emotion-7"
-          type="button"
+        <div
+          class="chakra-stack emotion-77"
+          data-testid="step-buttons"
         >
-          Save & Previous
-        </button>
-        <button
-          class="chakra-button emotion-78"
-          type="button"
-        >
-          Save & Next
-        </button>
-        <button
-          class="chakra-button emotion-7"
-          type="button"
-        >
-          Clear & Reset Section
-        </button>
+          <button
+            class="chakra-button emotion-7"
+            type="button"
+          >
+            Save & Previous
+          </button>
+          <button
+            class="chakra-button emotion-79"
+            type="button"
+          >
+            Save & Next
+          </button>
+          <button
+            class="chakra-button emotion-7"
+            type="button"
+          >
+            Clear & Reset Section
+          </button>
+        </div>
       </div>
     </form>
   </div>

@@ -1,6 +1,5 @@
 import React from 'react';
-import { Button, HStack } from '@chakra-ui/react';
-import FormLayout from 'layouts/FormLayout';
+import { Button, HStack, Stack } from '@chakra-ui/react';
 import NameIdentifier from '../NameIdentifier';
 import { t } from '@lingui/macro';
 import { Trans } from '@lingui/react';
@@ -23,7 +22,7 @@ const NameIdentifiers: React.FC = () => {
   };
 
   return (
-    <FormLayout data-testid="name-identifier">
+    <Stack data-testid="name-identifier">
       <NameIdentifier
         name="entity.name.name_identifiers"
         heading={t`Name Identifiers`}
@@ -57,7 +56,7 @@ const NameIdentifiers: React.FC = () => {
           <Trans id="Add Phonetic Names">Add Phonetic Names</Trans>
         </Button>
       </HStack>
-    </FormLayout>
+    </Stack>
   );
 };
 

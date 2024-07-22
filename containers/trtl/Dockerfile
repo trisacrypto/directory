@@ -1,10 +1,12 @@
 # Dynamic Builds
-ARG BUILDER_IMAGE=golang:1.21-bookworm
+ARG BUILDER_IMAGE=golang:1.22-bookworm
 ARG FINAL_IMAGE=debian:bookworm-slim
 
-# Build stage
-FROM ${BUILDER_IMAGE} as builder
+# Build stage1
+FROM --platform=${BUILDPLATFORM} ${BUILDER_IMAGE} as builder
 
+ARG TARGETOS
+ARG TARGETARCH
 ARG GIT_REVISION=""
 
 # Ensure ca-certificates are up to date
@@ -27,11 +29,11 @@ COPY pkg ./pkg
 COPY proto ./proto
 
 # Build binaries
-RUN go build -v -o /go/bin/trtl -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$GIT_REVISION'" ./cmd/trtl
-RUN go build -v -o /go/bin/gdsutil -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$GIT_REVISION'" ./cmd/gdsutil
+RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -v -o /go/bin/trtl -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$GIT_REVISION'" ./cmd/trtl
+RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -v -o /go/bin/gdsutil -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$GIT_REVISION'" ./cmd/gdsutil
 
 # Final Stage
-FROM ${FINAL_IMAGE} AS final
+FROM --platform=${BUILDPLATFORM} ${FINAL_IMAGE} AS final
 
 LABEL maintainer="TRISA <info@trisa.io>"
 LABEL description="GDS Replicated Data Backend (TRTL)"

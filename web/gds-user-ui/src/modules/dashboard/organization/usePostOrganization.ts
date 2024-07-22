@@ -1,7 +1,6 @@
-import { AxiosError } from 'axios';
-import { CreateOrganisation } from './organizationService';
 import { useMutation } from '@tanstack/react-query';
+import { createOrganization } from './organizationService';
 
 export function usePostOrganizations() {
-  return useMutation<any, AxiosError>(CreateOrganisation);
+  return useMutation<any, any>(createOrganization);
 }

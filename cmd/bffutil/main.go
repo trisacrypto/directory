@@ -3,11 +3,15 @@ package main
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/google/uuid"
@@ -175,13 +179,55 @@ func main() {
 			Name:   "orgs:cleanup",
 			Usage:  "removes any organizations that have zero collaborators",
 			Action: cleanupOrgs,
-			Before: connectDB,
+			Before: Before(loadConf, connectDB, connectAuth0),
 			After:  closeDB,
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
 					Name:    "force",
 					Aliases: []string{"f"},
 					Usage:   "do not prompt to confirm org delete",
+				},
+			},
+		},
+		{
+			Name:   "registration:update",
+			Usage:  "update the trisa testnet or mainnet registration details",
+			Action: registrationUpdate,
+			Before: connectDB,
+			After:  closeDB,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "org-id",
+					Aliases:  []string{"org", "o"},
+					Usage:    "the id of the organization to update",
+					Required: true,
+				},
+				&cli.StringFlag{
+					Name:     "network",
+					Aliases:  []string{"n"},
+					Usage:    "specify testnet or mainnet",
+					Required: true,
+				},
+				&cli.StringFlag{
+					Name:    "id",
+					Aliases: []string{"i"},
+					Usage:   "update the directory id of the registration",
+				},
+				&cli.StringFlag{
+					Name:    "registered-directory",
+					Aliases: []string{"d"},
+					Usage:   "update the registered directory of the registration",
+				},
+				&cli.StringFlag{
+					Name:    "common-name",
+					Aliases: []string{"c"},
+					Usage:   "update the common name of the registration",
+				},
+				&cli.TimestampFlag{
+					Name:    "submitted",
+					Aliases: []string{"s"},
+					Usage:   "update the submitted timestamp of the registration",
+					Layout:  time.RFC3339,
 				},
 			},
 		},
@@ -216,14 +262,28 @@ func main() {
 				&cli.StringFlag{
 					Name:     "org",
 					Aliases:  []string{"o"},
-					Usage:    "specify the organization id to add the collaborator to",
+					Usage:    "specify the organization id to remove the collaborator from",
 					Required: true,
 				},
 				&cli.StringFlag{
 					Name:     "user",
 					Aliases:  []string{"u"},
-					Usage:    "specify the auth0 id of the user to make a collaborator",
+					Usage:    "specify the auth0 id of the user to remove",
 					Required: true,
+				},
+			},
+		},
+		{
+			Name:   "collabs:export-emails",
+			Usage:  "export email addresses from collaborators",
+			Action: exportEmails,
+			Before: connectDB,
+			After:  closeDB,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "out",
+					Aliases: []string{"o"},
+					Usage:   "path to write csv output to",
 				},
 			},
 		},
@@ -237,6 +297,19 @@ func main() {
 					Name:    "dry-run",
 					Aliases: []string{"d"},
 					Usage:   "display user app_metadata changes without updating them",
+				},
+			},
+		},
+		{
+			Name:   "appdata:dedupeorgs",
+			Usage:  "remove duplicate organizations from a user's app_metadata",
+			Action: dedupeAppdataOrgs,
+			Before: Before(loadConf, connectAuth0),
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "dry-run",
+					Aliases: []string{"d"},
+					Usage:   "display user duplicate orgs without removing them",
 				},
 			},
 		},
@@ -530,7 +603,7 @@ func createOrgs(c *cli.Context) (err error) {
 		testname = "N/A"
 	}
 
-	if user, err = auth0.User.Read(c.String("user")); err != nil {
+	if user, err = auth0.User.Read(ctx, c.String("user")); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -540,7 +613,7 @@ func createOrgs(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
-	if permissions, err = auth0.User.Permissions(*user.ID); err != nil {
+	if permissions, err = auth0.User.Permissions(ctx, *user.ID); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -659,7 +732,7 @@ func createOrgs(c *cli.Context) (err error) {
 
 	// Add the user to the organization
 	appdata.AddOrganization(org.Id)
-	if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
+	if err = SaveAppMetadata(ctx, *user.ID, *appdata); err != nil {
 		return cli.Exit(err, 1)
 	}
 	return nil
@@ -773,6 +846,9 @@ func deleteOrgs(c *cli.Context) (err error) {
 		return cli.Exit("can only delete one organization at a time", 1)
 	}
 
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	var org *models.Organization
 	if org, err = GetOrg(c.Args().Get(0)); err != nil {
 		return cli.Exit(err, 1)
@@ -788,7 +864,7 @@ func deleteOrgs(c *cli.Context) (err error) {
 		}
 
 		var user *management.User
-		if user, err = auth0.User.Read(collaborator.UserId); err != nil {
+		if user, err = auth0.User.Read(ctx, collaborator.UserId); err != nil {
 			return cli.Exit(fmt.Errorf("could not fetch user for %s", collaborator.Email), 1)
 		}
 
@@ -831,13 +907,10 @@ func deleteOrgs(c *cli.Context) (err error) {
 			}
 		}
 
-		if err = SaveAppMetadata(uid, *umeta); err != nil {
+		if err = SaveAppMetadata(ctx, uid, *umeta); err != nil {
 			return cli.Exit(err, 1)
 		}
 	}
-
-	ctx, cancel := utils.WithDeadline(context.Background())
-	defer cancel()
 
 	// Last step: delete the organization from the database
 	if err = db.DeleteOrganization(ctx, org.UUID()); err != nil {
@@ -846,11 +919,74 @@ func deleteOrgs(c *cli.Context) (err error) {
 	return nil
 }
 
+func registrationUpdate(c *cli.Context) (err error) {
+	var orgID string
+	if orgID = c.String("org-id"); orgID == "" {
+		return cli.Exit("org-id is required", 1)
+	}
+
+	var org *models.Organization
+	if org, err = GetOrg(orgID); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	network := strings.ToLower(c.String("network"))
+
+	var record *models.DirectoryRecord
+	switch network {
+	case "test", "testnet", "t":
+		if org.Testnet == nil {
+			org.Testnet = &models.DirectoryRecord{}
+		}
+		record = org.Testnet
+	case "main", "mainnet", "m":
+		if org.Mainnet == nil {
+			org.Mainnet = &models.DirectoryRecord{}
+		}
+		record = org.Mainnet
+	default:
+		return cli.Exit(fmt.Errorf("unknown network type %q", network), 1)
+	}
+
+	updated := false
+
+	if id := c.String("id"); id != "" {
+		record.Id = id
+		updated = true
+	}
+
+	if registeredDirectory := c.String("registered-directory"); registeredDirectory != "" {
+		record.RegisteredDirectory = registeredDirectory
+		updated = true
+	}
+
+	if commonName := c.String("common-name"); commonName != "" {
+		record.CommonName = commonName
+		updated = true
+	}
+
+	if submitted := c.Timestamp("submitted"); submitted != nil && !submitted.IsZero() {
+		record.Submitted = submitted.Format(time.RFC3339)
+		updated = true
+	}
+
+	if !updated {
+		return cli.Exit("no updates specified", 1)
+	}
+
+	if err = db.UpdateOrganization(context.Background(), org); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	fmt.Printf("updated %s registration record for %s (%s)\n", network, org.Name, org.Domain)
+	return nil
+}
+
 func cleanupOrgs(c *cli.Context) (err error) {
 	orgsDeleted := 0
 	force := c.Bool("force")
 
-	ctx, cancel := utils.WithDeadline(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	iter := db.ListOrganizations(ctx)
@@ -859,6 +995,45 @@ func cleanupOrgs(c *cli.Context) (err error) {
 		var org *models.Organization
 		if org, err = iter.Organization(); err != nil {
 			return cli.Exit(err, 1)
+		}
+
+		// Resolve the collaborators
+		edited := false
+		collabs := make(map[string]*models.Collaborator, len(org.Collaborators))
+		for uid, collaborator := range org.Collaborators {
+			if collaborator.UserId == "" {
+				fmt.Printf("org %s (%s) has collaborator (bff id %s) with missing user id\n", org.ResolveName(), org.Id, uid)
+				continue
+			}
+
+			var user *management.User
+			if user, err = auth0.User.Read(ctx, collaborator.UserId); err != nil {
+				fmt.Printf("could not get user details for %q: %s\n", collaborator.UserId, err)
+				continue
+			}
+
+			appdata := &auth.AppMetadata{}
+			if err = appdata.Load(user.AppMetadata); err != nil {
+				return cli.Exit(fmt.Errorf("could not load app metadata: %w", err), 1)
+			}
+
+			if !UserBelongsToOrg(org.Id, appdata) {
+				edited = true
+			} else {
+				collabs[uid] = collaborator
+			}
+		}
+
+		// If changes have been made, update the organization
+		if edited {
+			if !force && !askForConfirmation(fmt.Sprintf("org %s has been updated from %d collaborators to %d collaborators, update?", org.ResolveName(), len(org.Collaborators), len(collabs))) {
+				continue
+			}
+
+			org.Collaborators = collabs
+			if err = db.UpdateOrganization(ctx, org); err != nil {
+				return cli.Exit(fmt.Errorf("could not update org %s: %w", org.ResolveName(), err), 1)
+			}
 		}
 
 		if len(org.Collaborators) == 0 {
@@ -888,9 +1063,12 @@ func addCollab(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	// Fetch the user from auth0.
 	var user *management.User
-	if user, err = auth0.User.Read(c.String("user")); err != nil {
+	if user, err = auth0.User.Read(ctx, c.String("user")); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -901,12 +1079,12 @@ func addCollab(c *cli.Context) (err error) {
 	}
 
 	var roles *management.RoleList
-	if roles, err = auth0.User.Roles(*user.ID); err != nil {
+	if roles, err = auth0.User.Roles(ctx, *user.ID); err != nil {
 		return cli.Exit(err, 1)
 	}
 
 	var permissions *management.PermissionList
-	if permissions, err = auth0.User.Permissions(*user.ID); err != nil {
+	if permissions, err = auth0.User.Permissions(ctx, *user.ID); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -932,9 +1110,6 @@ func addCollab(c *cli.Context) (err error) {
 	if err = org.AddCollaborator(collaborator); err != nil {
 		return cli.Exit(err, 1)
 	}
-
-	ctx, cancel := utils.WithDeadline(context.Background())
-	defer cancel()
 
 	if err = db.UpdateOrganization(ctx, org); err != nil {
 		return cli.Exit(fmt.Errorf("could not update organization: %w", err), 1)
@@ -970,7 +1145,7 @@ func addCollab(c *cli.Context) (err error) {
 
 	// Update user's app metadata to reflect the user's currently selected organization.
 	appdata.UpdateOrganization(org)
-	if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
+	if err = SaveAppMetadata(ctx, *user.ID, *appdata); err != nil {
 		return cli.Exit(err, 1)
 	}
 	return nil
@@ -983,9 +1158,12 @@ func deleteCollab(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	// Fetch the user from auth0.
 	var user *management.User
-	if user, err = auth0.User.Read(c.String("user")); err != nil {
+	if user, err = auth0.User.Read(ctx, c.String("user")); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -996,12 +1174,12 @@ func deleteCollab(c *cli.Context) (err error) {
 	}
 
 	var roles *management.RoleList
-	if roles, err = auth0.User.Roles(*user.ID); err != nil {
+	if roles, err = auth0.User.Roles(ctx, *user.ID); err != nil {
 		return cli.Exit(err, 1)
 	}
 
 	var permissions *management.PermissionList
-	if permissions, err = auth0.User.Permissions(*user.ID); err != nil {
+	if permissions, err = auth0.User.Permissions(ctx, *user.ID); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -1016,12 +1194,9 @@ func deleteCollab(c *cli.Context) (err error) {
 	// Ask if we should proceed
 	username, _ := auth.UserDisplayName(user)
 	fmt.Printf("User %s (%s, switch_organizations=%t) has appdata.OrgID %q\n", username, StringifyRoles(roles), HasPermission(auth.SwitchOrganizations, permissions), appdata.OrgID)
-	if !askForConfirmation(fmt.Sprintf("add user %q to organization %q?", username, org.ResolveName())) {
+	if !askForConfirmation(fmt.Sprintf("remove user %q from organization %q?", username, org.ResolveName())) {
 		return cli.Exit("canceled at request of user", 0)
 	}
-
-	ctx, cancel := utils.WithDeadline(context.Background())
-	defer cancel()
 
 	// Remove collaborator from the organization (won't error if not exists)
 	org.DeleteCollaborator(*user.Email)
@@ -1034,17 +1209,74 @@ func deleteCollab(c *cli.Context) (err error) {
 		appdata.OrgID = appdata.Organizations[0]
 	}
 
-	if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
+	if err = SaveAppMetadata(ctx, *user.ID, *appdata); err != nil {
 		return cli.Exit(err, 1)
 	}
 
 	return nil
 }
 
+func exportEmails(c *cli.Context) (err error) {
+	var o io.Writer
+	if out := c.String("out"); out != "" {
+		var f *os.File
+		if f, err = os.Create(out); err != nil {
+			return cli.Exit(fmt.Errorf("could not open %s: %w", out, err), 1)
+		}
+		defer f.Close()
+		o = f
+	} else {
+		o = os.Stdout
+	}
+
+	writer := csv.NewWriter(o)
+	writer.Write([]string{"org", "name", "email", "auth0"})
+
+	seen := make(map[string]struct{})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	iter := db.ListOrganizations(ctx)
+	defer iter.Release()
+	for iter.Next() {
+		var org *models.Organization
+		if org, err = iter.Organization(); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		for _, collab := range org.Collaborators {
+			// Deduplication - ignore names/emails we've already seen
+			hash := StringHash(collab.Name, collab.Email)
+			if _, ok := seen[hash]; ok {
+				continue
+			}
+
+			row := []string{org.ResolveName(), collab.Name, collab.Email, collab.UserId}
+			if err = writer.Write(row); err != nil {
+				return cli.Exit(err, 1)
+			}
+
+			// Track which names/emails we've already written
+			seen[hash] = struct{}{}
+		}
+	}
+
+	if err = iter.Error(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	writer.Flush()
+	return nil
+}
+
 func sortAppdataOrgs(c *cli.Context) (err error) {
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
 	// Get all users in the tenant
 	var users *management.UserList
-	if users, err = auth0.User.List(); err != nil {
+	if users, err = auth0.User.List(ctx); err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -1074,7 +1306,7 @@ func sortAppdataOrgs(c *cli.Context) (err error) {
 
 		// Update the user's app metadata on the Auth0 tenant
 		if !c.Bool("dry-run") {
-			if err = SaveAppMetadata(*user.ID, *appdata); err != nil {
+			if err = SaveAppMetadata(ctx, *user.ID, *appdata); err != nil {
 				return cli.Exit(err, 1)
 			}
 			fmt.Printf("updated app metadata for user %s (%s)\n", *user.Email, *user.ID)
@@ -1085,6 +1317,53 @@ func sortAppdataOrgs(c *cli.Context) (err error) {
 	}
 
 	fmt.Printf("updated app metadata for %d users\n", updated)
+
+	return nil
+}
+
+func dedupeAppdataOrgs(c *cli.Context) (err error) {
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
+	// Get all users in the tenant
+	var users *management.UserList
+	if users, err = auth0.User.List(ctx); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Recreate org list for each user
+	for _, user := range users.Users {
+		appdata := &auth.AppMetadata{}
+		if err = appdata.Load(user.AppMetadata); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		// Get the user's current org list
+		orgs := appdata.GetOrganizations()
+		if len(orgs) == 0 {
+			continue
+		}
+
+		// Check for duplicate orgs and remove them
+		seen := make(map[string]struct{})
+		appdata.Organizations = []string{}
+		for _, org := range orgs {
+			if _, ok := seen[org]; !ok {
+				seen[org] = struct{}{}
+				appdata.Organizations = append(appdata.Organizations, org)
+			} else {
+				fmt.Printf("found duplicate org %q from user %s (%s)\n", org, *user.Email, *user.ID)
+			}
+		}
+
+		fmt.Printf("current org list for user %s (%s): %v\n", *user.Email, *user.ID, appdata.Organizations)
+
+		if !c.Bool("dry-run") {
+			if err = SaveAppMetadata(ctx, *user.ID, *appdata); err != nil {
+				return cli.Exit(err, 1)
+			}
+		}
+	}
 
 	return nil
 }
@@ -1188,15 +1467,35 @@ func HasPermission(perm string, permissions *management.PermissionList) bool {
 	return false
 }
 
-func SaveAppMetadata(uid string, appdata auth.AppMetadata) (err error) {
+func SaveAppMetadata(ctx context.Context, uid string, appdata auth.AppMetadata) (err error) {
 	// Create a blank user with no data but the app data
 	user := &management.User{}
 	if user.AppMetadata, err = appdata.Dump(); err != nil {
 		return err
 	}
 
-	if err = auth0.User.Update(uid, user); err != nil {
+	if err = auth0.User.Update(ctx, uid, user); err != nil {
 		return err
 	}
 	return nil
+}
+
+func UserBelongsToOrg(orgID string, appdata *auth.AppMetadata) bool {
+	for _, id := range appdata.Organizations {
+		if id == orgID {
+			return true
+		}
+	}
+
+	return appdata.OrgID == orgID
+}
+
+func StringHash(strs ...string) string {
+	hash := sha256.New()
+	for _, s := range strs {
+		s = strings.TrimSpace(strings.ToLower(s))
+		hash.Write([]byte(s))
+	}
+
+	return base64.RawStdEncoding.EncodeToString(hash.Sum(nil))
 }

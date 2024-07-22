@@ -95,7 +95,6 @@ const stepperSlice: any = createSlice({
       if (state?.steps?.length > 1) {
         state?.steps?.map((step: any) => {
           if (step.key === payload.step) {
-            console.log('payload.status', payload.status);
             step.status = payload.status;
           }
         });

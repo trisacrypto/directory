@@ -170,7 +170,7 @@ func (s *Simulator) connect() (_ pb.TrtlClient, err error) {
 
 	// Connect the replica client
 	var cc *grpc.ClientConn
-	if cc, err = grpc.Dial(s.Endpoint, opts...); err != nil {
+	if cc, err = grpc.NewClient(s.Endpoint, opts...); err != nil {
 		return nil, err
 	}
 	log.Printf("connected to trtl server at %s\n", s.Endpoint)
@@ -634,6 +634,7 @@ func (t *TRISAModel) reissuer(wg *sync.WaitGroup) {
 // User updater randomly updates users' profiles
 // This writer may generate stomps, but it's unlikely
 func (t *TRISAModel) userProfiles(wg *sync.WaitGroup) {
+	defer wg.Done()
 	ticker := jitter.New(reissueInterval, reissueSigma)
 	for {
 		<-ticker.C

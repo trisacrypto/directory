@@ -244,7 +244,7 @@ func UserInfo(conf config.AuthConfig) (_ gin.HandlerFunc, err error) {
 			return
 		}
 
-		user, err := manager.User.Read(claims.Subject)
+		user, err := manager.User.Read(c.Request.Context(), claims.Subject)
 		if err != nil {
 			c.Error(err)
 			c.AbortWithStatusJSON(http.StatusBadGateway, api.ErrorResponse(ErrNoAuthUserData))

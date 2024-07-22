@@ -49,7 +49,7 @@ func TestReplicateObjectRoulette(t *testing.T) {
 	for i, tc := range cases {
 		count := 0
 		ts := time.Now().Add(tc.before)
-		replica.Seed(24)
+		replica.TestSeed(24)
 
 		for i := 0; i < tc.rolls; i++ {
 			if replica.ReplicateObjectRoulette(ts) {

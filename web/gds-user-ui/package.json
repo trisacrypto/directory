@@ -1,6 +1,6 @@
 {
   "name": "gds-user-ui",
-  "version": "1.7.4",
+  "version": "1.7.8",
   "private": true,
   "dependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.16.7",
@@ -27,12 +27,12 @@
     "@types/jest": "^27.4.0",
     "@types/node": "^16.11.25",
     "@types/prop-types": "^15.7.4",
-    "@types/react": "^17.0.39",
+    "@types/react": "^18.2.55",
     "@types/react-dom": "^17.0.11",
     "@types/react-redux": "^7.1.22",
     "akar-icons": "^1.9.20",
-    "auth0-js": "^9.19.0",
-    "axios": "^0.26.1",
+    "auth0-js": "^9.24.1",
+    "axios": "^1.6.7",
     "babel-plugin-polyfill-regenerator": "^0.4.0",
     "chakra-react-select": "^3.0.5",
     "dayjs": "^1.11.5",
@@ -137,7 +137,7 @@
     ]
   },
   "devDependencies": {
-    "@babel/core": "^7.18.0",
+    "@babel/core": "^7.23.9",
     "@badeball/cypress-cucumber-preprocessor": "^16.0.3",
     "@cypress/webpack-preprocessor": "^5.17.1",
     "@faker-js/faker": "^7.2.0",
@@ -167,7 +167,7 @@
     "axios-mock-adapter": "^1.21.5",
     "babel-core": "^7.0.0-bridge.0",
     "babel-plugin-polyfill-corejs2": "^0.3.2",
-    "cypress": "12.12.0",
+    "cypress": "^13.6.4",
     "eslint": "^8.10.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-standard": "^16.0.3",
@@ -187,7 +187,7 @@
     "prettier": "^2.8.0",
     "redux-mock-store": "^1.5.4",
     "ts-loader": "^9.4.3",
-    "webpack": "^5.69.1"
+    "webpack": "^5.90.1"
   },
   "jest": {
     "resetMocks": false,

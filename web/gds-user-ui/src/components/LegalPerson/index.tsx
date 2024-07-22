@@ -21,7 +21,6 @@ const LegalPerson: React.FC = () => {
     useFetchCertificateStep({
       key: StepEnum.LEGAL
     });
-
   const { isStepDeleted, updateDeleteStepState } = useCertificateStepper();
   const isLegalStepDeleted = isStepDeleted(StepEnum.LEGAL);
 

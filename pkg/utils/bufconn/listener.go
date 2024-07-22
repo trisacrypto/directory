@@ -9,6 +9,10 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 )
 
+const Endpoint = "passthrough://bufnet"
+
+const bufsize = 1024 * 1024
+
 // GRPCListener handles gRPC connections using a bufconn listener. This is useful for
 // testing when it's unnecessary to have a live gRPC server running. The normal
 // workflow is to call New() to start the listener, Connect() to start a gRPC
@@ -20,13 +24,13 @@ type GRPCListener struct {
 	Conn     *grpc.ClientConn
 }
 
-func New(bufSize int, target string) *GRPCListener {
+func New(target string) *GRPCListener {
 	if target == "" {
-		target = "bufnet"
+		target = Endpoint
 	}
 
 	return &GRPCListener{
-		Listener: bufconn.Listen(bufSize),
+		Listener: bufconn.Listen(bufsize),
 		Target:   target,
 	}
 }
@@ -37,7 +41,7 @@ func (g *GRPCListener) Connect(ctx context.Context, opts ...grpc.DialOption) (er
 	}
 
 	opts = append([]grpc.DialOption{grpc.WithContextDialer(g.Dialer)}, opts...)
-	if g.Conn, err = grpc.DialContext(ctx, g.Target, opts...); err != nil {
+	if g.Conn, err = grpc.NewClient(g.Target, opts...); err != nil {
 		return err
 	}
 	return err
