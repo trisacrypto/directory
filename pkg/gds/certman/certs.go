@@ -980,27 +980,19 @@ func (c *CertificateManager) deliverCertificatePassword(ctx context.Context, cer
 		Password: password,
 	}
 
-	// Attempt to deliver the password using the configured backoff strategy.
-	wait := c.conf.DeliveryBackoff.Ticker()
-	defer wait.Stop()
-
-	// Wait for the context to be cancelled or the password to be delivered.
-	var retries int
-	for retries = 0; retries < c.conf.DeliveryBackoff.MaxRetries+1; retries++ {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-wait.C:
-			if err = client.StoreCertificatePassword(ctx, req); err != nil {
-				log.Warn().Err(err).Int("attempts", retries+1).Str("webhook", certreq.Webhook).Msg("could not deliver certificate password, retrying")
-				continue
-			}
-			return nil
+	if err = client.StoreCertificatePassword(ctx, req); err != nil {
+		// NOTE: this message will not be logged if all errors are the same because the
+		// courier client deduplicates errors into a single status error.
+		if merr, ok := err.(*courier.MultiStatusError); ok {
+			log.Warn().
+				Errs("errors", merr.Errs).
+				Int("attempts", merr.Attempts).
+				Dur("delay", merr.Delay).
+				Msg("could not deliver certificates to webhook")
 		}
+		return err
 	}
-
-	// Exceeded the maximum number of retries
-	return fmt.Errorf("could not deliver certificate password after %d retries", retries)
+	return nil
 }
 
 // Deliver a certificate payload by webhook using the configured backoff strategy or
@@ -1017,25 +1009,17 @@ func (c *CertificateManager) deliverCertificatePayload(ctx context.Context, cert
 		Base64Certificate: base64.StdEncoding.EncodeToString(payload),
 	}
 
-	// Attempt to deliver the password using the configured backoff strategy.
-	wait := c.conf.DeliveryBackoff.Ticker()
-	defer wait.Stop()
-
-	// Wait for the context to be cancelled or the password to be delivered.
-	var retries int
-	for retries = 0; retries < c.conf.DeliveryBackoff.MaxRetries+1; retries++ {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-wait.C:
-			if err = client.StoreCertificate(ctx, req); err != nil {
-				log.Warn().Err(err).Int("attempts", retries+1).Str("webhook", certreq.Webhook).Msg("could not deliver encrypted certificate, retrying")
-				continue
-			}
-			return nil
+	if err = client.StoreCertificate(ctx, req); err != nil {
+		// NOTE: this message will not be logged if all errors are the same because the
+		// courier client deduplicates errors into a single status error.
+		if merr, ok := err.(*courier.MultiStatusError); ok {
+			log.Warn().
+				Errs("errors", merr.Errs).
+				Int("attempts", merr.Attempts).
+				Dur("delay", merr.Delay).
+				Msg("could not deliver certificates to webhook")
 		}
+		return err
 	}
-
-	// Exceeded the maximum number of retries
-	return fmt.Errorf("could not deliver encrypted certificate after %d retries", retries)
+	return nil
 }

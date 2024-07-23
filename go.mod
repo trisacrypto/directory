@@ -7,7 +7,6 @@ toolchain go1.22.3
 require (
 	cloud.google.com/go/secretmanager v1.13.4
 	github.com/auth0/go-jwt-middleware/v2 v2.2.1
-	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/getsentry/sentry-go v0.28.1
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-contrib/cors v1.7.2
@@ -37,7 +36,7 @@ require (
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.3
 	github.com/syndtr/goleveldb v1.0.0
-	github.com/trisacrypto/courier v0.0.0-20231106194613-8a8d8b5a1d91
+	github.com/trisacrypto/courier v1.0.0
 	github.com/trisacrypto/trisa v1.3.0
 	github.com/urfave/cli v1.22.15
 	github.com/urfave/cli/v2 v2.27.2
@@ -60,6 +59,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.11.9 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
+	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
