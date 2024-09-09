@@ -73,6 +73,7 @@ var testEnv = map[string]string{
 	"GDS_BFF_USER_CACHE_SIZE":               "1000",
 	"GDS_BFF_ACTIVITY_ENABLED":              "true",
 	"GDS_BFF_ACTIVITY_TOPIC":                "network-activity",
+	"GDS_BFF_ACTIVITY_NETWORK":              "testnet",
 	"GDS_BFF_ACTIVITY_ENSIGN_CLIENT_ID":     "client-id",
 	"GDS_BFF_ACTIVITY_ENSIGN_CLIENT_SECRET": "client-secret",
 	"GDS_BFF_ACTIVITY_ENSIGN_ENDPOINT":      "api.ensign.world:443",

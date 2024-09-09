@@ -785,7 +785,7 @@ func TestValidateVASP(t *testing.T) {
 				},
 			},
 			NationalIdentification: &ivms101.NationalIdentification{
-				NationalIdentifier:     "123456789",
+				NationalIdentifier:     "LKSW00FJKAMWLG6MAQ18",
 				NationalIdentifierType: ivms101.NationalIdentifierLEIX,
 			},
 		},
@@ -799,10 +799,6 @@ func TestValidateVASP(t *testing.T) {
 	vasp.LastUpdated = time.Now().Format(time.RFC3339)
 	vasp.Signature = []byte("abc123")
 	require.NoError(t, ValidateVASP(vasp, false), "expected successful validation when partial is false")
-
-	// Verify that the validation helper ignores C9 constraint errors
-	vasp.Entity.NationalIdentification.CountryOfIssue = "CA"
-	require.NoError(t, ValidateVASP(vasp, false), "expected successful validation even when C9 constraint is violated")
 }
 
 func TestUpdateVerificationStatus(t *testing.T) {

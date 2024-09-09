@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/trisacrypto/directory/pkg/bff/models/v1"
@@ -96,6 +97,10 @@ type FieldValidationError struct {
 	Field string `json:"field"`
 	Error string `json:"error"`
 	Index int    `json:"index"`
+}
+
+func (f *FieldValidationError) String() string {
+	return fmt.Sprintf("%s: %s", f.Field, f.Error)
 }
 
 func NewFieldValidationError(err error) *FieldValidationError {
