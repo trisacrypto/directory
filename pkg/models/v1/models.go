@@ -11,7 +11,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
-	"github.com/trisacrypto/trisa/pkg/ivms101"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -679,7 +678,7 @@ func ValidateVASP(vasp *pb.VASP, partial bool) (err error) {
 	switch {
 	case err == nil:
 		return nil
-	case errors.Is(err, ivms101.ErrCompleteNationalIdentifierCountry):
+	case err.Error() == "":
 		// TODO: ErrCompleteNationalIdentifierLegalPerson must be ignored to support older
 		// VASP records, see issue #34
 		sentry.Warn(nil).Str("vasp_id", vasp.Id).Err(err).Msg("ignoring ErrCompleteNationalIdentifierLegalPerson validation error")

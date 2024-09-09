@@ -70,6 +70,7 @@ var testEnv = map[string]string{
 	"GDS_SENTRY_SAMPLE_RATE":                   "0.2",
 	"GDS_ACTIVITY_ENABLED":                     "true",
 	"GDS_ACTIVITY_TOPIC":                       "gds-activity",
+	"GDS_ACTIVITY_NETWORK":                     "testnet",
 	"GDS_ACTIVITY_AGGREGATION_WINDOW":          "10m",
 	"GDS_ACTIVITY_ENSIGN_CLIENT_ID":            "client-id",
 	"GDS_ACTIVITY_ENSIGN_CLIENT_SECRET":        "client-secret",

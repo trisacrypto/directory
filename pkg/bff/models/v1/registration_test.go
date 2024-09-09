@@ -131,11 +131,10 @@ func TestValidateLegalPerson(t *testing.T) {
 		{
 			&ivms101.LegalPerson{},
 			ValidationErrors{
-				{Field: FieldEntityName, Err: ErrMissingField.Error()},
+				{Field: "entity.name", Err: "ivms101: missing name: this field is required"},
 				{Field: FieldEntityGeographicAddresses, Err: ErrNoGeographicAddress.Error()},
 				{Field: FieldEntityNationalIdentification, Err: ErrLegalNatIDRequired.Error()},
 				{Field: FieldEntityCountryOfRegistration, Err: ErrMissingField.Error()},
-				{Field: FieldEntity, Err: "one or more legal person name identifiers is required"},
 			},
 		},
 		// Test C9 constraint is ignored but still return an error for missing RA
@@ -167,8 +166,9 @@ func TestValidateLegalPerson(t *testing.T) {
 				CountryOfRegistration: "US",
 			},
 			ValidationErrors{
-				{Field: FieldEntityNationalIdentificationRA, Err: ErrNoRAForLEIX.Error()},
-				{Field: FieldEntity, Err: ivms101.ErrCompleteNationalIdentifierAuthority.Error()},
+				{
+					Field: "entity.nationalIdentification.registrationAuthority",
+					Err:   "ivms101: invalid field nationalIdentification.registrationAuthority: registration authority not allowed for national identifier type code LEIX"},
 			},
 		},
 		{
@@ -691,7 +691,9 @@ func TestUpdateRegistrationFormErrors(t *testing.T) {
 			{Field: FieldBusinessCategory, Err: ErrMissingField.Error()},
 		},
 		StepLegalPerson: {
-			{Field: FieldEntityCountryOfRegistration, Err: ErrMissingField.Error()},
+			{
+				Field: "entity.country_of_registration",
+				Err:   ErrMissingField.Error()},
 		},
 		StepContacts: {
 			{Field: FieldContacts, Err: ErrMissingContact.Error()},

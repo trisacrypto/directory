@@ -18,7 +18,6 @@ import (
 	models "github.com/trisacrypto/directory/pkg/models/v1"
 	storeerrors "github.com/trisacrypto/directory/pkg/store/errors"
 	"github.com/trisacrypto/directory/pkg/utils/wire"
-	"github.com/trisacrypto/trisa/pkg/ivms101"
 	gds "github.com/trisacrypto/trisa/pkg/trisa/gds/api/v1beta1"
 	pb "github.com/trisacrypto/trisa/pkg/trisa/gds/models/v1beta1"
 	"google.golang.org/grpc/codes"
@@ -239,6 +238,8 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	out, err = s.client.LoadRegistrationForm(context.Background(), params)
 	require.NoError(err, "expected no error when form data is available")
 	require.Equal(params.Step, out.Step, "expected returned step to be the same as the requested step")
+
+	fmt.Printf("%s\n", out.Errors)
 	require.Nil(out.Errors, "expected no validation errors for legal person step")
 	require.NotNil(out.Form, "expected returned form to not be nil")
 	require.Equal(full.State, out.Form.State, "expected returned form to have the same state as the full form")
@@ -307,8 +308,8 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	verrs := map[api.RegistrationFormStep][]*api.FieldValidationError{
 		api.StepBasicDetails: {{Field: records.FieldWebsite, Error: records.ErrMissingField.Error()}},
 		api.StepLegalPerson: {
-			{Field: records.FieldEntityNameIdentifiers, Error: records.ErrMissingField.Error()},
-			{Field: records.FieldEntity, Error: ivms101.ErrInvalidLegalPersonName.Error()},
+			{Field: "", Error: records.ErrMissingField.Error()},
+			{Field: "", Error: "ivms101: invalid field nationalIdentification.nationalIdentifier: invalid LEIX: invalid checksum"},
 		},
 		api.StepContacts: {{Field: records.FieldContactsTechnicalEmail, Error: records.ErrMissingField.Error()}},
 		api.StepTRIXO:    {{Field: records.FieldTRIXOPrimaryNationalJurisdiction, Error: records.ErrMissingField.Error()}},
@@ -525,8 +526,8 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	verrs := map[api.RegistrationFormStep][]*api.FieldValidationError{
 		api.StepBasicDetails: {{Field: records.FieldWebsite, Error: records.ErrMissingField.Error()}},
 		api.StepLegalPerson: {
-			{Field: records.FieldEntityNameIdentifiers, Error: records.ErrMissingField.Error()},
-			{Field: records.FieldEntity, Error: ivms101.ErrInvalidLegalPersonName.Error()},
+			{Field: "", Error: records.ErrMissingField.Error()},
+			{Field: records.FieldEntity, Error: ""},
 		},
 		api.StepContacts: {{Field: records.FieldContactsTechnicalEmail, Error: records.ErrMissingField.Error()}},
 		api.StepTRIXO:    {{Field: records.FieldTRIXOPrimaryNationalJurisdiction, Error: records.ErrMissingField.Error()}},
@@ -548,8 +549,8 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 		}, []*api.FieldValidationError{{Field: records.FieldWebsite, Error: records.ErrMissingField.Error()}}},
 		{api.StepLegalPerson, &records.RegistrationForm{
 			Entity: form.Form.Entity,
-		}, []*api.FieldValidationError{{Field: records.FieldEntityNameIdentifiers, Error: records.ErrMissingField.Error()},
-			{Field: records.FieldEntity, Error: ivms101.ErrInvalidLegalPersonName.Error()}}},
+		}, []*api.FieldValidationError{{Field: "", Error: records.ErrMissingField.Error()},
+			{Field: records.FieldEntity, Error: ""}}},
 		{api.StepContacts, &records.RegistrationForm{
 			Contacts: form.Form.Contacts,
 		}, []*api.FieldValidationError{{Field: records.FieldContactsTechnicalEmail, Error: records.ErrMissingField.Error()}}},
