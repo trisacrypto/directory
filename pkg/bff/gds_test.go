@@ -239,7 +239,6 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	require.NoError(err, "expected no error when form data is available")
 	require.Equal(params.Step, out.Step, "expected returned step to be the same as the requested step")
 
-	fmt.Printf("%s\n", out.Errors)
 	require.Nil(out.Errors, "expected no validation errors for legal person step")
 	require.NotNil(out.Form, "expected returned form to not be nil")
 	require.Equal(full.State, out.Form.State, "expected returned form to have the same state as the full form")
@@ -308,8 +307,8 @@ func (s *bffTestSuite) TestLoadRegisterForm() {
 	verrs := map[api.RegistrationFormStep][]*api.FieldValidationError{
 		api.StepBasicDetails: {{Field: records.FieldWebsite, Error: records.ErrMissingField.Error()}},
 		api.StepLegalPerson: {
-			{Field: "", Error: records.ErrMissingField.Error()},
-			{Field: "", Error: "ivms101: invalid field nationalIdentification.nationalIdentifier: invalid LEIX: invalid checksum"},
+			{Field: "entity.name.nameIdentifier[0].legalPersonName", Error: "ivms101: missing name.nameIdentifier[0].legalPersonName: this field is required"},
+			{Field: "entity.nationalIdentification.nationalIdentifier", Error: "ivms101: invalid field nationalIdentification.nationalIdentifier: invalid LEIX: invalid checksum"},
 		},
 		api.StepContacts: {{Field: records.FieldContactsTechnicalEmail, Error: records.ErrMissingField.Error()}},
 		api.StepTRIXO:    {{Field: records.FieldTRIXOPrimaryNationalJurisdiction, Error: records.ErrMissingField.Error()}},
@@ -526,8 +525,14 @@ func (s *bffTestSuite) TestSaveRegisterForm() {
 	verrs := map[api.RegistrationFormStep][]*api.FieldValidationError{
 		api.StepBasicDetails: {{Field: records.FieldWebsite, Error: records.ErrMissingField.Error()}},
 		api.StepLegalPerson: {
-			{Field: "", Error: records.ErrMissingField.Error()},
-			{Field: records.FieldEntity, Error: ""},
+			{
+				Field: "entity.name.nameIdentifier[0].legalPersonName",
+				Error: "ivms101: missing name.nameIdentifier[0].legalPersonName: this field is required",
+			},
+			{
+				Field: "entity.nationalIdentification.nationalIdentifier",
+				Error: "ivms101: invalid field nationalIdentification.nationalIdentifier: invalid LEIX: invalid checksum",
+			},
 		},
 		api.StepContacts: {{Field: records.FieldContactsTechnicalEmail, Error: records.ErrMissingField.Error()}},
 		api.StepTRIXO:    {{Field: records.FieldTRIXOPrimaryNationalJurisdiction, Error: records.ErrMissingField.Error()}},

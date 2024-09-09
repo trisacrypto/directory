@@ -20,6 +20,7 @@ import shutil
 import secrets
 import tarfile
 import datetime
+import argparse
 
 import lorem
 from faker import Faker
@@ -65,6 +66,22 @@ FAKE_VASPS = {
     "NovemberCash": "VERIFIED",
     "Romeo Montague Labs LLC": "VERIFIED",
     "Oscar Inc": "PENDING_REVIEW",
+}
+FAKE_LEIS = {
+    "CharlieBank": "OOT900L1XDRRL7PSIP77",
+    "Delta Assets": "C4TU00ZTL5Y0MHUGRJ57",
+    "Echo Funds": "9RLH00AZEPZAD6YPEJ97",
+    "Foxtrot LLC": "TVHN00DQZFMKWP8BA330",
+    "GolfBucks": "7BAX00RUVOVV6RPULO23",
+    "Hotel Corp": "JQOO00QREPQRMSXLXL26",
+    "IndiaCoin": "B7PE00JRMVNOWAZDYQ28",
+    "Juliet Capulet LLC": "WHWT00YHWLAZCX3M6D83",
+    "KiloVASP": "BWUN00NLE0NL2DH1UK77",
+    "Lima Beancounters": "BWUN00NLE0NL2DH1UK77",
+    "Mikes Official VASP": "XKDW00MRCXBAQJPW8A40",
+    "NovemberCash": "C5AR00MDD8NPUZRV2J68",
+    "Romeo Montague Labs LLC": "RVTZ00KDM2NIREGCLV45",
+    "Oscar Inc": "VZQC00XDUW7OBYGX0W22",
 }
 VASP_STATE_CHANGES = {
     "SUBMITTED": {
@@ -240,6 +257,13 @@ def fake_legal_name(vasp):
                 "legal_person_name_identifier_type": "LEGAL_PERSON_NAME_TYPE_CODE_LEGL",
             }
         ]
+    }
+
+
+def fake_lei(vasp):
+    return {
+        "national_identifier": FAKE_LEIS[vasp],
+        "national_identifier_type": "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX",
     }
 
 
@@ -450,6 +474,7 @@ def replace_fixtures():
         tar.add(OUTPUT_DIRECTORY, arcname="synthetic")
     shutil.move("fakes.tgz", os.path.join("pkg", "gds", "testdata", "fakes.tgz"))
 
+
 ##########################################################################
 # Contact Creation Functions
 ##########################################################################
@@ -502,11 +527,7 @@ def make_verified(vasp, idx, template="fixtures/datagen/templates/verified.json"
     record["id"] = idx
     record["entity"]["name"] = fake_legal_name(vasp)
     record["entity"]["geographic_addresses"] = [fake_address(country)]
-    record["entity"]["national_identification"][
-        "national_identifier"
-    ] = secrets.token_urlsafe(24)
-    # Due to IVMS101 validation constraint C9, the country of issue should not be
-    # filled in for a legal person.
+    record["entity"]["national_identification"] = fake_lei(vasp)
     record["entity"]["country_of_registration"] = country
     rng_person = random.Random(vasp+"person")
     record["contacts"]["legal"] = make_person(vasp, token="legal_token", rng=rng_person)
@@ -558,11 +579,7 @@ def make_unverified(
     record["id"] = idx
     record["entity"]["name"] = fake_legal_name(vasp)
     record["entity"]["geographic_addresses"] = [fake_address(country)]
-    record["entity"]["national_identification"][
-        "national_identifier"
-    ] = secrets.token_urlsafe(24)
-    # Due to IVMS101 validation constraint C9, the country of issue should not be
-    # filled in for a legal person.
+    record["entity"]["national_identification"] = fake_lei(vasp)
     record["entity"]["country_of_registration"] = country
     rng_person = random.Random(vasp+"person")
     record["contacts"]["legal"] = make_person(vasp, verified=email_verified, token="legal_token", rng=rng_person)
@@ -591,7 +608,6 @@ def make_unverified(
         record["extra"]["admin_verification_token"] = secrets.token_urlsafe(48)
     else:
         record["extra"]["admin_verification_token"] = ""
-
 
     return record
 
@@ -957,18 +973,25 @@ def add_vasp_cert_relationships(vasps, certreqs, certs):
         vasps[vasp_name]["extra"]["certificates"] = cert_ids
 
 if __name__ == "__main__":
-    replace = False
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "--help":
-            print("Usage: python fixtures/datagen/fakerize.py [--help|--replace]")
-            print("  --help: print this message")
-            print("  --replace: generate and replace existing fixtures in pkg/gds/testdata")
-            sys.exit(0)
-        elif sys.argv[1] == "--replace":
-            replace = True
-        else:
-            print("Unknown argument: %s", sys.argv[1])
-            sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="generate fake data for testing purposes",
+        epilog="make sure to run this in the root of the repository",
+    )
+
+    parser.add_argument(
+        "-r",
+        "--replace",
+        action="store_true",
+        default=False,
+        help="generate and replace existing fixtures in pkg/gds/testdata",
+    )
+
+    if not os.path.exists("fixtures") or not os.path.exists("pkg"):
+        print("ensure you're running this from the root of the repository:")
+        print("    python3 fixtures/datagen/fakerize.py")
+        sys.exit(1)
+
+    args = parser.parse_args()
 
     if os.path.exists(OUTPUT_DIRECTORY):
         shutil.rmtree(OUTPUT_DIRECTORY)
@@ -983,6 +1006,6 @@ if __name__ == "__main__":
     store(fake_certreqs, kind="certreqs")
     store(fake_certs, kind="certs")
 
-    if replace:
+    if args.replace:
         replace_fixtures()
         print("Successfully replaced pkg/gds/testdata/fakes.tgz")
