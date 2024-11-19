@@ -1,30 +1,34 @@
 package activity
 
 import (
+	"errors"
 	"time"
 
 	"github.com/trisacrypto/directory/pkg/utils/ensign"
 )
 
 type Config struct {
-	Enabled           bool          `split_words:"true" default:"false"`
-	Topic             string        `split_words:"true"`
-	Network           Network       `split_words:"true"`
+	Enabled           bool          `default:"false"`
+	Topic             string        `required:"false"`
+	Network           Network       `required:"false"`
 	AggregationWindow time.Duration `split_words:"true" default:"5m"`
-	Testing           bool          `split_words:"true" default:"false"`
+	Testing           bool          `default:"false"`
 	Ensign            ensign.Config
 }
 
 func (c Config) Validate() (err error) {
 	if c.Enabled {
 		if c.Topic == "" {
-			return ErrMissingTopic
+			err = errors.Join(err, ErrMissingTopic)
 		}
 
-		if err = c.Ensign.Validate(); err != nil {
-			return err
+		if verr := c.Network.IsValid(); verr != nil {
+			err = errors.Join(err, verr)
+		}
+
+		if verr := c.Ensign.IsValid(); verr != nil {
+			err = errors.Join(err, verr)
 		}
 	}
-
-	return nil
+	return err
 }

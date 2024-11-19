@@ -162,6 +162,14 @@ func (c Config) Validate() (err error) {
 		return err
 	}
 
+	if err = c.Sentry.Validate(); err != nil {
+		return err
+	}
+
+	if err = c.Activity.Validate(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -171,7 +179,6 @@ func (c GDSConfig) Validate() error {
 			return errors.New("invalid configuration: bind addr is required for enabled GDS")
 		}
 	}
-
 	return nil
 }
 
