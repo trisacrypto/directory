@@ -220,6 +220,60 @@ func reissueCerts(c *cli.Context) (err error) {
 	return nil
 }
 
+func cancelCertificatRequest(c *cli.Context) (err error) {
+	var (
+		vasp    *pb.VASP
+		certreq *models.CertificateRequest
+	)
+
+	reqID := c.String("request")
+	if reqID == "" {
+		return cli.Exit("specify a certificate request ID to cancel", 1)
+	}
+
+	ctx := context.Background()
+	if certreq, err = db.RetrieveCertReq(ctx, reqID); err != nil {
+		return cli.Exit(fmt.Errorf("could not find certificate rqeuest: %w", err), 1)
+	}
+
+	// Check with the user if we should continue with canceling the request
+	fmt.Printf("found certificate request for %s status %s\n", certreq.CommonName, certreq.Status)
+	if !c.Bool("yes") {
+		if !askForConfirmation("cancel this request?") {
+			return cli.Exit(fmt.Errorf("operation halted by user"), 1)
+		}
+	}
+
+	// Delete the certificate request
+	if err = db.DeleteCertReq(ctx, reqID); err != nil {
+		return cli.Exit(fmt.Errorf("could not delete certificate request: %w", err), 1)
+	}
+
+	// Change the status of the VASP
+	if !c.Bool("no-status-change") {
+		if vasp, err = db.RetrieveVASP(ctx, certreq.Vasp); err != nil {
+			return cli.Exit(fmt.Errorf("could not retrieve vasp: %w", err), 1)
+		}
+
+		if vasp.VerificationStatus == pb.VerificationIssuing || vasp.VerificationStatus == pb.VerificationReviewed {
+			fmt.Printf("updating status of %s to %s\n", vasp.CommonName, pb.VerificationPending)
+			if !c.Bool("yes") {
+				if !askForConfirmation("continue?") {
+					return cli.Exit(fmt.Errorf("operation halted by user"), 1)
+				}
+			}
+
+			vasp.VerificationStatus = pb.VerificationPending
+			if err = db.UpdateVASP(ctx, vasp); err != nil {
+				return cli.Exit(fmt.Errorf("could not update vasp: %w", err), 1)
+			}
+		}
+
+	}
+
+	return nil
+}
+
 func resendPassword(c *cli.Context) (err error) {
 	var (
 		vasp           *pb.VASP

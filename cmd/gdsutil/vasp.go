@@ -184,7 +184,7 @@ func vaspStatus(c *cli.Context) (err error) {
 			return cli.Exit(err, 1)
 		}
 
-		fmt.Printf("Certificate Request %d:\n  Common Name: %s\n  Status: %s\n  SANs: %s\n\n", i+1, ca.CommonName, ca.Status, strings.Join(ca.DnsNames, ", "))
+		fmt.Printf("Certificate Request %d:\n  ID: %s\n  Common Name: %s\n  Status: %s\n  SANs: %s\n\n", i+1, ca.Id, ca.CommonName, ca.Status, strings.Join(ca.DnsNames, ", "))
 
 	}
 	return nil

@@ -300,6 +300,34 @@ func main() {
 			},
 		},
 		{
+			Name:     "certs:cancel",
+			Usage:    "cancel a certificate request if it hasn't been completed yet",
+			Category: "certs",
+			Action:   cancelCertificatRequest,
+			Before:   connectDB,
+			After:    closeDB,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "request",
+					Aliases:  []string{"request-id", "r"},
+					Usage:    "the certificate request id to cancel",
+					Required: true,
+				},
+				&cli.BoolFlag{
+					Name:    "yes",
+					Aliases: []string{"y"},
+					Usage:   "skip the confirmation prompt and immediately cancel the certificate request",
+					Value:   false,
+				},
+				&cli.BoolFlag{
+					Name:    "no-status-change",
+					Aliases: []string{"S"},
+					Usage:   "do not change the status of the vasp after canceling the request",
+					Value:   false,
+				},
+			},
+		},
+		{
 			Name:     "certs:password",
 			Usage:    "view or resend the password for the latest certificate request if available",
 			Category: "certs",
