@@ -10,10 +10,10 @@ import (
 type Config struct {
 	Enabled           bool          `default:"false"`
 	Topic             string        `required:"false"`
-	Network           Network       `required:"false"`
+	Network           Network       `required:"false" validate:"ignore"`
 	AggregationWindow time.Duration `split_words:"true" default:"5m"`
-	Testing           bool          `default:"false"`
-	Ensign            ensign.Config
+	Testing           bool          `default:"false" `
+	Ensign            ensign.Config `validate:"ignore"`
 }
 
 func (c Config) Validate() (err error) {
@@ -22,11 +22,11 @@ func (c Config) Validate() (err error) {
 			err = errors.Join(err, ErrMissingTopic)
 		}
 
-		if verr := c.Network.IsValid(); verr != nil {
+		if verr := c.Network.Validate(); verr != nil {
 			err = errors.Join(err, verr)
 		}
 
-		if verr := c.Ensign.IsValid(); verr != nil {
+		if verr := c.Ensign.Validate(); verr != nil {
 			err = errors.Join(err, verr)
 		}
 	}

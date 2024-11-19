@@ -119,10 +119,10 @@ func (n Network) String() string {
 }
 
 // Check if the network is valid.
-// NOTE: this method must be named IsValid and not Validate to prevent confire from
+// NOTE: this method must be named Validate and not Validate to prevent confire from
 // calling this function during validation. Configurations that use a Network should
-// manually call IsValid in their Validation method.
-func (n Network) IsValid() error {
+// manually call Validate in their Validation method.
+func (n Network) Validate() error {
 	if n == UnknownNetwork {
 		return ErrUnknownNetwork
 	}
