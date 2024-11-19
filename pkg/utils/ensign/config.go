@@ -17,9 +17,6 @@ type Config struct {
 }
 
 // Validate that the ensign config is ready for connection.
-// NOTE: This must be Validate() and not Validate() to prevent confire from calling
-// this function to check if the configuration is valid. Configurations that embed an
-// ensign configuration should manually call Validate in their Validation method.
 func (c Config) Validate() (err error) {
 	if c.Testing {
 		return nil
