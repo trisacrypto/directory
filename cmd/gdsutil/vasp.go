@@ -175,17 +175,16 @@ func vaspStatus(c *cli.Context) (err error) {
 
 	certreqs, err := models.GetCertReqIDs(vasp)
 	if err != nil {
-		return cli.Exit(err, 1)
+		return cli.Exit(fmt.Errorf("could not retrieve certificate requests from vasps: %w", err), 1)
 	}
 
 	for i, certreq := range certreqs {
 		ca, err := db.RetrieveCertReq(ctx, certreq)
 		if err != nil {
-			return cli.Exit(err, 1)
+			return cli.Exit(fmt.Errorf("could not retrieve certificate request %s from database: %w", certreq, err), 1)
 		}
 
 		fmt.Printf("Certificate Request %d:\n  ID: %s\n  Common Name: %s\n  Status: %s\n  SANs: %s\n\n", i+1, ca.Id, ca.CommonName, ca.Status, strings.Join(ca.DnsNames, ", "))
-
 	}
 	return nil
 }

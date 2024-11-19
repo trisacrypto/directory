@@ -249,12 +249,17 @@ func cancelCertificatRequest(c *cli.Context) (err error) {
 		return cli.Exit(fmt.Errorf("could not delete certificate request: %w", err), 1)
 	}
 
+	// Remove the certificate request record from the vasp
+	if vasp, err = db.RetrieveVASP(ctx, certreq.Vasp); err != nil {
+		return cli.Exit(fmt.Errorf("could not retrieve vasp: %w", err), 1)
+	}
+
+	if err = models.DeleteCertReqID(vasp, reqID); err != nil {
+		return cli.Exit(fmt.Errorf("could not update vasp: %w", err), 1)
+	}
+
 	// Change the status of the VASP
 	if !c.Bool("no-status-change") {
-		if vasp, err = db.RetrieveVASP(ctx, certreq.Vasp); err != nil {
-			return cli.Exit(fmt.Errorf("could not retrieve vasp: %w", err), 1)
-		}
-
 		if vasp.VerificationStatus == pb.VerificationIssuing || vasp.VerificationStatus == pb.VerificationReviewed {
 			fmt.Printf("updating status of %s to %s\n", vasp.CommonName, pb.VerificationPending)
 			if !c.Bool("yes") {
@@ -264,11 +269,11 @@ func cancelCertificatRequest(c *cli.Context) (err error) {
 			}
 
 			vasp.VerificationStatus = pb.VerificationPending
-			if err = db.UpdateVASP(ctx, vasp); err != nil {
-				return cli.Exit(fmt.Errorf("could not update vasp: %w", err), 1)
-			}
 		}
+	}
 
+	if err = db.UpdateVASP(ctx, vasp); err != nil {
+		return cli.Exit(fmt.Errorf("could not update vasp: %w", err), 1)
 	}
 
 	return nil
