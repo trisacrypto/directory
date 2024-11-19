@@ -118,6 +118,7 @@ func (n Network) String() string {
 	}
 }
 
+// Check if the network is valid.
 func (n Network) Validate() error {
 	if n == UnknownNetwork {
 		return ErrUnknownNetwork

@@ -28,7 +28,7 @@ func TestPublisher(t *testing.T) {
 		Enabled:           true,
 		AggregationWindow: time.Minute * 5,
 	}
-	require.ErrorIs(t, activity.ErrMissingTopic, activity.Start(conf), "expected missing topic error")
+	require.Error(t, activity.Start(conf), "expected error with bad configuration")
 
 	// Test publisher in disabled mode starts
 	activity.Reset()

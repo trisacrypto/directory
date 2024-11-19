@@ -135,6 +135,7 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 	// Test running the subscriber under a waitgroup
 	conf.Topic = "network-activity"
 	conf.Testing = true
+	conf.Network = activity.TestNet
 	conf.Ensign = ensign.Config{
 		ClientID:     "client-id",
 		ClientSecret: "client-secret",

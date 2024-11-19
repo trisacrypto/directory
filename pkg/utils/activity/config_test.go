@@ -35,6 +35,7 @@ func TestActivityValidation(t *testing.T) {
 
 	// Test valid enabled configuration
 	conf.Enabled = true
+	conf.Network = activity.TestNet
 	conf.Ensign.ClientID = "client-id"
 	require.NoError(t, conf.Validate())
 }
