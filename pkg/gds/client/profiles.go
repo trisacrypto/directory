@@ -31,7 +31,7 @@ var cfgd configdir.ConfigDir
 // to easily override the user or system config by creating a profiles.yaml in the CWD.
 //
 // The profiles make it easy to switch between client configurations to connect
-// to trisatest.net or vaspdirectory.net. The profiles have a user-supplied name for
+// to testnet.directory or trisa.directory. The profiles have a user-supplied name for
 // easy configuration and the profiles are populated with reasonable defaults.
 //
 // At most one profile is considered "active", this profile is treated as the default
@@ -54,38 +54,38 @@ func DefaultProfiles() *Profiles {
 		Profiles: map[string]*Profile{
 			"production": {
 				Directory: &DirectoryProfile{
-					Endpoint: "api.vaspdirectory.net:443",
+					Endpoint: "api.trisa.directory:443",
 					Insecure: true,
 				},
 				Admin: &AdminProfile{
-					Endpoint: "https://api.admin.vaspdirectory.net",
+					Endpoint: "https://api.admin.trisa.directory",
 				},
 				Members: &MembersProfile{
-					Endpoint: "members.vaspdirectory.net:443",
+					Endpoint: "members.trisa.directory:443",
 					Insecure: true,
 				},
 				TrtlProfiles: []*TrtlProfile{
 					{
-						Endpoint: "trtl.us.vaspdirectory.net:443",
+						Endpoint: "trtl.us.trisa.directory:443",
 						Insecure: true,
 					},
 				},
 			},
 			"testnet": {
 				Directory: &DirectoryProfile{
-					Endpoint: "api.trisatest.net:443",
+					Endpoint: "api.testnet.directory:443",
 					Insecure: true,
 				},
 				Admin: &AdminProfile{
-					Endpoint: "https://api.admin.trisatest.net",
+					Endpoint: "https://api.admin.testnet.directory",
 				},
 				Members: &MembersProfile{
-					Endpoint: "members.trisatest.net:443",
+					Endpoint: "members.testnet.directory:443",
 					Insecure: true,
 				},
 				TrtlProfiles: []*TrtlProfile{
 					{
-						Endpoint: "trtl.us.trisatest.net:443",
+						Endpoint: "trtl.us.testnet.directory:443",
 						Insecure: true,
 					},
 				},

@@ -89,7 +89,7 @@ func (s *gdsTestSuite) TestRegister() {
 	}
 	_, err = client.Register(ctx, request)
 	require.Error(err)
-	request.TrisaEndpoint = "http://trisatest.net:443"
+	request.TrisaEndpoint = "http://testnet.directory:443"
 	_, err = client.Register(ctx, request)
 	require.Error(err)
 	request.TrisaEndpoint = "grpc://:443"
@@ -98,28 +98,28 @@ func (s *gdsTestSuite) TestRegister() {
 	request.TrisaEndpoint = ":443"
 	_, err = client.Register(ctx, request)
 	require.Error(err)
-	request.TrisaEndpoint = "trisatest.net"
+	request.TrisaEndpoint = "testnet.directory"
 	_, err = client.Register(ctx, request)
 	require.Error(err)
-	request.TrisaEndpoint = "trisatest.net:443/"
+	request.TrisaEndpoint = "testnet.directory:443/"
 	_, err = client.Register(ctx, request)
 	require.Error(err)
-	request.TrisaEndpoint = "trisatest.net:443/path"
+	request.TrisaEndpoint = "testnet.directory:443/path"
 	_, err = client.Register(ctx, request)
 	require.Error(err)
 
 	// Request contains an invalid common name
-	request.TrisaEndpoint = "trisatest.net:443"
-	request.CommonName = "http://trisatest.net"
+	request.TrisaEndpoint = "testnet.directory:443"
+	request.CommonName = "http://testnet.directory"
 	_, err = client.Register(ctx, request)
 	require.Error(err)
 	request.CommonName = ":443"
 	_, err = client.Register(ctx, request)
 	require.Error(err)
-	request.CommonName = "trisatest.net:443"
+	request.CommonName = "testnet.directory:443"
 	_, err = client.Register(ctx, request)
 	require.Error(err)
-	request.CommonName = "trisatest.net/path"
+	request.CommonName = "testnet.directory/path"
 	_, err = client.Register(ctx, request)
 	require.Error(err)
 
@@ -137,7 +137,7 @@ func (s *gdsTestSuite) TestRegister() {
 	require.NotNil(reply)
 	require.NotEmpty(reply.Id)
 	require.Equal(s.svc.GetConf().DirectoryID, reply.RegisteredDirectory)
-	require.Equal("trisatest.net", reply.CommonName)
+	require.Equal("testnet.directory", reply.CommonName)
 	require.Equal(pb.VerificationState_SUBMITTED, reply.Status)
 	require.Contains(reply.Message, "verification code has been sent")
 	require.NotEmpty(reply.Pkcs12Password)
@@ -260,7 +260,7 @@ func (s *gdsTestSuite) TestRegisterAlreadyVerified() {
 		VaspCategories:   charlie.VaspCategories,
 		EstablishedOn:    charlie.EstablishedOn,
 		Trixo:            charlie.Trixo,
-		TrisaEndpoint:    "trisatest.net:443",
+		TrisaEndpoint:    "testnet.directory:443",
 	}
 	sent := time.Now()
 	reply, err := client.Register(ctx, request)
@@ -268,7 +268,7 @@ func (s *gdsTestSuite) TestRegisterAlreadyVerified() {
 	require.NotNil(reply)
 	require.NotEmpty(reply.Id)
 	require.Equal(s.svc.GetConf().DirectoryID, reply.RegisteredDirectory)
-	require.Equal("trisatest.net", reply.CommonName)
+	require.Equal("testnet.directory", reply.CommonName)
 	require.Equal(pb.VerificationState_PENDING_REVIEW, reply.Status)
 	require.Contains(reply.Message, "verification code has been sent")
 	require.NotEmpty(reply.Pkcs12Password)

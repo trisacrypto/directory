@@ -17,14 +17,14 @@ var testEnv = map[string]string{
 	"GDS_BFF_MODE":                          "debug",
 	"GDS_BFF_LOG_LEVEL":                     "debug",
 	"GDS_BFF_CONSOLE_LOG":                   "true",
-	"GDS_BFF_ALLOW_ORIGINS":                 "https://vaspdirectory.net",
-	"GDS_BFF_COOKIE_DOMAIN":                 "vaspdirectory.net",
-	"GDS_BFF_LOGIN_URL":                     "https://vaspdirectory.net/auth/login",
-	"GDS_BFF_REGISTER_URL":                  "https://vaspdirectory.net/auth/register",
+	"GDS_BFF_ALLOW_ORIGINS":                 "https://trisa.directory",
+	"GDS_BFF_COOKIE_DOMAIN":                 "trisa.directory",
+	"GDS_BFF_LOGIN_URL":                     "https://trisa.directory/auth/login",
+	"GDS_BFF_REGISTER_URL":                  "https://trisa.directory/auth/register",
 	"GDS_BFF_SERVE_DOCS":                    "true",
 	"GDS_BFF_AUTH0_DOMAIN":                  "example.auth0.com",
 	"GDS_BFF_AUTH0_ISSUER":                  "https://auth.example.com",
-	"GDS_BFF_AUTH0_AUDIENCE":                "https://vaspdirectory.net",
+	"GDS_BFF_AUTH0_AUDIENCE":                "https://trisa.directory",
 	"GDS_BFF_AUTH0_PROVIDER_CACHE":          "10m",
 	"GDS_BFF_AUTH0_CLIENT_ID":               "exampleid",
 	"GDS_BFF_AUTH0_CLIENT_SECRET":           "supersecretsquirrel",
@@ -232,7 +232,7 @@ func TestRequiredConfig(t *testing.T) {
 func TestAuthConfig(t *testing.T) {
 	conf := config.AuthConfig{
 		Domain:        "example.auth0.com",
-		Audience:      "https://vaspdirectory.net",
+		Audience:      "https://trisa.directory",
 		ProviderCache: 0,
 		Testing:       true,
 	}

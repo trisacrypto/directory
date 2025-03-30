@@ -23,9 +23,9 @@ function defaultEndpointPrefix() {
             return 'http://localhost:4434/v2';
         case ENVIRONMENT.PROD:
             if (config.IS_TESTNET) {
-                return 'https://api.admin.trisatest.net/v2';
+                return 'https://api.admin.testnet.directory/v2';
             }
-            return 'https://api.admin.vaspdirectory.net/v2';
+            return 'https://api.admin.trisa.directory/v2';
 
         default:
             throw new Error('Could not identify the api prefix');
@@ -104,7 +104,7 @@ function getDirectoryName() {
 }
 
 function getDirectoryURL() {
-    return isTestNet() ? 'https://admin.vaspdirectory.net' : 'https://admin.trisatest.net';
+    return isTestNet() ? 'https://admin.trisa.directory' : 'https://admin.testnet.directory';
 }
 
 const getDirectoryLogo = () => (isTestNet() ? TrisatestLogo : VaspDirectoryLogo);

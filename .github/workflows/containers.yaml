@@ -184,7 +184,7 @@ jobs:
           status: FAILED
           color: danger
 
-  # GDS User UI: vaspdirectory.net
+  # GDS User UI: trisa.directory
   gds-user-ui:
     name: GDS UI
     runs-on: ubuntu-latest
@@ -249,14 +249,14 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            REACT_APP_TRISA_BASE_URL=https://bff.vaspdirectory.net/v1/
+            REACT_APP_TRISA_BASE_URL=https://bff.trisa.directory/v1/
             REACT_APP_ANALYTICS_ID=${{ secrets.REACT_APP_VASPDIRECTORY_ANALYTICS_ID }}
             REACT_APP_VERSION_NUMBER=${{ steps.vars.outputs.tag }}
             REACT_APP_GIT_REVISION=${{ steps.vars.outputs.revision }}
             REACT_APP_AUTH0_DOMAIN=${{ secrets.REACT_APP_AUTH0_DOMAIN }}
             REACT_APP_AUTH0_CLIENT_ID=${{ secrets.REACT_APP_AUTH0_CLIENT_ID }}
-            REACT_APP_AUTH0_REDIRECT_URI=https://vaspdirectory.net/auth/callback
-            REACT_APP_AUTH0_AUDIENCE=https://bff.vaspdirectory.net
+            REACT_APP_AUTH0_REDIRECT_URI=https://trisa.directory/auth/callback
+            REACT_APP_AUTH0_AUDIENCE=https://bff.trisa.directory
             REACT_APP_SENTRY_DSN=${{ secrets.REACT_APP_SENTRY_DSN }}
 
       - name: Slack Notify User UI Build Success
@@ -279,7 +279,7 @@ jobs:
           status: FAILED
           color: danger
 
-  # GDS Admin UI: admin.vaspdirectory.net
+  # GDS Admin UI: admin.trisa.directory
   gds-admin-ui:
     name: GDS Admin UI
     runs-on: ubuntu-latest
@@ -337,7 +337,7 @@ jobs:
           build-args: |
             REACT_APP_VERSION_NUMBER=${{ steps.vars.outputs.tag }}
             REACT_APP_GIT_REVISION=${{ steps.vars.outputs.revision }}
-            REACT_APP_GDS_API_ENDPOINT=https://api.admin.vaspdirectory.net/v2
+            REACT_APP_GDS_API_ENDPOINT=https://api.admin.trisa.directory/v2
             REACT_APP_GDS_IS_TESTNET=false
             REACT_APP_GOOGLE_CLIENT_ID=${{ secrets.REACT_APP_VASPDIRECTORY_CLIENT_ID }}
             REACT_APP_SENTRY_DSN=${{ secrets.REACT_APP_ADMIN_SENTRY_DSN }}
@@ -362,7 +362,7 @@ jobs:
           status: FAILED
           color: danger
 
-  # GDS TestNet Admin UI: admin.trisatest.net
+  # GDS TestNet Admin UI: admin.testnet.directory
   gds-testnet-admin-ui:
     name: GDS TestNet Admin UI
     runs-on: ubuntu-latest
@@ -420,7 +420,7 @@ jobs:
           build-args: |
             REACT_APP_VERSION_NUMBER=${{ steps.vars.outputs.tag }}
             REACT_APP_GIT_REVISION=${{ steps.vars.outputs.revision }}
-            REACT_APP_GDS_API_ENDPOINT=https://api.admin.trisatest.net/v2
+            REACT_APP_GDS_API_ENDPOINT=https://api.admin.testnet.directory/v2
             REACT_APP_GDS_IS_TESTNET=true
             REACT_APP_GOOGLE_CLIENT_ID=${{ secrets.REACT_APP_TRISATEST_CLIENT_ID }}
             REACT_APP_SENTRY_DSN=${{ secrets.REACT_APP_ADMIN_SENTRY_DSN }}

@@ -69,8 +69,8 @@ export default function IntegrateAndComply() {
                 </Text>
                 <Text fontSize="lg">
                   <Trans>
-                  Envoy is an <Text as="span" fontWeight={700}>open source messaging tool</Text> built to help compliance teams handle travel rule exchanges efficiently and securely. 
-                  It is designed by compliance experts and TRISA engineers to provide simplified data exchanges using the TRISA or TRP protocols. 
+                  Envoy is an <Text as="span" fontWeight={700}>open source messaging tool</Text> built to help compliance teams handle travel rule exchanges efficiently and securely.
+                  It is designed by compliance experts and TRISA engineers to provide simplified data exchanges using the TRISA or TRP protocols.
                   </Trans>
                 </Text>
               </Box>
@@ -119,7 +119,7 @@ export default function IntegrateAndComply() {
                       </ListItem>
                       <ListItem>
                         <Trans>
-                          Register with <Link isExternal href="https://vaspdirectory.net/guide">TRISA's GDS</Link>
+                          Register with <Link isExternal href="https://trisa.directory/guide">TRISA's GDS</Link>
                         </Trans>
                       </ListItem>
                       <ListItem>
@@ -156,7 +156,7 @@ export default function IntegrateAndComply() {
                     </ListItem>
                     <ListItem>
                       <Trans>
-                        Register with <Link isExternal href="https://vaspdirectory.net/guide">TRISA's GDS</Link>
+                        Register with <Link isExternal href="https://trisa.directory/guide">TRISA's GDS</Link>
                       </Trans>
                     </ListItem>
                   </UnorderedList>
@@ -188,7 +188,7 @@ export default function IntegrateAndComply() {
                         </ListItem>
                         <ListItem>
                           <Trans>
-                            Register with <Link isExternal href="https://vaspdirectory.net/guide">TRISA's GDS</Link>
+                            Register with <Link isExternal href="https://trisa.directory/guide">TRISA's GDS</Link>
                           </Trans>
                         </ListItem>
                       </UnorderedList>

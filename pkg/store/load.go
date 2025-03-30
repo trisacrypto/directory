@@ -56,7 +56,7 @@ func Load(db Store, path string) (err error) {
 		// TODO: ensure that ID generation is correct
 		vasp := &pb.VASP{
 			Id:                  uuid.New().String(),
-			RegisteredDirectory: "vaspdirectory.net",
+			RegisteredDirectory: "trisa.directory",
 			Entity: &ivms101.LegalPerson{
 				Name: &ivms101.LegalPersonName{
 					NameIdentifiers: []*ivms101.LegalPersonNameId{

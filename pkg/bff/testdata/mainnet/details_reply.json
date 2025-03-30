@@ -1,7 +1,7 @@
 {
   "member_summary": {
     "id": "9e069e01-8515-4d57-b9a5-e249f7ab4fca",
-    "registered_directory": "trisatest.net",
+    "registered_directory": "testnet.directory",
     "common_name": "api.bob.vaspbot.net",
     "endpoint": "api.bob.vaspbot.net:443",
     "name": "BobVASP",

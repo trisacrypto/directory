@@ -34,10 +34,10 @@ var AnonymousClaims = Claims{Scope: ScopeAnonymous, Permissions: nil}
 type Claims struct {
 	Scope         string   `json:"scope"`
 	Permissions   []string `json:"permissions"`
-	OrgID         string   `json:"https://vaspdirectory.net/orgid"`
-	VASPs         VASPs    `json:"https://vaspdirectory.net/vasps"`
-	Organizations []string `json:"https://vaspdirectory.net/organizations"`
-	Email         string   `json:"https://vaspdirectory.net/email"`
+	OrgID         string   `json:"https://trisa.directory/orgid"`
+	VASPs         VASPs    `json:"https://trisa.directory/vasps"`
+	Organizations []string `json:"https://trisa.directory/organizations"`
+	Email         string   `json:"https://trisa.directory/email"`
 }
 
 // Validate implements the validator.CustomClaims interface for Auth0 parsing.

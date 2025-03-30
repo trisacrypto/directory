@@ -2,7 +2,7 @@ export const mainnetMembersMockValue: any = {
   vasps: [
     {
       id: 'fe29b582-20b3-4b75-acb2-4d014af25f28',
-      registered_directory: 'vaspdirectory.net',
+      registered_directory: 'trisa.directory',
       common_name: 'mainnet.firecoinex.co',
       endpoint: 'mainnet.firecoinex.co:443',
       name: 'FireCoin Exchange',
@@ -17,7 +17,7 @@ export const mainnetMembersMockValue: any = {
     },
     {
       id: '52842ac3-7d9d-4520-8bfb-e6083dbdc8aa',
-      registered_directory: 'vaspdirectory.net',
+      registered_directory: 'trisa.directory',
       common_name: 'mainnet.testmachine.com',
       endpoint: 'mainnet.testmachine.com:443',
       name: 'Test Machine',
@@ -32,7 +32,7 @@ export const mainnetMembersMockValue: any = {
     },
     {
       id: 'ec6f2056-726b-4e8c-a916-f7359f6f5581',
-      registered_directory: 'vaspdirectory.net',
+      registered_directory: 'trisa.directory',
       common_name: 'mainnet.newcoinex.ai',
       endpoint: 'mainnet.newcoinex.ai:8221',
       name: 'New Coin Exchange',
@@ -53,7 +53,7 @@ export const testnetMembersMockValue: any = {
   vasps: [
     {
       id: '1b99f17d-3441-4885-b9df-8f3475f7e1b4',
-      registered_directory: 'trisatest.net',
+      registered_directory: 'testnet.directory',
       common_name: 'trisa-travelrule.sendcoin.io',
       endpoint: 'trisa-travelrule.sendcoin.io:443',
       name: 'SendCoin VASP',
@@ -68,7 +68,7 @@ export const testnetMembersMockValue: any = {
     },
     {
       id: 'aa4c6714-49dc-411c-adfa-b8edc4d58cd7',
-      registered_directory: 'trisatest.net',
+      registered_directory: 'testnet.directory',
       common_name: 'testing.example.com',
       endpoint: 'testing.example.com:443',
       name: 'Example Crypto',
@@ -83,7 +83,7 @@ export const testnetMembersMockValue: any = {
     },
     {
       id: '688059d6-9d14-4b49-8435-f641ba1dec3a',
-      registered_directory: 'trisatest.net',
+      registered_directory: 'testnet.directory',
       common_name: 'testnet.spudcoin.ai',
       endpoint: 'testnet.spudcoin.ai:8221',
       name: 'SpudCoin',
@@ -98,7 +98,7 @@ export const testnetMembersMockValue: any = {
     },
     {
       id: '62291255-1ea2-4932-8248-22af4abde298',
-      registered_directory: 'trisatest.net',
+      registered_directory: 'testnet.directory',
       common_name: 'test.signal.co.fr',
       endpoint: 'test.signal.co.fr:9212',
       name: 'Signal Coin France',
@@ -113,7 +113,7 @@ export const testnetMembersMockValue: any = {
     },
     {
       id: 'dae1555d-e4cf-4bfb-9858-9b86db71ccb6',
-      registered_directory: 'trisatest.net',
+      registered_directory: 'testnet.directory',
       common_name: 'testnet.bitfriend.link',
       endpoint: 'testnet.bitfriend.link:443',
       name: 'BitFriendly',
@@ -133,7 +133,7 @@ export const testnetMembersMockValue: any = {
 export const memberDetailMock = {
   summary: {
     id: '9e069e01-8515-4d57-b9a5-e249f7ab4fca',
-    registered_directory: 'trisatest.net',
+    registered_directory: 'testnet.directory',
     common_name: 'api.bob.vaspbot.net',
     endpoint: 'api.bob.vaspbot.net:443',
     name: 'BobVASP',

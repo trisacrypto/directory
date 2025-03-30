@@ -500,7 +500,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 			ID:                  charlie.Id,
 			Name:                "CharlieBank",
 			CommonName:          "trisa.charliebank.io",
-			RegisteredDirectory: "trisatest.net",
+			RegisteredDirectory: "testnet.directory",
 			VerificationStatus:  pb.VerificationState_SUBMITTED.String(),
 			VerifiedContacts: map[string]bool{
 				"administrative": false,
@@ -512,7 +512,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 			ID:                  delta.Id,
 			Name:                "Delta Assets",
 			CommonName:          "trisa.delta.io",
-			RegisteredDirectory: "trisatest.net",
+			RegisteredDirectory: "testnet.directory",
 			VerificationStatus:  pb.VerificationState_APPEALED.String(),
 			VerifiedContacts: map[string]bool{
 				"billing": true,
@@ -523,7 +523,7 @@ func (s *gdsTestSuite) TestListVASPs() {
 			ID:                    hotel.Id,
 			Name:                  "Hotel Corp",
 			CommonName:            "trisa.hotel.io",
-			RegisteredDirectory:   "trisatest.net",
+			RegisteredDirectory:   "testnet.directory",
 			VerifiedOn:            hotel.VerifiedOn,
 			VerificationStatus:    pb.VerificationState_VERIFIED.String(),
 			CertificateSerial:     models.GetCertID(hotel.IdentityCertificate),

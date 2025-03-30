@@ -2,7 +2,7 @@
   "vasps":  [
     {
       "id":  "fe29b582-20b3-4b75-acb2-4d014af25f28",
-      "registered_directory":  "vaspdirectory.net",
+      "registered_directory":  "trisa.directory",
       "common_name":  "mainnet.firecoinex.co",
       "endpoint":  "mainnet.firecoinex.co:443",
       "name":  "FireCoin Exchange",
@@ -19,7 +19,7 @@
     },
     {
       "id":  "52842ac3-7d9d-4520-8bfb-e6083dbdc8aa",
-      "registered_directory":  "vaspdirectory.net",
+      "registered_directory":  "trisa.directory",
       "common_name":  "mainnet.testmachine.com",
       "endpoint":  "mainnet.testmachine.com:443",
       "name":  "Test Machine",
@@ -37,7 +37,7 @@
     },
     {
       "id":  "ec6f2056-726b-4e8c-a916-f7359f6f5581",
-      "registered_directory":  "vaspdirectory.net",
+      "registered_directory":  "trisa.directory",
       "common_name":  "mainnet.newcoinex.ai",
       "endpoint":  "mainnet.newcoinex.ai:8221",
       "name":  "New Coin Exchange",

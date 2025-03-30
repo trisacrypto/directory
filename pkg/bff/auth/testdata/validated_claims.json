@@ -2,12 +2,12 @@
 	"CustomClaims": {
 		"scope": "openid profile email",
 		"permissions": ["add:collaborators", "read:certificates", "read:collaborators", "read:vasp"],
-    "https://vaspdirectory.net/orgid": "6f0d943d-6cd7-4745-bc9d-6d65e32c70e9",
-		"https://vaspdirectory.net/vasps": {
+    "https://trisa.directory/orgid": "6f0d943d-6cd7-4745-bc9d-6d65e32c70e9",
+		"https://trisa.directory/vasps": {
       "mainnet": "",
       "testnet": "eee784b5-49b3-452e-97d5-1b01e79f5e62"
     },
-		"https://vaspdirectory.net/email": "rebecca@example.com"
+		"https://trisa.directory/email": "rebecca@example.com"
 	},
 	"RegisteredClaims": {
 		"iss": "https://example.auth0.com/",

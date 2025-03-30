@@ -44,7 +44,7 @@ func TestLiveEmailTests(t *testing.T) {
 	// Send a user invite email
 	inviteName := "Alice Ables"
 	inviteEmail := "alice@example.com"
-	inviteURL, err := url.Parse("https://trisatest.net/invite/1234")
+	inviteURL, err := url.Parse("https://testnet.directory/invite/1234")
 	require.NoError(t, err, "could not parse invite URL")
 
 	user := &management.User{

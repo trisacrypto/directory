@@ -47,10 +47,10 @@ func (s *Server) CheckVerification(c *gin.Context) {
 		switch network {
 		case config.TestNet:
 			req.Id = claims.VASPs.TestNet
-			req.RegisteredDirectory = "trisatest.net"
+			req.RegisteredDirectory = "testnet.directory"
 		case config.MainNet:
 			req.Id = claims.VASPs.MainNet
-			req.RegisteredDirectory = "vaspdirectory.net"
+			req.RegisteredDirectory = "trisa.directory"
 		default:
 			return nil, fmt.Errorf("unknown network %q", network)
 		}

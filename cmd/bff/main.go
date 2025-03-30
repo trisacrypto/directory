@@ -72,7 +72,7 @@ func main() {
 						Aliases: []string{"u", "endpoint"},
 						Usage:   "specify the URL to connect to the BFF server on",
 						EnvVars: []string{"GDS_BFF_CLIENT_URL"},
-						Value:   "https://bff.vaspdirectory.net",
+						Value:   "https://bff.trisa.directory",
 					},
 					&cli.BoolFlag{
 						Name:    "nogds",
@@ -93,7 +93,7 @@ func main() {
 						Aliases: []string{"u", "endpoint"},
 						Usage:   "specify the URL to connect to the BFF server on",
 						EnvVars: []string{"GDS_BFF_CLIENT_URL"},
-						Value:   "https://bff.vaspdirectory.net",
+						Value:   "https://bff.trisa.directory",
 					},
 					&cli.StringFlag{
 						Name:     "token-cache",

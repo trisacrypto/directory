@@ -57,7 +57,7 @@ const VerifyPage: React.FC = () => {
             <Text as={'span'} ml={3}>
               <RouteLink to={'/'}>
                 <Link _active={{ outline: 'none' }} _focus={{ outline: 'none' }}>
-                  <Trans id="Return to vaspdirectory.net">Return to vaspdirectory.net </Trans>
+                  <Trans id="Return to trisa.directory">Return to trisa.directory </Trans>
                 </Link>
               </RouteLink>
             </Text>

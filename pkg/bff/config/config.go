@@ -91,7 +91,7 @@ type MTLSConfig struct {
 
 // EmailConfig defines how emails are sent from the BFF.
 type EmailConfig struct {
-	ServiceEmail   string `envconfig:"GDS_BFF_SERVICE_EMAIL" default:"TRISA Directory Service <admin@vaspdirectory.net>"`
+	ServiceEmail   string `envconfig:"GDS_BFF_SERVICE_EMAIL" default:"TRISA Directory Service <admin@trisa.directory>"`
 	SendGridAPIKey string `envconfig:"SENDGRID_API_KEY" required:"false"`
 	Testing        bool   `split_words:"true" default:"false"`
 	Storage        string `split_words:"true" default:""`

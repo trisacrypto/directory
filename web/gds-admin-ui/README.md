@@ -1,6 +1,6 @@
 # GDS Admin UI
 
-The GDS Admin UI is a web application that allows TRISA reviewers to interact with the GDS Admin API and to manage the TRISA network. This application is built for both admin.vaspdirectory.net and admin.trisatest.net.
+The GDS Admin UI is a web application that allows TRISA reviewers to interact with the GDS Admin API and to manage the TRISA network. This application is built for both admin.trisa.directory and admin.testnet.directory.
 
 ## Getting Started
 

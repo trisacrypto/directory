@@ -192,7 +192,7 @@ type LookupParams struct {
 // Lookup endpoint returns a 404 error (not found). The result is the simplest case,
 // just a JSON serialization of the protocol buffers returned from GDS to help long term
 // maintainability. The protocol buffers contain a "registered_directory" field that
-// will have either vaspdirectory.net or trisatest.net inside of it - which can be used
+// will have either trisa.directory or testnet.directory inside of it - which can be used
 // to identify which network the record is associated with. The protocol buffers may
 // also contain an "error" field - the BFF will handle this field by logging the error
 // but will exclude it from any results returned.
@@ -360,7 +360,7 @@ type MemberListReply struct {
 }
 
 // MemberDetailsParams contains details required to identify a VASP member in a specific
-// registered directory (e.g. trisatest.net or vaspdirectory.net).
+// registered directory (e.g. testnet.directory or trisa.directory).
 type MemberDetailsParams struct {
 	ID        string `url:"-" form:"-"`
 	Directory string `url:"registered_directory,omitempty" form:"registered_directory"`

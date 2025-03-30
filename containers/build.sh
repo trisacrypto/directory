@@ -109,20 +109,20 @@ docker buildx build --platform $PLATFORM -t trisa/trtlsim:$TAG -f $DIR/trtlsim/D
 docker buildx build --platform $PLATFORM -t trisa/cathy:$TAG -f $DIR/cathy/Dockerfile .
 docker buildx build --platform $PLATFORM -t trisa/maintenance:$TAG -f $DIR/maintenance/Dockerfile .
 
-# Build the UI image for vaspdirectory.net
+# Build the UI image for trisa.directory
 docker buildx build \
     --platform $PLATFORM \
     -t trisa/gds-user-ui:$TAG -f $DIR/gds-user-ui/Dockerfile \
-    --build-arg REACT_APP_TRISA_BASE_URL=https://bff.vaspdirectory.net/v1/ \
+    --build-arg REACT_APP_TRISA_BASE_URL=https://bff.trisa.directory/v1/ \
     --build-arg REACT_APP_ANALYTICS_ID=${REACT_APP_VASPDIRECTORY_ANALYTICS_ID} \
     --build-arg REACT_APP_VERSION_NUMBER=${REACT_APP_VERSION_NUMBER} \
     --build-arg REACT_APP_GIT_REVISION=${REACT_APP_GIT_REVISION} \
     --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_SENTRY_DSN} \
     --build-arg REACT_APP_AUTH0_DOMAIN=${REACT_APP_AUTH0_DOMAIN} \
     --build-arg REACT_APP_AUTH0_CLIENT_ID=${REACT_APP_AUTH0_CLIENT_ID} \
-    --build-arg REACT_APP_AUTH0_REDIRECT_URI=https://vaspdirectory.net/auth/callback \
+    --build-arg REACT_APP_AUTH0_REDIRECT_URI=https://trisa.directory/auth/callback \
     --build-arg REACT_APP_AUTH0_SCOPE="openid profile email" \
-    --build-arg REACT_APP_AUTH0_AUDIENCE=https://bff.vaspdirectory.net \
+    --build-arg REACT_APP_AUTH0_AUDIENCE=https://bff.trisa.directory \
     $REPO
 
 # Build the UI image for vaspdirectory.dev
@@ -143,11 +143,11 @@ docker buildx build \
     --build-arg REACT_APP_USE_DASH_LOCALE=true \
     $REPO
 
-# Build the Admin UI images for admin.trisatest.net and admin.vaspdirectory.net
+# Build the Admin UI images for admin.testnet.directory and admin.trisa.directory
 docker buildx build \
     --platform $PLATFORM \
     -t trisa/gds-admin-ui:$TAG -f $DIR/gds-admin-ui/Dockerfile \
-    --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.vaspdirectory.net/v2 \
+    --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.trisa.directory/v2 \
     --build-arg REACT_APP_GDS_IS_TESTNET=false \
     --build-arg REACT_APP_GOOGLE_CLIENT_ID=${REACT_APP_VASPDIRECTORY_CLIENT_ID} \
     --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_ADMIN_SENTRY_DSN} \
@@ -158,7 +158,7 @@ docker buildx build \
 docker buildx build \
     --platform $PLATFORM \
     -t trisa/gds-testnet-admin-ui:$TAG -f $DIR/gds-admin-ui/Dockerfile \
-    --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.trisatest.net/v2 \
+    --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.testnet.directory/v2 \
     --build-arg REACT_APP_GDS_IS_TESTNET=true \
     --build-arg REACT_APP_GOOGLE_CLIENT_ID=${REACT_APP_TRISATEST_CLIENT_ID} \
     --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_ADMIN_SENTRY_DSN} \

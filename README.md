@@ -120,7 +120,7 @@ Server side configuration is done with the environment. Please see the instructi
 
 ### Profiles
 
-Client-side configuration is setup using profiles. A profile is a set of related configurations for both development and production. For example, the default environments are "production" to connect to vaspdirectory.net, "testnet" to connect to trisatest.net, and "localhost" to connect to locally running development servers. The profiles are configured in a YAML file that is stored in an OS-specific configuration directory.
+Client-side configuration is setup using profiles. A profile is a set of related configurations for both development and production. For example, the default environments are "production" to connect to trisa.directory, "testnet" to connect to testnet.directory, and "localhost" to connect to locally running development servers. The profiles are configured in a YAML file that is stored in an OS-specific configuration directory.
 
 You must first install the CLI Tools described in the section above. After that, install the profiles helper tool:
 

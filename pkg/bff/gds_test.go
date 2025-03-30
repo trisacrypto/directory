@@ -904,13 +904,13 @@ func (s *bffTestSuite) TestSubmitRegistration() {
 
 	require.NotNil(org.Testnet, "missing testnet directory record after registration")
 	require.Equal(org.Testnet.Id, "6041571e-09b4-47e7-870a-723f8032cd6c", "incorrect testnet directory id")
-	require.Equal(org.Testnet.RegisteredDirectory, "trisatest.net", "incorrect testnet registered directory ")
+	require.Equal(org.Testnet.RegisteredDirectory, "testnet.directory", "incorrect testnet registered directory ")
 	require.Equal(org.Testnet.CommonName, "test.trisa.example.ua", "incorrect testnet directory common name")
 	require.NotEmpty(org.Testnet.Submitted, "expected testnet submitted timestamp stored in database")
 
 	require.NotNil(org.Mainnet, "missing mainnet directory record after registration")
 	require.Equal(org.Mainnet.Id, "5bafb054-5868-439e-9b3c-75db91810714", "incorrect mainnet directory id")
-	require.Equal(org.Mainnet.RegisteredDirectory, "vaspdirectory.net", "incorrect mainnet registered directory ")
+	require.Equal(org.Mainnet.RegisteredDirectory, "trisa.directory", "incorrect mainnet registered directory ")
 	require.Equal(org.Mainnet.CommonName, "trisa.example.ua", "incorrect mainnet directory common name")
 	require.NotEmpty(org.Mainnet.Submitted, "expected mainnet submitted timestamp stored in database")
 
@@ -983,13 +983,13 @@ func (s *bffTestSuite) TestCannotResubmitRegistration() {
 	org.Testnet = &records.DirectoryRecord{
 		Id:                  uuid.NewString(),
 		CommonName:          "test.trisa.example.com",
-		RegisteredDirectory: "trisatest.net",
+		RegisteredDirectory: "testnet.directory",
 		Submitted:           "2022-02-21T15:32:31Z",
 	}
 	org.Mainnet = &records.DirectoryRecord{
 		Id:                  uuid.NewString(),
 		CommonName:          "trisa.example.com",
-		RegisteredDirectory: "vaspdirectory.net",
+		RegisteredDirectory: "trisa.directory",
 		Submitted:           "2022-02-23T09:51:15Z",
 	}
 
@@ -1040,7 +1040,7 @@ func (s *bffTestSuite) TestVerifyEmail() {
 	require.Empty(s.mainnet.gds.Calls[mock.VerifyContactRPC], "expected no mainnet calls")
 
 	// Test good requests to the registered directory
-	for i, directory := range []string{"trisatest.net", "vaspdirectory.net"} {
+	for i, directory := range []string{"testnet.directory", "trisa.directory"} {
 		params.Directory = directory
 
 		// Identify the mock being used in this loop
@@ -1062,40 +1062,40 @@ func (s *bffTestSuite) TestVerifyEmail() {
 		_, err = s.client.VerifyContact(context.TODO(), params)
 		expectedCalls[directory]++
 		s.requireError(err, http.StatusBadRequest, "incorrect vasp id")
-		require.Equal(expectedCalls["trisatest.net"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
-		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
+		require.Equal(expectedCalls["testnet.directory"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
+		require.Equal(expectedCalls["trisa.directory"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
 
 		// Test not found error
 		mgds.UseError(mock.VerifyContactRPC, codes.NotFound, "could not lookup contact with token")
 		_, err = s.client.VerifyContact(context.TODO(), params)
 		expectedCalls[directory]++
 		s.requireError(err, http.StatusNotFound, "could not lookup contact with token")
-		require.Equal(expectedCalls["trisatest.net"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
-		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
+		require.Equal(expectedCalls["testnet.directory"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
+		require.Equal(expectedCalls["trisa.directory"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
 
 		// Test aborted error
 		mgds.UseError(mock.VerifyContactRPC, codes.Aborted, "could not update verification status")
 		_, err = s.client.VerifyContact(context.TODO(), params)
 		expectedCalls[directory]++
 		s.requireError(err, http.StatusConflict, "could not update verification status")
-		require.Equal(expectedCalls["trisatest.net"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
-		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
+		require.Equal(expectedCalls["testnet.directory"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
+		require.Equal(expectedCalls["trisa.directory"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
 
 		// Test failed precondition error
 		mgds.UseError(mock.VerifyContactRPC, codes.FailedPrecondition, "something went wrong")
 		_, err = s.client.VerifyContact(context.TODO(), params)
 		expectedCalls[directory]++
 		s.requireError(err, http.StatusInternalServerError, "something went wrong")
-		require.Equal(expectedCalls["trisatest.net"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
-		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
+		require.Equal(expectedCalls["testnet.directory"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
+		require.Equal(expectedCalls["trisa.directory"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
 
 		// Test internal error
 		mgds.UseError(mock.VerifyContactRPC, codes.FailedPrecondition, "boom hiss")
 		_, err = s.client.VerifyContact(context.TODO(), params)
 		expectedCalls[directory]++
 		s.requireError(err, http.StatusInternalServerError, "boom hiss")
-		require.Equal(expectedCalls["trisatest.net"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
-		require.Equal(expectedCalls["vaspdirectory.net"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
+		require.Equal(expectedCalls["testnet.directory"], s.testnet.gds.Calls[mock.VerifyContactRPC], "check testnet calls during %s testing", directory)
+		require.Equal(expectedCalls["trisa.directory"], s.mainnet.gds.Calls[mock.VerifyContactRPC], "check mainnet calls during %s testing", directory)
 
 		// Test a valid verify email response
 		mgds.OnVerifyContact = func(ctx context.Context, in *gds.VerifyContactRequest) (out *gds.VerifyContactReply, err error) {

@@ -12,7 +12,7 @@ const MainNet = () => {
             <Trans>Become a TRISA certified Virtual Asset Service Provider.</Trans>
           </p>
           <small>
-            <Trans>Looking for the <a href="https://trisatest.net">TestNet Directory Service</a>?</Trans>
+            <Trans>Looking for the <a href="https://testnet.directory">TestNet Directory Service</a>?</Trans>
           </small>
         </div>
       </div>
