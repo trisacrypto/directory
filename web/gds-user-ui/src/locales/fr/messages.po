@@ -1919,7 +1919,7 @@ msgid "Residential"
 msgstr "Résidentiel"
 
 #: src/modules/auth/register/success.tsx:60
-msgid "Return to vaspdirectory.net"
+msgid "Return to trisa.directory"
 msgstr ""
 
 #: src/components/CertificateReview/ReviewsSummary.tsx:95
@@ -2858,7 +2858,7 @@ msgstr ""
 #~ msgstr "Votre formulaire d'inscription a été soumis avec succès. Vous recevrez un e-mail de confirmation de admin@trisa.io. Dans cet e-mail, vous recevrez des instructions sur les prochaines étapes. Retournez à votre tableau de bord pour suivre l'état de votre inscription et de votre certificat."
 
 #: src/components/CertificateSection/index.tsx:61
-msgid "Your registration form has been successfully submitted. You will receive a confirmation email from admin@vaspdirectory.net. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate."
+msgid "Your registration form has been successfully submitted. You will receive a confirmation email from admin@trisa.directory. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate."
 msgstr ""
 
 #: src/components/ReviewSubmit/ConfirmationModal.tsx:59

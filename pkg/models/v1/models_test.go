@@ -794,7 +794,7 @@ func TestValidateVASP(t *testing.T) {
 	require.NoError(t, ValidateVASP(vasp, true), "expected successful validation if fields are missing but partial is true")
 
 	vasp.Id = "b5841869-105f-411c-8722-4045aad72717"
-	vasp.RegisteredDirectory = "trisatest.net"
+	vasp.RegisteredDirectory = "testnet.directory"
 	vasp.FirstListed = time.Now().AddDate(0, 0, -1).Format(time.RFC3339)
 	vasp.LastUpdated = time.Now().Format(time.RFC3339)
 	vasp.Signature = []byte("abc123")

@@ -139,7 +139,7 @@ func (s *EmailTestSuite) SetupSuite() {
 
 	s.conf = config.EmailConfig{
 		Testing:      true,
-		ServiceEmail: "TRISA Directory Service <admin@vaspdirectory.net>",
+		ServiceEmail: "TRISA Directory Service <admin@trisa.directory>",
 		Storage:      "fixtures/emails",
 	}
 }

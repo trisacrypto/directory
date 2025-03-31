@@ -197,7 +197,7 @@ func TestVerifyContact(t *testing.T) {
 	client, err := api.New(ts.URL)
 	require.NoError(t, err)
 
-	out, err := client.VerifyContact(context.TODO(), &api.VerifyContactParams{Directory: "trisatest.net", ID: "foo", Token: "bar"})
+	out, err := client.VerifyContact(context.TODO(), &api.VerifyContactParams{Directory: "testnet.directory", ID: "foo", Token: "bar"})
 	require.NoError(t, err)
 	require.Equal(t, fixture.Status, out.Status)
 	require.Equal(t, fixture.Message, out.Message)
@@ -690,7 +690,7 @@ func TestResetRegistrationForm(t *testing.T) {
 func TestSubmitRegistration(t *testing.T) {
 	fixture := &api.RegisterReply{
 		Id:                  "8b2e9e78-baca-4c34-a382-8b285503c901",
-		RegisteredDirectory: "vaspdirectory.net",
+		RegisteredDirectory: "trisa.directory",
 		CommonName:          "trisa.example.com",
 		Status:              "PENDING_REVIEW",
 		Message:             "Thank you for registering",
@@ -1015,7 +1015,7 @@ func TestMemberDetails(t *testing.T) {
 	fixture := &api.MemberDetailsReply{
 		Summary: map[string]interface{}{
 			"id":                   "8b2e9e78-baca-4c34-a382-8b285503c901",
-			"registered_directory": "trisatest.net",
+			"registered_directory": "testnet.directory",
 			"common_name":          "trisa.example.com",
 			"endpoint":             "trisa.example.com:443",
 			"name":                 "Trisa TestNet",
@@ -1047,7 +1047,7 @@ func TestMemberDetails(t *testing.T) {
 		require.Equal(t, http.MethodGet, r.Method)
 		require.Equal(t, "/v1/members/8b2e9e78-baca-4c34-a382-8b285503c901", r.URL.Path)
 		require.Contains(t, r.URL.Query(), "registered_directory")
-		require.Equal(t, "trisatest.net", r.URL.Query().Get("registered_directory"))
+		require.Equal(t, "testnet.directory", r.URL.Query().Get("registered_directory"))
 
 		w.Header().Add("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
@@ -1061,7 +1061,7 @@ func TestMemberDetails(t *testing.T) {
 
 	req := &api.MemberDetailsParams{
 		ID:        "8b2e9e78-baca-4c34-a382-8b285503c901",
-		Directory: "trisatest.net",
+		Directory: "testnet.directory",
 	}
 
 	out, err := client.MemberDetails(context.TODO(), req)

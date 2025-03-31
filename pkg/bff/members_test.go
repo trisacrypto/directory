@@ -292,11 +292,11 @@ func (s *bffTestSuite) TestMemberList() {
 	s.requireError(err, http.StatusBadRequest, "unknown registered directory", "expected invalid directory")
 
 	// Ensure that check verification middleware is required to access the specific directory
-	req.Directory = "trisatest.net"
+	req.Directory = "testnet.directory"
 	_, err = s.client.MemberList(context.TODO(), req)
 	s.requireError(err, http.StatusUnavailableForLegalReasons, "listing GDS members is only available to verified TRISA members")
 
-	req.Directory = "vaspdirectory.net"
+	req.Directory = "trisa.directory"
 	_, err = s.client.MemberList(context.TODO(), req)
 	s.requireError(err, http.StatusUnavailableForLegalReasons, "listing GDS members is only available to verified TRISA members")
 
@@ -310,11 +310,11 @@ func (s *bffTestSuite) TestMemberList() {
 	claims.VASPs["testnet"] = "9cbcd158-9b37-4200-803a-17fbc188f677"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with claims")
 
-	req.Directory = "trisatest.net"
+	req.Directory = "testnet.directory"
 	_, err = s.client.MemberList(context.TODO(), req)
 	s.requireError(err, http.StatusUnavailableForLegalReasons, "listing GDS members is only available to verified TRISA members")
 
-	req.Directory = "vaspdirectory.net"
+	req.Directory = "trisa.directory"
 	_, err = s.client.MemberList(context.TODO(), req)
 	s.requireError(err, http.StatusUnavailableForLegalReasons, "listing GDS members is only available to verified TRISA members")
 
@@ -326,11 +326,11 @@ func (s *bffTestSuite) TestMemberList() {
 
 	// Ensure errors are returned from the testnet and mainnet directory when the mocks
 	// are set to return unavailable errors.
-	req.Directory = "trisatest.net"
+	req.Directory = "testnet.directory"
 	_, err = s.client.MemberList(context.TODO(), req)
 	s.requireError(err, http.StatusServiceUnavailable, "specified directory is currently unavailable, please try again later", "expected grpc pass through error")
 
-	req.Directory = "vaspdirectory.net"
+	req.Directory = "trisa.directory"
 	_, err = s.client.MemberList(context.TODO(), req)
 	s.requireError(err, http.StatusServiceUnavailable, "specified directory is currently unavailable, please try again later", "expected grpc pass through error")
 
@@ -338,13 +338,13 @@ func (s *bffTestSuite) TestMemberList() {
 	s.testnet.members.UseFixture(mock.ListRPC, "testdata/testnet/list_reply.json")
 	s.mainnet.members.UseFixture(mock.ListRPC, "testdata/mainnet/list_reply.json")
 
-	req.Directory = "trisatest.net"
+	req.Directory = "testnet.directory"
 	out, err := s.client.MemberList(context.TODO(), req)
 	require.NoError(err, "expected valid response from testnet")
 	require.Len(out.VASPs, 5)
 	require.Equal(out.NextPageToken, "mLB9CU8O8xQj2XEyjAtlfvTj9imoXnLv/1p8fTLchTg=")
 
-	req.Directory = "vaspdirectory.net"
+	req.Directory = "trisa.directory"
 	out, err = s.client.MemberList(context.TODO(), req)
 	require.NoError(err, "expected valid response from mainnet")
 	require.Len(out.VASPs, 3)
@@ -403,11 +403,11 @@ func (s *bffTestSuite) TestMemberDetail() {
 	s.requireError(err, http.StatusBadRequest, "unknown registered directory", "expected error when directory is unrecognized")
 
 	// Ensure that check verification middleware is required to access the specific directory
-	req.Directory = "trisatest.net"
+	req.Directory = "testnet.directory"
 	_, err = s.client.MemberDetails(context.TODO(), req)
 	s.requireError(err, http.StatusUnavailableForLegalReasons, "listing GDS members is only available to verified TRISA members")
 
-	req.Directory = "vaspdirectory.net"
+	req.Directory = "trisa.directory"
 	_, err = s.client.MemberDetails(context.TODO(), req)
 	s.requireError(err, http.StatusUnavailableForLegalReasons, "listing GDS members is only available to verified TRISA members")
 
@@ -421,11 +421,11 @@ func (s *bffTestSuite) TestMemberDetail() {
 	claims.VASPs["testnet"] = "9cbcd158-9b37-4200-803a-17fbc188f677"
 	require.NoError(s.SetClientCredentials(claims), "could not create token with claims")
 
-	req.Directory = "trisatest.net"
+	req.Directory = "testnet.directory"
 	_, err = s.client.MemberDetails(context.TODO(), req)
 	s.requireError(err, http.StatusUnavailableForLegalReasons, "listing GDS members is only available to verified TRISA members")
 
-	req.Directory = "vaspdirectory.net"
+	req.Directory = "trisa.directory"
 	_, err = s.client.MemberDetails(context.TODO(), req)
 	s.requireError(err, http.StatusUnavailableForLegalReasons, "listing GDS members is only available to verified TRISA members")
 
@@ -437,7 +437,7 @@ func (s *bffTestSuite) TestMemberDetail() {
 
 	// Test error is returned when VASP does not exist in the requested directory
 	require.NoError(s.testnet.members.UseError(mock.DetailsRPC, codes.NotFound, "member not found"))
-	req.Directory = "trisatest.net"
+	req.Directory = "testnet.directory"
 	_, err = s.client.MemberDetails(context.TODO(), req)
 	s.requireError(err, http.StatusNotFound, "member not found", "expected error when VASP does not exist")
 
@@ -464,7 +464,7 @@ func (s *bffTestSuite) TestMemberDetail() {
 	require.Equal(testnetDetails.MemberSummary.BusinessCategory.String(), reply.Summary["business_category"], "expected business category to be string representation of enum")
 
 	// Test successful response from mainnet and mixed case directory
-	req.Directory = "VASPdirectory.net"
+	req.Directory = "TRISA.directory"
 	actualPerson = &ivms101.LegalPerson{}
 	actualContacts = &pb.Contacts{}
 	actualTrixo = &pb.TRIXOQuestionnaire{}

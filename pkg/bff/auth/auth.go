@@ -34,10 +34,10 @@ var AnonymousClaims = Claims{Scope: ScopeAnonymous, Permissions: nil}
 type Claims struct {
 	Scope         string   `json:"scope"`
 	Permissions   []string `json:"permissions"`
-	OrgID         string   `json:"https://vaspdirectory.net/orgid"`
-	VASPs         VASPs    `json:"https://vaspdirectory.net/vasps"`
-	Organizations []string `json:"https://vaspdirectory.net/organizations"`
-	Email         string   `json:"https://vaspdirectory.net/email"`
+	OrgID         string   `json:"https://trisa.directory/orgid"`
+	VASPs         VASPs    `json:"https://trisa.directory/vasps"`
+	Organizations []string `json:"https://trisa.directory/organizations"`
+	Email         string   `json:"https://trisa.directory/email"`
 }
 
 // Validate implements the validator.CustomClaims interface for Auth0 parsing.
@@ -115,7 +115,7 @@ func NewClaims() validator.CustomClaims {
 // downstream processing. If no JWT token is present in the header, this middleware will
 // mark the request as unauthenticated but it does not perform any authorization. If the
 // JWT token is invalid this middleware will return a 403 Forbidden response.
-func Authenticate(conf config.AuthConfig, options ...jwks.ProviderOption) (_ gin.HandlerFunc, err error) {
+func Authenticate(conf config.AuthConfig, options ...interface{}) (_ gin.HandlerFunc, err error) {
 	// Parse the issuer url to ensure it is correctly configured.
 	var issuerURL *url.URL
 	if issuerURL, err = conf.IssuerURL(); err != nil {

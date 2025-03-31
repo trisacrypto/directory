@@ -1,6 +1,6 @@
 # GDS UI
 
-The GDS UI is a web application that allows users to interact with the GDS and register to join the TRISA network. This application is built for both vaspdirectory.net and trisatest.net.
+The GDS UI is a web application that allows users to interact with the GDS and register to join the TRISA network. This application is built for both trisa.directory and testnet.directory.
 
 ## Getting Started
 

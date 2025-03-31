@@ -1,7 +1,7 @@
 {
     "error": null,
     "id": "6a57fea4-8fb7-42f3-bf0c-55fecccd2e53",
-    "registered_directory": "trisatest.net",
+    "registered_directory": "testnet.directory",
     "common_name": "api.alice.vaspbot.net",
     "endpoint": "api.alice.vaspbot.net:443",
     "identity_certificate": {

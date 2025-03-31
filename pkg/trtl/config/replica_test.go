@@ -110,7 +110,7 @@ func TestHostnamePID(t *testing.T) {
 		{"trtl-23", "trtl-63", 63, false},
 		{"ninja-trtl-0", "ninja-trtl-40", 40, false},
 		{"ninja_trtl-13920", "ninja_trtl-13960", 13960, false},
-		{"trtl.us.trisatest.net-18", "trtl.us.trisatest.net-58", 58, false},
+		{"trtl.us.testnet.directory-18", "trtl.us.testnet.directory-58", 58, false},
 	}
 
 	conf := config.ReplicaConfig{

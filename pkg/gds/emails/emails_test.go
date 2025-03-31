@@ -81,25 +81,25 @@ func TestEmailBuilders(t *testing.T) {
 	expires := time.Date(2022, time.July, 18, 12, 11, 35, 0, time.UTC)
 	reissuance := time.Date(2022, time.July, 25, 14, 0, 0, 0, time.UTC)
 
-	eandata := emails.ExpiresAdminNotificationData{VID: "42", Organization: "Acme, Inc", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443", RegisteredDirectory: "trisatest.net", Expiration: expires, Reissuance: reissuance, BaseURL: "http://localhost:8081/vasps/"}
+	eandata := emails.ExpiresAdminNotificationData{VID: "42", Organization: "Acme, Inc", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443", RegisteredDirectory: "testnet.directory", Expiration: expires, Reissuance: reissuance, BaseURL: "http://localhost:8081/vasps/"}
 	mail, err = emails.ExpiresAdminNotificationEmail(sender, senderEmail, recipient, recipientEmail, eandata)
 	require.NoError(t, err)
 	require.Equal(t, emails.ExpiresAdminNotificationRE, mail.Subject, "incorrect subject")
 	generateMIME(t, mail, "expires-admin-notification.mim")
 
-	rmdata := emails.ReissuanceReminderData{Name: recipient, VID: "42", Organization: "Acme, Inc", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443", RegisteredDirectory: "trisatest.net", Expiration: expires, Reissuance: reissuance}
+	rmdata := emails.ReissuanceReminderData{Name: recipient, VID: "42", Organization: "Acme, Inc", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443", RegisteredDirectory: "testnet.directory", Expiration: expires, Reissuance: reissuance}
 	mail, err = emails.ReissuanceReminderEmail(sender, senderEmail, recipient, recipientEmail, rmdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.ReissuanceReminderRE, mail.Subject, "incorrect subject")
 	generateMIME(t, mail, "reissuance-reminder.mim")
 
-	rsdata := emails.ReissuanceStartedData{Name: recipient, VID: "42", Organization: "Acme, Inc", CommonName: "example.com", Endpoint: "trisa.example.com:443", RegisteredDirectory: "trisatest.net", WhisperURL: "http://localhost/secret"}
+	rsdata := emails.ReissuanceStartedData{Name: recipient, VID: "42", Organization: "Acme, Inc", CommonName: "example.com", Endpoint: "trisa.example.com:443", RegisteredDirectory: "testnet.directory", WhisperURL: "http://localhost/secret"}
 	mail, err = emails.ReissuanceStartedEmail(sender, senderEmail, recipient, recipientEmail, rsdata)
 	require.NoError(t, err)
 	require.Equal(t, emails.ReissuanceStartedRE, mail.Subject, "incorrect subject")
 	generateMIME(t, mail, "reissuance-started.mim")
 
-	randata := emails.ReissuanceAdminNotificationData{VID: "42", Organization: "Acme, Inc", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443", RegisteredDirectory: "trisatest.net", Expiration: expires, Reissuance: reissuance, BaseURL: "http://localhost:8081/vasps/"}
+	randata := emails.ReissuanceAdminNotificationData{VID: "42", Organization: "Acme, Inc", CommonName: "example.com", SerialNumber: "1234abcdef56789", Endpoint: "trisa.example.com:443", RegisteredDirectory: "testnet.directory", Expiration: expires, Reissuance: reissuance, BaseURL: "http://localhost:8081/vasps/"}
 	mail, err = emails.ReissuanceAdminNotificationEmail(sender, senderEmail, recipient, recipientEmail, randata)
 	require.NoError(t, err)
 	require.Equal(t, emails.ReissuanceAdminNotificationRE, mail.Subject, "incorrect subject")
@@ -364,7 +364,7 @@ func (suite *EmailTestSuite) TestSendExpiresAdminNotificationEmail() {
 		CommonName:          "test.example.com",
 		SerialNumber:        "1234abcdef56789",
 		Endpoint:            "test.example.com:443",
-		RegisteredDirectory: "trisatest.net",
+		RegisteredDirectory: "testnet.directory",
 		Expiration:          time.Date(2022, time.July, 18, 16, 38, 38, 0, time.Local),
 		Reissuance:          time.Date(2022, time.July, 25, 12, 30, 0, 0, time.Local),
 		BaseURL:             "http://localhost:8080/vasps",
@@ -401,7 +401,7 @@ func (suite *EmailTestSuite) TestSendReissuanceReminderEmail() {
 		CommonName:          "test.example.com",
 		SerialNumber:        "1234abcdef56789",
 		Endpoint:            "test.example.com:443",
-		RegisteredDirectory: "trisatest.net",
+		RegisteredDirectory: "testnet.directory",
 		Expiration:          time.Date(2022, time.July, 18, 16, 38, 38, 0, time.Local),
 		Reissuance:          time.Date(2022, time.July, 25, 12, 30, 0, 0, time.Local),
 	}
@@ -436,7 +436,7 @@ func (suite *EmailTestSuite) TestSendReissuanceStartedEmail() {
 		Organization:        "Acme, Inc.",
 		CommonName:          "test.example.com",
 		Endpoint:            "test.example.com:443",
-		RegisteredDirectory: "trisatest.net",
+		RegisteredDirectory: "testnet.directory",
 		WhisperURL:          "http://whisper.rotational.dev/secret/foo",
 	}
 	msg, err := emails.ReissuanceStartedEmail(sender.Name, sender.Address, recipient.Name, recipient.Address, data)
@@ -470,7 +470,7 @@ func (suite *EmailTestSuite) TestSendReissuanceAdminNotificationEmail() {
 		CommonName:          "test.example.com",
 		SerialNumber:        "1234abcdef56789",
 		Endpoint:            "test.example.com:443",
-		RegisteredDirectory: "trisatest.net",
+		RegisteredDirectory: "testnet.directory",
 		Expiration:          time.Date(2022, time.July, 18, 16, 38, 38, 0, time.Local),
 		Reissuance:          time.Date(2022, time.July, 25, 12, 30, 0, 0, time.Local),
 		BaseURL:             "http://localhost:8080/vasps",

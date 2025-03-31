@@ -12,7 +12,7 @@ const TestNet = () => {
             <Trans>Get started with the TRISA TestNet to implement your Travel Rule compliance service.</Trans>
           </p>
           <small>
-            <Trans>Looking for the <a href="https://vaspdirectory.net">Production Directory Service</a>?</Trans>
+            <Trans>Looking for the <a href="https://trisa.directory">Production Directory Service</a>?</Trans>
           </small>
         </div>
       </div>

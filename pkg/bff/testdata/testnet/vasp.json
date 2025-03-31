@@ -109,7 +109,7 @@
         "revoked": true
     },
     "last_updated": "2021-08-31T12:36:27Z",
-    "registered_directory": "trisatest.net",
+    "registered_directory": "testnet.directory",
     "service_status": "UNKNOWN",
     "signature": "",
     "signing_certificates": [],

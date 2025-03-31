@@ -29,11 +29,11 @@ import (
 
 var (
 	trisatest = map[string]struct{}{
-		"trisatest.net": {},
-		"trisatest.dev": {},
+		"testnet.directory": {},
+		"trisatest.dev":     {},
 	}
 	vaspdirectory = map[string]struct{}{
-		"vaspdirectory.net": {},
+		"trisa.directory":   {},
 		"vaspdirectory.dev": {},
 	}
 )

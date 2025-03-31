@@ -14,14 +14,14 @@ const testNet = isTestNet();
 const getDirectoryURL = () => {
   if (isTestNet()) {
       return [
-          "https://vaspdirectory.net",
+          "https://trisa.directory",
           t`Switch to Production`,
           t`You're currently on the TestNet Directory`,
-      ]    
+      ]
   }
 
   return [
-          "https://trisatest.net",
+          "https://testnet.directory",
           t`Switch to TestNet`,
           t`You're currently on the Production Directory`,
       ]

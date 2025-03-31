@@ -35,9 +35,9 @@ export const APP_STATUS_CODE = {
 };
 
 export const AUTH0_NAMESPACES = {
-  ROLE: 'https://vaspdirectory.net/role',
-  CREATED_AT: 'https://vaspdirectory.net/created_at',
-  LAST_LOGIN: 'https://vaspdirectory.net/last_login',
+  ROLE: 'https://trisa.directory/role',
+  CREATED_AT: 'https://trisa.directory/created_at',
+  LAST_LOGIN: 'https://trisa.directory/last_login',
 };
 
 export const AUTH0_TYPE = {

@@ -52,7 +52,7 @@ func (c Config) IsZero() bool {
 func (c Config) AuthConfig() config.AuthConfig {
 	return config.AuthConfig{
 		Domain:        c.Domain,
-		Audience:      "https://bff.vaspdirectory.net",
+		Audience:      "https://bff.trisa.directory",
 		ProviderCache: 1 * time.Minute,
 		ClientID:      c.ClientID,
 		ClientSecret:  c.ClientSecret,

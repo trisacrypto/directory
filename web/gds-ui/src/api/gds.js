@@ -6,7 +6,7 @@ const api = require('./trisa/gds/api/v1beta1/api_grpc_web_pb');
 const models = require('./trisa/gds/models/v1beta1/models_pb');
 const ivms101 = require('./ivms101/ivms101_pb');
 
-const registeredDirectory = "vaspdirectory.net";
+const registeredDirectory = "trisa.directory";
 
 const defaultEndpoint = () => {
   // Use environment configured variable by default
@@ -19,7 +19,7 @@ const defaultEndpoint = () => {
     case "development":
       return "http://localhost:8080"
     case "production":
-      return "https://proxy.vaspdirectory.net"
+      return "https://proxy.trisa.directory"
     default:
       throw new Error(t`could not identify default GDS api endpoint`);
   }

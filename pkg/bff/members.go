@@ -25,7 +25,7 @@ import (
 const (
 	DefaultMembersTimeout   = 25 * time.Second
 	DefaultMembersPageSize  = 200
-	DefaultMembersDirectory = "vaspdirectory.net"
+	DefaultMembersDirectory = "trisa.directory"
 )
 
 // GetSummaries makes parallel calls to the members service to get the summary

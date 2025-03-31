@@ -13,10 +13,10 @@ import (
 // auth.Claims struct that uses this package for testing.
 type Claims struct {
 	jwt.RegisteredClaims
-	Email         string            `json:"https://vaspdirectory.net/email"`
-	OrgID         string            `json:"https://vaspdirectory.net/orgid"`
-	VASPs         map[string]string `json:"https://vaspdirectory.net/vasps"`
-	Organizations []string          `json:"https://vaspdirectory.net/organizations"`
+	Email         string            `json:"https://trisa.directory/email"`
+	OrgID         string            `json:"https://trisa.directory/orgid"`
+	VASPs         map[string]string `json:"https://trisa.directory/vasps"`
+	Organizations []string          `json:"https://trisa.directory/organizations"`
 	Scope         string            `json:"scope"`
 	Permissions   []string          `json:"permissions"`
 }

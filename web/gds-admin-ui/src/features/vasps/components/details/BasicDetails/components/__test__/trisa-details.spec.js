@@ -13,7 +13,7 @@ describe('<TrisaDetails />', () => {
   //             business_category: "BUSINESS_ENTITY",
   //             common_name: "trisa-axxxxxx16cc67xxxxxxxxxxdb.traveler.ciphertrace.com",
   //             id: "03faf7d2-451d-4d90-8302-e80f0cc9848a",
-  //             registered_directory: "trisatest.net",
+  //             registered_directory: "testnet.directory",
   //             trisa_endpoint: "trisa-xxxxxxxxx2abexxxx.traveler.ciphertrace.com:443",
   //         },
   //     }
@@ -35,7 +35,7 @@ describe('<TrisaDetails />', () => {
   //         vasp: {
   //             common_name: "trisa-axxxxxx16cc67xxxxxxxxxxdb.traveler.ciphertrace.com",
   //             id: faker.datatype.uuid(),
-  //             registered_directory: "trisatest.net",
+  //             registered_directory: "testnet.directory",
   //             trisa_endpoint: "trisa-xxxxxxxxx2abexxxx.traveler.ciphertrace.com:443",
   //         },
   //     }

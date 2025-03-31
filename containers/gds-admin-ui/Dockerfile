@@ -15,7 +15,7 @@ RUN yarn install --frozen-lockfile --check-files
 # Set production environment variable for build context
 ARG REACT_APP_VERSION_NUMBER
 ARG REACT_APP_GIT_REVISION
-ARG REACT_APP_GDS_API_ENDPOINT="https://api.admin.vaspdirectory.net"
+ARG REACT_APP_GDS_API_ENDPOINT="https://api.admin.trisa.directory"
 ARG REACT_APP_GDS_IS_TESTNET=false
 ARG REACT_APP_GOOGLE_CLIENT_ID
 ARG REACT_APP_SENTRY_DSN

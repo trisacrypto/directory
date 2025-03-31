@@ -140,7 +140,7 @@ VASP_STATE_CHANGES = {
     },
 }
 
-NETWORKS = ["trisatest.net", "vaspdirectory.net"]
+NETWORKS = ["testnet.directory", "trisa.directory"]
 URLWORDS = [
     "cacao",
     "pepper",

@@ -1,7 +1,7 @@
 {
   "member_summary": {
     "id": "7a96ca2c-2818-4106-932e-1bcfd743b04c",
-    "registered_directory": "trisatest.net",
+    "registered_directory": "testnet.directory",
     "common_name": "api.alice.vaspbot.net",
     "endpoint": "api.alice.vaspbot.net:443",
     "name": "AliceCoin",
