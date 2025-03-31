@@ -72,6 +72,15 @@ func main() {
 			},
 		},
 		{
+			Name:     "directory:migrate",
+			Usage:    "migrate the registered directory domains",
+			Category: "directory",
+			Action:   migrateDirectory,
+			Before:   connectDB,
+			After:    closeDB,
+			Flags:    []cli.Flag{},
+		},
+		{
 			Name:     "db:usage",
 			Usage:    "count the number of objects in the database by namespace",
 			Category: "db",
