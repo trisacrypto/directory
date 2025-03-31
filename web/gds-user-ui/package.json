@@ -1,6 +1,6 @@
 {
   "name": "gds-user-ui",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "private": true,
   "dependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.16.7",
