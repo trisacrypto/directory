@@ -14,6 +14,7 @@ type VASPCLIUpdate struct {
 	BusinessCategory   string                 `json:"business_category,omitempty"`
 	VASPCategories     []string               `json:"vasp_categories,omitempty"`
 	EstablishedOn      string                 `json:"established_on,omitempty"`
+	VerifiedOn         string                 `json:"verified_on,omitempty"`
 	TRIXO              *pb.TRIXOQuestionnaire `json:"trixo,omitempty"`
 	CertificateWebhook string                 `json:"certificate_webhook,omitempty"`
 	NoEmailDelivery    *bool                  `json:"no_email_delivery,omitempty"`
@@ -23,14 +24,17 @@ func (v *VASPCLIUpdate) Update(vasp *pb.VASP) (err error) {
 	if v.Entity != nil {
 		vasp.Entity = v.Entity
 	}
+
 	if v.Website != "" {
 		vasp.Website = v.Website
 	}
+
 	if v.BusinessCategory != "" {
 		if vasp.BusinessCategory, err = pb.ParseBusinessCategory(v.BusinessCategory); err != nil {
 			return err
 		}
 	}
+
 	if len(v.VASPCategories) > 0 {
 		for i, cat := range v.VASPCategories {
 			if v.VASPCategories[i], err = pb.ValidVASPCategory(cat); err != nil {
@@ -40,19 +44,26 @@ func (v *VASPCLIUpdate) Update(vasp *pb.VASP) (err error) {
 
 		vasp.VaspCategories = v.VASPCategories
 	}
+
 	if v.EstablishedOn != "" {
 		vasp.EstablishedOn = v.EstablishedOn
 	}
+
+	if v.VerifiedOn != "" {
+		vasp.VerifiedOn = v.VerifiedOn
+	}
+
 	if v.TRIXO != nil {
 		vasp.Trixo = v.TRIXO
 	}
+
 	if v.CertificateWebhook != "" {
 		vasp.CertificateWebhook = v.CertificateWebhook
 	}
+
 	if v.NoEmailDelivery != nil {
 		vasp.NoEmailDelivery = *v.NoEmailDelivery
 	}
 
-	return vasp.Validate(false)
-
+	return vasp.Validate(true)
 }
