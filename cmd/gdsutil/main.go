@@ -174,6 +174,34 @@ func main() {
 			},
 		},
 		{
+			Name:     "vasp:update",
+			Usage:    "update a VASP record from a JSON file",
+			Category: "vasps",
+			Action:   vaspUpdate,
+			Before:   connectDB,
+			After:    closeDB,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "vasp",
+					Aliases:  []string{"vasp-id", "v"},
+					Usage:    "the VASP ID of the record to update",
+					Required: true,
+				},
+				&cli.StringFlag{
+					Name:     "path",
+					Aliases:  []string{"p", "in", "i"},
+					Usage:    "path to the JSON file to update the VASP record with",
+					Required: true,
+				},
+				&cli.BoolFlag{
+					Name:    "yes",
+					Aliases: []string{"y"},
+					Usage:   "skip the confirmation prompt and immediately send notifications",
+					Value:   false,
+				},
+			},
+		},
+		{
 			Name:     "contact:migrate",
 			Usage:    "migrate all contacts on vasps into the model contacts namespace",
 			Category: "contact",
@@ -537,6 +565,19 @@ func askForConfirmation(s string) bool {
 
 func weekFromNow() time.Time {
 	return time.Now().AddDate(0, 0, 7)
+}
+
+func loadJSON(path string, v interface{}) (err error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return fmt.Errorf("could not open file %s: %w", path, err)
+	}
+	defer file.Close()
+
+	if err = json.NewDecoder(file).Decode(v); err != nil {
+		return err
+	}
+	return nil
 }
 
 func printJSON(v interface{}) (err error) {

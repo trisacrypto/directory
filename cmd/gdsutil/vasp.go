@@ -188,3 +188,39 @@ func vaspStatus(c *cli.Context) (err error) {
 	}
 	return nil
 }
+
+func vaspUpdate(c *cli.Context) (err error) {
+	vaspID := c.String("vasp")
+	path := c.String("path")
+
+	var update *models.VASPCLIUpdate
+	if err = loadJSON(path, &update); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
+	var vasp *pb.VASP
+	if vasp, err = db.RetrieveVASP(ctx, vaspID); err != nil {
+		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
+	}
+
+	fmt.Printf("updating VASP record for %s\n", vasp.CommonName)
+	if !c.Bool("yes") {
+		if !askForConfirmation("continue with operation?") {
+			return cli.Exit(fmt.Errorf("canceled by user"), 1)
+		}
+	}
+
+	if err = update.Update(vasp); err != nil {
+		return cli.Exit(fmt.Errorf("could not update VASP record: %s", err), 1)
+	}
+
+	if err = db.UpdateVASP(ctx, vasp); err != nil {
+		return cli.Exit(fmt.Errorf("could not save VASP: %s", err), 1)
+	}
+
+	fmt.Println("VASP information updated")
+	return nil
+}
