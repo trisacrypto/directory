@@ -9,9 +9,9 @@ import "fmt"
 const (
 	VersionMajor         = 1
 	VersionMinor         = 10
-	VersionPatch         = 0
+	VersionPatch         = 1
 	VersionReleaseLevel  = ""
-	VersionReleaseNumber = 19
+	VersionReleaseNumber = 20
 )
 
 // Set the GitVersion via -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$(git rev-parse --short HEAD)'"
