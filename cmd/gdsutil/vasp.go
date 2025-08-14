@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -222,5 +223,43 @@ func vaspUpdate(c *cli.Context) (err error) {
 	}
 
 	fmt.Println("VASP information updated")
+	return nil
+}
+
+func vaspPort(c *cli.Context) (err error) {
+	vaspID := c.String("vasp")
+	newPort := c.Int("port")
+
+	if newPort < 1 || newPort > 65535 {
+		return cli.Exit(fmt.Errorf("invalid port number: %d", newPort), 1)
+	}
+
+	ctx, cancel := utils.WithDeadline(context.Background())
+	defer cancel()
+
+	var vasp *pb.VASP
+	if vasp, err = db.RetrieveVASP(ctx, vaspID); err != nil {
+		return cli.Exit(fmt.Errorf("could not find VASP record: %s", err), 1)
+	}
+
+	var host string
+	if host, _, err = net.SplitHostPort(vasp.TrisaEndpoint); err != nil {
+		return cli.Exit(fmt.Errorf("could not split TRISA endpoint %q: %w", vasp.TrisaEndpoint, err), 1)
+	}
+
+	endpoint := net.JoinHostPort(host, fmt.Sprintf("%d", newPort))
+	fmt.Printf("update TRISA endpoint from %s to %s\n", vasp.TrisaEndpoint, endpoint)
+	if !c.Bool("yes") {
+		if !askForConfirmation("continue with operation?") {
+			return cli.Exit(fmt.Errorf("canceled by user"), 1)
+		}
+	}
+
+	vasp.TrisaEndpoint = endpoint
+	if err = db.UpdateVASP(ctx, vasp); err != nil {
+		return cli.Exit(fmt.Errorf("could not save VASP: %s", err), 1)
+	}
+
+	fmt.Println("TRISA endpoint updated")
 	return nil
 }

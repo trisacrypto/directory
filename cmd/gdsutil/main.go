@@ -202,6 +202,34 @@ func main() {
 			},
 		},
 		{
+			Name:     "vasp:port",
+			Usage:    "update the port of a VASP's TRISA endpoint",
+			Category: "vasps",
+			Action:   vaspPort,
+			Before:   connectDB,
+			After:    closeDB,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "vasp",
+					Aliases:  []string{"vasp-id", "v"},
+					Usage:    "the VASP ID of the record to update",
+					Required: true,
+				},
+				&cli.IntFlag{
+					Name:     "port",
+					Aliases:  []string{"p"},
+					Usage:    "the new port number for the VASP's TRISA endpoint",
+					Required: true,
+				},
+				&cli.BoolFlag{
+					Name:    "yes",
+					Aliases: []string{"y"},
+					Usage:   "skip the confirmation prompt and immediately send notifications",
+					Value:   false,
+				},
+			},
+		},
+		{
 			Name:     "contact:migrate",
 			Usage:    "migrate all contacts on vasps into the model contacts namespace",
 			Category: "contact",
