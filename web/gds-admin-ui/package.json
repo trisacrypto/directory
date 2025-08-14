@@ -1,6 +1,6 @@
 {
     "name": "gds-admin-ui",
-    "version": "1.10.1",
+    "version": "1.10.2",
     "private": true,
     "dependencies": {
         "@hookform/resolvers": "^2.9.10",
