@@ -1533,7 +1533,9 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 
 	// Parse incoming JSON data from the client request
 	in = new(admin.ReplaceContactRequest)
-	if err = c.ShouldBind(&in); err != nil {
+	in.Contact = make(map[string]interface{})
+
+	if err = c.ShouldBind(&in.Contact); err != nil {
 		sentry.Warn(c).Err(err).Msg("could not bind request")
 		c.JSON(http.StatusBadRequest, admin.ErrorResponse(err))
 		return
@@ -1635,8 +1637,14 @@ func (s *Admin) ReplaceContact(c *gin.Context) {
 		}
 
 		// Send the verification email
-		// HACK: need to put in a models.Contact instead of nil here to avoid a panic.
-		if err = s.svc.email.SendVerifyContact(vasp, nil); err != nil {
+		cmodel := &models.Contact{
+			Name:     contact.Name,
+			Email:    contact.Email,
+			EmailLog: make([]*models.EmailLogEntry, 0),
+		}
+		cmodel.Token, cmodel.Verified, _ = models.GetContactVerification(contact)
+
+		if err = s.svc.email.SendVerifyContact(vasp, cmodel); err != nil {
 			sentry.Error(c).Err(err).Msg("could not send verification email")
 			c.JSON(http.StatusInternalServerError, admin.ErrorResponse("could not send verification email to the new contact"))
 			return
