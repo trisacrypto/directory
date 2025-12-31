@@ -1,7 +1,7 @@
 ARG BASE_IMAGE=nginx:stable
 FROM ${BASE_IMAGE} AS final
 
-LABEL maintainer="TRISA <admin@trisa.io>"
+LABEL maintainer="TRISA <admin@travelrule.io>"
 LABEL description="TRISA GDS Maintenance Mode Placeholder"
 
 COPY web/maintenance /usr/share/nginx/html

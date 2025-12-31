@@ -72,7 +72,7 @@ const JoinUsSection: React.FC = () => {
                 <Link
                   isExternal
                   textDecoration={'underline'}
-                  href="https://trisa.io/getting-started-with-trisa/">
+                  href="https://travelrule.io/getting-started-with-trisa/">
                   <Trans id="Learn how TRISA works.">Learn how TRISA works.</Trans>
                 </Link>
               </Text>
@@ -95,10 +95,10 @@ const JoinUsSection: React.FC = () => {
                 </Box>
               ))}
             </SimpleGrid>
-            <Stack 
+            <Stack
               justifyContent={"center"}
-              alignItems={"center"} 
-              direction={['column', 'row']} 
+              alignItems={"center"}
+              direction={['column', 'row']}
               spacing={4}
               >
               <RouterLink to={'/guide'}>
@@ -125,7 +125,7 @@ const JoinUsSection: React.FC = () => {
                   border="2px solid #fff"
                   _hover={{ bg: '#24a9df' }}
                   as="a"
-                  href="https://trisa.io/members/"
+                  href="https://travelrule.io/members/"
                   target="_blank">
                   <Trans id="View Member List">View Member List</Trans>
                 </Button>

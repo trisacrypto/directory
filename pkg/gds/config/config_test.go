@@ -25,7 +25,7 @@ var testEnv = map[string]string{
 	"GDS_ADMIN_MODE":                           "debug",
 	"GDS_ADMIN_TOKEN_KEYS":                     "1y9fT85qWaIvAAORW7DKxtpz9FB:testdata/key1.pem,1y9fVjaUlsVdFFDUWlvRq2PLkw3:testdata/key2.pem",
 	"GDS_ADMIN_OAUTH_GOOGLE_AUDIENCE":          "abc-1234.example.fakegoogleusercontent.com",
-	"GDS_ADMIN_OAUTH_AUTHORIZED_EMAIL_DOMAINS": "trisa.io,trisa.directory,testnet.directory",
+	"GDS_ADMIN_OAUTH_AUTHORIZED_EMAIL_DOMAINS": "travelrule.io,trisa.directory,testnet.directory",
 	"GDS_ADMIN_ALLOW_ORIGINS":                  "https://admin.testnet.directory",
 	"GDS_ADMIN_COOKIE_DOMAIN":                  "admin.testnet.directory",
 	"GDS_ADMIN_AUDIENCE":                       "https://api.admin.testnet.directory",

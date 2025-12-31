@@ -267,7 +267,7 @@ msgid "An error occurred while deleting the collaborator, please try again or co
 msgstr ""
 
 #: src/components/Collaborators/DeleteCollaborator/DeleteCollaboratorModal.tsx:86
-#~ msgid "An error occurred while deleting the collaborator, please try again or contact support at support@trisa.io"
+#~ msgid "An error occurred while deleting the collaborator, please try again or contact support at support@travelrule.io"
 #~ msgstr ""
 
 #: src/components/NationalIdentification/index.tsx:129
@@ -2831,7 +2831,7 @@ msgstr ""
 #~ msgstr ""
 
 #: src/components/CertificateSection/index.tsx:61
-#~ msgid "Your registration form has been successfully submitted. You will receive a confirmation email from admin@trisa.io. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate."
+#~ msgid "Your registration form has been successfully submitted. You will receive a confirmation email from admin@travelrule.io. In the email, you will receive instructions on next steps. Return to your dashboard to monitor the status of your registration and certificate."
 #~ msgstr ""
 
 #: src/components/CertificateSection/index.tsx:61

@@ -37,18 +37,20 @@
     "contacts": {
         "technical": {
             "name": "TRISA Technical Support",
-            "email": "support@trisa.io"
+            "email": "support@travelrule.io"
         },
         "administrative": {
             "name": "TRISA Administration",
-            "email": "admin@trisa.io"
+            "email": "admin@travelrule.io"
         }
     },
     "common_name": "api.alice.vaspbot.net",
     "trisa_endpoint": "api.alice.vaspbot.net:443",
     "website": "https://alice.vaspbot.net/",
     "business_category": "PRIVATE_ORGANIZATION",
-    "vasp_categories": ["ATM"],
+    "vasp_categories": [
+        "ATM"
+    ],
     "established_on": "2020-11-10",
     "trixo": {
         "primary_national_jurisdiction": "US",

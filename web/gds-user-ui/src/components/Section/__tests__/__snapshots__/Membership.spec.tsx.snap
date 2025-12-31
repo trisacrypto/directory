@@ -1018,7 +1018,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
               >
                 <a
                   class="chakra-link emotion-6"
-                  href="https://trisa.io"
+                  href="https://travelrule.io"
                   rel="noopener"
                   target="_blank"
                 >
@@ -1141,7 +1141,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                 class="chakra-text emotion-37"
                 data-testid="step"
               >
-                Step 
+                Step
                 1
               </p>
               <p
@@ -1187,7 +1187,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                 class="chakra-text emotion-37"
                 data-testid="step"
               >
-                Step 
+                Step
                 2
               </p>
               <p
@@ -1233,7 +1233,7 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
                 class="chakra-text emotion-37"
                 data-testid="step"
               >
-                Step 
+                Step
                 3
               </p>
               <p
@@ -1281,44 +1281,44 @@ exports[`<MembershipGuide /> should match snapshot 1`] = `
             class="chakra-text emotion-60"
           >
             A component of
-             
+
             <a
               class="chakra-link emotion-61"
-              href="https://trisa.io"
+              href="https://travelrule.io"
               rel="noopener"
               target="_blank"
             >
               the TRISA architecture
             </a>
-             
+
             for Cryptocurrency Travel Rule compliance.
           </p>
           <p
             class="chakra-text emotion-60"
           >
             Created and maintained by
-             
+
             <a
               class="chakra-link emotion-61"
               href="https://rotational.io"
               rel="noopener"
               target="_blank"
             >
-               
+
               Rotational Labs
             </a>
-             
+
             on behalf of
-             
+
             <a
               class="chakra-link emotion-61"
-              href="https://trisa.io"
+              href="https://travelrule.io"
               rel="noopener"
               target="_blank"
             >
               TRISA
             </a>
-             
+
           </p>
         </div>
       </div>

@@ -35,7 +35,7 @@ const Login = () => {
                     setRedirectOnLogin(true);
                 })
                 .catch((error) => {
-                    setLoginError('Address could not be authenticated (not a @trisa.io account).');
+                    setLoginError('Address could not be authenticated (not a @travelrule.io account).');
                     captureException(error);
                 });
         }
@@ -55,7 +55,7 @@ const Login = () => {
                         <div className="text-center w-75 m-auto">
                             <h4 className="text-dark-50 text-center mt-0 fw-bold">Sign In</h4>
                             <p className="text-muted mb-4">
-                                Please use your @trisa.io Google account to access the GDS Admin.
+                                Please use your @travelrule.io Google account to access the GDS Admin.
                             </p>
                         </div>
                         {csrfProtected && (

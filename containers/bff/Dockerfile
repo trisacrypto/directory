@@ -34,7 +34,7 @@ RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -v -o /go/bin/trtl -ldflags="
 # Final Stage
 FROM --platform=${BUILDPLATFORM} ${FINAL_IMAGE} AS final
 
-LABEL maintainer="TRISA <info@trisa.io>"
+LABEL maintainer="TRISA <info@travelrule.io>"
 LABEL description="TRISA GDS Backend for Front-End"
 
 # Ensure ca-certificates are up to date

@@ -110,7 +110,7 @@ function EditCollaboratorModal(props: Props) {
     if (hasCollaboratorFailed && !wasCollaboratorUpdated) {
       // const hasErrored =
       //   errorMessage &&
-      //   t`An error occurred while updating the collaborator, please try again or contact support at support@trisa.io`;
+      //   t`An error occurred while updating the collaborator, please try again or contact support at support@travelrule.io`;
       toast({
         title: t`Collaborator is not updated`,
         description: t`${upperCaseFirstLetter(errorMessage?.data?.error)}` || t`The collaborator has not been updated`,

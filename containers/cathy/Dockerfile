@@ -32,7 +32,7 @@ RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -v -o /go/bin/sectigo -ldflag
 # Final Stage
 FROM --platform=${BUILDPLATFORM} ${FINAL_IMAGE} AS final
 
-LABEL maintainer="TRISA <info@trisa.io>"
+LABEL maintainer="TRISA <info@travelrule.io>"
 LABEL description="TRISA Cathy CA for Integration Testing and Staging QA"
 
 # Ensure ca-certificates are up to date

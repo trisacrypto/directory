@@ -33,7 +33,7 @@ const AboutTrisaSection: React.FC = () => {
             <Text
               color={useColorModeValue('black', 'white')}
               fontSize={{ base: '16px', md: '17px' }}>
-              <Link isExternal color={colors.system.link} href={'https://trisa.io'}>
+              <Link isExternal color={colors.system.link} href={'https://travelrule.io'}>
                 <Trans id="The Travel Rule Information Sharing Architecture (TRISA)">
                   The Travel Rule Information Sharing Architecture (TRISA)
                 </Trans>{' '}

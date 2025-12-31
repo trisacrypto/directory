@@ -499,7 +499,7 @@ func TestRetrieveVASP(t *testing.T) {
 				"previous_state": "PENDING_REVIEW",
 				"current_state":  "APPROVED",
 				"description":    "approved by certified reviewer",
-				"source":         "admin@trisa.io",
+				"source":         "admin@travelrule.io",
 			},
 		},
 	}
