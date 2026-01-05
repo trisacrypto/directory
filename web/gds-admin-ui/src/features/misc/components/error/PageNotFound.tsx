@@ -52,7 +52,7 @@ const ErrorPageNotFound = () => {
       <footer className="footer footer-alt">
         Created and maintained by <a href="https://rotational.io">Rotational</a> Labs in partnership
         with <a href="https://ciphertrace.com">CipherTrace</a> on behalf of{' '}
-        <a href="https://trisa.io">TRISA</a>.
+        <a href="https://travelrule.io">TRISA</a>.
       </footer>
     </>
   );

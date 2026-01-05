@@ -713,7 +713,7 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
               >
                 <a
                   class="chakra-link emotion-6"
-                  href="https://trisa.io"
+                  href="https://travelrule.io"
                   rel="noopener"
                   target="_blank"
                 >
@@ -808,44 +808,44 @@ exports[`<VerifyPage /> should match snapshot 1`] = `
             class="chakra-text emotion-30"
           >
             A component of
-             
+
             <a
               class="chakra-link emotion-31"
-              href="https://trisa.io"
+              href="https://travelrule.io"
               rel="noopener"
               target="_blank"
             >
               the TRISA architecture
             </a>
-             
+
             for Cryptocurrency Travel Rule compliance.
           </p>
           <p
             class="chakra-text emotion-30"
           >
             Created and maintained by
-             
+
             <a
               class="chakra-link emotion-31"
               href="https://rotational.io"
               rel="noopener"
               target="_blank"
             >
-               
+
               Rotational Labs
             </a>
-             
+
             on behalf of
-             
+
             <a
               class="chakra-link emotion-31"
-              href="https://trisa.io"
+              href="https://travelrule.io"
               rel="noopener"
               target="_blank"
             >
               TRISA
             </a>
-             
+
           </p>
         </div>
       </div>

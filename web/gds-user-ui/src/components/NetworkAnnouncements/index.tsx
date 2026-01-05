@@ -43,13 +43,13 @@ const NetworkAnnouncements = () => {
 //       title: t`Upcoming TRISA Working Group Call`,
 //       body: t`Join us on Thursday Apr 28 for the TRISA Working Group.`,
 //       post_date: '2022-04-20',
-//       author: 'admin@trisa.io'
+//       author: 'admin@travelrule.io'
 //     },
 //     {
 //       title: t`Routine Maintenance Scheduled`,
 //       body: t`The GDS will be undergoing routine maintenance on Apr 7.`,
 //       post_date: t`2022-04-01`,
-//       author: 'admin@trisa.io'
+//       author: 'admin@travelrule.io'
 //     },
 //     {
 //       title: t`Beware the Ides of March`,

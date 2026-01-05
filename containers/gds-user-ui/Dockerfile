@@ -33,7 +33,7 @@ RUN yarn build
 # Final Stage
 FROM ${FINAL_IMAGE} AS final
 
-LABEL maintainer="TRISA <admin@trisa.io>"
+LABEL maintainer="TRISA <admin@travelrule.io>"
 LABEL description="Global TRISA Directory Service Advanced User Interface"
 
 COPY --from=builder /usr/src/app/build/ /usr/share/nginx/html

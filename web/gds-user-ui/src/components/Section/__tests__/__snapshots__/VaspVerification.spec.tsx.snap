@@ -609,7 +609,7 @@ exports[`<Line /> should match snapshot 1`] = `
                   >
                     <a
                       class="chakra-link emotion-54"
-                      href="https://trisa.io/getting-started-with-trisa/"
+                      href="https://travelrule.io/getting-started-with-trisa/"
                       rel="noopener"
                       target="_blank"
                     >
@@ -653,14 +653,14 @@ exports[`<Line /> should match snapshot 1`] = `
               class="chakra-text emotion-60"
             >
               Already have an account?
-               
+
               <a
                 href="/auth/login"
               >
                 <a
                   class="chakra-link emotion-61"
                 >
-                   
+
                   Log in.
                 </a>
               </a>

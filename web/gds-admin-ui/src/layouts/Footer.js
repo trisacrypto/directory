@@ -14,7 +14,7 @@ const Footer = () => {
                     <Col md={12}>
                         {currentYear} © Created and maintained by <a href="https://rotational.io">Rotational Labs</a> in
                         partnership with <a href="https://ciphertrace.com">CipherTrace</a> on behalf of{' '}
-                        <a href="https://trisa.io">TRISA</a>.
+                        <a href="https://travelrule.io">TRISA</a>.
                     </Col>
                     <Col className="d-flex">
                         {appVersion?.version ? (

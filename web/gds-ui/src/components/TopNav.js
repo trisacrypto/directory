@@ -39,7 +39,7 @@ const TopNav = () => {
         <Navbar.Toggle aria-controls="header-links" />
         <Navbar.Collapse id="header-links" className="justify-content-end">
           <Nav>
-            <Nav.Link href="https://trisa.io/"><Trans>About TRISA</Trans></Nav.Link>
+            <Nav.Link href="https://travelrule.io/"><Trans>About TRISA</Trans></Nav.Link>
             <Nav.Link href={t`https://trisa.dev/`}><Trans>Documentation</Trans></Nav.Link>
             <Nav.Link href={directoryURL} title={directoryURLTitle}>{directoryURLText}</Nav.Link>
             <LanguageSelect />

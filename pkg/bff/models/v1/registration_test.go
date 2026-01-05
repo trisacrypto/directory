@@ -529,8 +529,8 @@ func TestValidateContact(t *testing.T) {
 // Test validating the TRISA implementation details
 func TestValidateTRISA(t *testing.T) {
 	validNetwork := &NetworkDetails{
-		Endpoint:   "main.trisa.io:443",
-		CommonName: "main.trisa.io",
+		Endpoint:   "main.travelrule.io:443",
+		CommonName: "main.travelrule.io",
 	}
 
 	testCases := []struct {
@@ -546,49 +546,49 @@ func TestValidateTRISA(t *testing.T) {
 			{Field: FieldTestNet, Err: ErrMissingTestNetOrMainNet.Error()},
 			{Field: FieldMainNet, Err: ErrMissingTestNetOrMainNet.Error()},
 		}},
-		{&NetworkDetails{CommonName: "test.trisa.io"}, validNetwork, ValidationErrors{
+		{&NetworkDetails{CommonName: "test.travelrule.io"}, validNetwork, ValidationErrors{
 			{Field: FieldTestNetEndpoint, Err: ErrMissingField.Error()},
 			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
 		}},
-		{&NetworkDetails{Endpoint: "not an address", CommonName: "test.trisa.io"}, nil, ValidationErrors{
+		{&NetworkDetails{Endpoint: "not an address", CommonName: "test.travelrule.io"}, nil, ValidationErrors{
 			{Field: FieldTestNetEndpoint, Err: ErrInvalidEndpoint.Error()},
 			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
 		}},
-		{&NetworkDetails{Endpoint: ":443", CommonName: "test.trisa.io"}, nil, ValidationErrors{
+		{&NetworkDetails{Endpoint: ":443", CommonName: "test.travelrule.io"}, nil, ValidationErrors{
 			{Field: FieldTestNetEndpoint, Err: ErrMissingHost.Error()},
 			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
 		}},
-		{&NetworkDetails{Endpoint: "test.trisa.io:", CommonName: "test.trisa.io"}, nil, ValidationErrors{
+		{&NetworkDetails{Endpoint: "test.travelrule.io:", CommonName: "test.travelrule.io"}, nil, ValidationErrors{
 			{Field: FieldTestNetEndpoint, Err: ErrMissingPort.Error()},
 		}},
-		{&NetworkDetails{Endpoint: "test.trisa.io:foo", CommonName: "test.trisa.io"}, nil, ValidationErrors{
+		{&NetworkDetails{Endpoint: "test.travelrule.io:foo", CommonName: "test.travelrule.io"}, nil, ValidationErrors{
 			{Field: FieldTestNetEndpoint, Err: ErrInvalidPort.Error()},
 		}},
-		{&NetworkDetails{Endpoint: "test.trisa.io:443"}, nil, ValidationErrors{
+		{&NetworkDetails{Endpoint: "test.travelrule.io:443"}, nil, ValidationErrors{
 			{Field: FieldTestNetCommonName, Err: ErrMissingField.Error()},
 		}},
-		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "*.trisa.io"}, nil, ValidationErrors{
+		{&NetworkDetails{Endpoint: "test.travelrule.io:443", CommonName: "*.travelrule.io"}, nil, ValidationErrors{
 			{Field: FieldTestNetCommonName, Err: ErrInvalidCommonName.Error()},
 			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
 		}},
-		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "main.trisa.io"}, nil, ValidationErrors{
+		{&NetworkDetails{Endpoint: "test.travelrule.io:443", CommonName: "main.travelrule.io"}, nil, ValidationErrors{
 			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
 		}},
-		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "main.trisa.io", DnsNames: []string{"alt.trisa.io", "", "*.trisa.io", "https://trisa.io"}}, validNetwork, ValidationErrors{
+		{&NetworkDetails{Endpoint: "test.travelrule.io:443", CommonName: "main.travelrule.io", DnsNames: []string{"alt.travelrule.io", "", "*.travelrule.io", "https://travelrule.io"}}, validNetwork, ValidationErrors{
 			{Field: FieldTestNetCommonName, Err: ErrCommonNameMismatch.Error()},
 			{Field: FieldTestNetDNSNames, Err: ErrMissingField.Error(), Index: 1},
 			{Field: FieldTestNetDNSNames, Err: ErrInvalidCommonName.Error(), Index: 2},
 			{Field: FieldTestNetDNSNames, Err: ErrInvalidCommonName.Error(), Index: 3},
 		}},
-		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "test.trisa.io"}, &NetworkDetails{Endpoint: "main.trisa.io:443"}, ValidationErrors{
+		{&NetworkDetails{Endpoint: "test.travelrule.io:443", CommonName: "test.travelrule.io"}, &NetworkDetails{Endpoint: "main.travelrule.io:443"}, ValidationErrors{
 			{Field: FieldMainNetCommonName, Err: ErrMissingField.Error()},
 		}},
 		{validNetwork, validNetwork, ValidationErrors{
 			{Field: FieldMainNetEndpoint, Err: ErrDuplicateEndpoint.Error()},
 		}},
-		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "test.trisa.io"}, nil, nil},
+		{&NetworkDetails{Endpoint: "test.travelrule.io:443", CommonName: "test.travelrule.io"}, nil, nil},
 		{nil, validNetwork, nil},
-		{&NetworkDetails{Endpoint: "test.trisa.io:443", CommonName: "test.trisa.io"}, validNetwork, nil},
+		{&NetworkDetails{Endpoint: "test.travelrule.io:443", CommonName: "test.travelrule.io"}, validNetwork, nil},
 	}
 
 	for i, tc := range testCases {

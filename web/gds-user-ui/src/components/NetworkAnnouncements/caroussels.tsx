@@ -48,13 +48,13 @@ const AnnouncementCarousel: FC<AnnouncementProps> = ({ announcements }) => {
   //       title: 'Upcoming TRISA Working Group Call',
   //       body: 'Join us on Thursday Apr 28 for the TRISA Working Group.',
   //       post_date: '2022-04-20',
-  //       author: 'admin@trisa.io'
+  //       author: 'admin@travelrule.io'
   //     },
   //     {
   //       title: 'Routine Maintenance Scheduled',
   //       body: 'The GDS will be undergoing routine maintenance on Apr 7.',
   //       post_date: '2022-04-01',
-  //       author: 'admin@trisa.io'
+  //       author: 'admin@travelrule.io'
   //     },
   //     {
   //       title: 'Beware the Ides of March',

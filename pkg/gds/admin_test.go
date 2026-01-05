@@ -1352,7 +1352,7 @@ func (s *gdsTestSuite) TestListReviewNotes() {
 	rep = s.doRequest(a.ListReviewNotes, c, w, actual)
 	require.Equal(http.StatusOK, rep.StatusCode)
 	require.Len(actual.Notes, 1)
-	require.Equal("admin@trisa.io", actual.Notes[0].Author)
+	require.Equal("admin@travelrule.io", actual.Notes[0].Author)
 	require.NotEmpty(actual.Notes[0].Created)
 	require.NotEmpty(actual.Notes[0].Editor)
 	require.NotEmpty(actual.Notes[0].ID)
@@ -1426,7 +1426,7 @@ func (s *gdsTestSuite) TestUpdateReviewNote() {
 	ts, err := time.Parse(time.RFC3339, actual.Modified)
 	require.NoError(err)
 	require.True(ts.Sub(modified) < time.Minute)
-	require.Equal("admin@trisa.io", actual.Author)
+	require.Equal("admin@travelrule.io", actual.Author)
 	require.Equal(request.claims.Email, actual.Editor)
 	require.Equal("bar", actual.Text)
 	// Record on the database should be updated

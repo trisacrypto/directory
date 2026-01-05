@@ -813,13 +813,13 @@ func TestAnnoucements(t *testing.T) {
 				Title:    "Upcoming TRISA Working Group Call",
 				Body:     "Join us on Thursday Apr 28 for the TRISA Working Group.",
 				PostDate: "2022-04-20",
-				Author:   "admin@trisa.io",
+				Author:   "admin@travelrule.io",
 			},
 			{
 				Title:    "Routine Maintenance Scheduled",
 				Body:     "The GDS will be undergoing routine maintenance on Apr 7.",
 				PostDate: "2022-04-01",
-				Author:   "admin@trisa.io",
+				Author:   "admin@travelrule.io",
 			},
 			{
 				Title:    "Beware the Ides of March",

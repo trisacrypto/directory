@@ -1,164 +1,164 @@
 {
-  "id":  "838b1f57-1646-488d-a231-d71d88681cfa",
-  "registered_directory":  "trisa.directory",
-  "entity":  {
-    "name":  {
-      "name_identifiers":  [
+  "id": "838b1f57-1646-488d-a231-d71d88681cfa",
+  "registered_directory": "trisa.directory",
+  "entity": {
+    "name": {
+      "name_identifiers": [
         {
-          "legal_person_name":  "Bob's Discount VASP, PLC",
-          "legal_person_name_identifier_type":  "LEGAL_PERSON_NAME_TYPE_CODE_LEGL"
+          "legal_person_name": "Bob's Discount VASP, PLC",
+          "legal_person_name_identifier_type": "LEGAL_PERSON_NAME_TYPE_CODE_LEGL"
         },
         {
-          "legal_person_name":  "Bob VASP",
-          "legal_person_name_identifier_type":  "LEGAL_PERSON_NAME_TYPE_CODE_SHRT"
+          "legal_person_name": "Bob VASP",
+          "legal_person_name_identifier_type": "LEGAL_PERSON_NAME_TYPE_CODE_SHRT"
         }
       ],
-      "local_name_identifiers":  [],
-      "phonetic_name_identifiers":  []
+      "local_name_identifiers": [],
+      "phonetic_name_identifiers": []
     },
-    "geographic_addresses":  [
+    "geographic_addresses": [
       {
-        "address_type":  "ADDRESS_TYPE_CODE_BIZZ",
-        "department":  "",
-        "sub_department":  "",
-        "street_name":  "Grimsby Road",
-        "building_number":  "762",
-        "building_name":  "",
-        "floor":  "",
-        "post_box":  "",
-        "room":  "",
-        "post_code":  "OX8 U89",
-        "town_name":  "Oxford",
-        "town_location_name":  "",
-        "district_name":  "",
-        "country_sub_division":  "",
-        "address_line":  [],
-        "country":  "GB"
+        "address_type": "ADDRESS_TYPE_CODE_BIZZ",
+        "department": "",
+        "sub_department": "",
+        "street_name": "Grimsby Road",
+        "building_number": "762",
+        "building_name": "",
+        "floor": "",
+        "post_box": "",
+        "room": "",
+        "post_code": "OX8 U89",
+        "town_name": "Oxford",
+        "town_location_name": "",
+        "district_name": "",
+        "country_sub_division": "",
+        "address_line": [],
+        "country": "GB"
       }
     ],
-    "customer_number":  "",
-    "national_identification":  {
-      "national_identifier":  "GIVU00BIYKUEMNOTGV15",
-      "national_identifier_type":  "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX"
+    "customer_number": "",
+    "national_identification": {
+      "national_identifier": "GIVU00BIYKUEMNOTGV15",
+      "national_identifier_type": "NATIONAL_IDENTIFIER_TYPE_CODE_LEIX"
     },
-    "country_of_registration":  "GB"
+    "country_of_registration": "GB"
   },
-  "contacts":  {
-    "technical":  {
-      "name":  "TRISA Support",
-      "email":  "support@trisa.io",
-      "phone":  "",
-      "person":  null,
-      "extra":  {
-        "@type":  "type.googleapis.com/gds.models.v1.GDSContactExtraData",
-        "verified":  true,
-        "token":  ""
+  "contacts": {
+    "technical": {
+      "name": "TRISA Support",
+      "email": "support@travelrule.io",
+      "phone": "",
+      "person": null,
+      "extra": {
+        "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
+        "verified": true,
+        "token": ""
       }
     },
-    "administrative":  {
-      "name":  "TRISA Admin",
-      "email":  "admin@trisa.io",
-      "phone":  "",
-      "person":  null,
-      "extra":  {
-        "@type":  "type.googleapis.com/gds.models.v1.GDSContactExtraData",
-        "verified":  true,
-        "token":  ""
+    "administrative": {
+      "name": "TRISA Admin",
+      "email": "admin@travelrule.io",
+      "phone": "",
+      "person": null,
+      "extra": {
+        "@type": "type.googleapis.com/gds.models.v1.GDSContactExtraData",
+        "verified": true,
+        "token": ""
       }
     },
-    "legal":  null,
-    "billing":  null
+    "legal": null,
+    "billing": null
   },
-  "identity_certificate":  {
-    "version":  "3",
-    "serial_number":  "",
-    "signature":  "",
-    "signature_algorithm":  "SHA384-RSA",
-    "public_key_algorithm":  "RSA",
-    "subject":  {
-      "common_name":  "api.bob.vaspbot.net",
-      "serial_number":  "",
-      "organization":  [
+  "identity_certificate": {
+    "version": "3",
+    "serial_number": "",
+    "signature": "",
+    "signature_algorithm": "SHA384-RSA",
+    "public_key_algorithm": "RSA",
+    "subject": {
+      "common_name": "api.bob.vaspbot.net",
+      "serial_number": "",
+      "organization": [
         "CipherTrace Inc"
       ],
-      "organizational_unit":  [],
-      "street_address":  [],
-      "locality":  [
+      "organizational_unit": [],
+      "street_address": [],
+      "locality": [
         "Menlo Park"
       ],
-      "province":  [
+      "province": [
         "California"
       ],
-      "postal_code":  [],
-      "country":  [
+      "postal_code": [],
+      "country": [
         "US"
       ]
     },
-    "issuer":  {
-      "common_name":  "CipherTrace Issuing CA",
-      "serial_number":  "",
-      "organization":  [
+    "issuer": {
+      "common_name": "CipherTrace Issuing CA",
+      "serial_number": "",
+      "organization": [
         "CipherTrace Inc"
       ],
-      "organizational_unit":  [],
-      "street_address":  [],
-      "locality":  [
+      "organizational_unit": [],
+      "street_address": [],
+      "locality": [
         "Menlo Park"
       ],
-      "province":  [
+      "province": [
         "California"
       ],
-      "postal_code":  [],
-      "country":  [
+      "postal_code": [],
+      "country": [
         "US"
       ]
     },
-    "not_before":  "2021-01-27T18:29:07Z",
-    "not_after":  "2022-02-27T18:29:06Z",
-    "revoked":  false,
-    "data":  "",
-    "chain":  ""
+    "not_before": "2021-01-27T18:29:07Z",
+    "not_after": "2022-02-27T18:29:06Z",
+    "revoked": false,
+    "data": "",
+    "chain": ""
   },
-  "signing_certificates":  [],
-  "common_name":  "api.bob.vaspbot.net",
-  "trisa_endpoint":  "api.bob.vaspbot.net:443",
-  "website":  "https://bob.vaspbot.net/",
-  "business_category":  "PRIVATE_ORGANIZATION",
-  "vasp_categories":  [
+  "signing_certificates": [],
+  "common_name": "api.bob.vaspbot.net",
+  "trisa_endpoint": "api.bob.vaspbot.net:443",
+  "website": "https://bob.vaspbot.net/",
+  "business_category": "PRIVATE_ORGANIZATION",
+  "vasp_categories": [
     "Exchange"
   ],
-  "established_on":  "2020-11-11",
-  "trixo":  {
-    "primary_national_jurisdiction":  "GB",
-    "primary_regulator":  "Financial Conduct Authority",
-    "financial_transfers_permitted":  "yes",
-    "other_jurisdictions":  [],
-    "has_required_regulatory_program":  "yes",
-    "conducts_customer_kyc":  true,
-    "kyc_threshold":  100,
-    "kyc_threshold_currency":  "USD",
-    "must_comply_travel_rule":  false,
-    "applicable_regulations":  [
+  "established_on": "2020-11-11",
+  "trixo": {
+    "primary_national_jurisdiction": "GB",
+    "primary_regulator": "Financial Conduct Authority",
+    "financial_transfers_permitted": "yes",
+    "other_jurisdictions": [],
+    "has_required_regulatory_program": "yes",
+    "conducts_customer_kyc": true,
+    "kyc_threshold": 100,
+    "kyc_threshold_currency": "USD",
+    "must_comply_travel_rule": false,
+    "applicable_regulations": [
       "Legal statement on cryptoassets and smart contracts",
       "FCA Cryptoassets: AML / CTF regime"
     ],
-    "compliance_threshold":  10000,
-    "compliance_threshold_currency":  "USD",
-    "must_safeguard_pii":  true,
-    "safeguards_pii":  true
+    "compliance_threshold": 10000,
+    "compliance_threshold_currency": "USD",
+    "must_safeguard_pii": true,
+    "safeguards_pii": true
   },
-  "verification_status":  "PENDING_REVIEW",
-  "service_status":  "UNKNOWN",
-  "verified_on":  "",
-  "first_listed":  "2021-01-27T18:26:21Z",
-  "last_updated":  "2021-01-27T18:30:57Z",
-  "signature":  "abc1234",
-  "version":  {
-    "pid":  "8",
-    "version":  "8"
+  "verification_status": "PENDING_REVIEW",
+  "service_status": "UNKNOWN",
+  "verified_on": "",
+  "first_listed": "2021-01-27T18:26:21Z",
+  "last_updated": "2021-01-27T18:30:57Z",
+  "signature": "abc1234",
+  "version": {
+    "pid": "8",
+    "version": "8"
   },
-  "extra":  {
-    "@type":  "type.googleapis.com/gds.models.v1.GDSExtraData",
-    "admin_verification_token":  ""
+  "extra": {
+    "@type": "type.googleapis.com/gds.models.v1.GDSExtraData",
+    "admin_verification_token": ""
   }
 }
