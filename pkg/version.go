@@ -8,10 +8,10 @@ import "fmt"
 // Version component constants for the current build.
 const (
 	VersionMajor         = 1
-	VersionMinor         = 10
-	VersionPatch         = 3
+	VersionMinor         = 11
+	VersionPatch         = 0
 	VersionReleaseLevel  = ""
-	VersionReleaseNumber = 22
+	VersionReleaseNumber = 23
 )
 
 // Set the GitVersion via -ldflags="-X 'github.com/trisacrypto/directory/pkg.GitVersion=$(git rev-parse --short HEAD)'"
