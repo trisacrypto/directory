@@ -21,7 +21,7 @@ var (
 func TestCredentials(t *testing.T) {
 	// Skip test if a cache file already exists
 	if err := checkCache(); err != nil {
-		t.Skipf(err.Error())
+		t.Skipf("cache check failed: %s", err.Error())
 	}
 
 	// Ensure the environment is setup for the test and cleaned up afterward
