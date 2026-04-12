@@ -117,7 +117,6 @@ docker buildx build \
     --build-arg REACT_APP_ANALYTICS_ID=${REACT_APP_VASPDIRECTORY_ANALYTICS_ID} \
     --build-arg REACT_APP_VERSION_NUMBER=${REACT_APP_VERSION_NUMBER} \
     --build-arg REACT_APP_GIT_REVISION=${REACT_APP_GIT_REVISION} \
-    --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_SENTRY_DSN} \
     --build-arg REACT_APP_AUTH0_DOMAIN=${REACT_APP_AUTH0_DOMAIN} \
     --build-arg REACT_APP_AUTH0_CLIENT_ID=${REACT_APP_AUTH0_CLIENT_ID} \
     --build-arg REACT_APP_AUTH0_REDIRECT_URI=https://trisa.directory/auth/callback \
@@ -133,8 +132,6 @@ docker buildx build \
     --build-arg REACT_APP_ANALYTICS_ID=${REACT_APP_STAGING_VASPDIRECTORY_ANALYTICS_ID} \
     --build-arg REACT_APP_VERSION_NUMBER=${REACT_APP_VERSION_NUMBER} \
     --build-arg REACT_APP_GIT_REVISION=${REACT_APP_GIT_REVISION} \
-    --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_SENTRY_DSN} \
-    --build-arg REACT_APP_SENTRY_ENVIRONMENT="staging" \
     --build-arg REACT_APP_AUTH0_DOMAIN=${REACT_APP_AUTH0_DOMAIN} \
     --build-arg REACT_APP_AUTH0_CLIENT_ID=${REACT_APP_STAGING_AUTH0_CLIENT_ID} \
     --build-arg REACT_APP_AUTH0_REDIRECT_URI=https://vaspdirectory.dev/auth/callback \
@@ -150,7 +147,6 @@ docker buildx build \
     --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.trisa.directory/v2 \
     --build-arg REACT_APP_GDS_IS_TESTNET=false \
     --build-arg REACT_APP_GOOGLE_CLIENT_ID=${REACT_APP_VASPDIRECTORY_CLIENT_ID} \
-    --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_ADMIN_SENTRY_DSN} \
     --build-arg REACT_APP_VERSION_NUMBER=${REACT_APP_VERSION_NUMBER} \
     --build-arg REACT_APP_GIT_REVISION=${REACT_APP_GIT_REVISION} \
     $REPO
@@ -161,7 +157,6 @@ docker buildx build \
     --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.testnet.directory/v2 \
     --build-arg REACT_APP_GDS_IS_TESTNET=true \
     --build-arg REACT_APP_GOOGLE_CLIENT_ID=${REACT_APP_TRISATEST_CLIENT_ID} \
-    --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_ADMIN_SENTRY_DSN} \
     --build-arg REACT_APP_VERSION_NUMBER=${REACT_APP_VERSION_NUMBER} \
     --build-arg REACT_APP_GIT_REVISION=${REACT_APP_GIT_REVISION} \
     $REPO
@@ -173,8 +168,6 @@ docker buildx build \
     --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.vaspdirectory.dev/v2 \
     --build-arg REACT_APP_GDS_IS_TESTNET=false \
     --build-arg REACT_APP_GOOGLE_CLIENT_ID=${REACT_APP_STAGING_VASPDIRECTORY_CLIENT_ID} \
-    --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_ADMIN_SENTRY_DSN} \
-    --build-arg REACT_APP_SENTRY_ENVIRONMENT="staging" \
     --build-arg REACT_APP_VERSION_NUMBER=${REACT_APP_VERSION_NUMBER} \
     --build-arg REACT_APP_GIT_REVISION=${REACT_APP_GIT_REVISION} \
     $REPO
@@ -185,8 +178,6 @@ docker buildx build \
     --build-arg REACT_APP_GDS_API_ENDPOINT=https://api.admin.trisatest.dev/v2 \
     --build-arg REACT_APP_GDS_IS_TESTNET=true \
     --build-arg REACT_APP_GOOGLE_CLIENT_ID=${REACT_APP_STAGING_TRISATEST_CLIENT_ID} \
-    --build-arg REACT_APP_SENTRY_DSN=${REACT_APP_ADMIN_SENTRY_DSN} \
-    --build-arg REACT_APP_SENTRY_ENVIRONMENT="staging" \
     --build-arg REACT_APP_VERSION_NUMBER=${REACT_APP_VERSION_NUMBER} \
     --build-arg REACT_APP_GIT_REVISION=${REACT_APP_GIT_REVISION} \
     $REPO

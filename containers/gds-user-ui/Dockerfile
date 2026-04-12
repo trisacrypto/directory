@@ -22,8 +22,6 @@ ARG REACT_APP_AUTH0_CLIENT_ID
 ARG REACT_APP_AUTH0_SCOPE="openid profile email"
 ARG REACT_APP_AUTH0_REDIRECT_URI="https://trisa.directory/auth/callback"
 ARG REACT_APP_AUTH0_AUDIENCE="https://bff.trisa.directory"
-ARG REACT_APP_SENTRY_DSN
-ARG REACT_APP_SENTRY_ENVIRONMENT
 ARG REACT_APP_USE_DASH_LOCALE
 
 # Build app with react-scripts
