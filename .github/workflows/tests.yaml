@@ -1,0 +1,85 @@
+name: Tests
+on:
+  push:
+    branches:
+      - main
+      - 'v*'
+    tags:
+      - 'v*'
+  pull_request:
+
+jobs:
+  go-lint:
+    name: Go Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.26.x
+
+      - name: Install Staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@2026.1
+
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Lint Go Code
+        run: staticcheck ./...
+
+  go-test:
+    name: Go Test
+    runs-on: ubuntu-latest
+    env:
+      GOPATH: ${{ github.workspace }}/go
+      GOBIN: ${{ github.workspace }}/go/bin
+      GOTEST_GITHUB_ACTIONS: 1
+    defaults:
+      run:
+        working-directory: ${{ env.GOPATH }}/src/go.rtnl.ai/uptime
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.26.x
+
+      - name: Checkout Code
+        uses: actions/checkout@v6
+        with:
+          path: ${{ env.GOPATH }}/src/go.rtnl.ai/uptime
+
+      - name: Install Dependencies
+        run: |
+          go version
+
+      - name: Code Generation
+        run: go generate ./...
+
+      - name: Run Unit Tests
+        run: go test -v -coverprofile=coverage.txt -covermode=atomic --race ./...
+
+  build:
+    name: Go Build
+    runs-on: ubuntu-latest
+    env:
+      GOPATH: ${{ github.workspace }}/go
+      GOBIN: ${{ github.workspace }}/go/bin
+    defaults:
+      run:
+        working-directory: ${{ env.GOPATH }}/src/go.rtnl.ai/uptime
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.26.x
+
+      - name: Checkout Code
+        uses: actions/checkout@v6
+        with:
+          path: ${{ env.GOPATH }}/src/go.rtnl.ai/uptime
+      - name: Install Dependencies
+        run: |
+          go version
+
+      - name: Build
+        run: go build ./cmd/...
