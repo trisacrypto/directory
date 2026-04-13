@@ -36,7 +36,7 @@ jobs:
       GOTEST_GITHUB_ACTIONS: 1
     defaults:
       run:
-        working-directory: ${{ env.GOPATH }}/src/go.rtnl.ai/uptime
+        working-directory: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
     steps:
       - name: Setup Go
         uses: actions/setup-go@v6
@@ -46,7 +46,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v6
         with:
-          path: ${{ env.GOPATH }}/src/go.rtnl.ai/uptime
+          path: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
 
       - name: Install Dependencies
         run: |
@@ -66,7 +66,7 @@ jobs:
       GOBIN: ${{ github.workspace }}/go/bin
     defaults:
       run:
-        working-directory: ${{ env.GOPATH }}/src/go.rtnl.ai/uptime
+        working-directory: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
     steps:
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -76,7 +76,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v6
         with:
-          path: ${{ env.GOPATH }}/src/go.rtnl.ai/uptime
+          path: ${{ env.GOPATH }}/src/github.com/trisacrypto/directory
       - name: Install Dependencies
         run: |
           go version
