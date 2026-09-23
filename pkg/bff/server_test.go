@@ -154,7 +154,7 @@ func (s *bffTestSuite) SetupSuite() {
 
 	// Inject the database clients into the BFF
 	s.bff.SetDB(s.DB())
-	s.bff.SetTestNetDB(s.TestNetDB())
+	s.bff.SetTestNetDB(s.DBTestNet())
 	s.bff.SetMainNetDB(s.MainNetDB())
 
 	// Start the BFF server - the goal of the BFF tests is to have the server run for
@@ -232,7 +232,7 @@ func (s *bffTestSuite) DB() store.Store {
 }
 
 // TestnetDB returns the configured database client for the testnet
-func (s *bffTestSuite) TestNetDB() store.Store {
+func (s *bffTestSuite) DBTestNet() store.Store {
 	client, err := s.testnet.db.Client()
 	s.Require().NoError(err, "could not init testnet database client")
 	return client

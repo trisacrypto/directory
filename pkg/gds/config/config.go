@@ -7,13 +7,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rotationalio/confire"
 	"github.com/rs/zerolog"
 	"github.com/trisacrypto/directory/pkg/sectigo"
 	"github.com/trisacrypto/directory/pkg/store/config"
 	"github.com/trisacrypto/directory/pkg/utils/activity"
 	"github.com/trisacrypto/directory/pkg/utils/logger"
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
+	"go.rtnl.ai/confire"
 )
 
 // Config uses envconfig to load required settings from the environment and validate

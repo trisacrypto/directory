@@ -10,7 +10,6 @@ import (
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/gin-gonic/gin"
-	"github.com/rotationalio/confire"
 	"github.com/rs/zerolog"
 	"github.com/trisacrypto/directory/pkg/store/config"
 	"github.com/trisacrypto/directory/pkg/utils/activity"
@@ -18,6 +17,7 @@ import (
 	"github.com/trisacrypto/directory/pkg/utils/sentry"
 	"github.com/trisacrypto/trisa/pkg/trisa/mtls"
 	"github.com/trisacrypto/trisa/pkg/trust"
+	"go.rtnl.ai/confire"
 	"google.golang.org/grpc"
 )
 
