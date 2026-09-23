@@ -58,7 +58,7 @@ func (s *bffTestSuite) TestParallelDBRequests() {
 	require.NotNil(errs[1], "expected mainnet error to be not nil")
 
 	// Test the case where the RPC returns 1 result and 1 error and flatten is true
-	_, err := s.TestNetDB().CreateVASP(context.Background(), testnetVASP)
+	_, err := s.DBTestNet().CreateVASP(context.Background(), testnetVASP)
 	require.NoError(err, "could not create testnet VASP")
 	results, errs = s.bff.ParallelDBRequests(context.TODO(), rpc, true)
 	require.Len(results, 1, "results was not flattened")

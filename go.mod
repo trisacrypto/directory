@@ -10,6 +10,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-contrib/cors v1.7.9
 	github.com/gin-gonic/gin v1.12.0
+	github.com/go-jose/go-jose/v4 v4.1.5
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/go-querystring v1.2.0
 	github.com/google/uuid v1.6.0
@@ -21,7 +22,6 @@ require (
 	github.com/mroth/weightedrand v1.0.0
 	github.com/oklog/ulid/v2 v2.1.2
 	github.com/prometheus/client_golang v1.24.1
-	github.com/rotationalio/confire v1.1.0
 	github.com/rotationalio/go-ensign v0.12.0
 	github.com/rotationalio/honu v0.4.0
 	github.com/rotationalio/whisper v1.2.1
@@ -40,11 +40,11 @@ require (
 	github.com/urfave/cli v1.22.17
 	github.com/urfave/cli/v2 v2.27.7
 	github.com/vmihailenco/msgpack/v5 v5.4.1
+	go.rtnl.ai/confire v1.2.0
 	golang.org/x/net v0.59.0
 	google.golang.org/api v0.299.0
 	google.golang.org/grpc v1.84.0
 	google.golang.org/protobuf v1.36.12
-	gopkg.in/square/go-jose.v2 v2.6.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -92,7 +92,7 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/s2a-go v0.1.10 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.22 // indirect
-	github.com/googleapis/gax-go/v2 v2.25.0 // indirect
+	github.com/googleapis/gax-go/v2 v2.26.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.20.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.4.0 // indirect

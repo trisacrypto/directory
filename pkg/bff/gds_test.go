@@ -89,7 +89,7 @@ func (s *bffTestSuite) TestVASPNames() {
 	testnetFixture := filepath.Join("testdata", "testnet", "vasp.json")
 	require.NoError(loadFixture(testnetFixture, testnetVASP))
 	testnetVASP.VerificationStatus = pb.VerificationState_VERIFIED
-	_, err = s.TestNetDB().CreateVASP(ctx, testnetVASP)
+	_, err = s.DBTestNet().CreateVASP(ctx, testnetVASP)
 	require.NoError(err, "error creating VASP fixture in database")
 	rep, err = s.client.LookupAutocomplete(ctx)
 	require.NoError(err, "error calling names endpoint")
@@ -116,7 +116,7 @@ func (s *bffTestSuite) TestVASPNames() {
 	testnetVASP.Id = uuid.New().String()
 	testnetVASP.CommonName = "testnet.bob.vaspbot.net"
 	testnetVASP.Entity.Name.NameIdentifiers[0].LegalPersonName = "Bob VASP, Inc."
-	_, err = s.TestNetDB().CreateVASP(ctx, testnetVASP)
+	_, err = s.DBTestNet().CreateVASP(ctx, testnetVASP)
 	require.NoError(err, "error creating VASP fixture in database")
 	mainnetVASP.Id = uuid.New().String()
 	mainnetVASP.CommonName = "mainnet.charlie.vaspbot.net"
@@ -1170,7 +1170,7 @@ func (s *bffTestSuite) TestCertificates() {
 	require.Empty(reply.Error.MainNet, "expected no error when mainnet returns a valid response")
 
 	// Test error message is populated when only mainnet returns an error
-	_, err = s.TestNetDB().CreateVASP(context.Background(), testnetVASP)
+	_, err = s.DBTestNet().CreateVASP(context.Background(), testnetVASP)
 	require.NoError(err, "could not create testnet VASP")
 	require.NoError(s.MainNetDB().DeleteVASP(context.Background(), mainnetVASP.Id), "could not delete VASP from mainnet database")
 	reply, err = s.client.Certificates(context.TODO())
@@ -1190,9 +1190,9 @@ func (s *bffTestSuite) TestCertificates() {
 	require.Empty(reply.Error, "expected no errors")
 
 	// Create certificate fixtures in the databases
-	require.NoError(s.TestNetDB().UpdateCert(context.Background(), uniform), "could not create uniform certificate")
+	require.NoError(s.DBTestNet().UpdateCert(context.Background(), uniform), "could not create uniform certificate")
 	require.NoError(models.AppendCertID(testnetVASP, uniform.Id), "could not append testnet certificate ID to VASP")
-	require.NoError(s.TestNetDB().UpdateVASP(context.Background(), testnetVASP), "could not update testnet VASP")
+	require.NoError(s.DBTestNet().UpdateVASP(context.Background(), testnetVASP), "could not update testnet VASP")
 
 	require.NoError(s.MainNetDB().UpdateCert(context.Background(), victor), "could not create victor certificate")
 	require.NoError(models.AppendCertID(mainnetVASP, victor.Id), "could not append mainnet certificate ID to VASP")
@@ -1481,7 +1481,7 @@ func (s *bffTestSuite) TestAttention() {
 	testnetVASP.IdentityCertificate.NotAfter = expires.Format(time.RFC3339)
 
 	// Expired message should be returned when the certificate is expired
-	_, err = s.TestNetDB().CreateVASP(context.Background(), testnetVASP)
+	_, err = s.DBTestNet().CreateVASP(context.Background(), testnetVASP)
 	require.NoError(err, "could not create VASP in the testnet database")
 	expiredTestnet := &api.AttentionMessage{
 		Message:  fmt.Sprintf(bff.RenewCertificate, "TestNet", expires.Format("January 2, 2006")),

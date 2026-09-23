@@ -27,9 +27,9 @@ import (
 	"time"
 
 	"github.com/auth0/go-auth0/management"
+	jose "github.com/go-jose/go-jose/v4"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/trisacrypto/directory/pkg/bff/config"
-	"gopkg.in/square/go-jose.v2"
 )
 
 const (

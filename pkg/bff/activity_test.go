@@ -405,7 +405,7 @@ func (s *bffTestSuite) TestActivitySubscriber() {
 	}
 	month, err = s.DB().RetrieveActivityMonth(ctx, "2023-09")
 	require.NoError(err, "could not retrieve activity month")
-	require.Equal("2023-09", month.Date, "wrong activity month retrieved")
+	require.Equal(expected.Date, month.Date, "wrong activity month retrieved")
 	require.Len(month.Days, 1, "wrong number of activity days in month")
 	require.Equal(expected.Days[0].Date, month.Days[0].Date, "wrong date for day")
 	require.Equal(expected.Days[0].Activity, month.Days[0].Activity, "wrong activity for day")

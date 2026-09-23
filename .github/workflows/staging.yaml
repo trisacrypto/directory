@@ -86,26 +86,6 @@ jobs:
             REACT_APP_AUTH0_AUDIENCE=https://bff.vaspdirectory.dev
             REACT_APP_USE_DASH_LOCALE=true
 
-      - name: Slack Notify Staging UI Build Success
-        if: success()
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
-        uses: slackapi/slack-github-action@v4
-        with:
-          channel: gds-containers
-          status: SUCCESS
-          color: good
-
-      - name: Slack Notify Staging UI Build Fail
-        if: failure()
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
-        uses: slackapi/slack-github-action@v4
-        with:
-          channel: gds-containers
-          status: FAILED
-          color: danger
-
   # GDS Staging Admin UI: admin.vaspdirectory.dev
   gds-staging-admin-ui:
     name: GDS Staging Admin UI
@@ -174,26 +154,6 @@ jobs:
             REACT_APP_GDS_IS_TESTNET=false
             REACT_APP_GOOGLE_CLIENT_ID=${{ secrets.REACT_APP_STAGING_VASPDIRECTORY_CLIENT_ID }}
 
-      - name: Slack Notify Staging Admin UI Build Success
-        if: success()
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
-        uses: slackapi/slack-github-action@v4
-        with:
-          channel: gds-containers
-          status: SUCCESS
-          color: good
-
-      - name: Slack Notify Staging Admin UI Build Fail
-        if: failure()
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
-        uses: slackapi/slack-github-action@v4
-        with:
-          channel: gds-containers
-          status: FAILED
-          color: danger
-
   # GDS Staging TestNet Admin UI: admin.trisatest.dev
   gds-staging-testnet-admin-ui:
     name: GDS Staging TestNet Admin UI
@@ -261,23 +221,3 @@ jobs:
             REACT_APP_GDS_API_ENDPOINT=https://api.admin.trisatest.dev/v2
             REACT_APP_GDS_IS_TESTNET=true
             REACT_APP_GOOGLE_CLIENT_ID=${{ secrets.REACT_APP_STAGING_TRISATEST_CLIENT_ID }}
-
-      - name: Slack Notify Staging TestNet UI Build Success
-        if: success()
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
-        uses: slackapi/slack-github-action@v4
-        with:
-          channel: gds-containers
-          status: SUCCESS
-          color: good
-
-      - name: Slack Notify Staging TestNet UI Build Fail
-        if: failure()
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}
-        uses: slackapi/slack-github-action@v4
-        with:
-          channel: gds-containers
-          status: FAILED
-          color: danger
